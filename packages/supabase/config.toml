@@ -1,0 +1,40 @@
+[api]
+enabled = true
+port = 54331
+schemas = ["public"]
+
+[db]
+port = 54332
+major_version = 15
+
+[studio]
+enabled = true
+port = 54333
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3000/auth/callback"]
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = false
+enable_confirmations = false
+
+[auth.external.google]
+enabled = false
+
+[storage]
+enabled = true
+file_size_limit = "50MiB"
+
+[realtime]
+enabled = true
+
+[analytics]
+enabled = true
+port = 54337
+
+[inbucket]
+enabled = true
+port = 54334
