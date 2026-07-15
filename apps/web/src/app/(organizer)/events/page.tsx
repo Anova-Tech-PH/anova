@@ -1,21 +1,29 @@
 import Link from "next/link";
-import { Plus, Calendar, MapPin, Wifi, Users } from "lucide-react";
+import { Plus, Calendar, MapPin, Wifi, Users, ArrowUpRight } from "lucide-react";
 import { createClient } from "@/shared/utils/supabase/server";
-import { Badge, EmptyState } from "@/shared/components/ui";
+import { Badge, EmptyState, Button } from "@/shared/components/ui";
 
 function getStatusStyle(status: string) {
   switch (status) {
     case "published":
-      return { bg: "bg-violet-100 dark:bg-violet-950/40", badge: "success" as const, label: "Published" };
+      return { bg: "bg-gradient-to-br from-violet-100 to-violet-50 dark:from-violet-950/40 dark:to-violet-900/20", badge: "success" as const, label: "Published", dot: "bg-emerald-500" };
     case "draft":
-      return { bg: "bg-slate-100 dark:bg-slate-800/40", badge: "warning" as const, label: "Draft" };
+      return { bg: "bg-gradient-to-br from-slate-100 to-slate-50 dark:from-slate-800/40 dark:to-slate-700/20", badge: "warning" as const, label: "Draft", dot: "bg-amber-500" };
     case "cancelled":
-      return { bg: "bg-red-50 dark:bg-red-950/40", badge: "destructive" as const, label: "Cancelled" };
+      return { bg: "bg-gradient-to-br from-red-50 to-red-100/50 dark:from-red-950/40 dark:to-red-900/20", badge: "destructive" as const, label: "Cancelled", dot: "bg-red-500" };
     case "completed":
-      return { bg: "bg-emerald-50 dark:bg-emerald-950/40", badge: "info" as const, label: "Completed" };
+      return { bg: "bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-950/40 dark:to-emerald-900/20", badge: "info" as const, label: "Completed", dot: "bg-blue-500" };
     default:
-      return { bg: "bg-muted", badge: "default" as const, label: status };
+      return { bg: "bg-gradient-to-br from-muted to-muted/50", badge: "default" as const, label: status, dot: "bg-gray-400" };
   }
+}
+
+function formatDate(date: string) {
+  return new Date(date).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 export default async function EventsPage() {
@@ -51,13 +59,17 @@ export default async function EventsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Events</h1>
-        <Link
-          href="/events/new"
-          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 shadow-sm"
-        >
-          <Plus className="h-4 w-4" />
-          New Event
+        <div>
+          <h1 className="text-2xl font-semibold">Events</h1>
+          <p className="text-sm text-muted-foreground">
+            {events?.length ?? 0} event{events?.length !== 1 ? "s" : ""} total
+          </p>
+        </div>
+        <Link href="/events/new">
+          <Button className="gap-2 shadow-sm">
+            <Plus className="h-4 w-4" />
+            New Event
+          </Button>
         </Link>
       </div>
 
@@ -84,18 +96,23 @@ export default async function EventsPage() {
               <Link
                 key={event.id}
                 href={`/events/${event.id}`}
-                className="group overflow-hidden rounded-xl border bg-card shadow-sm transition-all hover:shadow-md hover:border-primary/20"
+                className="group overflow-hidden rounded-xl border bg-card shadow-sm transition-all hover:shadow-lg hover:border-primary/20 hover:-translate-y-0.5"
               >
-                {/* Status-colored placeholder header */}
+                {/* Status-colored header */}
                 <div className={`relative flex h-28 items-center justify-center ${style.bg}`}>
-                  <Calendar className="h-10 w-10 text-foreground/10" />
+                  <Calendar className="h-10 w-10 text-foreground/8" />
                   <div className="absolute left-3 top-3">
                     <Badge variant={style.badge}>{style.label}</Badge>
                   </div>
                   <div className="absolute right-3 top-3">
-                    <span className="flex items-center gap-1 rounded-full bg-background/80 px-2 py-0.5 text-xs font-medium backdrop-blur-sm">
+                    <span className="flex items-center gap-1 rounded-full bg-background/90 px-2.5 py-1 text-xs font-medium backdrop-blur-sm shadow-sm">
                       <Users className="h-3 w-3" />
-                      {regCount} reg.
+                      {regCount}
+                    </span>
+                  </div>
+                  <div className="absolute right-3 bottom-3 opacity-0 translate-x-1 transition-all group-hover:opacity-100 group-hover:translate-x-0">
+                    <span className="flex items-center gap-1 rounded-full bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground shadow-sm">
+                      Manage <ArrowUpRight className="h-3 w-3" />
                     </span>
                   </div>
                 </div>
@@ -104,10 +121,10 @@ export default async function EventsPage() {
                   <h3 className="font-semibold truncate group-hover:text-primary transition-colors">
                     {event.title}
                   </h3>
-                  <div className="mt-2 space-y-1">
+                  <div className="mt-2.5 space-y-1.5">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Calendar className="h-3.5 w-3.5 shrink-0" />
-                      <span>{new Date(event.start_date).toLocaleDateString()}</span>
+                      <span>{formatDate(event.start_date)}</span>
                     </div>
                     {event.venue_name ? (
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">

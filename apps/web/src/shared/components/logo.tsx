@@ -19,7 +19,7 @@ export function Logo({ size = "md", variant = "color", className }: LogoProps) {
   return (
     <img
       src={variant === "white" ? "/logo-white.png" : "/logo.png"}
-      alt="Attendly"
+      alt="Anova"
       width={width}
       height={height}
       className={cn("block object-contain", className)}

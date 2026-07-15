@@ -1,4 +1,4 @@
-# Attendly — Development Notes
+# Anova — Development Notes
 
 ## Supabase
 

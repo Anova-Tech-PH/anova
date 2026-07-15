@@ -75,7 +75,7 @@ export default function SignupPage() {
               Start something<br />unforgettable.
             </h2>
             <p className="text-lg text-primary-foreground/80">
-              From intimate workshops to large conferences, Attendly gives you everything you need.
+              From intimate workshops to large conferences, Anova gives you everything you need.
             </p>
           </div>
           <p className="text-sm text-primary-foreground/60">

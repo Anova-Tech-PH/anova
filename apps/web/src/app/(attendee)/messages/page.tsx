@@ -29,6 +29,7 @@ export default async function MessagesPage({
       conversations={conversations}
       selectedConversationId={selectedConvId}
       selectedConversationName={selectedConv?.display_name ?? ""}
+      selectedConversationAvatar={selectedConv?.display_avatar ?? null}
       initialMessages={messages}
       currentUserId={user.id}
     />

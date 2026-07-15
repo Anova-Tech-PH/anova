@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useMemo, useTransition } from "react";
-import { Search, Download, ChevronDown } from "lucide-react";
+import { Search, Download, ChevronDown, Users, UserCheck, UserX, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { updateRegistrationStatus } from "../actions";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Card } from "@/shared/components/ui/card";
 import { Input } from "@/shared/components/ui/input";
+import { cn } from "@/shared/utils/cn";
 
 type Registration = {
   id: string;
@@ -25,6 +26,13 @@ const statusVariants: Record<string, "success" | "info" | "destructive" | "warni
   checked_in: "info",
   cancelled: "destructive",
   pending: "warning",
+};
+
+const statusDotColors: Record<string, string> = {
+  confirmed: "bg-emerald-500",
+  checked_in: "bg-blue-500",
+  cancelled: "bg-red-500",
+  pending: "bg-amber-500",
 };
 
 export function RegistrationsTable({
@@ -106,27 +114,68 @@ export function RegistrationsTable({
     URL.revokeObjectURL(url);
   }
 
+  const statCards = [
+    {
+      label: "Total",
+      value: stats.total,
+      icon: Users,
+      gradient: "from-slate-50 to-slate-100/80 dark:from-slate-900/40 dark:to-slate-800/30",
+      iconColor: "text-slate-600 dark:text-slate-400",
+    },
+    {
+      label: "Confirmed",
+      value: stats.confirmed,
+      icon: CheckCircle,
+      gradient: "from-emerald-50 to-emerald-100/80 dark:from-emerald-900/30 dark:to-emerald-800/20",
+      iconColor: "text-emerald-600 dark:text-emerald-400",
+    },
+    {
+      label: "Checked In",
+      value: stats.checked_in,
+      icon: UserCheck,
+      gradient: "from-blue-50 to-blue-100/80 dark:from-blue-900/30 dark:to-blue-800/20",
+      iconColor: "text-blue-600 dark:text-blue-400",
+    },
+    {
+      label: "Cancelled",
+      value: stats.cancelled,
+      icon: UserX,
+      gradient: "from-red-50 to-red-100/80 dark:from-red-900/30 dark:to-red-800/20",
+      iconColor: "text-red-600 dark:text-red-400",
+    },
+  ];
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-3">
-        {[
-          { label: "Total", value: stats.total },
-          { label: "Confirmed", value: stats.confirmed },
-          { label: "Checked In", value: stats.checked_in },
-          { label: "Cancelled", value: stats.cancelled },
-        ].map((s) => (
-          <Card key={s.label} className="p-3 text-center">
-            <p className="text-2xl font-semibold">{s.value}</p>
-            <p className="text-xs text-muted-foreground">{s.label}</p>
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {statCards.map((s) => (
+          <Card
+            key={s.label}
+            className={cn(
+              "relative overflow-hidden border p-4 bg-gradient-to-br",
+              s.gradient
+            )}
+          >
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  {s.label}
+                </p>
+                <p className="mt-1 text-3xl font-bold tabular-nums">{s.value}</p>
+              </div>
+              <div className={cn("rounded-lg bg-white/60 p-2 dark:bg-white/10", s.iconColor)}>
+                <s.icon className="h-5 w-5" />
+              </div>
+            </div>
           </Card>
         ))}
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="relative flex-1 min-w-0">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
           <Input
             type="text"
             value={search}
@@ -136,71 +185,137 @@ export function RegistrationsTable({
           />
         </div>
 
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-        >
-          <option value="all">All statuses</option>
-          <option value="confirmed">Confirmed</option>
-          <option value="checked_in">Checked In</option>
-          <option value="cancelled">Cancelled</option>
-        </select>
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className={cn(
+                "h-9 appearance-none rounded-lg border bg-background pl-3 pr-9 text-sm",
+                "outline-none transition-colors",
+                "focus:ring-2 focus:ring-ring focus:ring-offset-1",
+                "hover:border-foreground/30"
+              )}
+            >
+              <option value="all">All statuses</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="checked_in">Checked In</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          </div>
 
-        <Button onClick={exportCsv} variant="outline">
-          <Download className="h-4 w-4" />
-          Export CSV
-        </Button>
+          <Button onClick={exportCsv} variant="outline" className="gap-2 font-medium shadow-sm">
+            <Download className="h-4 w-4" />
+            Export CSV
+          </Button>
+        </div>
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto rounded-xl border">
+      <div className="overflow-x-auto rounded-xl border shadow-sm">
         <table className="w-full text-sm">
-          <thead className="border-b bg-muted/50">
-            <tr>
-              <th className="px-4 py-3 text-left font-medium">Name</th>
-              <th className="px-4 py-3 text-left font-medium">Email</th>
-              <th className="px-4 py-3 text-left font-medium">Ticket</th>
-              <th className="px-4 py-3 text-left font-medium">Status</th>
-              <th className="px-4 py-3 text-left font-medium">Registered</th>
-              <th className="px-4 py-3 text-left font-medium">Actions</th>
+          <thead>
+            <tr className="border-b bg-muted/60">
+              <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Name
+              </th>
+              <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden sm:table-cell">
+                Email
+              </th>
+              <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">
+                Ticket
+              </th>
+              <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Status
+              </th>
+              <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden lg:table-cell">
+                Registered
+              </th>
+              <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Actions
+              </th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y">
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
-                  {registrations.length === 0
-                    ? "No registrations yet"
-                    : "No results match your search"}
+                <td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">
+                  <div className="flex flex-col items-center gap-2">
+                    <Users className="h-8 w-8 text-muted-foreground/40" />
+                    <p className="font-medium">
+                      {registrations.length === 0
+                        ? "No registrations yet"
+                        : "No results match your search"}
+                    </p>
+                    {registrations.length > 0 && (
+                      <p className="text-xs">Try adjusting your filters</p>
+                    )}
+                  </div>
                 </td>
               </tr>
             ) : (
-              filtered.map((reg) => (
-                <tr key={reg.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
-                  <td className="px-4 py-3 font-medium">{reg.name}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{reg.email}</td>
-                  <td className="px-4 py-3">{reg.ticket_types?.name ?? "-"}</td>
-                  <td className="px-4 py-3">
-                    <Badge variant={statusVariants[reg.status] ?? "default"}>
-                      {reg.status.replace("_", " ")}
-                    </Badge>
+              filtered.map((reg, index) => (
+                <tr
+                  key={reg.id}
+                  className={cn(
+                    "transition-colors hover:bg-primary/[0.04]",
+                    index % 2 === 1 && "bg-muted/20"
+                  )}
+                >
+                  <td className="px-4 py-3.5">
+                    <div>
+                      <span className="font-medium">{reg.name}</span>
+                      <span className="block text-xs text-muted-foreground sm:hidden">
+                        {reg.email}
+                      </span>
+                    </div>
                   </td>
-                  <td className="px-4 py-3 text-muted-foreground">
+                  <td className="px-4 py-3.5 text-muted-foreground hidden sm:table-cell">
+                    {reg.email}
+                  </td>
+                  <td className="px-4 py-3.5 hidden md:table-cell">
+                    {reg.ticket_types?.name ? (
+                      <Badge variant="default">{reg.ticket_types.name}</Badge>
+                    ) : (
+                      <span className="text-muted-foreground">-</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3.5">
+                    <span className="inline-flex items-center gap-1.5">
+                      <span
+                        className={cn(
+                          "inline-block h-2 w-2 rounded-full",
+                          statusDotColors[reg.status] ?? "bg-gray-400"
+                        )}
+                      />
+                      <span className="text-sm capitalize">
+                        {reg.status.replace("_", " ")}
+                      </span>
+                    </span>
+                  </td>
+                  <td className="px-4 py-3.5 text-muted-foreground hidden lg:table-cell">
                     {new Date(reg.created_at).toLocaleDateString()}
                   </td>
-                  <td className="px-4 py-3">
-                    <div className="relative">
+                  <td className="px-4 py-3.5">
+                    <div className="relative inline-block">
                       <select
                         value={reg.status}
                         onChange={(e) => handleStatusChange(reg.id, e.target.value)}
                         disabled={isPending}
-                        className="rounded border bg-background px-2 py-1 text-xs outline-none"
+                        className={cn(
+                          "h-8 appearance-none rounded-md border bg-background pl-2.5 pr-7 text-xs font-medium",
+                          "outline-none transition-all",
+                          "focus:ring-2 focus:ring-ring focus:ring-offset-1",
+                          "hover:border-foreground/30 hover:bg-muted/30",
+                          "disabled:cursor-not-allowed disabled:opacity-50"
+                        )}
                       >
                         <option value="confirmed">Confirmed</option>
                         <option value="checked_in">Checked In</option>
                         <option value="cancelled">Cancelled</option>
                       </select>
+                      <ChevronDown className="pointer-events-none absolute right-1.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                     </div>
                   </td>
                 </tr>
@@ -211,7 +326,7 @@ export function RegistrationsTable({
       </div>
 
       <p className="text-xs text-muted-foreground">
-        Showing {filtered.length} of {registrations.length} registrations
+        Showing {filtered.length} of {registrations.length} registration{registrations.length !== 1 ? "s" : ""}
       </p>
     </div>
   );

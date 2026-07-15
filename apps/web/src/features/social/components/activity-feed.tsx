@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Heart, MessageCircle, Trash2, User } from "lucide-react";
+import { Heart, MessageCircle, Trash2, User, Megaphone, Check } from "lucide-react";
 import { toast } from "sonner";
 import { togglePostLike, createComment, deletePost, votePoll } from "../actions";
 import { PostComposer } from "./post-composer";
@@ -56,7 +56,7 @@ export function ActivityFeed({
   const [posts, setPosts] = useState(initialPosts);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <PostComposer
         eventId={eventId}
         onPostCreated={(post) => setPosts((prev) => [post, ...prev])}
@@ -95,11 +95,16 @@ function PostCard({
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [isPending, startTransition] = useTransition();
+  const [likeAnimating, setLikeAnimating] = useState(false);
 
   function handleLike() {
     startTransition(async () => {
       try {
         const { liked } = await togglePostLike(post.id);
+        if (liked) {
+          setLikeAnimating(true);
+          setTimeout(() => setLikeAnimating(false), 300);
+        }
         onUpdate({
           ...post,
           liked,
@@ -160,20 +165,35 @@ function PostCard({
   }
 
   const totalVotes = Object.values(post.poll_vote_counts).reduce((a, b) => a + b, 0);
+  const isAnnouncement = post.type === "announcement";
 
   return (
-    <Card className="p-4">
+    <Card className={`p-4 transition-shadow duration-200 hover:shadow-md ${isAnnouncement ? "border-primary/30 bg-primary/[0.02]" : ""}`}>
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <Avatar src={post.profiles?.avatar_url} name={post.profiles?.full_name} size="md" />
+          <div className="relative">
+            <Avatar src={post.profiles?.avatar_url} name={post.profiles?.full_name} size="md" />
+            {isAnnouncement && (
+              <div className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm">
+                <Megaphone className="h-2.5 w-2.5" />
+              </div>
+            )}
+          </div>
           <div>
-            <p className="text-sm font-medium">{post.profiles?.full_name ?? "Unknown"}</p>
+            <div className="flex items-center gap-1.5">
+              <p className="text-sm font-medium">{post.profiles?.full_name ?? "Unknown"}</p>
+              {isAnnouncement && (
+                <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                  Announcement
+                </span>
+              )}
+            </div>
             <p className="text-[10px] text-muted-foreground">{timeAgo(post.created_at)}</p>
           </div>
         </div>
         {post.author_id === currentUserId && (
-          <Button variant="ghost" size="icon" onClick={handleDelete} disabled={isPending} className="text-muted-foreground hover:text-destructive">
+          <Button variant="ghost" size="icon" onClick={handleDelete} disabled={isPending} className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors">
             <Trash2 className="h-4 w-4" />
           </Button>
         )}
@@ -199,20 +219,27 @@ function PostCard({
                 key={option.index}
                 onClick={() => handleVote(option.index)}
                 disabled={post.user_poll_vote !== null || isPending}
-                className={`relative w-full overflow-hidden rounded-lg border p-2.5 text-left text-sm transition-colors ${
-                  voted ? "border-primary bg-primary/5" : "hover:bg-accent"
-                } ${post.user_poll_vote !== null ? "cursor-default" : ""}`}
+                className={`relative w-full overflow-hidden rounded-lg border p-2.5 text-left text-sm transition-all duration-200 ${
+                  voted ? "border-primary bg-primary/5 shadow-sm" : "hover:bg-accent hover:border-border/80"
+                } ${post.user_poll_vote !== null ? "cursor-default" : "hover:shadow-sm"}`}
               >
                 {post.user_poll_vote !== null && (
                   <div
-                    className="absolute inset-y-0 left-0 bg-primary/10"
+                    className="absolute inset-y-0 left-0 bg-primary/10 transition-all duration-500 ease-out"
                     style={{ width: `${pct}%` }}
                   />
                 )}
                 <span className="relative flex items-center justify-between">
-                  <span>{option.text}</span>
+                  <span className="flex items-center gap-1.5">
+                    {voted && (
+                      <Check className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+                    )}
+                    <span>{option.text}</span>
+                  </span>
                   {post.user_poll_vote !== null && (
-                    <span className="text-xs text-muted-foreground">{pct}%</span>
+                    <span className={`text-xs tabular-nums ${voted ? "font-medium text-primary" : "text-muted-foreground"}`}>
+                      {pct}%
+                    </span>
                   )}
                 </span>
               </button>
@@ -225,41 +252,56 @@ function PostCard({
       )}
 
       {/* Actions */}
-      <div className="mt-3 flex items-center gap-4 border-t pt-3">
+      <div className="mt-3 flex items-center gap-1 border-t pt-3">
         <button
           onClick={handleLike}
           disabled={isPending}
-          className={`flex items-center gap-1.5 text-sm ${post.liked ? "text-red-500" : "text-muted-foreground hover:text-foreground"}`}
+          className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition-all duration-200 ${
+            post.liked
+              ? "text-red-500 bg-red-500/5 hover:bg-red-500/10"
+              : "text-muted-foreground hover:text-foreground hover:bg-accent"
+          }`}
         >
-          <Heart className={`h-4 w-4 ${post.liked ? "fill-current" : ""}`} />
-          {post.likes_count > 0 && post.likes_count}
+          <Heart
+            className={`h-4 w-4 transition-all duration-200 ${
+              post.liked ? "fill-current" : ""
+            } ${likeAnimating ? "scale-125" : "scale-100"}`}
+            style={{
+              transition: "transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+            }}
+          />
+          {post.likes_count > 0 && <span className="tabular-nums">{post.likes_count}</span>}
         </button>
         <button
           onClick={() => setShowComments(!showComments)}
-          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+          className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition-colors duration-200 ${
+            showComments
+              ? "text-primary bg-primary/5 hover:bg-primary/10"
+              : "text-muted-foreground hover:text-foreground hover:bg-accent"
+          }`}
         >
-          <MessageCircle className="h-4 w-4" />
-          {post.comments_count > 0 && post.comments_count}
+          <MessageCircle className={`h-4 w-4 ${showComments ? "fill-primary/20" : ""}`} />
+          {post.comments_count > 0 && <span className="tabular-nums">{post.comments_count}</span>}
         </button>
       </div>
 
       {/* Comments */}
       {showComments && (
-        <div className="mt-3 space-y-3 border-t pt-3">
+        <div className="mt-3 space-y-2.5 border-t pt-3">
           {post.comments.map((comment) => (
-            <div key={comment.id} className="flex gap-2">
+            <div key={comment.id} className="flex gap-2 rounded-lg bg-muted/30 p-2.5">
               <Avatar src={comment.profiles?.avatar_url} name={comment.profiles?.full_name} size="sm" />
-              <div>
+              <div className="min-w-0 flex-1">
                 <p className="text-xs">
                   <span className="font-medium">{comment.profiles?.full_name ?? "Unknown"}</span>{" "}
                   <span className="text-muted-foreground">· {timeAgo(comment.created_at)}</span>
                 </p>
-                <p className="text-sm">{comment.content}</p>
+                <p className="mt-0.5 text-sm">{comment.content}</p>
               </div>
             </div>
           ))}
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 pt-0.5">
             <Input
               type="text"
               value={commentText}

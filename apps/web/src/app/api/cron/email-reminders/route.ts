@@ -91,7 +91,7 @@ async function processReminders(supabase: ReturnType<typeof createServiceClient>
         const subject = `[Reminder] ${event.title} starts ${timeUntil}`;
 
         const { data: sent, error } = await getResend().emails.send({
-          from: "Attendly <noreply@attendly.app>",
+          from: "Anova <noreply@anova.app>",
           to: reg.email,
           subject,
           html,
@@ -161,7 +161,7 @@ async function processPostEvent(supabase: ReturnType<typeof createServiceClient>
       const subject = `Thanks for attending ${event.title}!`;
 
       const { data: sent, error } = await getResend().emails.send({
-        from: "Attendly <noreply@attendly.app>",
+        from: "Anova <noreply@anova.app>",
         to: reg.email,
         subject,
         html,

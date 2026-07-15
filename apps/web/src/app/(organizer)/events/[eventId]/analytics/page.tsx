@@ -10,10 +10,10 @@ export default async function AnalyticsPage({
   const data = await getEventAnalytics(eventId);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold">Analytics</h1>
-        <p className="text-sm text-muted-foreground">
+        <h1 className="text-2xl font-bold tracking-tight">Analytics</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           Event performance and registration analytics.
         </p>
       </div>

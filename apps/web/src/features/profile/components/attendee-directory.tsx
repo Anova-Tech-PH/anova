@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useTransition } from "react";
-import { Search, User, UserPlus, Check, Clock } from "lucide-react";
+import { Search, UserPlus, Check, Clock, Users } from "lucide-react";
 import { toast } from "sonner";
 import { sendConnectionRequest } from "@/features/connections/actions";
 import { Avatar } from "@/shared/components/ui/avatar";
@@ -10,6 +10,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Card } from "@/shared/components/ui/card";
 import { EmptyState } from "@/shared/components/ui/empty-state";
 import { Input } from "@/shared/components/ui/input";
+import { cn } from "@/shared/utils/cn";
 
 type Profile = {
   id: string;
@@ -23,6 +24,23 @@ type Profile = {
 };
 
 type ConnectionMap = Record<string, { status: string; direction: "sent" | "received"; connectionId: string }>;
+
+const INTEREST_COLORS = [
+  "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
+  "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300",
+  "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+  "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
+  "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300",
+  "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300",
+];
+
+function getTagColor(tag: string) {
+  let hash = 0;
+  for (let i = 0; i < tag.length; i++) {
+    hash = tag.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return INTEREST_COLORS[Math.abs(hash) % INTEREST_COLORS.length];
+}
 
 export function AttendeeDirectory({
   attendees,
@@ -69,70 +87,128 @@ export function AttendeeDirectory({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      {/* Search bar */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
         <Input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by name, company, or interests..."
-          className="pl-9"
+          className="h-12 rounded-xl pl-12 text-base shadow-sm"
         />
       </div>
 
+      {/* Attendee count */}
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <Users className="h-4 w-4" />
+        <span>
+          {filtered.length} attendee{filtered.length !== 1 ? "s" : ""} at this event
+          {search && ` matching "${search}"`}
+        </span>
+      </div>
+
+      {/* Grid or empty state */}
       {filtered.length === 0 ? (
         <EmptyState
           title={search ? "No attendees match your search" : "No other attendees yet"}
+          description={
+            search
+              ? "Try adjusting your search terms or clearing the filter to see all attendees."
+              : "Be the first to join! Other attendees will appear here as they register."
+          }
         />
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((attendee) => {
             const conn = connections[attendee.id];
             return (
-              <Card key={attendee.id} className="flex gap-3 p-4">
-                <Avatar src={attendee.avatar_url} name={attendee.full_name} size="lg" />
-                <div className="min-w-0 flex-1">
-                  <p className="font-medium truncate">{attendee.full_name}</p>
-                  {(attendee.job_title || attendee.company) && (
-                    <p className="text-xs text-muted-foreground truncate">
-                      {[attendee.job_title, attendee.company].filter(Boolean).join(" at ")}
-                    </p>
-                  )}
-                  {attendee.bio && (
-                    <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{attendee.bio}</p>
-                  )}
-                  {attendee.interests && attendee.interests.length > 0 && (
-                    <div className="mt-1.5 flex flex-wrap gap-1">
-                      {attendee.interests.slice(0, 3).map((tag) => (
-                        <span key={tag} className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
-                          {tag}
-                        </span>
-                      ))}
-                      {attendee.interests.length > 3 && (
-                        <span className="text-[10px] text-muted-foreground">+{attendee.interests.length - 3}</span>
-                      )}
-                    </div>
-                  )}
-                </div>
-                <div className="shrink-0">
+              <Card
+                key={attendee.id}
+                className="flex flex-col items-center p-6 text-center transition-shadow hover:shadow-md"
+              >
+                {/* Avatar */}
+                <Avatar
+                  src={attendee.avatar_url}
+                  name={attendee.full_name}
+                  size="xl"
+                  className="mb-3"
+                />
+
+                {/* Name */}
+                <p className="w-full truncate text-base font-semibold leading-tight">
+                  {attendee.full_name}
+                </p>
+
+                {/* Title / Company */}
+                {(attendee.job_title || attendee.company) && (
+                  <p className="mt-0.5 w-full truncate text-sm text-muted-foreground">
+                    {[attendee.job_title, attendee.company].filter(Boolean).join(" at ")}
+                  </p>
+                )}
+
+                {/* Bio */}
+                {attendee.bio && (
+                  <p className="mt-2 w-full text-sm leading-relaxed text-muted-foreground line-clamp-2">
+                    {attendee.bio}
+                  </p>
+                )}
+
+                {/* Interest tags */}
+                {attendee.interests && attendee.interests.length > 0 && (
+                  <div className="mt-3 flex flex-wrap justify-center gap-1.5">
+                    {attendee.interests.slice(0, 4).map((tag) => (
+                      <span
+                        key={tag}
+                        className={cn(
+                          "rounded-full px-2.5 py-0.5 text-xs font-medium",
+                          getTagColor(tag)
+                        )}
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                    {attendee.interests.length > 4 && (
+                      <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground">
+                        +{attendee.interests.length - 4}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* Connection action — pushed to the bottom */}
+                <div className="mt-auto w-full pt-4">
                   {conn?.status === "accepted" ? (
-                    <Badge variant="success" className="flex items-center gap-1">
-                      <Check className="h-3 w-3" /> Connected
-                    </Badge>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled
+                      className="w-full gap-1.5 text-emerald-600 dark:text-emerald-400"
+                    >
+                      <Check className="h-4 w-4" />
+                      Connected
+                    </Button>
                   ) : conn?.status === "pending" ? (
-                    <Badge variant="warning" className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" /> Pending
-                    </Badge>
-                  ) : (
                     <Button
                       variant="outline"
                       size="sm"
+                      disabled
+                      className="w-full gap-1.5 text-muted-foreground"
+                    >
+                      <Clock className="h-4 w-4" />
+                      Pending
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="default"
+                      size="sm"
                       onClick={() => handleConnect(attendee.id)}
                       disabled={isPending}
-                      className="flex items-center gap-1 rounded-full text-[10px]"
+                      className="w-full gap-1.5"
                     >
-                      <UserPlus className="h-3 w-3" /> Connect
+                      <UserPlus className="h-4 w-4" />
+                      Connect
                     </Button>
                   )}
                 </div>
@@ -141,10 +217,6 @@ export function AttendeeDirectory({
           })}
         </div>
       )}
-
-      <p className="text-xs text-muted-foreground">
-        {filtered.length} attendee{filtered.length !== 1 ? "s" : ""}
-      </p>
     </div>
   );
 }

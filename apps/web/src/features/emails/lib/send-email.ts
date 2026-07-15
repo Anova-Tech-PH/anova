@@ -14,7 +14,7 @@ export async function sendEmail(params: SendEmailParams) {
   const supabase = await createClient();
 
   const { data, error: sendError } = await getResend().emails.send({
-    from: "Attendly <noreply@attendly.app>",
+    from: "Anova <noreply@anova.app>",
     to: params.to.email,
     subject: params.subject,
     html: params.html,

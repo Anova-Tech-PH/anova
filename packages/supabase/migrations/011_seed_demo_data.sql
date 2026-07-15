@@ -5,7 +5,7 @@
 
 -- Demo organization
 INSERT INTO public.organizations (id, name, slug) VALUES
-  ('00000000-0000-0000-0000-000000000001', 'Attendly Demo', 'attendly-demo');
+  ('00000000-0000-0000-0000-000000000001', 'Anova Demo', 'anova-demo');
 
 -- ---------------------------------------------------------------------------
 -- EVENT 1: Tech Summit 2026 (published, multi-day conference)
