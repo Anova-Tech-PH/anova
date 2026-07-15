@@ -82,3 +82,29 @@ export const LIMITS = {
   MAX_ROOMS_PER_EVENT: 50,
   MAX_ROOM_CAPACITY: 500,
 } as const;
+
+export const EMAIL_TYPE = {
+  TRANSACTIONAL: "transactional",
+  MARKETING: "marketing",
+} as const;
+
+export type EmailType = (typeof EMAIL_TYPE)[keyof typeof EMAIL_TYPE];
+
+export const EMAIL_STATUS = {
+  QUEUED: "queued",
+  SENT: "sent",
+  DELIVERED: "delivered",
+  FAILED: "failed",
+  BOUNCED: "bounced",
+} as const;
+
+export type EmailStatus = (typeof EMAIL_STATUS)[keyof typeof EMAIL_STATUS];
+
+export const EMAIL_TRIGGER = {
+  ON_REGISTRATION: "on_registration",
+  PRE_EVENT_24H: "pre_event_24h",
+  PRE_EVENT_1H: "pre_event_1h",
+  POST_EVENT: "post_event",
+} as const;
+
+export type EmailTrigger = (typeof EMAIL_TRIGGER)[keyof typeof EMAIL_TRIGGER];
