@@ -61,6 +61,15 @@ export const POST_TYPE = {
 
 export type PostType = (typeof POST_TYPE)[keyof typeof POST_TYPE];
 
+export const BREAKOUT_ROOM_STATUS = {
+  OPEN: "open",
+  FULL: "full",
+  CLOSED: "closed",
+} as const;
+
+export type BreakoutRoomStatus =
+  (typeof BREAKOUT_ROOM_STATUS)[keyof typeof BREAKOUT_ROOM_STATUS];
+
 export const LIMITS = {
   MAX_EVENTS_PER_ORG: 100,
   MAX_SESSIONS_PER_EVENT: 500,
@@ -70,4 +79,6 @@ export const LIMITS = {
   MAX_COMMENT_LENGTH: 500,
   MAX_MESSAGE_LENGTH: 1000,
   MAX_BIO_LENGTH: 500,
+  MAX_ROOMS_PER_EVENT: 50,
+  MAX_ROOM_CAPACITY: 500,
 } as const;

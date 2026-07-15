@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { Newspaper, MessageCircle, Users, User, Calendar } from "lucide-react";
+import { Newspaper, MessageCircle, DoorOpen, Users, User, Calendar } from "lucide-react";
 
 const tabs = [
   { href: "/feed", label: "Feed", icon: Newspaper },
   { href: "/messages", label: "Messages", icon: MessageCircle },
+  { href: "/rooms", label: "Rooms", icon: DoorOpen },
   { href: "/people", label: "People", icon: Users },
   { href: "/my-events", label: "Events", icon: Calendar },
   { href: "/profile", label: "Profile", icon: User },

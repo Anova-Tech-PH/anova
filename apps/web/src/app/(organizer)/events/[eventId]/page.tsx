@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Calendar, Users, QrCode, BarChart3, Settings, Mic } from "lucide-react";
+import { Calendar, Users, QrCode, BarChart3, Settings, Mic, DoorOpen } from "lucide-react";
 import { createClient } from "@/shared/utils/supabase/server";
 
 export default async function EventDetailPage({
@@ -24,6 +24,7 @@ export default async function EventDetailPage({
     { href: `/events/${eventId}/tickets`, label: "Tickets", icon: Mic },
     { href: `/events/${eventId}/registrations`, label: "Registrations", icon: Users },
     { href: `/events/${eventId}/check-in`, label: "Check-in", icon: QrCode },
+    { href: `/events/${eventId}/rooms`, label: "Rooms", icon: DoorOpen },
     { href: `/events/${eventId}/analytics`, label: "Analytics", icon: BarChart3 },
     { href: `/events/${eventId}/settings`, label: "Settings", icon: Settings },
   ];
