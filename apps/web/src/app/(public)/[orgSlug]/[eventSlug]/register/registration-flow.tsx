@@ -5,6 +5,7 @@ import { Check, Ticket } from "lucide-react";
 import { toast } from "sonner";
 import { registerForEvent } from "@/features/registration/actions";
 import { QrConfirmation } from "./qr-confirmation";
+import { Input, Button } from "@/shared/components/ui";
 
 type TicketType = {
   id: string;
@@ -129,34 +130,33 @@ export function RegistrationFlow({
           <h2 className="text-sm font-medium">Your information</h2>
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Full name *</label>
-            <input
+            <Input
               type="text"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
               placeholder="Jane Smith"
             />
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Email *</label>
-            <input
+            <Input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
               placeholder="you@example.com"
             />
           </div>
 
-          <button
+          <Button
             type="submit"
-            disabled={loading || !name || !email}
-            className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+            disabled={!name || !email}
+            loading={loading}
+            className="w-full"
           >
             {loading ? "Registering..." : "Complete Registration"}
-          </button>
+          </Button>
         </form>
       )}
     </div>

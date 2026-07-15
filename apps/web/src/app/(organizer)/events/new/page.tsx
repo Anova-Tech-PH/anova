@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/shared/utils/supabase/client";
 import { toast } from "sonner";
+import { Input, Textarea, Button } from "@/shared/components/ui";
 
 type Step = "basics" | "location" | "details";
 
@@ -131,51 +132,46 @@ export default function NewEventPage() {
         <div className="space-y-4">
           <div className="space-y-2">
             <label className="text-sm font-medium">Event name</label>
-            <input
+            <Input
               type="text"
               value={form.title}
               onChange={(e) => updateForm("title", e.target.value)}
-              className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
               placeholder="My Awesome Conference"
             />
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium">URL slug</label>
-            <input
+            <Input
               type="text"
               value={form.slug}
               onChange={(e) => updateForm("slug", e.target.value)}
-              className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
               placeholder="my-awesome-conference"
             />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <label className="text-sm font-medium">Start date</label>
-              <input
+              <Input
                 type="datetime-local"
                 value={form.start_date}
                 onChange={(e) => updateForm("start_date", e.target.value)}
-                className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">End date</label>
-              <input
+              <Input
                 type="datetime-local"
                 value={form.end_date}
                 onChange={(e) => updateForm("end_date", e.target.value)}
-                className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
           </div>
-          <button
+          <Button
             onClick={() => setStep("location")}
             disabled={!form.title || !form.start_date || !form.end_date}
-            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
           >
             Next
-          </button>
+          </Button>
         </div>
       )}
 
@@ -198,11 +194,10 @@ export default function NewEventPage() {
           {form.is_virtual ? (
             <div className="space-y-2">
               <label className="text-sm font-medium">Virtual event URL</label>
-              <input
+              <Input
                 type="url"
                 value={form.virtual_url}
                 onChange={(e) => updateForm("virtual_url", e.target.value)}
-                className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
                 placeholder="https://zoom.us/j/..."
               />
             </div>
@@ -210,21 +205,19 @@ export default function NewEventPage() {
             <>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Venue name</label>
-                <input
+                <Input
                   type="text"
                   value={form.venue_name}
                   onChange={(e) => updateForm("venue_name", e.target.value)}
-                  className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
                   placeholder="Convention Center"
                 />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Address</label>
-                <input
+                <Input
                   type="text"
                   value={form.venue_address}
                   onChange={(e) => updateForm("venue_address", e.target.value)}
-                  className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
                   placeholder="123 Main St, City, State"
                 />
               </div>
@@ -232,18 +225,12 @@ export default function NewEventPage() {
           )}
 
           <div className="flex gap-3">
-            <button
-              onClick={() => setStep("basics")}
-              className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-accent"
-            >
+            <Button variant="outline" onClick={() => setStep("basics")}>
               Back
-            </button>
-            <button
-              onClick={() => setStep("details")}
-              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-            >
+            </Button>
+            <Button onClick={() => setStep("details")}>
               Next
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -253,39 +240,33 @@ export default function NewEventPage() {
         <div className="space-y-4">
           <div className="space-y-2">
             <label className="text-sm font-medium">Description</label>
-            <textarea
+            <Textarea
               value={form.description}
               onChange={(e) => updateForm("description", e.target.value)}
               rows={4}
-              className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
               placeholder="Tell attendees about your event..."
             />
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium">Cover image URL</label>
-            <input
+            <Input
               type="url"
               value={form.cover_image}
               onChange={(e) => updateForm("cover_image", e.target.value)}
-              className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
               placeholder="https://..."
             />
           </div>
 
           <div className="flex gap-3">
-            <button
-              onClick={() => setStep("location")}
-              className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-accent"
-            >
+            <Button variant="outline" onClick={() => setStep("location")}>
               Back
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handleSubmit}
-              disabled={loading}
-              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+              loading={loading}
             >
               {loading ? "Creating..." : "Create Event"}
-            </button>
+            </Button>
           </div>
         </div>
       )}

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { X } from "lucide-react";
+import { Button, Input, Textarea } from "@/shared/components/ui";
 
 type SpeakerData = {
   id?: string;
@@ -58,21 +59,19 @@ export function SpeakerForm({
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Name *</label>
-              <input
+              <Input
                 type="text"
                 required
                 value={form.name}
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Email</label>
-              <input
+              <Input
                 type="email"
                 value={form.email}
                 onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-                className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
           </div>
@@ -80,61 +79,57 @@ export function SpeakerForm({
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Title</label>
-              <input
+              <Input
                 type="text"
                 value={form.title}
                 onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
                 placeholder="e.g. CTO"
               />
             </div>
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Company</label>
-              <input
+              <Input
                 type="text"
                 value={form.company}
                 onChange={(e) => setForm((f) => ({ ...f, company: e.target.value }))}
-                className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
           </div>
 
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Photo URL</label>
-            <input
+            <Input
               type="url"
               value={form.photo}
               onChange={(e) => setForm((f) => ({ ...f, photo: e.target.value }))}
-              className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
               placeholder="https://..."
             />
           </div>
 
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Bio</label>
-            <textarea
+            <Textarea
               value={form.bio}
               onChange={(e) => setForm((f) => ({ ...f, bio: e.target.value }))}
               rows={3}
-              className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
           <div className="flex justify-end gap-3">
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={onCancel}
-              className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-accent"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
-              disabled={loading || !form.name}
-              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+              disabled={!form.name}
+              loading={loading}
             >
               {loading ? "Saving..." : speaker ? "Update" : "Add Speaker"}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

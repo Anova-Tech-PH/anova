@@ -5,6 +5,11 @@ import { Heart, MessageCircle, Trash2, User } from "lucide-react";
 import { toast } from "sonner";
 import { togglePostLike, createComment, deletePost, votePoll } from "../actions";
 import { PostComposer } from "./post-composer";
+import { Avatar } from "@/shared/components/ui/avatar";
+import { Button } from "@/shared/components/ui/button";
+import { Card } from "@/shared/components/ui/card";
+import { EmptyState } from "@/shared/components/ui/empty-state";
+import { Input } from "@/shared/components/ui/input";
 
 type Post = {
   id: string;
@@ -58,9 +63,7 @@ export function ActivityFeed({
       />
 
       {posts.length === 0 ? (
-        <div className="rounded-xl border border-dashed py-12 text-center text-sm text-muted-foreground">
-          No posts yet. Be the first to share something!
-        </div>
+        <EmptyState title="No posts yet. Be the first to share something!" />
       ) : (
         posts.map((post) => (
           <PostCard
@@ -159,26 +162,20 @@ function PostCard({
   const totalVotes = Object.values(post.poll_vote_counts).reduce((a, b) => a + b, 0);
 
   return (
-    <div className="rounded-xl border bg-card p-4">
+    <Card className="p-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          {post.profiles?.avatar_url ? (
-            <img src={post.profiles.avatar_url} alt="" className="h-8 w-8 rounded-full object-cover" />
-          ) : (
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
-              <User className="h-4 w-4 text-muted-foreground" />
-            </div>
-          )}
+          <Avatar src={post.profiles?.avatar_url} name={post.profiles?.full_name} size="md" />
           <div>
             <p className="text-sm font-medium">{post.profiles?.full_name ?? "Unknown"}</p>
             <p className="text-[10px] text-muted-foreground">{timeAgo(post.created_at)}</p>
           </div>
         </div>
         {post.author_id === currentUserId && (
-          <button onClick={handleDelete} disabled={isPending} className="text-muted-foreground hover:text-destructive">
+          <Button variant="ghost" size="icon" onClick={handleDelete} disabled={isPending} className="text-muted-foreground hover:text-destructive">
             <Trash2 className="h-4 w-4" />
-          </button>
+          </Button>
         )}
       </div>
 
@@ -251,13 +248,7 @@ function PostCard({
         <div className="mt-3 space-y-3 border-t pt-3">
           {post.comments.map((comment) => (
             <div key={comment.id} className="flex gap-2">
-              {comment.profiles?.avatar_url ? (
-                <img src={comment.profiles.avatar_url} alt="" className="h-6 w-6 shrink-0 rounded-full object-cover" />
-              ) : (
-                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted">
-                  <User className="h-3 w-3 text-muted-foreground" />
-                </div>
-              )}
+              <Avatar src={comment.profiles?.avatar_url} name={comment.profiles?.full_name} size="sm" />
               <div>
                 <p className="text-xs">
                   <span className="font-medium">{comment.profiles?.full_name ?? "Unknown"}</span>{" "}
@@ -269,24 +260,24 @@ function PostCard({
           ))}
 
           <div className="flex gap-2">
-            <input
+            <Input
               type="text"
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleComment()}
               placeholder="Write a comment..."
-              className="flex-1 rounded-lg border bg-background px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
+              className="flex-1"
             />
-            <button
+            <Button
               onClick={handleComment}
               disabled={!commentText.trim() || isPending}
-              className="rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground disabled:opacity-50"
+              size="sm"
             >
               Reply
-            </button>
+            </Button>
           </div>
         </div>
       )}
-    </div>
+    </Card>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { X } from "lucide-react";
+import { Button, Input, Textarea } from "@/shared/components/ui";
 
 const SESSION_TYPES = [
   { value: "keynote", label: "Keynote" },
@@ -85,12 +86,11 @@ export function SessionForm({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Title *</label>
-            <input
+            <Input
               type="text"
               required
               value={form.title}
               onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-              className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
@@ -100,7 +100,7 @@ export function SessionForm({
               <select
                 value={form.type}
                 onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))}
-                className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
               >
                 {SESSION_TYPES.map((t) => (
                   <option key={t.value} value={t.value}>
@@ -116,7 +116,7 @@ export function SessionForm({
                 <select
                   value={form.track_id}
                   onChange={(e) => setForm((f) => ({ ...f, track_id: e.target.value }))}
-                  className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+                  className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
                 >
                   <option value="">No track</option>
                   {tracks.map((t) => (
@@ -132,44 +132,40 @@ export function SessionForm({
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Start time *</label>
-              <input
+              <Input
                 type="datetime-local"
                 required
                 value={form.start_time}
                 onChange={(e) => setForm((f) => ({ ...f, start_time: e.target.value }))}
-                className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
             <div className="space-y-1.5">
               <label className="text-sm font-medium">End time *</label>
-              <input
+              <Input
                 type="datetime-local"
                 required
                 value={form.end_time}
                 onChange={(e) => setForm((f) => ({ ...f, end_time: e.target.value }))}
-                className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
           </div>
 
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Location</label>
-            <input
+            <Input
               type="text"
               value={form.location}
               onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))}
-              className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
               placeholder="e.g. Main Hall, Room A"
             />
           </div>
 
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Description</label>
-            <textarea
+            <Textarea
               value={form.description}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
               rows={3}
-              className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
@@ -196,20 +192,20 @@ export function SessionForm({
           )}
 
           <div className="flex justify-end gap-3 pt-2">
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={onCancel}
-              className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-accent"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
-              disabled={loading || !form.title || !form.start_time || !form.end_time}
-              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+              disabled={!form.title || !form.start_time || !form.end_time}
+              loading={loading}
             >
               {loading ? "Saving..." : session ? "Update" : "Add Session"}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

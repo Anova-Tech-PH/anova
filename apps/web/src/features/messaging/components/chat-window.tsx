@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, User } from "lucide-react";
+import { Send } from "lucide-react";
 import { toast } from "sonner";
+import { Button, Input, Avatar } from "@/shared/components/ui";
 import { sendMessage, markConversationRead } from "../actions";
 
 type Message = {
@@ -98,13 +99,7 @@ export function ChatWindow({
                 <div className={`flex ${isOwn ? "justify-end" : "justify-start"}`}>
                   <div className={`flex max-w-[75%] gap-2 ${isOwn ? "flex-row-reverse" : ""}`}>
                     {!isOwn && (
-                      msg.profiles?.avatar_url ? (
-                        <img src={msg.profiles.avatar_url} alt="" className="h-6 w-6 shrink-0 rounded-full object-cover" />
-                      ) : (
-                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted">
-                          <User className="h-3 w-3 text-muted-foreground" />
-                        </div>
-                      )
+                      <Avatar src={msg.profiles?.avatar_url} name={msg.profiles?.full_name} size="sm" className="h-6 w-6" />
                     )}
                     <div>
                       {!isOwn && (
@@ -140,21 +135,22 @@ export function ChatWindow({
       {/* Input */}
       <div className="border-t p-3">
         <div className="flex gap-2">
-          <input
+          <Input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
             placeholder="Type a message..."
-            className="flex-1 rounded-full border bg-background px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+            className="flex-1 rounded-full px-4"
           />
-          <button
+          <Button
             onClick={handleSend}
-            disabled={loading || !input.trim()}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+            disabled={!input.trim()}
+            loading={loading}
+            className="h-9 w-9 rounded-full p-0"
           >
             <Send className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
       </div>
     </div>

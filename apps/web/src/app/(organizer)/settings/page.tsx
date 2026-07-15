@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/shared/utils/supabase/server";
 import { SignOutButton } from "./sign-out-button";
+import { Card } from "@/shared/components/ui";
 
 export default async function SettingsPage() {
   const supabase = await createClient();
@@ -28,7 +29,7 @@ export default async function SettingsPage() {
         </p>
       </div>
 
-      <div className="rounded-xl border bg-card p-6">
+      <Card className="p-6">
         <h2 className="mb-4 text-lg font-semibold">Account</h2>
         <div className="space-y-3 text-sm">
           <div className="flex items-center justify-between">
@@ -40,10 +41,10 @@ export default async function SettingsPage() {
             <span>{user.user_metadata?.full_name ?? "—"}</span>
           </div>
         </div>
-      </div>
+      </Card>
 
       {organization && (
-        <div className="rounded-xl border bg-card p-6">
+        <Card className="p-6">
           <h2 className="mb-4 text-lg font-semibold">Organization</h2>
           <div className="space-y-3 text-sm">
             <div className="flex items-center justify-between">
@@ -55,7 +56,7 @@ export default async function SettingsPage() {
               <span className="font-mono text-xs">{organization.slug}</span>
             </div>
           </div>
-        </div>
+        </Card>
       )}
 
       <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-6">

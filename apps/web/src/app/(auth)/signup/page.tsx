@@ -5,6 +5,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/shared/utils/supabase/client";
 import { toast } from "sonner";
+import { Button } from "@/shared/components/ui/button";
+import { Input } from "@/shared/components/ui/input";
+import { PageTransition } from "@/shared/components/ui/page-transition";
+import { Logo } from "@/shared/components/logo";
 
 export default function SignupPage() {
   const [fullName, setFullName] = useState("");
@@ -61,77 +65,93 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
-      <div className="w-full max-w-sm space-y-6">
-        <div className="space-y-2 text-center">
-          <h1 className="text-2xl font-semibold">Create your account</h1>
-          <p className="text-sm text-muted-foreground">
-            Start managing events in minutes
+    <div className="flex min-h-screen">
+      {/* Left branded panel */}
+      <div className="hidden lg:flex lg:w-1/2 flex-col justify-center bg-gradient-to-br from-primary via-primary/90 to-primary/80 p-12 text-primary-foreground">
+        <div className="max-w-md space-y-8">
+          <Logo size="xl" variant="white" />
+          <div className="space-y-4">
+            <h2 className="text-4xl font-bold font-serif leading-tight">
+              Start something<br />unforgettable.
+            </h2>
+            <p className="text-lg text-primary-foreground/80">
+              From intimate workshops to large conferences, Attendly gives you everything you need.
+            </p>
+          </div>
+          <p className="text-sm text-primary-foreground/60">
+            Free to get started
           </p>
         </div>
+      </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <label htmlFor="fullName" className="text-sm font-medium">
-              Full name
-            </label>
-            <input
-              id="fullName"
-              type="text"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              required
-              className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Jane Smith"
-            />
+      {/* Right form panel */}
+      <div className="flex flex-1 items-center justify-center px-4">
+        <PageTransition>
+          <div className="w-full max-w-sm space-y-6">
+            <div className="space-y-2 text-center lg:text-left">
+              <h1 className="text-2xl font-semibold">Create your account</h1>
+              <p className="text-sm text-muted-foreground">
+                Start managing events in minutes
+              </p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="fullName" className="text-sm font-medium">
+                  Full name
+                </label>
+                <Input
+                  id="fullName"
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required
+                  placeholder="Jane Smith"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="email" className="text-sm font-medium">
+                  Email
+                </label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  placeholder="you@example.com"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="password" className="text-sm font-medium">
+                  Password
+                </label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={8}
+                  placeholder="At least 8 characters"
+                />
+              </div>
+
+              <Button type="submit" loading={loading} className="w-full">
+                {loading ? "Creating account..." : "Create account"}
+              </Button>
+            </form>
+
+            <div className="text-center text-sm text-muted-foreground">
+              Already have an account?{" "}
+              <Link href="/login" className="text-primary font-medium hover:underline">
+                Sign in
+              </Link>
+            </div>
           </div>
-
-          <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-              placeholder="you@example.com"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="password" className="text-sm font-medium">
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={8}
-              className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-              placeholder="At least 8 characters"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-          >
-            {loading ? "Creating account..." : "Create account"}
-          </button>
-        </form>
-
-        <div className="text-center text-sm text-muted-foreground">
-          Already have an account?{" "}
-          <Link href="/login" className="text-foreground underline">
-            Sign in
-          </Link>
-        </div>
+        </PageTransition>
       </div>
     </div>
   );

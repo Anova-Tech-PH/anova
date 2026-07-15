@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { createClient } from "@/shared/utils/supabase/client";
+import { Input, Textarea, Button, Badge, Card } from "@/shared/components/ui";
 
 type Event = {
   id: string;
@@ -113,26 +114,24 @@ export function EventSettingsForm({ event }: { event: Event }) {
   return (
     <div className="space-y-8">
       {/* General settings */}
-      <div className="rounded-xl border bg-card p-6">
+      <Card className="p-6">
         <h2 className="mb-4 text-lg font-semibold">General</h2>
         <div className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Title</label>
-              <input
+              <Input
                 type="text"
                 value={form.title}
                 onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Slug</label>
-              <input
+              <Input
                 type="text"
                 value={form.slug}
                 onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value }))}
-                className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
           </div>
@@ -140,41 +139,37 @@ export function EventSettingsForm({ event }: { event: Event }) {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Start date</label>
-              <input
+              <Input
                 type="datetime-local"
                 value={form.start_date}
                 onChange={(e) => setForm((f) => ({ ...f, start_date: e.target.value }))}
-                className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
             <div className="space-y-1.5">
               <label className="text-sm font-medium">End date</label>
-              <input
+              <Input
                 type="datetime-local"
                 value={form.end_date}
                 onChange={(e) => setForm((f) => ({ ...f, end_date: e.target.value }))}
-                className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
           </div>
 
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Description</label>
-            <textarea
+            <Textarea
               value={form.description}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
               rows={4}
-              className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Cover image URL</label>
-            <input
+            <Input
               type="url"
               value={form.cover_image}
               onChange={(e) => setForm((f) => ({ ...f, cover_image: e.target.value }))}
-              className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
@@ -192,64 +187,60 @@ export function EventSettingsForm({ event }: { event: Event }) {
           {form.is_virtual ? (
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Virtual URL</label>
-              <input
+              <Input
                 type="url"
                 value={form.virtual_url}
                 onChange={(e) => setForm((f) => ({ ...f, virtual_url: e.target.value }))}
-                className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <label className="text-sm font-medium">Venue name</label>
-                <input
+                <Input
                   type="text"
                   value={form.venue_name}
                   onChange={(e) => setForm((f) => ({ ...f, venue_name: e.target.value }))}
-                  className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
               <div className="space-y-1.5">
                 <label className="text-sm font-medium">Venue address</label>
-                <input
+                <Input
                   type="text"
                   value={form.venue_address}
                   onChange={(e) => setForm((f) => ({ ...f, venue_address: e.target.value }))}
-                  className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
             </div>
           )}
 
-          <button
+          <Button
             onClick={handleSave}
-            disabled={saving}
-            className="rounded-lg bg-primary px-6 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+            loading={saving}
           >
             {saving ? "Saving..." : "Save Changes"}
-          </button>
+          </Button>
         </div>
-      </div>
+      </Card>
 
       {/* Publishing */}
-      <div className="rounded-xl border bg-card p-6">
+      <Card className="p-6">
         <h2 className="mb-4 text-lg font-semibold">Publishing</h2>
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm">
               Status:{" "}
-              <span
-                className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
+              <Badge
+                variant={
                   status === "published"
-                    ? "bg-green-100 text-green-700"
+                    ? "success"
                     : status === "draft"
-                      ? "bg-yellow-100 text-yellow-700"
-                      : "bg-gray-100 text-gray-600"
-                }`}
+                      ? "warning"
+                      : "default"
+                }
               >
                 {status}
-              </span>
+              </Badge>
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
               {status === "published"
@@ -258,22 +249,22 @@ export function EventSettingsForm({ event }: { event: Event }) {
             </p>
           </div>
           {status === "draft" ? (
-            <button
+            <Button
               onClick={() => handleStatusChange("published")}
-              className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
+              className="bg-green-600 hover:bg-green-700"
             >
               Publish Event
-            </button>
+            </Button>
           ) : status === "published" ? (
-            <button
+            <Button
+              variant="outline"
               onClick={() => handleStatusChange("draft")}
-              className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-accent"
             >
               Unpublish
-            </button>
+            </Button>
           ) : null}
         </div>
-      </div>
+      </Card>
 
       {/* Danger zone */}
       <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-6">
@@ -281,13 +272,14 @@ export function EventSettingsForm({ event }: { event: Event }) {
         <p className="text-sm text-muted-foreground">
           Permanently delete this event and all associated data.
         </p>
-        <button
+        <Button
+          variant="destructive"
           onClick={handleDelete}
-          disabled={deleting}
-          className="mt-4 rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-white hover:bg-destructive/90 disabled:opacity-50"
+          loading={deleting}
+          className="mt-4"
         >
           {deleting ? "Deleting..." : "Delete Event"}
-        </button>
+        </Button>
       </div>
     </div>
   );

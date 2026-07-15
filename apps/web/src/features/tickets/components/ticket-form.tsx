@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { X } from "lucide-react";
+import { Button, Input, Textarea } from "@/shared/components/ui";
 
 type TicketFormData = {
   id?: string;
@@ -59,23 +60,21 @@ export function TicketForm({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Name *</label>
-            <input
+            <Input
               type="text"
               required
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-              className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
               placeholder="e.g. General Admission"
             />
           </div>
 
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Description</label>
-            <textarea
+            <Textarea
               value={form.description}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
               rows={2}
-              className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
               placeholder="What's included with this ticket?"
             />
           </div>
@@ -92,7 +91,7 @@ export function TicketForm({
                     price: e.target.value === "free" ? 0 : f.price,
                   }))
                 }
-                className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="free">Free</option>
                 <option value="paid">Paid</option>
@@ -102,13 +101,12 @@ export function TicketForm({
             {form.type === "paid" && (
               <div className="space-y-1.5">
                 <label className="text-sm font-medium">Price ($)</label>
-                <input
+                <Input
                   type="number"
                   min="0"
                   step="0.01"
                   value={form.price}
                   onChange={(e) => setForm((f) => ({ ...f, price: parseFloat(e.target.value) || 0 }))}
-                  className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
             )}
@@ -116,12 +114,11 @@ export function TicketForm({
 
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Quantity (leave blank for unlimited)</label>
-            <input
+            <Input
               type="number"
               min="1"
               value={form.quantity}
               onChange={(e) => setForm((f) => ({ ...f, quantity: e.target.value }))}
-              className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
               placeholder="Unlimited"
             />
           </div>
@@ -129,39 +126,37 @@ export function TicketForm({
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Sales start</label>
-              <input
+              <Input
                 type="datetime-local"
                 value={form.sales_start}
                 onChange={(e) => setForm((f) => ({ ...f, sales_start: e.target.value }))}
-                className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Sales end</label>
-              <input
+              <Input
                 type="datetime-local"
                 value={form.sales_end}
                 onChange={(e) => setForm((f) => ({ ...f, sales_end: e.target.value }))}
-                className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
           </div>
 
           <div className="flex justify-end gap-3 pt-2">
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={onCancel}
-              className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-accent"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
-              disabled={loading || !form.name}
-              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+              disabled={!form.name}
+              loading={loading}
             >
               {loading ? "Saving..." : ticket ? "Update" : "Add Ticket Type"}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

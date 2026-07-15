@@ -4,6 +4,9 @@ import { useState } from "react";
 import { Image, BarChart3, Send, X, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { createPost } from "../actions";
+import { Button } from "@/shared/components/ui/button";
+import { Card } from "@/shared/components/ui/card";
+import { Input } from "@/shared/components/ui/input";
 
 export function PostComposer({
   eventId,
@@ -66,7 +69,7 @@ export function PostComposer({
   }
 
   return (
-    <div className="rounded-xl border bg-card p-4">
+    <Card className="p-4">
       <textarea
         value={content}
         onChange={(e) => setContent(e.target.value)}
@@ -78,12 +81,11 @@ export function PostComposer({
 
       {type === "photo" && (
         <div className="mt-2">
-          <input
+          <Input
             type="url"
             value={imageUrl}
             onChange={(e) => setImageUrl(e.target.value)}
             placeholder="Image URL..."
-            className="w-full rounded-lg border bg-background px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
           />
         </div>
       )}
@@ -92,12 +94,12 @@ export function PostComposer({
         <div className="mt-2 space-y-2">
           {pollOptions.map((option, i) => (
             <div key={i} className="flex items-center gap-2">
-              <input
+              <Input
                 type="text"
                 value={option}
                 onChange={(e) => updatePollOption(i, e.target.value)}
                 placeholder={`Option ${i + 1}`}
-                className="flex-1 rounded-lg border bg-background px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-ring"
+                className="flex-1"
               />
               {pollOptions.length > 2 && (
                 <button onClick={() => removePollOption(i)} className="text-muted-foreground hover:text-destructive">
@@ -130,15 +132,15 @@ export function PostComposer({
           </button>
         </div>
 
-        <button
+        <Button
           onClick={handleSubmit}
           disabled={loading || !content.trim() || (type === "poll" && pollOptions.filter((o) => o.trim()).length < 2)}
-          className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+          size="sm"
         >
           <Send className="h-3.5 w-3.5" />
           Post
-        </button>
+        </Button>
       </div>
-    </div>
+    </Card>
   );
 }

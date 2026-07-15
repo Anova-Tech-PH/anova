@@ -1,10 +1,12 @@
 import Link from "next/link";
+import { Logo } from "@/shared/components/logo";
+import { Button } from "@/shared/components/ui/button";
 
 export default function HomePage() {
   return (
     <div className="flex min-h-screen flex-col">
       <header className="flex items-center justify-between border-b px-6 py-4">
-        <h1 className="text-xl font-semibold">Attendly</h1>
+        <Logo size="sm" />
         <nav className="flex items-center gap-4">
           <Link
             href="/login"
@@ -12,11 +14,8 @@ export default function HomePage() {
           >
             Log in
           </Link>
-          <Link
-            href="/signup"
-            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-          >
-            Get Started
+          <Link href="/signup">
+            <Button size="sm">Get Started</Button>
           </Link>
         </nav>
       </header>
@@ -34,17 +33,14 @@ export default function HomePage() {
           </p>
         </div>
         <div className="flex gap-4">
-          <Link
-            href="/signup"
-            className="rounded-lg bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-          >
-            Create your first event
+          <Link href="/signup">
+            <Button size="lg">Create your first event</Button>
           </Link>
         </div>
       </main>
 
       <footer className="border-t px-6 py-4 text-center text-sm text-muted-foreground">
-        Attendly
+        <Logo size="sm" className="mx-auto opacity-50" />
       </footer>
     </div>
   );

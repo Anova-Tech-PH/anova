@@ -4,6 +4,10 @@ import { useState, useMemo, useTransition } from "react";
 import { Search, Download, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { updateRegistrationStatus } from "../actions";
+import { Badge } from "@/shared/components/ui/badge";
+import { Button } from "@/shared/components/ui/button";
+import { Card } from "@/shared/components/ui/card";
+import { Input } from "@/shared/components/ui/input";
 
 type Registration = {
   id: string;
@@ -16,11 +20,11 @@ type Registration = {
   ticket_types: { name: string; type: string; price: number } | null;
 };
 
-const statusStyles: Record<string, string> = {
-  confirmed: "bg-green-100 text-green-700",
-  checked_in: "bg-blue-100 text-blue-700",
-  cancelled: "bg-red-100 text-red-700",
-  pending: "bg-yellow-100 text-yellow-700",
+const statusVariants: Record<string, "success" | "info" | "destructive" | "warning"> = {
+  confirmed: "success",
+  checked_in: "info",
+  cancelled: "destructive",
+  pending: "warning",
 };
 
 export function RegistrationsTable({
@@ -112,10 +116,10 @@ export function RegistrationsTable({
           { label: "Checked In", value: stats.checked_in },
           { label: "Cancelled", value: stats.cancelled },
         ].map((s) => (
-          <div key={s.label} className="rounded-xl border bg-card p-3 text-center">
+          <Card key={s.label} className="p-3 text-center">
             <p className="text-2xl font-semibold">{s.value}</p>
             <p className="text-xs text-muted-foreground">{s.label}</p>
-          </div>
+          </Card>
         ))}
       </div>
 
@@ -123,12 +127,12 @@ export function RegistrationsTable({
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
+          <Input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by name or email..."
-            className="w-full rounded-lg border bg-background py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+            className="pl-9"
           />
         </div>
 
@@ -143,13 +147,10 @@ export function RegistrationsTable({
           <option value="cancelled">Cancelled</option>
         </select>
 
-        <button
-          onClick={exportCsv}
-          className="flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium hover:bg-accent"
-        >
+        <Button onClick={exportCsv} variant="outline">
           <Download className="h-4 w-4" />
           Export CSV
-        </button>
+        </Button>
       </div>
 
       {/* Table */}
@@ -176,14 +177,14 @@ export function RegistrationsTable({
               </tr>
             ) : (
               filtered.map((reg) => (
-                <tr key={reg.id} className="border-b last:border-0">
+                <tr key={reg.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
                   <td className="px-4 py-3 font-medium">{reg.name}</td>
                   <td className="px-4 py-3 text-muted-foreground">{reg.email}</td>
                   <td className="px-4 py-3">{reg.ticket_types?.name ?? "-"}</td>
                   <td className="px-4 py-3">
-                    <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${statusStyles[reg.status] ?? "bg-gray-100"}`}>
+                    <Badge variant={statusVariants[reg.status] ?? "default"}>
                       {reg.status.replace("_", " ")}
-                    </span>
+                    </Badge>
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">
                     {new Date(reg.created_at).toLocaleDateString()}

@@ -11,6 +11,18 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { Card } from "@/shared/components/ui/card";
+
+// Recharts requires hex/rgb colors — oklch CSS vars won't work
+const CHART_COLORS = {
+  primary: "#1a7a7a",
+  primaryLight: "#1a7a7a1a",
+  secondary: "#3d9e8e",
+  secondaryLight: "#3d9e8e1a",
+  border: "#e5e2dd",
+  muted: "#868078",
+  cardBg: "#fdfdfc",
+};
 
 type AnalyticsData = {
   stats: {
@@ -39,35 +51,35 @@ export function AnalyticsCharts({ data }: { data: AnalyticsData }) {
           { label: "Checked In", value: stats.checkedIn },
           { label: "Check-in Rate", value: `${stats.checkInRate}%` },
         ].map((s) => (
-          <div key={s.label} className="rounded-xl border bg-card p-5">
+          <Card key={s.label} className="p-5">
             <p className="text-sm text-muted-foreground">{s.label}</p>
             <p className="mt-1 text-2xl font-semibold">{s.value}</p>
-          </div>
+          </Card>
         ))}
       </div>
 
       {stats.totalRevenue > 0 && (
-        <div className="rounded-xl border bg-card p-5">
+        <Card className="p-5">
           <p className="text-sm text-muted-foreground">Total Revenue</p>
           <p className="mt-1 text-2xl font-semibold">
             ${stats.totalRevenue.toLocaleString("en-US", { minimumFractionDigits: 2 })}
           </p>
-        </div>
+        </Card>
       )}
 
       {/* Registration timeline */}
       {timeSeries.length > 0 && (
-        <div className="rounded-xl border bg-card p-6">
+        <Card className="p-6">
           <h3 className="mb-4 font-semibold">Registrations Over Time</h3>
           <ResponsiveContainer width="100%" height={280}>
             <AreaChart data={timeSeries}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="date" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
-              <YAxis tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
+              <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.border} />
+              <XAxis dataKey="date" tick={{ fontSize: 12 }} stroke={CHART_COLORS.muted} />
+              <YAxis tick={{ fontSize: 12 }} stroke={CHART_COLORS.muted} />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
+                  backgroundColor: CHART_COLORS.cardBg,
+                  border: `1px solid ${CHART_COLORS.border}`,
                   borderRadius: "0.5rem",
                   fontSize: 12,
                 }}
@@ -75,47 +87,47 @@ export function AnalyticsCharts({ data }: { data: AnalyticsData }) {
               <Area
                 type="monotone"
                 dataKey="cumulative"
-                stroke="hsl(var(--primary))"
-                fill="hsl(var(--primary) / 0.1)"
+                stroke={CHART_COLORS.primary}
+                fill={CHART_COLORS.primaryLight}
                 name="Total"
               />
               <Area
                 type="monotone"
                 dataKey="registrations"
-                stroke="hsl(var(--chart-2))"
-                fill="hsl(var(--chart-2) / 0.1)"
+                stroke={CHART_COLORS.secondary}
+                fill={CHART_COLORS.secondaryLight}
                 name="Daily"
               />
             </AreaChart>
           </ResponsiveContainer>
-        </div>
+        </Card>
       )}
 
       {/* Ticket breakdown */}
       {ticketBreakdown.length > 0 && (
-        <div className="rounded-xl border bg-card p-6">
+        <Card className="p-6">
           <h3 className="mb-4 font-semibold">Ticket Breakdown</h3>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={ticketBreakdown} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis type="number" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
-              <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
+              <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.border} />
+              <XAxis type="number" tick={{ fontSize: 12 }} stroke={CHART_COLORS.muted} />
+              <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 12 }} stroke={CHART_COLORS.muted} />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
+                  backgroundColor: CHART_COLORS.cardBg,
+                  border: `1px solid ${CHART_COLORS.border}`,
                   borderRadius: "0.5rem",
                   fontSize: 12,
                 }}
               />
-              <Bar dataKey="count" fill="hsl(var(--primary))" name="Registrations" radius={[0, 4, 4, 0]} />
+              <Bar dataKey="count" fill={CHART_COLORS.primary} name="Registrations" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
-        </div>
+        </Card>
       )}
 
       {/* Check-in progress */}
-      <div className="rounded-xl border bg-card p-6">
+      <Card className="p-6">
         <h3 className="mb-4 font-semibold">Check-in Progress</h3>
         <div className="space-y-3">
           <div className="flex items-center justify-between text-sm">
@@ -136,7 +148,7 @@ export function AnalyticsCharts({ data }: { data: AnalyticsData }) {
             </p>
           )}
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

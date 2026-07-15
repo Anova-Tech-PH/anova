@@ -4,6 +4,9 @@ import { useTransition } from "react";
 import { Users, Clock, MapPin, User } from "lucide-react";
 import { toast } from "sonner";
 import { joinRoom, leaveRoom } from "../actions";
+import { Badge } from "@/shared/components/ui/badge";
+import { Button } from "@/shared/components/ui/button";
+import { Card } from "@/shared/components/ui/card";
 
 type Room = {
   id: string;
@@ -55,7 +58,7 @@ export function RoomCard({
   }
 
   return (
-    <div className="rounded-xl border bg-card p-5 space-y-3">
+    <Card className="p-5 space-y-3">
       <div className="flex items-start justify-between">
         <div>
           <h3 className="font-medium">{room.title}</h3>
@@ -63,13 +66,9 @@ export function RoomCard({
             <p className="text-xs text-muted-foreground">Session: {room.sessions.title}</p>
           )}
         </div>
-        <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-          isClosed ? "bg-gray-100 text-gray-700"
-            : isFull ? "bg-yellow-100 text-yellow-700"
-            : "bg-green-100 text-green-700"
-        }`}>
+        <Badge variant={isClosed ? "default" : isFull ? "warning" : "success"}>
           {isClosed ? "Closed" : isFull ? "Full" : "Open"}
-        </span>
+        </Badge>
       </div>
 
       {room.description && (
@@ -100,18 +99,15 @@ export function RoomCard({
       </div>
 
       {currentUserId && !isClosed && (
-        <button
+        <Button
           onClick={handleToggle}
           disabled={isPending || (!isJoined && isFull)}
-          className={`w-full rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50 ${
-            isJoined
-              ? "border hover:bg-accent"
-              : "bg-primary text-primary-foreground hover:bg-primary/90"
-          }`}
+          variant={isJoined ? "outline" : "primary"}
+          className="w-full"
         >
           {isPending ? "..." : isJoined ? "Leave Room" : isFull ? "Full" : "Join Room"}
-        </button>
+        </Button>
       )}
-    </div>
+    </Card>
   );
 }

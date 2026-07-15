@@ -5,6 +5,10 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/shared/utils/supabase/client";
 import { toast } from "sonner";
+import { Button } from "@/shared/components/ui/button";
+import { Input } from "@/shared/components/ui/input";
+import { PageTransition } from "@/shared/components/ui/page-transition";
+import { Logo } from "@/shared/components/logo";
 
 export default function LoginPage() {
   return (
@@ -44,60 +48,82 @@ function LoginForm() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
-      <div className="w-full max-w-sm space-y-6">
-        <div className="space-y-2 text-center">
-          <h1 className="text-2xl font-semibold">Welcome back</h1>
-          <p className="text-sm text-muted-foreground">
-            Sign in to your account
+    <div className="flex min-h-screen">
+      {/* Left branded panel */}
+      <div className="hidden lg:flex lg:w-1/2 flex-col justify-center bg-gradient-to-br from-primary via-primary/90 to-primary/80 p-12 text-primary-foreground">
+        <div className="max-w-md space-y-8">
+          <Logo size="xl" variant="white" />
+          <div className="space-y-4">
+            <h2 className="text-4xl font-bold font-serif leading-tight">
+              Events that bring<br />people together.
+            </h2>
+            <p className="text-lg text-primary-foreground/80">
+              Create, manage, and grow your events with a platform designed for modern organizers.
+            </p>
+          </div>
+          <p className="text-sm text-primary-foreground/60">
+            Trusted by organizers worldwide
           </p>
         </div>
+      </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-              placeholder="you@example.com"
-            />
+      {/* Right form panel */}
+      <div className="flex flex-1 items-center justify-center px-4">
+        <PageTransition>
+          <div className="w-full max-w-sm space-y-6">
+            <div className="space-y-2 text-center lg:text-left">
+              <h1 className="text-2xl font-semibold">Welcome back</h1>
+              <p className="text-sm text-muted-foreground">
+                Sign in to your account
+              </p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="email" className="text-sm font-medium">
+                  Email
+                </label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  placeholder="you@example.com"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label htmlFor="password" className="text-sm font-medium">
+                    Password
+                  </label>
+                  <Link href="/forgot-password" className="text-xs text-muted-foreground hover:text-foreground">
+                    Forgot password?
+                  </Link>
+                </div>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+
+              <Button type="submit" loading={loading} className="w-full">
+                {loading ? "Signing in..." : "Sign in"}
+              </Button>
+            </form>
+
+            <div className="text-center text-sm text-muted-foreground">
+              Don&apos;t have an account?{" "}
+              <Link href="/signup" className="text-primary font-medium hover:underline">
+                Sign up
+              </Link>
+            </div>
           </div>
-
-          <div className="space-y-2">
-            <label htmlFor="password" className="text-sm font-medium">
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-          >
-            {loading ? "Signing in..." : "Sign in"}
-          </button>
-        </form>
-
-        <div className="text-center text-sm text-muted-foreground">
-          Don&apos;t have an account?{" "}
-          <Link href="/signup" className="text-foreground underline">
-            Sign up
-          </Link>
-        </div>
+        </PageTransition>
       </div>
     </div>
   );

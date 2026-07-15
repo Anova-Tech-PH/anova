@@ -23,14 +23,31 @@ export async function getConversations() {
     .from("conversations")
     .select(`
       *,
-      conversation_members(user_id, profiles:user_id(full_name, avatar_url))
+      conversation_members(user_id)
     `)
     .in("id", convIds)
     .order("updated_at", { ascending: false });
 
   if (!conversations) return [];
 
-  // Get last message for each conversation
+  // Collect all member user IDs and fetch profiles
+  const allMemberIds = new Set<string>();
+  for (const conv of conversations) {
+    for (const m of (conv.conversation_members as any[])) {
+      allMemberIds.add(m.user_id);
+    }
+  }
+
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("id, full_name, avatar_url")
+    .in("id", Array.from(allMemberIds));
+
+  const profileMap: Record<string, { full_name: string; avatar_url: string | null }> = {};
+  for (const p of profiles ?? []) {
+    profileMap[p.id] = { full_name: p.full_name, avatar_url: p.avatar_url };
+  }
+
   const result = [];
   for (const conv of conversations) {
     const { data: lastMsg } = await supabase
@@ -57,6 +74,7 @@ export async function getConversations() {
     // Get display name for DMs
     const otherMembers = (conv.conversation_members as any[])
       .filter((m: any) => m.user_id !== user.id);
+    const otherProfile = otherMembers[0] ? profileMap[otherMembers[0].user_id] : null;
 
     result.push({
       ...conv,
@@ -64,10 +82,10 @@ export async function getConversations() {
       unread_count: unreadCount,
       display_name: conv.is_group
         ? conv.name ?? "Group Chat"
-        : otherMembers[0]?.profiles?.full_name ?? "Unknown",
+        : otherProfile?.full_name ?? "Unknown",
       display_avatar: conv.is_group
         ? null
-        : otherMembers[0]?.profiles?.avatar_url ?? null,
+        : otherProfile?.avatar_url ?? null,
     });
   }
 
@@ -77,13 +95,30 @@ export async function getConversations() {
 export async function getMessages(conversationId: string) {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
+  const { data: messages, error } = await supabase
     .from("messages")
-    .select("*, profiles:sender_id(full_name, avatar_url)")
+    .select("*")
     .eq("conversation_id", conversationId)
     .order("created_at", { ascending: true })
     .limit(100);
 
   if (error) throw new Error(error.message);
-  return data;
+  if (!messages || messages.length === 0) return [];
+
+  // Fetch sender profiles
+  const senderIds = [...new Set(messages.map((m) => m.sender_id))];
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("id, full_name, avatar_url")
+    .in("id", senderIds);
+
+  const profileMap: Record<string, { full_name: string; avatar_url: string | null }> = {};
+  for (const p of profiles ?? []) {
+    profileMap[p.id] = { full_name: p.full_name, avatar_url: p.avatar_url };
+  }
+
+  return messages.map((msg) => ({
+    ...msg,
+    profiles: profileMap[msg.sender_id] ?? null,
+  }));
 }

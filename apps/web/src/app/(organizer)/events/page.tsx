@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { createClient } from "@/shared/utils/supabase/server";
+import { Badge, EmptyState } from "@/shared/components/ui";
 
 export default async function EventsPage() {
   const supabase = await createClient();
@@ -26,7 +27,7 @@ export default async function EventsPage() {
         <h1 className="text-2xl font-semibold">Events</h1>
         <Link
           href="/events/new"
-          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 shadow-sm"
         >
           <Plus className="h-4 w-4" />
           New Event
@@ -34,15 +35,18 @@ export default async function EventsPage() {
       </div>
 
       {!events || events.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-16 text-center">
-          <p className="text-muted-foreground">No events yet</p>
-          <Link
-            href="/events/new"
-            className="mt-4 text-sm font-medium text-primary underline"
-          >
-            Create your first event
-          </Link>
-        </div>
+        <EmptyState
+          title="No events yet"
+          className="py-16"
+          action={
+            <Link
+              href="/events/new"
+              className="text-sm font-medium text-primary underline"
+            >
+              Create your first event
+            </Link>
+          }
+        />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {events.map((event) => (
@@ -62,17 +66,17 @@ export default async function EventsPage() {
               )}
               <div className="p-4">
                 <div className="flex items-center gap-2">
-                  <span
-                    className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
+                  <Badge
+                    variant={
                       event.status === "published"
-                        ? "bg-green-100 text-green-700"
+                        ? "success"
                         : event.status === "draft"
-                          ? "bg-yellow-100 text-yellow-700"
-                          : "bg-gray-100 text-gray-700"
-                    }`}
+                          ? "warning"
+                          : "default"
+                    }
                   >
                     {event.status}
-                  </span>
+                  </Badge>
                 </div>
                 <h3 className="mt-2 font-semibold">{event.title}</h3>
                 <p className="mt-1 text-sm text-muted-foreground">

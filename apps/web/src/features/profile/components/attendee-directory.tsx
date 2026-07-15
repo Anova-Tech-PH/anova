@@ -4,6 +4,12 @@ import { useState, useMemo, useTransition } from "react";
 import { Search, User, UserPlus, Check, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { sendConnectionRequest } from "@/features/connections/actions";
+import { Avatar } from "@/shared/components/ui/avatar";
+import { Badge } from "@/shared/components/ui/badge";
+import { Button } from "@/shared/components/ui/button";
+import { Card } from "@/shared/components/ui/card";
+import { EmptyState } from "@/shared/components/ui/empty-state";
+import { Input } from "@/shared/components/ui/input";
 
 type Profile = {
   id: string;
@@ -66,32 +72,26 @@ export function AttendeeDirectory({
     <div className="space-y-4">
       <div className="relative">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <input
+        <Input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by name, company, or interests..."
-          className="w-full rounded-lg border bg-background py-2 pl-9 pr-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+          className="pl-9"
         />
       </div>
 
       {filtered.length === 0 ? (
-        <div className="rounded-xl border border-dashed py-12 text-center text-sm text-muted-foreground">
-          {search ? "No attendees match your search" : "No other attendees yet"}
-        </div>
+        <EmptyState
+          title={search ? "No attendees match your search" : "No other attendees yet"}
+        />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
           {filtered.map((attendee) => {
             const conn = connections[attendee.id];
             return (
-              <div key={attendee.id} className="flex gap-3 rounded-xl border bg-card p-4">
-                {attendee.avatar_url ? (
-                  <img src={attendee.avatar_url} alt="" className="h-12 w-12 shrink-0 rounded-full object-cover" />
-                ) : (
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-muted">
-                    <User className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                )}
+              <Card key={attendee.id} className="flex gap-3 p-4">
+                <Avatar src={attendee.avatar_url} name={attendee.full_name} size="lg" />
                 <div className="min-w-0 flex-1">
                   <p className="font-medium truncate">{attendee.full_name}</p>
                   {(attendee.job_title || attendee.company) && (
@@ -117,24 +117,26 @@ export function AttendeeDirectory({
                 </div>
                 <div className="shrink-0">
                   {conn?.status === "accepted" ? (
-                    <span className="flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-1 text-[10px] font-medium text-green-700">
+                    <Badge variant="success" className="flex items-center gap-1">
                       <Check className="h-3 w-3" /> Connected
-                    </span>
+                    </Badge>
                   ) : conn?.status === "pending" ? (
-                    <span className="flex items-center gap-1 rounded-full bg-yellow-100 px-2.5 py-1 text-[10px] font-medium text-yellow-700">
+                    <Badge variant="warning" className="flex items-center gap-1">
                       <Clock className="h-3 w-3" /> Pending
-                    </span>
+                    </Badge>
                   ) : (
-                    <button
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => handleConnect(attendee.id)}
                       disabled={isPending}
-                      className="flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-medium hover:bg-accent disabled:opacity-50"
+                      className="flex items-center gap-1 rounded-full text-[10px]"
                     >
                       <UserPlus className="h-3 w-3" /> Connect
-                    </button>
+                    </Button>
                   )}
                 </div>
-              </div>
+              </Card>
             );
           })}
         </div>

@@ -5,6 +5,10 @@ import { Plus, Pencil, Trash2, Ticket } from "lucide-react";
 import { toast } from "sonner";
 import { TicketForm } from "./ticket-form";
 import { createTicketType, updateTicketType, deleteTicketType } from "../actions";
+import { Badge } from "@/shared/components/ui/badge";
+import { Button } from "@/shared/components/ui/button";
+import { Card } from "@/shared/components/ui/card";
+import { EmptyState } from "@/shared/components/ui/empty-state";
 
 type TicketType = {
   id: string;
@@ -100,45 +104,38 @@ export function TicketList({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">Ticket Types</h2>
-        <button
-          onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-        >
+        <Button onClick={() => setShowForm(true)}>
           <Plus className="h-4 w-4" />
           Add Ticket Type
-        </button>
+        </Button>
       </div>
 
       {tickets.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-16 text-center">
-          <Ticket className="mb-2 h-8 w-8 text-muted-foreground" />
-          <p className="text-muted-foreground">No ticket types yet</p>
-          <button
-            onClick={() => setShowForm(true)}
-            className="mt-3 text-sm font-medium text-primary underline"
-          >
-            Create your first ticket type
-          </button>
-        </div>
+        <EmptyState
+          icon={<Ticket className="h-8 w-8" />}
+          title="No ticket types yet"
+          action={
+            <button
+              onClick={() => setShowForm(true)}
+              className="text-sm font-medium text-primary underline"
+            >
+              Create your first ticket type
+            </button>
+          }
+        />
       ) : (
         <div className="space-y-3">
           {tickets.map((ticket) => (
-            <div
+            <Card
               key={ticket.id}
-              className="flex items-center justify-between rounded-xl border bg-card p-4"
+              className="flex items-center justify-between p-4"
             >
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <h3 className="font-medium">{ticket.name}</h3>
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                      ticket.type === "free"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-blue-100 text-blue-700"
-                    }`}
-                  >
+                  <Badge variant={ticket.type === "free" ? "success" : "info"}>
                     {ticket.type === "free" ? "Free" : `$${ticket.price}`}
-                  </span>
+                  </Badge>
                 </div>
                 {ticket.description && (
                   <p className="mt-0.5 text-sm text-muted-foreground truncate">
@@ -159,21 +156,24 @@ export function TicketList({
               </div>
 
               <div className="flex shrink-0 gap-1 ml-4">
-                <button
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={() => setEditingTicket(ticket)}
-                  className="rounded p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"
                 >
                   <Pencil className="h-4 w-4" />
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={() => handleDelete(ticket)}
                   disabled={isPending}
-                  className="rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                  className="hover:bg-destructive/10 hover:text-destructive"
                 >
                   <Trash2 className="h-4 w-4" />
-                </button>
+                </Button>
               </div>
-            </div>
+            </Card>
           ))}
         </div>
       )}

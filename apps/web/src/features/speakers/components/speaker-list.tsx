@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus, Pencil, Trash2, User } from "lucide-react";
+import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { Button, Card, Avatar, EmptyState } from "@/shared/components/ui";
 import { SpeakerForm } from "./speaker-form";
 import { createSpeaker, updateSpeaker, deleteSpeaker } from "../actions";
 
@@ -100,37 +101,28 @@ export function SpeakerList({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="font-semibold">Speakers</h3>
-        <button
+        <Button
           onClick={() => setShowForm(true)}
-          className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+          size="sm"
         >
           <Plus className="h-3.5 w-3.5" />
           Add Speaker
-        </button>
+        </Button>
       </div>
 
       {speakers.length === 0 ? (
-        <div className="rounded-xl border border-dashed py-8 text-center text-sm text-muted-foreground">
-          No speakers yet. Add your first speaker.
-        </div>
+        <EmptyState
+          title="No speakers yet"
+          description="Add your first speaker."
+        />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {speakers.map((speaker) => (
-            <div
+            <Card
               key={speaker.id}
-              className="flex items-start gap-3 rounded-xl border bg-card p-4"
+              className="flex items-start gap-3 p-4"
             >
-              {speaker.photo ? (
-                <img
-                  src={speaker.photo}
-                  alt={speaker.name}
-                  className="h-12 w-12 shrink-0 rounded-full object-cover"
-                />
-              ) : (
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-muted">
-                  <User className="h-5 w-5 text-muted-foreground" />
-                </div>
-              )}
+              <Avatar src={speaker.photo} name={speaker.name} size="lg" />
               <div className="min-w-0 flex-1">
                 <p className="font-medium truncate">{speaker.name}</p>
                 {(speaker.title || speaker.company) && (
@@ -154,7 +146,7 @@ export function SpeakerList({
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
               </div>
-            </div>
+            </Card>
           ))}
         </div>
       )}

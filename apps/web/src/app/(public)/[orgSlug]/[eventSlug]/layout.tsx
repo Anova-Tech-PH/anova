@@ -1,3 +1,6 @@
+import Link from "next/link";
+import { Logo } from "@/shared/components/logo";
+
 export default function PublicEventLayout({
   children,
 }: {
@@ -6,7 +9,9 @@ export default function PublicEventLayout({
   return (
     <div className="min-h-screen">
       <header className="border-b px-4 py-3">
-        <span className="text-lg font-semibold">Attendly</span>
+        <Link href="/">
+          <Logo size="sm" />
+        </Link>
       </header>
       {children}
     </div>

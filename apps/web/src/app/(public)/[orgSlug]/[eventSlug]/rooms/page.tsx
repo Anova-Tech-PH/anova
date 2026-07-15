@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/shared/utils/supabase/server";
+import { Card } from "@/shared/components/ui/card";
+import { Badge } from "@/shared/components/ui/badge";
 
 export default async function PublicRoomsPage({
   params,
@@ -47,16 +49,16 @@ export default async function PublicRoomsPage({
       ) : (
         <div className="space-y-4">
           {rooms.map((room) => (
-            <div key={room.id} className="rounded-xl border bg-card p-5 space-y-2">
+            <Card key={room.id} className="p-5 space-y-2">
               <div className="flex items-start justify-between">
                 <h3 className="font-medium">{room.title}</h3>
-                <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                  room.status === "open" ? "bg-green-100 text-green-700"
-                    : room.status === "full" ? "bg-yellow-100 text-yellow-700"
-                    : "bg-gray-100 text-gray-700"
-                }`}>
+                <Badge variant={
+                  room.status === "open" ? "success"
+                    : room.status === "full" ? "warning"
+                    : "default"
+                }>
                   {room.status}
-                </span>
+                </Badge>
               </div>
               {room.description && (
                 <p className="text-sm text-muted-foreground">{room.description}</p>
@@ -68,7 +70,7 @@ export default async function PublicRoomsPage({
                 <span>{room.breakout_room_participants.length}{room.max_capacity ? ` / ${room.max_capacity}` : ""} joined</span>
                 {Array.isArray(room.sessions) && room.sessions[0] && <span>Session: {room.sessions[0].title}</span>}
               </div>
-            </div>
+            </Card>
           ))}
         </div>
       )}

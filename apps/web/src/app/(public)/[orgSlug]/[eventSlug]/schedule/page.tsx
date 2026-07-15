@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Clock, MapPin, User, ArrowLeft } from "lucide-react";
+import { Clock, MapPin, ArrowLeft } from "lucide-react";
 import { createClient } from "@/shared/utils/supabase/server";
+import { Badge, Avatar } from "@/shared/components/ui";
 
 function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString("en-US", {
@@ -10,12 +11,12 @@ function formatTime(iso: string) {
   });
 }
 
-const typeStyles: Record<string, string> = {
-  keynote: "bg-purple-100 text-purple-700",
-  talk: "bg-blue-100 text-blue-700",
-  workshop: "bg-green-100 text-green-700",
-  panel: "bg-orange-100 text-orange-700",
-  break: "bg-gray-100 text-gray-600",
+const typeBadgeVariant: Record<string, "primary" | "info" | "success" | "warning" | "default"> = {
+  keynote: "primary",
+  talk: "info",
+  workshop: "success",
+  panel: "warning",
+  break: "default",
 };
 
 export default async function PublicSchedulePage({
@@ -97,9 +98,9 @@ export default async function PublicSchedulePage({
                     }}
                   >
                     <div className="flex items-center gap-2">
-                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${typeStyles[session.type] ?? "bg-gray-100 text-gray-600"}`}>
+                      <Badge variant={typeBadgeVariant[session.type] ?? "default"}>
                         {session.type}
-                      </span>
+                      </Badge>
                       {session.track && (
                         <span className="text-[10px] text-muted-foreground">
                           {session.track.name}
@@ -128,13 +129,7 @@ export default async function PublicSchedulePage({
                       <div className="mt-3 flex flex-wrap gap-2">
                         {session.session_speakers.map(({ speakers: sp }: any) => (
                           <div key={sp.id} className="flex items-center gap-2">
-                            {sp.photo ? (
-                              <img src={sp.photo} alt={sp.name} className="h-6 w-6 rounded-full object-cover" />
-                            ) : (
-                              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted">
-                                <User className="h-3 w-3 text-muted-foreground" />
-                              </div>
-                            )}
+                            <Avatar src={sp.photo} name={sp.name} size="sm" className="h-6 w-6" />
                             <div>
                               <span className="text-xs font-medium">{sp.name}</span>
                               {sp.title && (

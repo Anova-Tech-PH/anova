@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Calendar, MapPin, ExternalLink } from "lucide-react";
 import { createClient } from "@/shared/utils/supabase/server";
+import { buttonVariants } from "@/shared/components/ui";
 
 export default async function PublicEventPage({
   params,
@@ -32,7 +33,7 @@ export default async function PublicEventPage({
   return (
     <div className="min-h-screen">
       {/* Hero */}
-      <div className="relative bg-primary/5 py-16">
+      <div className="relative bg-gradient-to-b from-primary/8 via-primary/3 to-transparent py-16">
         {event.cover_image && (
           <div className="absolute inset-0 overflow-hidden">
             <img
@@ -68,7 +69,7 @@ export default async function PublicEventPage({
           </div>
           <Link
             href={`/${orgSlug}/${eventSlug}/register`}
-            className="mt-6 inline-flex rounded-lg bg-primary px-6 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+            className={buttonVariants({ size: "lg", className: "mt-6" })}
           >
             Register Now
           </Link>
@@ -89,13 +90,13 @@ export default async function PublicEventPage({
         <div className="flex gap-4">
           <Link
             href={`/${orgSlug}/${eventSlug}/schedule`}
-            className="rounded-lg border px-4 py-2 text-sm hover:bg-accent"
+            className={buttonVariants({ variant: "outline" })}
           >
             View Schedule
           </Link>
           <Link
             href={`/${orgSlug}/${eventSlug}/speakers`}
-            className="rounded-lg border px-4 py-2 text-sm hover:bg-accent"
+            className={buttonVariants({ variant: "outline" })}
           >
             View Speakers
           </Link>

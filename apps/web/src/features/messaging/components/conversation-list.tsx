@@ -1,6 +1,7 @@
 "use client";
 
-import { User, Users } from "lucide-react";
+import { Users } from "lucide-react";
+import { Avatar } from "@/shared/components/ui";
 
 type Conversation = {
   id: string;
@@ -48,16 +49,12 @@ export function ConversationList({
             selectedId === conv.id ? "bg-accent" : "hover:bg-accent/50"
           }`}
         >
-          {conv.display_avatar ? (
-            <img src={conv.display_avatar} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" />
-          ) : (
+          {conv.is_group && !conv.display_avatar ? (
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted">
-              {conv.is_group ? (
-                <Users className="h-4 w-4 text-muted-foreground" />
-              ) : (
-                <User className="h-4 w-4 text-muted-foreground" />
-              )}
+              <Users className="h-4 w-4 text-muted-foreground" />
             </div>
+          ) : (
+            <Avatar src={conv.display_avatar} name={conv.display_name} size="md" />
           )}
           <div className="min-w-0 flex-1">
             <div className="flex items-center justify-between">

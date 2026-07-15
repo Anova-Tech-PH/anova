@@ -83,10 +83,16 @@ export async function sendMessage(data: {
       content: data.content,
       image_url: data.image_url || null,
     })
-    .select("*, profiles:sender_id(full_name, avatar_url)")
+    .select("*")
     .single();
 
   if (error) throw new Error(error.message);
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name, avatar_url")
+    .eq("id", user.id)
+    .single();
 
   // Update conversation timestamp
   await supabase
@@ -101,7 +107,7 @@ export async function sendMessage(data: {
     .eq("conversation_id", data.conversation_id)
     .eq("user_id", user.id);
 
-  return message;
+  return { ...message, profiles: profile };
 }
 
 export async function markConversationRead(conversationId: string) {

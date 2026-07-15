@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Camera, CheckCircle, AlertCircle, XCircle } from "lucide-react";
 import { toast } from "sonner";
+import { Button, Input, Card, EmptyState } from "@/shared/components/ui";
 import { checkInByQrCode } from "../actions";
 
 type ScanResult = Awaited<ReturnType<typeof checkInByQrCode>> | null;
@@ -101,17 +102,13 @@ export function QrScanner({ eventId }: { eventId: string }) {
             Checked in this session: <span className="font-semibold text-foreground">{checkedInCount}</span>
           </p>
         </div>
-        <button
+        <Button
           onClick={scanning ? stopScanner : startScanner}
-          className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium ${
-            scanning
-              ? "border hover:bg-accent"
-              : "bg-primary text-primary-foreground hover:bg-primary/90"
-          }`}
+          variant={scanning ? "outline" : "primary"}
         >
           <Camera className="h-4 w-4" />
           {scanning ? "Stop Scanner" : "Start Scanner"}
-        </button>
+        </Button>
       </div>
 
       {/* Scanner viewport */}
@@ -122,12 +119,11 @@ export function QrScanner({ eventId }: { eventId: string }) {
       </div>
 
       {!scanning && !result && !error && (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-16 text-center">
-          <Camera className="mb-2 h-8 w-8 text-muted-foreground" />
-          <p className="text-muted-foreground">
-            Click &quot;Start Scanner&quot; to begin scanning QR codes
-          </p>
-        </div>
+        <EmptyState
+          icon={<Camera className="h-8 w-8" />}
+          title="Click &quot;Start Scanner&quot; to begin scanning QR codes"
+          className="py-16"
+        />
       )}
 
       {/* Result */}
@@ -210,24 +206,24 @@ function ManualCheckIn({
   }
 
   return (
-    <div className="rounded-xl border bg-card p-4">
+    <Card className="p-4">
       <h3 className="mb-3 text-sm font-medium">Manual Check-in</h3>
       <form onSubmit={handleSubmit} className="flex gap-2">
-        <input
+        <Input
           type="text"
           value={code}
           onChange={(e) => setCode(e.target.value)}
           placeholder="Enter QR code manually..."
-          className="flex-1 rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+          className="flex-1"
         />
-        <button
+        <Button
           type="submit"
-          disabled={loading || !code.trim()}
-          className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+          disabled={!code.trim()}
+          loading={loading}
         >
           {loading ? "..." : "Check In"}
-        </button>
+        </Button>
       </form>
-    </div>
+    </Card>
   );
 }

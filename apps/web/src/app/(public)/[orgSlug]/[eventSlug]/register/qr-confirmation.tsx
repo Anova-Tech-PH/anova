@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Check } from "lucide-react";
 import QRCode from "qrcode";
+import { Card } from "@/shared/components/ui";
 
 export function QrConfirmation({
   name,
@@ -27,8 +28,8 @@ export function QrConfirmation({
 
   return (
     <div className="mt-8 space-y-6 text-center">
-      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
-        <Check className="h-6 w-6 text-green-600" />
+      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-success-light">
+        <Check className="h-6 w-6 text-success" />
       </div>
 
       <div>
@@ -38,7 +39,7 @@ export function QrConfirmation({
         </p>
       </div>
 
-      <div className="rounded-xl border bg-card p-6">
+      <Card className="p-6">
         <p className="text-sm text-muted-foreground">Ticket</p>
         <p className="font-medium">{ticketName}</p>
         <p className="mt-1 text-sm">{name}</p>
@@ -58,7 +59,7 @@ export function QrConfirmation({
         <p className="mt-2 text-xs text-muted-foreground">
           Show this QR code at check-in
         </p>
-      </div>
+      </Card>
     </div>
   );
 }

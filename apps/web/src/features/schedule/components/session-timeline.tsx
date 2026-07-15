@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { Plus, Pencil, Trash2, Clock, MapPin, User } from "lucide-react";
 import { toast } from "sonner";
+import { Button, Badge, Card, EmptyState } from "@/shared/components/ui";
 import { SessionForm } from "./session-form";
 import { createSession, updateSession, deleteSession } from "../actions";
 
@@ -41,12 +42,12 @@ function formatTime(iso: string) {
   });
 }
 
-const typeStyles: Record<string, string> = {
-  keynote: "bg-purple-100 text-purple-700",
-  talk: "bg-blue-100 text-blue-700",
-  workshop: "bg-green-100 text-green-700",
-  panel: "bg-orange-100 text-orange-700",
-  break: "bg-gray-100 text-gray-600",
+const typeBadgeVariant: Record<string, "info" | "success" | "default" | "warning" | "destructive"> = {
+  keynote: "warning",
+  talk: "info",
+  workshop: "success",
+  panel: "warning",
+  break: "default",
 };
 
 export function SessionTimeline({
@@ -184,28 +185,29 @@ export function SessionTimeline({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h3 className="font-semibold">Sessions</h3>
-        <button
+        <Button
           onClick={() => setShowForm(true)}
-          className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+          size="sm"
         >
           <Plus className="h-3.5 w-3.5" />
           Add Session
-        </button>
+        </Button>
       </div>
 
       {sessions.length === 0 ? (
-        <div className="rounded-xl border border-dashed py-12 text-center text-sm text-muted-foreground">
-          No sessions yet. Add your first session to build the schedule.
-        </div>
+        <EmptyState
+          title="No sessions yet"
+          description="Add your first session to build the schedule."
+        />
       ) : (
         Object.entries(dayGroups).map(([day, daySessions]) => (
           <div key={day} className="space-y-3">
             <h4 className="text-sm font-medium text-muted-foreground">{day}</h4>
             <div className="space-y-2">
               {daySessions.map((session) => (
-                <div
+                <Card
                   key={session.id}
-                  className={`rounded-xl border bg-card p-4 ${session.type === "break" ? "opacity-60" : ""}`}
+                  className={`p-4 ${session.type === "break" ? "opacity-60" : ""}`}
                   style={{
                     borderLeftWidth: 3,
                     borderLeftColor: session.track?.color ?? "transparent",
@@ -214,9 +216,9 @@ export function SessionTimeline({
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${typeStyles[session.type] ?? "bg-gray-100 text-gray-600"}`}>
+                        <Badge variant={typeBadgeVariant[session.type] ?? "default"} className="text-[10px]">
                           {session.type}
-                        </span>
+                        </Badge>
                         {session.track && (
                           <span className="text-[10px] text-muted-foreground">
                             {session.track.name}
@@ -266,7 +268,7 @@ export function SessionTimeline({
                       </button>
                     </div>
                   </div>
-                </div>
+                </Card>
               ))}
             </div>
           </div>

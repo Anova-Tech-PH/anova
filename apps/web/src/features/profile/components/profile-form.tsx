@@ -4,6 +4,10 @@ import { useState } from "react";
 import { User, X } from "lucide-react";
 import { toast } from "sonner";
 import { updateProfile } from "../actions";
+import { Avatar } from "@/shared/components/ui/avatar";
+import { Button } from "@/shared/components/ui/button";
+import { Input } from "@/shared/components/ui/input";
+import { Textarea } from "@/shared/components/ui/input";
 
 type Profile = {
   id: string;
@@ -71,20 +75,13 @@ export function ProfileForm({ profile }: { profile: Profile }) {
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Avatar preview */}
       <div className="flex items-center gap-4">
-        {form.avatar_url ? (
-          <img src={form.avatar_url} alt="" className="h-16 w-16 rounded-full object-cover" />
-        ) : (
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-            <User className="h-7 w-7 text-muted-foreground" />
-          </div>
-        )}
+        <Avatar src={form.avatar_url || undefined} name={form.full_name} size="lg" />
         <div className="flex-1 space-y-1.5">
           <label className="text-sm font-medium">Avatar URL</label>
-          <input
+          <Input
             type="url"
             value={form.avatar_url}
             onChange={(e) => setForm((f) => ({ ...f, avatar_url: e.target.value }))}
-            className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
             placeholder="https://..."
           />
         </div>
@@ -93,43 +90,39 @@ export function ProfileForm({ profile }: { profile: Profile }) {
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Full name *</label>
-          <input
+          <Input
             type="text"
             required
             value={form.full_name}
             onChange={(e) => setForm((f) => ({ ...f, full_name: e.target.value }))}
-            className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
           />
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Job title</label>
-          <input
+          <Input
             type="text"
             value={form.job_title}
             onChange={(e) => setForm((f) => ({ ...f, job_title: e.target.value }))}
-            className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
           />
         </div>
       </div>
 
       <div className="space-y-1.5">
         <label className="text-sm font-medium">Company</label>
-        <input
+        <Input
           type="text"
           value={form.company}
           onChange={(e) => setForm((f) => ({ ...f, company: e.target.value }))}
-          className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
         />
       </div>
 
       <div className="space-y-1.5">
         <label className="text-sm font-medium">Bio</label>
-        <textarea
+        <Textarea
           value={form.bio}
           onChange={(e) => setForm((f) => ({ ...f, bio: e.target.value }))}
           rows={3}
           maxLength={500}
-          className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
           placeholder="Tell others about yourself..."
         />
         <p className="text-xs text-muted-foreground">{form.bio.length}/500</p>
@@ -148,7 +141,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
             </span>
           ))}
         </div>
-        <input
+        <Input
           type="text"
           value={interestInput}
           onChange={(e) => setInterestInput(e.target.value)}
@@ -159,7 +152,6 @@ export function ProfileForm({ profile }: { profile: Profile }) {
               setInterestInput("");
             }
           }}
-          className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
           placeholder="Type and press Enter..."
         />
       </div>
@@ -177,7 +169,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
             </span>
           ))}
         </div>
-        <input
+        <Input
           type="text"
           value={lookingForInput}
           onChange={(e) => setLookingForInput(e.target.value)}
@@ -188,7 +180,6 @@ export function ProfileForm({ profile }: { profile: Profile }) {
               setLookingForInput("");
             }
           }}
-          className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
           placeholder="e.g. Co-founder, Mentor, Investor..."
         />
       </div>
@@ -196,33 +187,30 @@ export function ProfileForm({ profile }: { profile: Profile }) {
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
           <label className="text-sm font-medium">LinkedIn URL</label>
-          <input
+          <Input
             type="url"
             value={form.linkedin_url}
             onChange={(e) => setForm((f) => ({ ...f, linkedin_url: e.target.value }))}
-            className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
             placeholder="https://linkedin.com/in/..."
           />
         </div>
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Twitter / X handle</label>
-          <input
+          <Input
             type="text"
             value={form.twitter_handle}
             onChange={(e) => setForm((f) => ({ ...f, twitter_handle: e.target.value }))}
-            className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
             placeholder="@handle"
           />
         </div>
       </div>
 
-      <button
+      <Button
         type="submit"
         disabled={loading || !form.full_name}
-        className="rounded-lg bg-primary px-6 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
       >
         {loading ? "Saving..." : "Save Profile"}
-      </button>
+      </Button>
     </form>
   );
 }
