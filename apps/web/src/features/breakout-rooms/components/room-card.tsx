@@ -57,57 +57,102 @@ export function RoomCard({
     });
   }
 
+  const statusColor = isClosed
+    ? "bg-gray-400"
+    : isFull
+      ? "bg-amber-400"
+      : "bg-emerald-400";
+
+  const capacityPercent = room.max_capacity
+    ? Math.min(100, Math.round((participantCount / room.max_capacity) * 100))
+    : 0;
+
   return (
-    <Card className="p-5 space-y-3">
-      <div className="flex items-start justify-between">
-        <div>
-          <h3 className="font-medium">{room.title}</h3>
-          {room.sessions && (
-            <p className="text-xs text-muted-foreground">Session: {room.sessions.title}</p>
+    <Card className="overflow-hidden p-0 space-y-0">
+      {/* Status stripe */}
+      <div className={`h-1 w-full ${statusColor}`} />
+
+      {/* Header area with subtle gradient */}
+      <div className="bg-gradient-to-b from-muted/40 to-transparent px-5 pt-4 pb-3 space-y-1">
+        <div className="flex items-start justify-between">
+          <div className="min-w-0 flex-1">
+            <h3 className="font-medium">{room.title}</h3>
+            {room.sessions && (
+              <p className="text-xs text-muted-foreground">Session: {room.sessions.title}</p>
+            )}
+          </div>
+          <Badge
+            variant={isClosed ? "default" : isFull ? "warning" : "success"}
+            className="flex items-center gap-1.5 shrink-0"
+          >
+            <span
+              className={`inline-block h-1.5 w-1.5 rounded-full ${
+                isClosed ? "bg-gray-100" : isFull ? "bg-amber-100" : "bg-emerald-100"
+              }`}
+            />
+            {isClosed ? "Closed" : isFull ? "Full" : "Open"}
+          </Badge>
+        </div>
+      </div>
+
+      <div className="px-5 pb-5 space-y-3">
+        {room.description && (
+          <p className="text-sm text-muted-foreground">{room.description}</p>
+        )}
+
+        <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1 rounded-full bg-muted/60 px-2.5 py-1">
+            <Clock className="h-3 w-3" />
+            {new Date(room.starts_at).toLocaleString()} - {new Date(room.ends_at).toLocaleTimeString()}
+          </span>
+          {room.facilitator_name && (
+            <span className="flex items-center gap-1 rounded-full bg-muted/60 px-2.5 py-1">
+              <User className="h-3 w-3" />
+              {room.facilitator_name}
+            </span>
+          )}
+          {room.location && (
+            <span className="flex items-center gap-1 rounded-full bg-muted/60 px-2.5 py-1">
+              <MapPin className="h-3 w-3" />
+              {room.location}
+            </span>
           )}
         </div>
-        <Badge variant={isClosed ? "default" : isFull ? "warning" : "success"}>
-          {isClosed ? "Closed" : isFull ? "Full" : "Open"}
-        </Badge>
-      </div>
 
-      {room.description && (
-        <p className="text-sm text-muted-foreground">{room.description}</p>
-      )}
+        {/* Participant count with capacity bar */}
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between text-xs">
+            <span className="flex items-center gap-1 text-muted-foreground">
+              <Users className="h-3 w-3" />
+              {participantCount}{room.max_capacity ? ` / ${room.max_capacity}` : ""} participants
+            </span>
+            {room.max_capacity ? (
+              <span className="text-muted-foreground font-medium">{capacityPercent}%</span>
+            ) : null}
+          </div>
+          {room.max_capacity ? (
+            <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-500 ${
+                  isFull ? "bg-amber-400" : "bg-emerald-400"
+                }`}
+                style={{ width: `${capacityPercent}%` }}
+              />
+            </div>
+          ) : null}
+        </div>
 
-      <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-        <span className="flex items-center gap-1">
-          <Clock className="h-3 w-3" />
-          {new Date(room.starts_at).toLocaleString()} - {new Date(room.ends_at).toLocaleTimeString()}
-        </span>
-        {room.facilitator_name && (
-          <span className="flex items-center gap-1">
-            <User className="h-3 w-3" />
-            {room.facilitator_name}
-          </span>
+        {currentUserId && !isClosed && (
+          <Button
+            onClick={handleToggle}
+            disabled={isPending || (!isJoined && isFull)}
+            variant={isJoined ? "outline" : "primary"}
+            className="w-full transition-all duration-200 hover:shadow-md active:scale-[0.98]"
+          >
+            {isPending ? "..." : isJoined ? "Leave Room" : isFull ? "Full" : "Join Room"}
+          </Button>
         )}
-        {room.location && (
-          <span className="flex items-center gap-1">
-            <MapPin className="h-3 w-3" />
-            {room.location}
-          </span>
-        )}
-        <span className="flex items-center gap-1">
-          <Users className="h-3 w-3" />
-          {participantCount}{room.max_capacity ? ` / ${room.max_capacity}` : ""}
-        </span>
       </div>
-
-      {currentUserId && !isClosed && (
-        <Button
-          onClick={handleToggle}
-          disabled={isPending || (!isJoined && isFull)}
-          variant={isJoined ? "outline" : "primary"}
-          className="w-full"
-        >
-          {isPending ? "..." : isJoined ? "Leave Room" : isFull ? "Full" : "Join Room"}
-        </Button>
-      )}
     </Card>
   );
 }

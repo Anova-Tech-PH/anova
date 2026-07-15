@@ -201,7 +201,7 @@ export function AttendeeDirectory({
                     </Button>
                   ) : (
                     <Button
-                      variant="default"
+                      variant="primary"
                       size="sm"
                       onClick={() => handleConnect(attendee.id)}
                       disabled={isPending}

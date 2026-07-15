@@ -140,3 +140,53 @@
     background-attachment: fixed;
   }
 }
+
+/* Custom scrollbar */
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: oklch(0.85 0.005 195) transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: oklch(0.85 0.005 195);
+    border-radius: 100px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: oklch(0.75 0.01 195);
+  }
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Focus ring consistency */
+@layer base {
+  :focus-visible {
+    outline: 2px solid oklch(0.445 0.107 195 / 0.5);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+/* Subtle text selection color */
+::selection {
+  background: oklch(0.445 0.107 195 / 0.15);
+  color: oklch(0.2 0.02 195);
+}
+
+/* Smooth page transitions */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}

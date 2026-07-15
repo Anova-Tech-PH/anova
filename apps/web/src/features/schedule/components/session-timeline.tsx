@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus, Pencil, Trash2, Clock, MapPin, User } from "lucide-react";
+import { Plus, Pencil, Trash2, Clock, MapPin, User, CalendarDays } from "lucide-react";
 import { toast } from "sonner";
 import { Button, Badge, Card, EmptyState } from "@/shared/components/ui";
 import { SessionForm } from "./session-form";
@@ -22,17 +22,25 @@ type Session = {
   session_speakers: SessionSpeaker[];
 };
 
-function groupByDay(sessions: Session[]): Record<string, Session[]> {
-  const groups: Record<string, Session[]> = {};
+type DayGroup = { label: string; month: string; day: string; sessions: Session[] };
+
+function groupByDay(sessions: Session[]): DayGroup[] {
+  const groups: Record<string, DayGroup> = {};
   for (const s of sessions) {
-    const day = new Date(s.start_time).toLocaleDateString("en-US", {
+    const d = new Date(s.start_time);
+    const label = d.toLocaleDateString("en-US", {
       weekday: "long",
       month: "long",
       day: "numeric",
     });
-    (groups[day] ??= []).push(s);
+    const month = d.toLocaleDateString("en-US", { month: "short" }).toUpperCase();
+    const day = d.getDate().toString();
+    if (!groups[label]) {
+      groups[label] = { label, month, day, sessions: [] };
+    }
+    groups[label].sessions.push(s);
   }
-  return groups;
+  return Object.values(groups);
 }
 
 function formatTime(iso: string) {
@@ -67,6 +75,8 @@ export function SessionTimeline({
   const [isPending, startTransition] = useTransition();
 
   const dayGroups = groupByDay(sessions);
+
+  const speakerColors = ["bg-primary/60", "bg-amber-400/60", "bg-rose-400/60", "bg-violet-400/60", "bg-emerald-400/60"];
 
   function toLocalInput(iso: string) {
     const d = new Date(iso);
@@ -196,80 +206,131 @@ export function SessionTimeline({
 
       {sessions.length === 0 ? (
         <EmptyState
+          icon={<CalendarDays className="h-8 w-8" />}
           title="No sessions yet"
           description="Add your first session to build the schedule."
         />
       ) : (
-        Object.entries(dayGroups).map(([day, daySessions]) => (
-          <div key={day} className="space-y-3">
-            <h4 className="text-sm font-medium text-muted-foreground">{day}</h4>
-            <div className="space-y-2">
-              {daySessions.map((session) => (
-                <Card
-                  key={session.id}
-                  className={`p-4 ${session.type === "break" ? "opacity-60" : ""}`}
-                  style={{
-                    borderLeftWidth: 3,
-                    borderLeftColor: session.track?.color ?? "transparent",
-                  }}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <Badge variant={typeBadgeVariant[session.type] ?? "default"} className="text-[10px]">
-                          {session.type}
-                        </Badge>
-                        {session.track && (
-                          <span className="text-[10px] text-muted-foreground">
-                            {session.track.name}
-                          </span>
-                        )}
-                      </div>
-                      <h5 className="mt-1 font-medium">{session.title}</h5>
-                      <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {formatTime(session.start_time)} - {formatTime(session.end_time)}
-                        </span>
-                        {session.location && (
-                          <span className="flex items-center gap-1">
-                            <MapPin className="h-3 w-3" />
-                            {session.location}
-                          </span>
-                        )}
-                      </div>
-                      {session.session_speakers.length > 0 && (
-                        <div className="mt-2 flex flex-wrap gap-1.5">
-                          {session.session_speakers.map(({ speakers: sp }) => (
-                            <span
-                              key={sp.id}
-                              className="flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px]"
-                            >
-                              <User className="h-2.5 w-2.5" />
-                              {sp.name}
-                            </span>
-                          ))}
+        dayGroups.map((group) => (
+          <div key={group.label} className="space-y-3">
+            {/* Day header with calendar-page indicator */}
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-lg border bg-background shadow-sm">
+                <span className="text-[10px] font-semibold uppercase leading-none text-primary">
+                  {group.month}
+                </span>
+                <span className="text-lg font-bold leading-tight">{group.day}</span>
+              </div>
+              <div>
+                <h4 className="text-sm font-semibold">{group.label}</h4>
+                <p className="text-xs text-muted-foreground">{group.sessions.length} session{group.sessions.length !== 1 ? "s" : ""}</p>
+              </div>
+            </div>
+
+            {/* Timeline with vertical line */}
+            <div className="relative ml-[23px] border-l-2 border-muted pl-6 space-y-2">
+              {group.sessions.map((session) => {
+                const isBreak = session.type === "break";
+                return (
+                  <div key={session.id} className="group relative">
+                    {/* Timeline dot */}
+                    <div
+                      className="absolute -left-[31px] top-4 h-2.5 w-2.5 rounded-full border-2 border-background"
+                      style={{ backgroundColor: session.track?.color ?? (isBreak ? "var(--color-muted-foreground)" : "var(--color-primary)") }}
+                    />
+
+                    <Card
+                      className={`p-4 transition-all duration-200 hover:shadow-md ${
+                        isBreak ? "border-dashed bg-muted/30" : ""
+                      }`}
+                      style={{
+                        borderLeftWidth: isBreak ? undefined : 4,
+                        borderLeftColor: isBreak ? undefined : (session.track?.color ?? "transparent"),
+                        borderLeftStyle: isBreak ? undefined : "solid",
+                      }}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          {/* Time label - prominent */}
+                          <div className="mb-1.5 text-xs font-semibold text-primary/80">
+                            {formatTime(session.start_time)} — {formatTime(session.end_time)}
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <Badge variant={typeBadgeVariant[session.type] ?? "default"} className="text-[10px]">
+                              {session.type}
+                            </Badge>
+                            {session.track && (
+                              <span
+                                className="flex items-center gap-1 text-[10px] font-medium"
+                                style={{ color: session.track.color ?? undefined }}
+                              >
+                                <span
+                                  className="inline-block h-1.5 w-1.5 rounded-full"
+                                  style={{ backgroundColor: session.track.color ?? "currentColor" }}
+                                />
+                                {session.track.name}
+                              </span>
+                            )}
+                          </div>
+
+                          <h5 className={`mt-1 font-medium ${isBreak ? "italic text-muted-foreground text-sm" : ""}`}>
+                            {session.title}
+                          </h5>
+
+                          {!isBreak && (
+                            <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                              {session.location && (
+                                <span className="flex items-center gap-1">
+                                  <MapPin className="h-3 w-3" />
+                                  {session.location}
+                                </span>
+                              )}
+                            </div>
+                          )}
+
+                          {session.session_speakers.length > 0 && (
+                            <div className="mt-2 flex flex-wrap gap-1.5">
+                              {session.session_speakers.map(({ speakers: sp }, spIndex) => (
+                                <span
+                                  key={sp.id}
+                                  className="flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-0.5 text-[11px]"
+                                >
+                                  <span
+                                    className={`inline-flex h-4 w-4 items-center justify-center rounded-full text-[8px] font-bold text-white ${
+                                      speakerColors[spIndex % speakerColors.length]
+                                    }`}
+                                  >
+                                    {sp.name.charAt(0).toUpperCase()}
+                                  </span>
+                                  {sp.name}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                    <div className="flex shrink-0 gap-1">
-                      <button
-                        onClick={() => setEditingSession(session)}
-                        className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(session)}
-                        disabled={isPending}
-                        className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
+
+                        {/* Actions - shown on hover */}
+                        <div className="flex shrink-0 gap-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                          <button
+                            onClick={() => setEditingSession(session)}
+                            className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(session)}
+                            disabled={isPending}
+                            className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    </Card>
                   </div>
-                </Card>
-              ))}
+                );
+              })}
             </div>
           </div>
         ))

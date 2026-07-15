@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Calendar, MapPin, Wifi, Shield } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/shared/utils/supabase/server";
 import { RegistrationFlow } from "./registration-flow";
@@ -54,25 +54,52 @@ export default async function RegisterPage({
     available: t.quantity ? t.quantity - (countMap[t.id] ?? 0) : null,
   }));
 
+  const startDate = new Date(event.start_date);
+  const endDate = new Date(event.end_date);
+  const dateStr = startDate.toDateString() === endDate.toDateString()
+    ? startDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+    : `${startDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })} – ${endDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
+
   return (
     <div className="mx-auto max-w-lg px-4 py-12">
       <Link
         href={`/${orgSlug}/${eventSlug}`}
-        className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+        className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to event
       </Link>
 
-      <h1 className="text-2xl font-semibold">Register for {event.title}</h1>
+      {/* Event summary card */}
+      <div className="mb-8 rounded-xl border bg-gradient-to-br from-primary/[0.04] to-transparent p-5">
+        <h1 className="text-xl font-semibold">{event.title}</h1>
+        <div className="mt-3 flex flex-wrap gap-3 text-sm text-muted-foreground">
+          <span className="flex items-center gap-1.5">
+            <Calendar className="h-3.5 w-3.5 text-primary" />
+            {dateStr}
+          </span>
+          {event.venue_name && (
+            <span className="flex items-center gap-1.5">
+              <MapPin className="h-3.5 w-3.5 text-primary" />
+              {event.venue_name}
+            </span>
+          )}
+          {event.is_virtual && (
+            <span className="flex items-center gap-1.5">
+              <Wifi className="h-3.5 w-3.5 text-primary" />
+              Virtual Event
+            </span>
+          )}
+        </div>
+      </div>
+
+      <h2 className="text-lg font-semibold">Select your ticket</h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        {new Date(event.start_date).toLocaleDateString()} -{" "}
-        {new Date(event.end_date).toLocaleDateString()}
-        {event.venue_name && ` · ${event.venue_name}`}
+        Choose a ticket type and complete your registration.
       </p>
 
       {ticketsWithAvailability.length === 0 ? (
-        <div className="mt-8 rounded-xl border border-dashed py-12 text-center text-muted-foreground">
+        <div className="mt-8 rounded-xl border border-dashed bg-muted/20 py-12 text-center text-muted-foreground">
           Registration is not available yet.
         </div>
       ) : (
@@ -81,6 +108,12 @@ export default async function RegisterPage({
           tickets={ticketsWithAvailability}
         />
       )}
+
+      {/* Trust signal */}
+      <div className="mt-8 flex items-center justify-center gap-2 text-xs text-muted-foreground/60">
+        <Shield className="h-3.5 w-3.5" />
+        Secure registration powered by Anova
+      </div>
     </div>
   );
 }

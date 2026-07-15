@@ -5,9 +5,11 @@ import { User } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 
 const sizes = {
+  xs: "h-6 w-6 text-[10px]",
   sm: "h-8 w-8 text-xs",
   md: "h-10 w-10 text-sm",
   lg: "h-12 w-12 text-base",
+  xl: "h-16 w-16 text-lg",
 };
 
 const avatarColors = [
@@ -39,14 +41,16 @@ function getInitials(name: string): string {
 interface AvatarProps {
   src?: string | null;
   name?: string | null;
-  size?: "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg" | "xl";
   className?: string;
+  ring?: boolean;
 }
 
-export function Avatar({ src, name, size = "md", className }: AvatarProps) {
+export function Avatar({ src, name, size = "md", className, ring }: AvatarProps) {
   const [imgError, setImgError] = useState(false);
   const sizeClass = sizes[size];
   const colorClass = name ? avatarColors[hashName(name) % avatarColors.length] : avatarColors[0];
+  const ringClass = ring ? "ring-2 ring-background shadow-sm" : "";
 
   if (src && !imgError) {
     return (
@@ -54,7 +58,7 @@ export function Avatar({ src, name, size = "md", className }: AvatarProps) {
         src={src}
         alt={name || "Avatar"}
         onError={() => setImgError(true)}
-        className={cn("shrink-0 rounded-full object-cover", sizeClass, className)}
+        className={cn("shrink-0 rounded-full object-cover", sizeClass, ringClass, className)}
       />
     );
   }
@@ -66,6 +70,7 @@ export function Avatar({ src, name, size = "md", className }: AvatarProps) {
           "flex shrink-0 items-center justify-center rounded-full font-medium",
           sizeClass,
           colorClass,
+          ringClass,
           className
         )}
       >
@@ -79,6 +84,7 @@ export function Avatar({ src, name, size = "md", className }: AvatarProps) {
       className={cn(
         "flex shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground",
         sizeClass,
+        ringClass,
         className
       )}
     >

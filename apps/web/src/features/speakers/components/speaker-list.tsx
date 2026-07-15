@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, User } from "lucide-react";
 import { toast } from "sonner";
 import { Button, Card, Avatar, EmptyState } from "@/shared/components/ui";
 import { SpeakerForm } from "./speaker-form";
@@ -104,6 +104,7 @@ export function SpeakerList({
         <Button
           onClick={() => setShowForm(true)}
           size="sm"
+          className="transition-all duration-200 hover:shadow-md"
         >
           <Plus className="h-3.5 w-3.5" />
           Add Speaker
@@ -112,36 +113,53 @@ export function SpeakerList({
 
       {speakers.length === 0 ? (
         <EmptyState
+          icon={<User className="h-8 w-8" />}
           title="No speakers yet"
           description="Add your first speaker."
         />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {speakers.map((speaker) => (
+          {speakers.map((speaker, index) => (
             <Card
               key={speaker.id}
-              className="flex items-start gap-3 p-4"
+              className="group relative flex flex-col items-center p-6 text-center transition-all duration-200 hover:shadow-md"
             >
-              <Avatar src={speaker.photo} name={speaker.name} size="lg" />
-              <div className="min-w-0 flex-1">
+              {/* Subtle top gradient background */}
+              <div
+                className="pointer-events-none absolute inset-x-0 top-0 h-20 rounded-t-xl opacity-30"
+                style={{
+                  background: `linear-gradient(135deg, ${
+                    ["oklch(0.445 0.107 195)", "oklch(0.5 0.1 260)", "oklch(0.5 0.1 320)", "oklch(0.5 0.1 50)"][index % 4]
+                  } 0%, transparent 100%)`,
+                }}
+              />
+
+              {/* Avatar with ring */}
+              <div className="relative z-10 mb-3 rounded-full ring-2 ring-muted ring-offset-2 ring-offset-background">
+                <Avatar src={speaker.photo} name={speaker.name} size="lg" />
+              </div>
+
+              <div className="relative z-10 min-w-0 w-full">
                 <p className="font-medium truncate">{speaker.name}</p>
                 {(speaker.title || speaker.company) && (
-                  <p className="text-xs text-muted-foreground truncate">
+                  <p className="mt-0.5 text-xs text-muted-foreground truncate">
                     {[speaker.title, speaker.company].filter(Boolean).join(" at ")}
                   </p>
                 )}
               </div>
-              <div className="flex shrink-0 gap-1">
+
+              {/* Actions - visible on hover */}
+              <div className="absolute right-2 top-2 flex gap-1 rounded-lg bg-background/80 p-0.5 opacity-0 shadow-sm backdrop-blur-sm transition-opacity duration-200 group-hover:opacity-100">
                 <button
                   onClick={() => setEditingSpeaker(speaker)}
-                  className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+                  className="rounded p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
                 >
                   <Pencil className="h-3.5 w-3.5" />
                 </button>
                 <button
                   onClick={() => handleDelete(speaker)}
                   disabled={isPending}
-                  className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                  className="rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>

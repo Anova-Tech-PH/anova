@@ -118,72 +118,83 @@ export default async function PublicEventPage({
     <div className="min-h-screen">
       {/* ── Hero ── */}
       <div className="relative overflow-hidden bg-gradient-to-b from-primary/8 via-primary/4 to-transparent">
+        {/* Decorative background elements */}
+        <div className="absolute inset-0" style={{
+          backgroundImage: "radial-gradient(circle at 20% 50%, oklch(0.445 0.107 195 / 0.06) 0%, transparent 50%), radial-gradient(circle at 80% 20%, oklch(0.55 0.14 245 / 0.05) 0%, transparent 40%)",
+        }} />
+        <div className="absolute top-20 left-10 h-64 w-64 rounded-full bg-primary/[0.03] blur-3xl" />
+        <div className="absolute bottom-10 right-10 h-48 w-48 rounded-full bg-info/[0.04] blur-3xl" />
         {event.cover_image && (
           <div className="absolute inset-0 overflow-hidden">
             <img
               src={event.cover_image}
               alt=""
-              className="h-full w-full object-cover opacity-20"
+              className="h-full w-full object-cover opacity-15 blur-sm"
             />
           </div>
         )}
-        <div className="relative mx-auto max-w-4xl px-4 py-20 text-center">
-          <p className="text-sm font-semibold uppercase tracking-wider text-primary">
+        <div className="relative mx-auto max-w-4xl px-4 py-24 text-center">
+          <span className="inline-flex items-center gap-2 rounded-full border bg-card/80 px-4 py-1.5 text-sm font-medium text-primary shadow-sm backdrop-blur-sm">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/60" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+            </span>
             {org.name}
-          </p>
-          <h1 className="mt-3 text-4xl font-bold tracking-tight sm:text-5xl">
+          </span>
+          <h1 className="mt-6 text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
             {event.title}
           </h1>
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1.5">
-              <Calendar className="h-4 w-4" />
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-card/60 px-3 py-1.5 shadow-sm backdrop-blur-sm">
+              <Calendar className="h-4 w-4 text-primary" />
               {formatDateRange(event.start_date, event.end_date)}
             </span>
             {event.venue_name && (
-              <span className="flex items-center gap-1.5">
-                <MapPin className="h-4 w-4" />
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-card/60 px-3 py-1.5 shadow-sm backdrop-blur-sm">
+                <MapPin className="h-4 w-4 text-primary" />
                 {event.venue_name}
               </span>
             )}
             {event.is_virtual && (
-              <span className="flex items-center gap-1.5">
-                <ExternalLink className="h-4 w-4" />
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-card/60 px-3 py-1.5 shadow-sm backdrop-blur-sm">
+                <ExternalLink className="h-4 w-4 text-primary" />
                 Virtual Event
               </span>
             )}
           </div>
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
             <Link
               href={`/${orgSlug}/${eventSlug}/register`}
               className={buttonVariants({
                 size: "lg",
-                className: "gap-2 px-8",
+                className: "gap-2 px-8 shadow-lg shadow-primary/20",
               })}
             >
               Register Now
-              {startingPrice != null && (
-                <span className="opacity-70">
-                  — from ${Number(startingPrice).toFixed(0)}
-                </span>
-              )}
+              <ArrowRight className="h-4 w-4" />
             </Link>
+            {startingPrice != null && (
+              <span className="text-sm text-muted-foreground">
+                Starting from <span className="font-semibold text-foreground">${Number(startingPrice).toFixed(0)}</span>
+              </span>
+            )}
           </div>
           {/* Quick stats */}
-          <div className="mt-6 flex items-center justify-center gap-6 text-xs text-muted-foreground">
+          <div className="mt-8 flex items-center justify-center gap-6 text-xs text-muted-foreground">
             {(regCount ?? 0) > 0 && (
-              <span className="flex items-center gap-1">
+              <span className="flex items-center gap-1.5">
                 <Users className="h-3.5 w-3.5" />
                 {regCount} registered
               </span>
             )}
             {speakers && speakers.length > 0 && (
-              <span className="flex items-center gap-1">
+              <span className="flex items-center gap-1.5">
                 <Mic2 className="h-3.5 w-3.5" />
                 {speakers.length} speakers
               </span>
             )}
             {sessions && sessions.length > 0 && (
-              <span className="flex items-center gap-1">
+              <span className="flex items-center gap-1.5">
                 <Calendar className="h-3.5 w-3.5" />
                 {sessions.filter((s) => s.type !== "break").length} sessions
               </span>
@@ -196,8 +207,11 @@ export default async function PublicEventPage({
         {/* ── About ── */}
         {event.description && (
           <section>
-            <h2 className="text-xl font-semibold">About the Event</h2>
-            <p className="mt-3 text-muted-foreground leading-relaxed whitespace-pre-wrap max-w-2xl">
+            <div className="flex items-center gap-2">
+              <div className="h-6 w-1 rounded-full bg-primary" />
+              <h2 className="text-xl font-semibold">About the Event</h2>
+            </div>
+            <p className="mt-4 text-muted-foreground leading-relaxed whitespace-pre-wrap max-w-2xl">
               {event.description}
             </p>
           </section>
@@ -206,39 +220,39 @@ export default async function PublicEventPage({
         {/* ── Speakers ── */}
         {speakers && speakers.length > 0 && (
           <section>
-            <h2 className="text-xl font-semibold">Speakers</h2>
+            <div className="flex items-center gap-2">
+              <div className="h-6 w-1 rounded-full bg-primary" />
+              <h2 className="text-xl font-semibold">Speakers</h2>
+              <span className="ml-2 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">{speakers.length}</span>
+            </div>
             <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {speakers.map((speaker) => (
                 <div
                   key={speaker.id}
-                  className="group flex gap-4 rounded-xl border bg-card p-4 transition-shadow hover:shadow-md"
+                  className="group flex flex-col items-center rounded-xl border bg-card p-5 text-center transition-all hover:shadow-md hover:border-primary/20 hover:-translate-y-0.5"
                 >
                   {speaker.photo ? (
                     <img
                       src={speaker.photo}
                       alt={speaker.name}
-                      className="h-14 w-14 shrink-0 rounded-full object-cover"
+                      className="h-16 w-16 shrink-0 rounded-full object-cover ring-2 ring-background shadow-md"
                     />
                   ) : (
-                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-muted">
-                      <User className="h-6 w-6 text-muted-foreground" />
-                    </div>
+                    <Avatar name={speaker.name} size="xl" ring />
                   )}
-                  <div className="min-w-0">
-                    <h3 className="font-semibold text-sm">{speaker.name}</h3>
-                    {(speaker.title || speaker.company) && (
-                      <p className="text-xs text-muted-foreground">
-                        {[speaker.title, speaker.company]
-                          .filter(Boolean)
-                          .join(" at ")}
-                      </p>
-                    )}
-                    {speaker.bio && (
-                      <p className="mt-1.5 text-xs text-muted-foreground line-clamp-2">
-                        {speaker.bio}
-                      </p>
-                    )}
-                  </div>
+                  <h3 className="mt-3 font-semibold text-sm">{speaker.name}</h3>
+                  {(speaker.title || speaker.company) && (
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {[speaker.title, speaker.company]
+                        .filter(Boolean)
+                        .join(" at ")}
+                    </p>
+                  )}
+                  {speaker.bio && (
+                    <p className="mt-2 text-xs text-muted-foreground line-clamp-2">
+                      {speaker.bio}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
@@ -248,11 +262,16 @@ export default async function PublicEventPage({
         {/* ── Schedule ── */}
         {sessions && sessions.length > 0 && (
           <section>
-            <h2 className="text-xl font-semibold">Schedule</h2>
+            <div className="flex items-center gap-2">
+              <div className="h-6 w-1 rounded-full bg-primary" />
+              <h2 className="text-xl font-semibold">Schedule</h2>
+              <span className="ml-2 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">{sessions.filter(s => s.type !== "break").length} sessions</span>
+            </div>
             <div className="mt-6 space-y-8">
               {Object.entries(dayGroups).map(([day, daySessions]) => (
                 <div key={day}>
-                  <h3 className="mb-3 text-sm font-medium uppercase tracking-wider text-muted-foreground">
+                  <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+                    <Calendar className="h-3.5 w-3.5 text-primary" />
                     {day}
                   </h3>
                   <div className="space-y-2">
@@ -336,24 +355,28 @@ export default async function PublicEventPage({
         )}
 
         {/* ── Register CTA ── */}
-        <section className="rounded-2xl bg-gradient-to-br from-primary/8 via-primary/4 to-transparent border p-8 text-center">
-          <h2 className="text-xl font-semibold">Ready to join?</h2>
-          <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
-            Secure your spot at {event.title}.{" "}
-            {ticketTypes && ticketTypes.length > 1
-              ? `${ticketTypes.length} ticket options available.`
-              : ""}
-          </p>
-          <Link
-            href={`/${orgSlug}/${eventSlug}/register`}
-            className={buttonVariants({
-              size: "lg",
-              className: "mt-6 gap-2",
-            })}
-          >
-            Register Now
-            <ArrowRight className="h-4 w-4" />
-          </Link>
+        <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-info/5 border p-10 text-center">
+          <div className="absolute top-0 right-0 h-32 w-32 rounded-full bg-primary/5 blur-2xl" />
+          <div className="absolute bottom-0 left-0 h-24 w-24 rounded-full bg-info/5 blur-2xl" />
+          <div className="relative">
+            <h2 className="text-2xl font-bold">Ready to join?</h2>
+            <p className="mt-3 text-sm text-muted-foreground max-w-md mx-auto">
+              Secure your spot at {event.title}.{" "}
+              {ticketTypes && ticketTypes.length > 1
+                ? `${ticketTypes.length} ticket options available.`
+                : ""}
+            </p>
+            <Link
+              href={`/${orgSlug}/${eventSlug}/register`}
+              className={buttonVariants({
+                size: "lg",
+                className: "mt-8 gap-2 px-8 shadow-lg shadow-primary/20",
+              })}
+            >
+              Register Now
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
         </section>
       </div>
     </div>

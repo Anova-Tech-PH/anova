@@ -21,7 +21,13 @@ export default async function FeedPage({
     .eq("user_id", user.id)
     .in("status", ["confirmed", "checked_in"]);
 
-  const events = registrations?.map((r) => r.events).filter(Boolean) ?? [];
+  const allEvents = registrations?.map((r) => r.events).flat().filter(Boolean) ?? [];
+  const seen = new Set<string>();
+  const events = allEvents.filter((e: any) => {
+    if (seen.has(e.id)) return false;
+    seen.add(e.id);
+    return true;
+  });
   const selectedEventId = eventId ?? (events[0] as any)?.id;
 
   if (!selectedEventId) {

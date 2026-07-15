@@ -32,8 +32,12 @@ export default function RootLayout({
         {children}
         <Toaster
           position="bottom-right"
+          gap={8}
           toastOptions={{
-            className: "!bg-card !text-card-foreground !border-border",
+            className: "!bg-card !text-card-foreground !border-border !shadow-lg !rounded-xl",
+            style: {
+              padding: "14px 16px",
+            },
           }}
         />
       </body>

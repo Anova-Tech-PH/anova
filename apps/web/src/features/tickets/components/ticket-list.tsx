@@ -125,56 +125,94 @@ export function TicketList({
         />
       ) : (
         <div className="space-y-3">
-          {tickets.map((ticket) => (
-            <Card
-              key={ticket.id}
-              className="flex items-center justify-between p-4"
-            >
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-medium">{ticket.name}</h3>
-                  <Badge variant={ticket.type === "free" ? "success" : "info"}>
-                    {ticket.type === "free" ? "Free" : `$${ticket.price}`}
-                  </Badge>
-                </div>
-                {ticket.description && (
-                  <p className="mt-0.5 text-sm text-muted-foreground truncate">
-                    {ticket.description}
-                  </p>
-                )}
-                <div className="mt-1 flex items-center gap-4 text-xs text-muted-foreground">
-                  <span>
-                    {ticket.sold} sold
-                    {ticket.quantity ? ` / ${ticket.quantity}` : ""}
-                  </span>
-                  {ticket.quantity && (
-                    <span>
-                      {ticket.quantity - ticket.sold} remaining
-                    </span>
-                  )}
-                </div>
-              </div>
+          {tickets.map((ticket) => {
+            const soldPercent = ticket.quantity
+              ? Math.min(100, Math.round((ticket.sold / ticket.quantity) * 100))
+              : 0;
+            const leftBorderColor = ticket.type === "free" ? "rgb(34 197 94)" : "oklch(0.445 0.107 195)";
 
-              <div className="flex shrink-0 gap-1 ml-4">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setEditingTicket(ticket)}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleDelete(ticket)}
-                  disabled={isPending}
-                  className="hover:bg-destructive/10 hover:text-destructive"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </Card>
-          ))}
+            return (
+              <Card
+                key={ticket.id}
+                className="group overflow-hidden p-0 transition-all duration-200 hover:shadow-md"
+                style={{
+                  borderLeftWidth: 4,
+                  borderLeftColor: leftBorderColor,
+                }}
+              >
+                <div className="flex items-center justify-between p-4">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2.5">
+                      <h3 className="font-medium">{ticket.name}</h3>
+                      <Badge
+                        variant={ticket.type === "free" ? "success" : "info"}
+                        className="text-xs font-semibold px-2.5"
+                      >
+                        {ticket.type === "free" ? "Free" : `$${ticket.price}`}
+                      </Badge>
+                    </div>
+                    {ticket.description && (
+                      <p className="mt-0.5 text-sm text-muted-foreground truncate">
+                        {ticket.description}
+                      </p>
+                    )}
+
+                    {/* Sales indicator */}
+                    <div className="mt-2 space-y-1.5">
+                      <div className="flex items-center gap-4 text-xs">
+                        <span className="flex items-center gap-1.5">
+                          <span className="inline-flex h-5 min-w-8 items-center justify-center rounded-md bg-primary/10 px-1.5 font-semibold text-primary">
+                            {ticket.sold}
+                          </span>
+                          <span className="text-muted-foreground">
+                            sold{ticket.quantity ? ` of ${ticket.quantity}` : ""}
+                          </span>
+                        </span>
+                        {ticket.quantity ? (
+                          <span className="text-muted-foreground">
+                            {ticket.quantity - ticket.sold} remaining
+                          </span>
+                        ) : null}
+                      </div>
+                      {ticket.quantity ? (
+                        <div className="h-1.5 w-full max-w-xs rounded-full bg-muted overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-500 ${
+                              soldPercent >= 90
+                                ? "bg-amber-400"
+                                : ticket.type === "free"
+                                  ? "bg-emerald-400"
+                                  : "bg-primary"
+                            }`}
+                            style={{ width: `${soldPercent}%` }}
+                          />
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  <div className="flex shrink-0 gap-1 ml-4 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setEditingTicket(ticket)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDelete(ticket)}
+                      disabled={isPending}
+                      className="hover:bg-destructive/10 hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            );
+          })}
         </div>
       )}
 
