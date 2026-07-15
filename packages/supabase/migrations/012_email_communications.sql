@@ -64,17 +64,17 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.email_automations TO authenticate
 -- email_templates: org members can manage
 CREATE POLICY "Org members can manage email templates"
   ON public.email_templates FOR ALL TO authenticated
-  USING (is_org_member(organization_id, auth.uid()))
-  WITH CHECK (is_org_member(organization_id, auth.uid()));
+  USING (is_org_member(organization_id))
+  WITH CHECK (is_org_member(organization_id));
 
 -- email_logs: org members can view and insert
 CREATE POLICY "Org members can view email logs"
   ON public.email_logs FOR SELECT TO authenticated
-  USING (is_org_member(organization_id, auth.uid()));
+  USING (is_org_member(organization_id));
 
 CREATE POLICY "Org members can insert email logs"
   ON public.email_logs FOR INSERT TO authenticated
-  WITH CHECK (is_org_member(organization_id, auth.uid()));
+  WITH CHECK (is_org_member(organization_id));
 
 -- email_automations: via event's org membership
 CREATE POLICY "Org members can manage email automations"
