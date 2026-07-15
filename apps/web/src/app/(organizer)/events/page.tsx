@@ -1,7 +1,22 @@
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Plus, Calendar, MapPin, Wifi, Users } from "lucide-react";
 import { createClient } from "@/shared/utils/supabase/server";
 import { Badge, EmptyState } from "@/shared/components/ui";
+
+function getStatusStyle(status: string) {
+  switch (status) {
+    case "published":
+      return { bg: "bg-violet-100 dark:bg-violet-950/40", badge: "success" as const, label: "Published" };
+    case "draft":
+      return { bg: "bg-slate-100 dark:bg-slate-800/40", badge: "warning" as const, label: "Draft" };
+    case "cancelled":
+      return { bg: "bg-red-50 dark:bg-red-950/40", badge: "destructive" as const, label: "Cancelled" };
+    case "completed":
+      return { bg: "bg-emerald-50 dark:bg-emerald-950/40", badge: "info" as const, label: "Completed" };
+    default:
+      return { bg: "bg-muted", badge: "default" as const, label: status };
+  }
+}
 
 export default async function EventsPage() {
   const supabase = await createClient();
@@ -20,6 +35,18 @@ export default async function EventsPage() {
         .in("organization_id", orgIds)
         .order("created_at", { ascending: false })
     : { data: [] };
+
+  // Fetch registration counts per event
+  const regCounts: Record<string, number> = {};
+  if (events && events.length > 0) {
+    for (const event of events) {
+      const { count } = await supabase
+        .from("registrations")
+        .select("id", { count: "exact", head: true })
+        .eq("event_id", event.id);
+      regCounts[event.id] = count ?? 0;
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -49,42 +76,55 @@ export default async function EventsPage() {
         />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {events.map((event) => (
-            <Link
-              key={event.id}
-              href={`/events/${event.id}`}
-              className="group rounded-xl border bg-card shadow-sm transition-shadow hover:shadow-md"
-            >
-              {event.cover_image && (
-                <div className="aspect-[2/1] overflow-hidden rounded-t-xl">
-                  <img
-                    src={event.cover_image}
-                    alt={event.title}
-                    className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                  />
+          {events.map((event) => {
+            const style = getStatusStyle(event.status);
+            const regCount = regCounts[event.id] ?? 0;
+
+            return (
+              <Link
+                key={event.id}
+                href={`/events/${event.id}`}
+                className="group overflow-hidden rounded-xl border bg-card shadow-sm transition-all hover:shadow-md hover:border-primary/20"
+              >
+                {/* Status-colored placeholder header */}
+                <div className={`relative flex h-28 items-center justify-center ${style.bg}`}>
+                  <Calendar className="h-10 w-10 text-foreground/10" />
+                  <div className="absolute left-3 top-3">
+                    <Badge variant={style.badge}>{style.label}</Badge>
+                  </div>
+                  <div className="absolute right-3 top-3">
+                    <span className="flex items-center gap-1 rounded-full bg-background/80 px-2 py-0.5 text-xs font-medium backdrop-blur-sm">
+                      <Users className="h-3 w-3" />
+                      {regCount} reg.
+                    </span>
+                  </div>
                 </div>
-              )}
-              <div className="p-4">
-                <div className="flex items-center gap-2">
-                  <Badge
-                    variant={
-                      event.status === "published"
-                        ? "success"
-                        : event.status === "draft"
-                          ? "warning"
-                          : "default"
-                    }
-                  >
-                    {event.status}
-                  </Badge>
+
+                <div className="p-4">
+                  <h3 className="font-semibold truncate group-hover:text-primary transition-colors">
+                    {event.title}
+                  </h3>
+                  <div className="mt-2 space-y-1">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Calendar className="h-3.5 w-3.5 shrink-0" />
+                      <span>{new Date(event.start_date).toLocaleDateString()}</span>
+                    </div>
+                    {event.venue_name ? (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <MapPin className="h-3.5 w-3.5 shrink-0" />
+                        <span className="truncate">{event.venue_name}</span>
+                      </div>
+                    ) : event.is_virtual ? (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Wifi className="h-3.5 w-3.5 shrink-0" />
+                        <span>Virtual Event</span>
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
-                <h3 className="mt-2 font-semibold">{event.title}</h3>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {new Date(event.start_date).toLocaleDateString()}
-                </p>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>
