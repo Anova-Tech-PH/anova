@@ -8,6 +8,7 @@ import {
   Text,
   Button,
   Hr,
+  Img,
 } from "@react-email/components";
 
 type Props = {
@@ -16,6 +17,7 @@ type Props = {
   eventDate: string;
   eventUrl: string;
   ticketType: string;
+  qrCode?: string;
 };
 
 export function RegistrationConfirmation({
@@ -24,7 +26,11 @@ export function RegistrationConfirmation({
   eventDate = "",
   eventUrl = "#",
   ticketType = "General",
+  qrCode,
 }: Props) {
+  const qrImageUrl = qrCode
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrCode)}`
+    : null;
   return (
     <Html>
       <Head />
@@ -44,6 +50,23 @@ export function RegistrationConfirmation({
             <Text style={{ fontSize: "13px", color: "#6b7280", margin: "0 0 4px" }}>Ticket</Text>
             <Text style={{ fontSize: "14px", margin: "0" }}>{ticketType}</Text>
           </Section>
+          {qrImageUrl && (
+            <Section style={{ textAlign: "center" as const, margin: "24px 0" }}>
+              <Text style={{ fontSize: "14px", fontWeight: "600", color: "#374151", margin: "0 0 8px" }}>
+                Your Check-in QR Code
+              </Text>
+              <Img
+                src={qrImageUrl}
+                alt="Check-in QR Code"
+                width="200"
+                height="200"
+                style={{ margin: "0 auto", borderRadius: "8px", border: "1px solid #e5e7eb" }}
+              />
+              <Text style={{ fontSize: "12px", color: "#9ca3af", margin: "8px 0 0" }}>
+                Show this QR code at the event entrance for check-in
+              </Text>
+            </Section>
+          )}
           <Button
             href={eventUrl}
             style={{ backgroundColor: "#18181b", color: "#fff", padding: "10px 20px", borderRadius: "6px", fontSize: "14px", textDecoration: "none" }}

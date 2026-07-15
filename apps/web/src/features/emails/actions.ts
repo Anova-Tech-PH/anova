@@ -197,7 +197,7 @@ export async function sendBroadcastEmail(data: {
 
 export async function sendRegistrationConfirmationEmail(
   eventId: string,
-  registration: { name: string; email: string; ticketTypeName: string }
+  registration: { name: string; email: string; ticketTypeName: string; qrCode: string }
 ) {
   const supabase = await createClient();
 
@@ -237,6 +237,7 @@ export async function sendRegistrationConfirmationEmail(
       }),
       eventUrl,
       ticketType: registration.ticketTypeName,
+      qrCode: registration.qrCode,
     })
   );
 

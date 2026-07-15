@@ -81,6 +81,7 @@ export async function registerForEvent(data: {
     name: data.name,
     email: data.email,
     ticketTypeName: ticketType?.name ?? "General",
+    qrCode,
   }).catch(() => {});
 
   return registration;
