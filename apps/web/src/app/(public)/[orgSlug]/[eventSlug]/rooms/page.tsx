@@ -20,7 +20,7 @@ export default async function PublicRoomsPage({
   const { data: event } = await supabase
     .from("events")
     .select("id, title")
-    .eq("org_id", org.id)
+    .eq("organization_id", org.id)
     .eq("slug", eventSlug)
     .eq("status", "published")
     .single();
