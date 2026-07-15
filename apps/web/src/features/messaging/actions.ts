@@ -13,57 +13,29 @@ export async function createConversation(data: {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
-  // For DMs, check if conversation already exists
+  // For DMs, use the RPC function which handles deduplication and RLS
   if (!data.is_group && data.member_ids.length === 1) {
-    const otherUserId = data.member_ids[0];
+    const { data: convId, error } = await supabase.rpc("create_dm_conversation", {
+      p_event_id: data.event_id,
+      p_other_user_id: data.member_ids[0],
+    });
 
-    const { data: existing } = await supabase
-      .from("conversations")
-      .select(`
-        id,
-        conversation_members!inner(user_id)
-      `)
-      .eq("event_id", data.event_id)
-      .eq("is_group", false);
+    if (error) throw new Error(error.message);
 
-    // Find a conversation where both users are members
-    if (existing) {
-      for (const conv of existing) {
-        const memberIds = (conv.conversation_members as any[]).map((m: any) => m.user_id);
-        if (memberIds.includes(user.id) && memberIds.includes(otherUserId)) {
-          return conv;
-        }
-      }
-    }
+    revalidatePath("/messages");
+    return { id: convId as string };
   }
 
-  const { data: conversation, error } = await supabase
-    .from("conversations")
-    .insert({
-      event_id: data.event_id,
-      is_group: data.is_group,
-      name: data.name || null,
-    })
-    .select()
-    .single();
+  // Group conversations (future use)
+  const { data: convId, error } = await supabase.rpc("create_dm_conversation", {
+    p_event_id: data.event_id,
+    p_other_user_id: data.member_ids[0],
+  });
 
   if (error) throw new Error(error.message);
 
-  // Add all members including self
-  const allMemberIds = [...new Set([user.id, ...data.member_ids])];
-  const { error: membersError } = await supabase
-    .from("conversation_members")
-    .insert(
-      allMemberIds.map((uid) => ({
-        conversation_id: conversation.id,
-        user_id: uid,
-      }))
-    );
-
-  if (membersError) throw new Error(membersError.message);
-
   revalidatePath("/messages");
-  return conversation;
+  return { id: convId as string };
 }
 
 export async function sendMessage(data: {

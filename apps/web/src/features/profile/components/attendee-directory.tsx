@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useMemo, useTransition } from "react";
-import { Search, UserPlus, Check, Clock, Users } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Search, UserPlus, Check, Clock, Users, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { sendConnectionRequest } from "@/features/connections/actions";
+import { createConversation } from "@/features/messaging/actions";
 import { Avatar } from "@/shared/components/ui/avatar";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
@@ -53,9 +55,25 @@ export function AttendeeDirectory({
   eventId: string;
   currentUserId: string;
 }) {
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [isPending, startTransition] = useTransition();
   const [connections, setConnections] = useState(connectionMap);
+
+  function handleMessage(userId: string) {
+    startTransition(async () => {
+      try {
+        const conv = await createConversation({
+          event_id: eventId,
+          is_group: false,
+          member_ids: [userId],
+        });
+        router.push(`/messages?conversation=${conv.id}`);
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Failed to start conversation");
+      }
+    });
+  }
 
   const filtered = useMemo(() => {
     if (!search) return attendees.filter((a) => a.id !== currentUserId);
@@ -178,27 +196,51 @@ export function AttendeeDirectory({
                 )}
 
                 {/* Connection action — pushed to the bottom */}
-                <div className="mt-auto w-full pt-4">
+                <div className="mt-auto w-full pt-4 space-y-2">
                   {conn?.status === "accepted" ? (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      disabled
-                      className="w-full gap-1.5 text-emerald-600 dark:text-emerald-400"
-                    >
-                      <Check className="h-4 w-4" />
-                      Connected
-                    </Button>
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        disabled
+                        className="w-full gap-1.5 text-emerald-600 dark:text-emerald-400"
+                      >
+                        <Check className="h-4 w-4" />
+                        Connected
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleMessage(attendee.id)}
+                        disabled={isPending}
+                        className="w-full gap-1.5"
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                        Message
+                      </Button>
+                    </>
                   ) : conn?.status === "pending" ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled
-                      className="w-full gap-1.5 text-muted-foreground"
-                    >
-                      <Clock className="h-4 w-4" />
-                      Pending
-                    </Button>
+                    <>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled
+                        className="w-full gap-1.5 text-muted-foreground"
+                      >
+                        <Clock className="h-4 w-4" />
+                        Pending
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleMessage(attendee.id)}
+                        disabled={isPending}
+                        className="w-full gap-1.5"
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                        Message
+                      </Button>
+                    </>
                   ) : (
                     <Button
                       variant="primary"
