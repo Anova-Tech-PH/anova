@@ -2,7 +2,6 @@
 
 import { createClient } from "@/shared/utils/supabase/server";
 import { revalidatePath } from "next/cache";
-import { resend } from "./lib/resend";
 import { sendEmail, substituteVariables } from "./lib/send-email";
 import { getSegmentedRecipients } from "./lib/segments";
 
@@ -219,7 +218,8 @@ export async function sendRegistrationConfirmationEmail(
 
   if (!automation?.enabled) return;
 
-  const orgSlug = (event.organizations as { slug: string })?.slug ?? "";
+  const orgs = event.organizations as unknown as { slug: string }[] | null;
+  const orgSlug = orgs?.[0]?.slug ?? "";
   const eventUrl = `/${orgSlug}/${event.slug}`;
 
   const { render } = await import("@react-email/components");

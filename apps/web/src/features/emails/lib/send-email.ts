@@ -1,4 +1,4 @@
-import { resend } from "./resend";
+import { getResend } from "./resend";
 import { createClient } from "@/shared/utils/supabase/server";
 
 type SendEmailParams = {
@@ -13,7 +13,7 @@ type SendEmailParams = {
 export async function sendEmail(params: SendEmailParams) {
   const supabase = await createClient();
 
-  const { data, error: sendError } = await resend.emails.send({
+  const { data, error: sendError } = await getResend().emails.send({
     from: "Attendly <noreply@attendly.app>",
     to: params.to.email,
     subject: params.subject,

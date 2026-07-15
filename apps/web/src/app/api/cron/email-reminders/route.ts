@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { resend } from "@/features/emails/lib/resend";
+import { getResend } from "@/features/emails/lib/resend";
 import { render } from "@react-email/components";
 import { EventReminder } from "@/features/emails/lib/templates/event-reminder";
 import { PostEvent } from "@/features/emails/lib/templates/post-event";
@@ -90,7 +90,7 @@ async function processReminders(supabase: ReturnType<typeof createServiceClient>
 
         const subject = `[Reminder] ${event.title} starts ${timeUntil}`;
 
-        const { data: sent, error } = await resend.emails.send({
+        const { data: sent, error } = await getResend().emails.send({
           from: "Attendly <noreply@attendly.app>",
           to: reg.email,
           subject,
@@ -160,7 +160,7 @@ async function processPostEvent(supabase: ReturnType<typeof createServiceClient>
 
       const subject = `Thanks for attending ${event.title}!`;
 
-      const { data: sent, error } = await resend.emails.send({
+      const { data: sent, error } = await getResend().emails.send({
         from: "Attendly <noreply@attendly.app>",
         to: reg.email,
         subject,
