@@ -3,6 +3,7 @@
 import { createClient } from "@/shared/utils/supabase/server";
 import { nanoid } from "nanoid";
 import { revalidatePath } from "next/cache";
+import { sendRegistrationConfirmationEmail } from "@/features/emails/actions";
 
 export async function registerForEvent(data: {
   event_id: string;
@@ -68,6 +69,19 @@ export async function registerForEvent(data: {
     .single();
 
   if (error) throw new Error(error.message);
+
+  // Send confirmation email (non-blocking)
+  const { data: ticketType } = await supabase
+    .from("ticket_types")
+    .select("name")
+    .eq("id", data.ticket_type_id)
+    .single();
+
+  sendRegistrationConfirmationEmail(data.event_id, {
+    name: data.name,
+    email: data.email,
+    ticketTypeName: ticketType?.name ?? "General",
+  }).catch(() => {});
 
   return registration;
 }
