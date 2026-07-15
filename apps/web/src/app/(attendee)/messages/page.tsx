@@ -1,36 +1,16 @@
-import { redirect } from "next/navigation";
-import { createClient } from "@/shared/utils/supabase/server";
-import { getConversations, getMessages } from "@/features/messaging/queries";
-import { MessagesView } from "./messages-view";
+import { MessageCircle } from "lucide-react";
 
-export default async function MessagesPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ conversation?: string }>;
-}) {
-  const { conversation: conversationId } = await searchParams;
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-
-  const conversations = await getConversations();
-  const selectedConvId = conversationId ?? conversations[0]?.id ?? null;
-
-  let messages: any[] = [];
-  let selectedConv: any = null;
-
-  if (selectedConvId) {
-    messages = await getMessages(selectedConvId);
-    selectedConv = conversations.find((c) => c.id === selectedConvId) ?? null;
-  }
-
+export default function MessagesPage() {
   return (
-    <MessagesView
-      conversations={conversations}
-      selectedConversationId={selectedConvId}
-      selectedConversationName={selectedConv?.display_name ?? ""}
-      initialMessages={messages}
-      currentUserId={user.id}
-    />
+    <div className="space-y-6">
+      <h1 className="text-2xl font-semibold">Messages</h1>
+      <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-12 text-center">
+        <MessageCircle className="h-10 w-10 text-muted-foreground/50 mb-3" />
+        <h3 className="font-medium">Coming Soon</h3>
+        <p className="text-sm text-muted-foreground mt-1">
+          Direct and group messaging with other attendees.
+        </p>
+      </div>
+    </div>
   );
 }

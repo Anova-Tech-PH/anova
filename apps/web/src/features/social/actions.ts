@@ -24,12 +24,19 @@ export async function createPost(data: {
       image_url: data.image_url || null,
       poll_options: data.poll_options ? data.poll_options.map((o, i) => ({ index: i, text: o, votes: 0 })) : null,
     })
-    .select("*, profiles:author_id(full_name, avatar_url)")
+    .select("*")
     .single();
 
   if (error) throw new Error(error.message);
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name, avatar_url")
+    .eq("id", user.id)
+    .single();
+
   revalidatePath("/feed");
-  return post;
+  return { ...post, profiles: profile };
 }
 
 export async function togglePostLike(postId: string) {
@@ -61,11 +68,18 @@ export async function createComment(postId: string, content: string) {
   const { data: comment, error } = await supabase
     .from("comments")
     .insert({ post_id: postId, author_id: user.id, content })
-    .select("*, profiles:author_id(full_name, avatar_url)")
+    .select("*")
     .single();
 
   if (error) throw new Error(error.message);
-  return comment;
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name, avatar_url")
+    .eq("id", user.id)
+    .single();
+
+  return { ...comment, profiles: profile };
 }
 
 export async function deletePost(postId: string) {
