@@ -22,7 +22,8 @@ export default async function PeoplePage({
     .eq("user_id", user.id)
     .in("status", ["confirmed", "checked_in"]);
 
-  const events = registrations?.map((r) => r.events).filter(Boolean) ?? [];
+  const allEvents = registrations?.map((r) => r.events).filter(Boolean) ?? [];
+  const events = allEvents.filter((evt: any, i: number, arr: any[]) => arr.findIndex((e: any) => e.id === evt.id) === i);
   const selectedEventId = eventId ?? (events[0] as any)?.id;
 
   if (!selectedEventId) {
