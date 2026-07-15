@@ -26,6 +26,11 @@ export function RegistrationFlow({
   const [selectedTicket, setSelectedTicket] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [gender, setGender] = useState("");
+  const [birthday, setBirthday] = useState("");
+  const [address, setAddress] = useState("");
+  const [city, setCity] = useState("");
+  const [country, setCountry] = useState("");
   const [loading, setLoading] = useState(false);
   const [confirmation, setConfirmation] = useState<{
     qr_code: string;
@@ -46,6 +51,13 @@ export function RegistrationFlow({
         ticket_type_id: selectedTicket,
         name,
         email,
+        custom_fields: {
+          ...(gender && { gender }),
+          ...(birthday && { birthday }),
+          ...(address && { address }),
+          ...(city && { city }),
+          ...(country && { country }),
+        },
       });
       setConfirmation(reg);
     } catch (err) {
@@ -147,6 +159,62 @@ export function RegistrationFlow({
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
             />
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Gender</label>
+              <select
+                value={gender}
+                onChange={(e) => setGender(e.target.value)}
+                className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <option value="">Select...</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="non-binary">Non-binary</option>
+                <option value="prefer-not-to-say">Prefer not to say</option>
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Birthday</label>
+              <Input
+                type="date"
+                value={birthday}
+                onChange={(e) => setBirthday(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">Address</label>
+            <Input
+              type="text"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              placeholder="Street address"
+            />
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">City</label>
+              <Input
+                type="text"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                placeholder="City"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Country</label>
+              <Input
+                type="text"
+                value={country}
+                onChange={(e) => setCountry(e.target.value)}
+                placeholder="Country"
+              />
+            </div>
           </div>
 
           <Button
