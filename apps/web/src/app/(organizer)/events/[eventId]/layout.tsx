@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, Calendar, Users, QrCode, BarChart3, Settings, Mic, DoorOpen } from "lucide-react";
+import { ArrowLeft, Calendar, Users, QrCode, BarChart3, Settings, Mic, DoorOpen, Mail } from "lucide-react";
 import { createClient } from "@/shared/utils/supabase/server";
 import { notFound } from "next/navigation";
 import { Badge } from "@/shared/components/ui";
@@ -29,6 +29,7 @@ export default async function EventLayout({
     { href: `/events/${eventId}/registrations`, label: "Registrations", icon: Users },
     { href: `/events/${eventId}/check-in`, label: "Check-in", icon: QrCode },
     { href: `/events/${eventId}/rooms`, label: "Rooms", icon: DoorOpen },
+    { href: `/events/${eventId}/emails`, label: "Emails", icon: Mail },
     { href: `/events/${eventId}/analytics`, label: "Analytics", icon: BarChart3 },
     { href: `/events/${eventId}/settings`, label: "Settings", icon: Settings },
   ];
