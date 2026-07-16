@@ -6,7 +6,6 @@ import { createClient } from "@/shared/utils/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
-import { Card } from "@/shared/components/ui/card";
 import { PageTransition } from "@/shared/components/ui/page-transition";
 import { Logo } from "@/shared/components/logo";
 import {
