@@ -64,11 +64,48 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Redirect logged-in users away from auth pages
+  // Redirect logged-in users away from auth pages (except onboarding)
   if (pathname.startsWith("/login") || pathname.startsWith("/signup")) {
     if (user) {
       const url = request.nextUrl.clone();
       url.pathname = "/dashboard";
+      return NextResponse.redirect(url);
+    }
+  }
+
+  // Allow onboarding page for logged-in users without an org
+  if (pathname.startsWith("/onboarding")) {
+    if (!user) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      return NextResponse.redirect(url);
+    }
+    // Check if user already has an org — if so, redirect to dashboard
+    const { count } = await supabase
+      .from("organization_members")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id);
+
+    if (count && count > 0) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/dashboard";
+      return NextResponse.redirect(url);
+    }
+  }
+
+  // Redirect users without an org to onboarding (for protected routes)
+  if (
+    user &&
+    (pathname.startsWith("/dashboard") || pathname.startsWith("/events"))
+  ) {
+    const { count } = await supabase
+      .from("organization_members")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id);
+
+    if (!count || count === 0) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/onboarding";
       return NextResponse.redirect(url);
     }
   }

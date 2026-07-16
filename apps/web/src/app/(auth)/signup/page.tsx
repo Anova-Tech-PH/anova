@@ -37,31 +37,7 @@ export default function SignupPage() {
       return;
     }
 
-    // Auto-create organization for new users
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (user) {
-      const orgSlug = fullName
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "");
-
-      // Append short random suffix to prevent slug collisions
-      const suffix = Math.random().toString(36).slice(2, 6);
-      const { error: rpcError } = await supabase.rpc("create_organization_with_owner", {
-        _name: `${fullName}'s Events`,
-        _slug: `${orgSlug}-${suffix}`,
-      });
-
-      if (rpcError) {
-        console.error("Failed to create organization:", rpcError.message);
-        toast.error("Account created but organization setup failed. Please contact support.");
-      }
-    }
-
-    router.push("/dashboard");
+    router.push("/onboarding");
     router.refresh();
   }
 
