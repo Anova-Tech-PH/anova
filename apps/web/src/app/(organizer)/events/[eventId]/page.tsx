@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/shared/utils/supabase/server";
 import { Card } from "@/shared/components/ui";
-import { BookOpen, MapPin, Globe, Clock, Link } from "lucide-react";
+import { BookOpen, MapPin, Globe, Clock, Link, ExternalLink } from "lucide-react";
+import { CopyLinkButton } from "./copy-link-button";
 
 export default async function EventDetailPage({
   params,
@@ -13,7 +14,7 @@ export default async function EventDetailPage({
 
   const { data: event } = await supabase
     .from("events")
-    .select("*")
+    .select("*, organizations(slug)")
     .eq("id", eventId)
     .single();
 
@@ -87,6 +88,26 @@ export default async function EventDetailPage({
           <p className="mt-2 text-lg font-semibold">{event.slug}</p>
         </Card>
       </div>
+
+      {event.organizations && (
+        <Card className="p-6">
+          <div className="mb-3 flex items-center gap-2">
+            <ExternalLink className="h-4 w-4 text-[oklch(0.445_0.107_195)]" />
+            <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+              Public Registration Link
+            </h2>
+          </div>
+          <div className="flex items-center gap-3">
+            <code className="flex-1 rounded-lg border bg-muted/50 px-3 py-2 text-sm">
+              {`/${(event.organizations as any).slug}/${event.slug}/register`}
+            </code>
+            <CopyLinkButton path={`/${(event.organizations as any).slug}/${event.slug}/register`} />
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Share this link with attendees to register for your event.
+          </p>
+        </Card>
+      )}
     </div>
   );
 }
