@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Newspaper, MessageCircle, DoorOpen, Users, User, Calendar, LayoutDashboard, Settings } from "lucide-react";
 import { PageTransition } from "@/shared/components/ui";
 import { Logo } from "@/shared/components/logo";
+import { UnreadBadge } from "@/features/messaging/components/unread-badge";
 import { cn } from "@/shared/utils/cn";
 
 const organizerNav = [
@@ -104,9 +105,7 @@ export default function AttendeeLayout({
                 </span>
                 <span className="flex-1">{item.label}</span>
                 {item.label === "Messages" && (
-                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[oklch(0.445_0.107_195)] px-1.5 text-[10px] font-semibold text-white shadow-sm">
-                    3
-                  </span>
+                  <UnreadBadge className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[oklch(0.445_0.107_195)] px-1.5 text-[10px] font-semibold text-white shadow-sm" />
                 )}
               </Link>
             ))}
@@ -157,9 +156,7 @@ export default function AttendeeLayout({
               <span className="relative">
                 <item.icon className={cn("h-5 w-5", active && "drop-shadow-sm")} />
                 {item.label === "Messages" && (
-                  <span className="absolute -right-2 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[oklch(0.445_0.107_195)] px-1 text-[9px] font-bold text-white shadow-sm">
-                    3
-                  </span>
+                  <UnreadBadge className="absolute -right-2 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[oklch(0.445_0.107_195)] px-1 text-[9px] font-bold text-white shadow-sm" />
                 )}
               </span>
               <span>{item.label}</span>
