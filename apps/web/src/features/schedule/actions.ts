@@ -67,6 +67,7 @@ export async function createSession(eventId: string, data: {
   location?: string;
   track_id?: string;
   speaker_ids?: string[];
+  enable_check_in?: boolean;
 }) {
   const supabase = await createClient();
 
@@ -106,6 +107,7 @@ export async function updateSession(eventId: string, sessionId: string, data: {
   location?: string;
   track_id?: string | null;
   speaker_ids?: string[];
+  enable_check_in?: boolean;
 }) {
   const supabase = await createClient();
 

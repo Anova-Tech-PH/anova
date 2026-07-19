@@ -1,4 +1,6 @@
 import { QrScanner } from "@/features/registration/components/qr-scanner";
+import { CheckInStats } from "@/features/registration/components/check-in-stats";
+import { createClient } from "@/shared/utils/supabase/server";
 import { ScanLine } from "lucide-react";
 
 export default async function CheckInPage({
@@ -7,6 +9,14 @@ export default async function CheckInPage({
   params: Promise<{ eventId: string }>;
 }) {
   const { eventId } = await params;
+  const supabase = await createClient();
+
+  const { data: checkInSessions } = await supabase
+    .from("sessions")
+    .select("id, title, start_time, end_time, location")
+    .eq("event_id", eventId)
+    .eq("enable_check_in", true)
+    .order("start_time", { ascending: true });
 
   return (
     <div className="space-y-6">
@@ -25,7 +35,9 @@ export default async function CheckInPage({
         </div>
       </div>
 
-      <QrScanner eventId={eventId} />
+      <QrScanner eventId={eventId} sessions={checkInSessions ?? []} />
+
+      <CheckInStats eventId={eventId} />
     </div>
   );
 }

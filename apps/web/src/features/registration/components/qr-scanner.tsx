@@ -1,25 +1,68 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Camera, CheckCircle, AlertCircle, XCircle } from "lucide-react";
+import { Camera, CheckCircle, AlertCircle, XCircle, ListChecks } from "lucide-react";
 import { toast } from "sonner";
 import { Button, Input, Card, EmptyState } from "@/shared/components/ui";
 import { checkInByQrCode } from "../actions";
 
 type ScanResult = Awaited<ReturnType<typeof checkInByQrCode>> | null;
 
-export function QrScanner({ eventId }: { eventId: string }) {
+type CheckInSession = {
+  id: string;
+  title: string;
+  start_time: string;
+  end_time: string;
+  location: string | null;
+};
+
+function formatSessionTime(iso: string) {
+  return new Date(iso).toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+export function QrScanner({
+  eventId,
+  sessions,
+}: {
+  eventId: string;
+  sessions: CheckInSession[];
+}) {
   const scannerRef = useRef<HTMLDivElement>(null);
   const html5QrCodeRef = useRef<any>(null);
   const [scanning, setScanning] = useState(false);
   const [result, setResult] = useState<ScanResult>(null);
   const [error, setError] = useState<string | null>(null);
   const [checkedInCount, setCheckedInCount] = useState(0);
+  const [selectedSessionId, setSelectedSessionId] = useState<string>("");
   const processingRef = useRef(false);
 
-  async function startScanner() {
+  const selectedSession = sessions.find((s) => s.id === selectedSessionId);
+
+  function handleSessionChange(sessionId: string) {
+    setSelectedSessionId(sessionId);
+    setCheckedInCount(0);
     setResult(null);
     setError(null);
+  }
+
+  async function startScanner() {
+    if (!selectedSessionId) {
+      toast.error("Please select a session first");
+      return;
+    }
+
+    setResult(null);
+    setError(null);
+    // Show the container BEFORE starting the scanner so it has layout dimensions
+    setScanning(true);
+
+    // Wait a frame for the DOM to update and container to be visible
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
 
     const { Html5Qrcode } = await import("html5-qrcode");
 
@@ -32,44 +75,47 @@ export function QrScanner({ eventId }: { eventId: string }) {
     const scanner = new Html5Qrcode("qr-reader");
     html5QrCodeRef.current = scanner;
 
+    const scanConfig = { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
+    const onScan = async (decodedText: string) => {
+      if (processingRef.current) return;
+      processingRef.current = true;
+
+      try {
+        const checkInResult = await checkInByQrCode(decodedText, eventId, selectedSessionId);
+        setResult(checkInResult);
+        setError(null);
+
+        if (!checkInResult.already_checked_in) {
+          setCheckedInCount((c) => c + 1);
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Check-in failed");
+        setResult(null);
+      }
+
+      // Pause scanning briefly after a result
+      try {
+        await scanner.pause(true);
+      } catch {}
+
+      setTimeout(() => {
+        processingRef.current = false;
+        try {
+          scanner.resume();
+        } catch {}
+      }, 2000);
+    };
+    const onScanError = () => {}; // ignore scan failures
+
     try {
-      await scanner.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 250, height: 250 } },
-        async (decodedText: string) => {
-          if (processingRef.current) return;
-          processingRef.current = true;
-
-          try {
-            const checkInResult = await checkInByQrCode(decodedText);
-            setResult(checkInResult);
-            setError(null);
-
-            if (!checkInResult.already_checked_in) {
-              setCheckedInCount((c) => c + 1);
-            }
-          } catch (err) {
-            setError(err instanceof Error ? err.message : "Check-in failed");
-            setResult(null);
-          }
-
-          // Pause scanning briefly after a result
-          try {
-            await scanner.pause(true);
-          } catch {}
-
-          setTimeout(() => {
-            processingRef.current = false;
-            try {
-              scanner.resume();
-            } catch {}
-          }, 2000);
-        },
-        () => {} // ignore scan failures
-      );
-
-      setScanning(true);
+      // Try rear camera first (mobile), fall back to any available camera
+      try {
+        await scanner.start({ facingMode: "environment" }, scanConfig, onScan, onScanError);
+      } catch {
+        await scanner.start({ facingMode: "user" }, scanConfig, onScan, onScanError);
+      }
     } catch (err) {
+      setScanning(false);
       toast.error("Could not access camera. Please allow camera permissions.");
     }
   }
@@ -94,8 +140,39 @@ export function QrScanner({ eventId }: { eventId: string }) {
     };
   }, []);
 
+  if (sessions.length === 0) {
+    return (
+      <EmptyState
+        icon={<ListChecks className="h-8 w-8" />}
+        title="No check-in sessions"
+        description="Enable check-in on sessions in the Schedule tab to start scanning attendees."
+        className="py-16"
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
+      {/* Session selector */}
+      <div className="rounded-xl border bg-card p-4">
+        <label className="mb-2 block text-sm font-medium">Select session to check into</label>
+        <select
+          value={selectedSessionId}
+          onChange={(e) => handleSessionChange(e.target.value)}
+          className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+        >
+          <option value="">-- Choose a session --</option>
+          {sessions.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.title} ({formatSessionTime(s.start_time)})
+            </option>
+          ))}
+        </select>
+        {selectedSession?.location && (
+          <p className="mt-1 text-xs text-muted-foreground">Location: {selectedSession.location}</p>
+        )}
+      </div>
+
       {/* Stats bar */}
       <div className="flex items-center justify-between rounded-xl border bg-card p-4">
         <div className="flex items-center gap-3">
@@ -111,6 +188,7 @@ export function QrScanner({ eventId }: { eventId: string }) {
           onClick={scanning ? stopScanner : startScanner}
           variant={scanning ? "outline" : "primary"}
           className="gap-2"
+          disabled={!selectedSessionId}
         >
           <Camera className="h-4 w-4" />
           {scanning ? "Stop Scanner" : "Start Scanner"}
@@ -124,7 +202,7 @@ export function QrScanner({ eventId }: { eventId: string }) {
         <div id="qr-reader" ref={scannerRef} />
       </div>
 
-      {!scanning && !result && !error && (
+      {!scanning && !result && !error && selectedSessionId && (
         <EmptyState
           icon={<Camera className="h-8 w-8" />}
           title="Ready to scan"
@@ -161,6 +239,11 @@ export function QrScanner({ eventId }: { eventId: string }) {
                   Ticket: {Array.isArray(result.ticket_types) ? result.ticket_types[0]?.name : (result.ticket_types as any).name}
                 </p>
               )}
+              {selectedSession && (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Session: {selectedSession.title}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -181,20 +264,29 @@ export function QrScanner({ eventId }: { eventId: string }) {
       )}
 
       {/* Manual entry */}
-      <ManualCheckIn eventId={eventId} onSuccess={(r) => {
-        setResult(r);
-        setError(null);
-        if (r && !r.already_checked_in) setCheckedInCount((c) => c + 1);
-      }} />
+      <ManualCheckIn
+        eventId={eventId}
+        sessionId={selectedSessionId}
+        disabled={!selectedSessionId}
+        onSuccess={(r) => {
+          setResult(r);
+          setError(null);
+          if (r && !r.already_checked_in) setCheckedInCount((c) => c + 1);
+        }}
+      />
     </div>
   );
 }
 
 function ManualCheckIn({
   eventId,
+  sessionId,
+  disabled,
   onSuccess,
 }: {
   eventId: string;
+  sessionId: string;
+  disabled: boolean;
   onSuccess: (result: ScanResult) => void;
 }) {
   const [code, setCode] = useState("");
@@ -202,11 +294,11 @@ function ManualCheckIn({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!code.trim()) return;
+    if (!code.trim() || !sessionId) return;
     setLoading(true);
 
     try {
-      const result = await checkInByQrCode(code.trim());
+      const result = await checkInByQrCode(code.trim(), eventId, sessionId);
       onSuccess(result);
       setCode("");
     } catch (err) {
@@ -232,10 +324,11 @@ function ManualCheckIn({
           onChange={(e) => setCode(e.target.value)}
           placeholder="Enter QR code..."
           className="flex-1"
+          disabled={disabled}
         />
         <Button
           type="submit"
-          disabled={!code.trim()}
+          disabled={!code.trim() || disabled}
           loading={loading}
         >
           {loading ? "..." : "Check In"}

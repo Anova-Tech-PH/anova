@@ -25,6 +25,7 @@ type SessionFormData = {
   location: string;
   track_id: string;
   speaker_ids: string[];
+  enable_check_in: boolean;
 };
 
 export function SessionForm({
@@ -49,6 +50,7 @@ export function SessionForm({
     location: session?.location ?? "",
     track_id: session?.track_id ?? "",
     speaker_ids: session?.speaker_ids ?? [],
+    enable_check_in: session?.enable_check_in ?? false,
   });
   const [loading, setLoading] = useState(false);
 
@@ -159,6 +161,19 @@ export function SessionForm({
               placeholder="e.g. Main Hall, Room A"
             />
           </div>
+
+          <label className="flex items-center gap-3 rounded-lg border px-4 py-3 cursor-pointer hover:bg-accent/50 transition-colors">
+            <input
+              type="checkbox"
+              checked={form.enable_check_in}
+              onChange={(e) => setForm((f) => ({ ...f, enable_check_in: e.target.checked }))}
+              className="h-4 w-4 rounded border-input accent-primary"
+            />
+            <div>
+              <span className="text-sm font-medium">Enable check-in for this session</span>
+              <p className="text-xs text-muted-foreground">Allows scanning attendee QR codes for this session</p>
+            </div>
+          </label>
 
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Description</label>

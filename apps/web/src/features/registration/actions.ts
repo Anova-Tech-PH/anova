@@ -87,51 +87,62 @@ export async function registerForEvent(data: {
   return registration;
 }
 
-export async function checkInByQrCode(qrCode: string, eventId?: string) {
+export async function checkInByQrCode(qrCode: string, eventId: string, sessionId: string) {
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Authentication required");
 
-  let query = supabase
+  const { data: registration, error: findError } = await supabase
     .from("registrations")
     .select("id, name, email, status, checked_in_at, event_id, ticket_type_id, ticket_types(name)")
-    .eq("qr_code", qrCode);
-
-  if (eventId) {
-    query = query.eq("event_id", eventId);
-  }
-
-  const { data: registration, error: findError } = await query.single();
+    .eq("qr_code", qrCode)
+    .eq("event_id", eventId)
+    .single();
 
   if (findError || !registration) {
     throw new Error("Registration not found");
-  }
-
-  if (registration.status === "checked_in") {
-    return {
-      ...registration,
-      already_checked_in: true,
-    };
   }
 
   if (registration.status === "cancelled") {
     throw new Error("This registration has been cancelled");
   }
 
-  const { error: updateError } = await supabase
-    .from("registrations")
-    .update({
-      status: "checked_in",
-      checked_in_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", registration.id);
+  // Insert into check_ins table (unique constraint handles duplicates)
+  const { error: checkInError } = await supabase
+    .from("check_ins")
+    .insert({
+      registration_id: registration.id,
+      event_id: eventId,
+      session_id: sessionId,
+      checked_in_by: user.id,
+    });
 
-  if (updateError) throw new Error(updateError.message);
+  if (checkInError) {
+    // Unique constraint violation = already checked in for this session
+    if (checkInError.code === "23505") {
+      return {
+        ...registration,
+        already_checked_in: true,
+      };
+    }
+    throw new Error(checkInError.message);
+  }
 
-  revalidatePath(`/events/${registration.event_id}/registrations`);
-  revalidatePath(`/events/${registration.event_id}/check-in`);
+  // Update registration status to checked_in on first-ever check-in (backward compat)
+  if (registration.status !== "checked_in") {
+    await supabase
+      .from("registrations")
+      .update({
+        status: "checked_in",
+        checked_in_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", registration.id);
+  }
+
+  revalidatePath(`/events/${eventId}/registrations`);
+  revalidatePath(`/events/${eventId}/check-in`);
 
   return {
     ...registration,
