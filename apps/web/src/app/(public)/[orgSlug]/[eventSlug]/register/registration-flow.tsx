@@ -64,7 +64,7 @@ export function RegistrationFlow({
   const originalPrice = selected ? selected.price : 0;
   const discountAmount = appliedPromo
     ? appliedPromo.discount_type === "percentage"
-      ? Math.round(originalPrice * appliedPromo.discount_value) / 100
+      ? parseFloat((originalPrice * appliedPromo.discount_value / 100).toFixed(2))
       : Math.min(appliedPromo.discount_value, originalPrice)
     : 0;
   const finalPrice = Math.max(0, originalPrice - discountAmount);

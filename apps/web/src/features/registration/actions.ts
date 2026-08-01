@@ -69,6 +69,11 @@ export async function registerForEvent(data: {
       throw new Error("Promo code has reached its usage limit");
     }
 
+    // Check applies_to restriction
+    if (promo.applies_to && promo.applies_to.length > 0 && !promo.applies_to.includes(data.ticket_type_id)) {
+      throw new Error("This promo code does not apply to the selected ticket type");
+    }
+
     // Increment current_uses
     await supabase
       .from("promo_codes")
