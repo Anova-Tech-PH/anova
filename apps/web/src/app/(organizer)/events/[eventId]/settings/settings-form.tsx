@@ -3,7 +3,8 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Upload, X, ImageIcon } from "lucide-react";
+import { Upload, X, ImageIcon, Copy } from "lucide-react";
+import { duplicateEvent } from "@/features/events/actions";
 import { createClient } from "@attendly/ui/supabase/client";
 import { Input, Textarea, Button, Badge, Card } from "@attendly/ui/components";
 
@@ -47,6 +48,7 @@ export function EventSettingsForm({ event }: { event: Event }) {
   const [status, setStatus] = useState(event.status);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [duplicating, setDuplicating] = useState(false);
 
   async function handleSave() {
     setSaving(true);
@@ -109,6 +111,18 @@ export function EventSettingsForm({ event }: { event: Event }) {
     } else {
       toast.success("Event deleted");
       router.push("/events");
+    }
+  }
+
+  async function handleDuplicate() {
+    setDuplicating(true);
+    try {
+      const result = await duplicateEvent(event.id);
+      toast.success("Event duplicated");
+      router.push(`/events/${result.id}/settings`);
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to duplicate event");
+      setDuplicating(false);
     }
   }
 
@@ -266,6 +280,23 @@ export function EventSettingsForm({ event }: { event: Event }) {
             </Button>
           ) : null}
         </div>
+      </Card>
+
+      {/* Duplicate event */}
+      <Card className="p-6">
+        <h2 className="mb-2 text-lg font-semibold">Duplicate Event</h2>
+        <p className="text-sm text-muted-foreground">
+          Create a copy of this event including all tickets, tracks, sessions, and speakers. The duplicate will be created as a draft.
+        </p>
+        <Button
+          variant="outline"
+          onClick={handleDuplicate}
+          loading={duplicating}
+          className="mt-4 gap-2"
+        >
+          <Copy className="h-4 w-4" />
+          {duplicating ? "Duplicating..." : "Duplicate Event"}
+        </Button>
       </Card>
 
       {/* Danger zone */}
