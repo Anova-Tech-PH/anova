@@ -87,6 +87,17 @@ export async function registerForEvent(data: {
   // Get current user if logged in
   const { data: { user } } = await supabase.auth.getUser();
 
+  // Approval workflow: check if the event requires approval for registrations.
+  // If require_approval is true, new registrations start as "pending" instead of "confirmed".
+  // Pending registrations must be approved by an organizer before the attendee receives confirmation.
+  const { data: event } = await supabase
+    .from("events")
+    .select("require_approval")
+    .eq("id", data.event_id)
+    .single();
+
+  const registrationStatus = event?.require_approval ? "pending" : "confirmed";
+
   const qrCode = nanoid(16);
 
   const insertData: Record<string, unknown> = {
@@ -96,7 +107,7 @@ export async function registerForEvent(data: {
     name: data.name,
     email: data.email,
     qr_code: qrCode,
-    status: "confirmed",
+    status: registrationStatus,
     custom_fields: data.custom_fields ?? {},
   };
 
@@ -108,24 +119,27 @@ export async function registerForEvent(data: {
   const { data: registration, error } = await supabase
     .from("registrations")
     .insert(insertData)
-    .select("id, qr_code, name, email")
+    .select("id, qr_code, name, email, status")
     .single();
 
   if (error) throw new Error(error.message);
 
-  // Send confirmation email (non-blocking)
-  const { data: ticketType } = await supabase
-    .from("ticket_types")
-    .select("name")
-    .eq("id", data.ticket_type_id)
-    .single();
+  // Only send confirmation email for confirmed registrations.
+  // Pending registrations will receive an email when approved by the organizer.
+  if (registrationStatus === "confirmed") {
+    const { data: ticketType } = await supabase
+      .from("ticket_types")
+      .select("name")
+      .eq("id", data.ticket_type_id)
+      .single();
 
-  sendRegistrationConfirmationEmail(data.event_id, {
-    name: data.name,
-    email: data.email,
-    ticketTypeName: ticketType?.name ?? "General",
-    qrCode,
-  }).catch((err) => console.error("[Registration Email Error]", err));
+    sendRegistrationConfirmationEmail(data.event_id, {
+      name: data.name,
+      email: data.email,
+      ticketTypeName: ticketType?.name ?? "General",
+      qrCode,
+    }).catch((err) => console.error("[Registration Email Error]", err));
+  }
 
   return registration;
 }
@@ -200,7 +214,7 @@ export async function updateRegistrationStatus(
   registrationId: string,
   status: string
 ) {
-  const validStatuses = ["confirmed", "checked_in", "cancelled"];
+  const validStatuses = ["pending", "confirmed", "checked_in", "cancelled"];
   if (!validStatuses.includes(status)) {
     throw new Error(`Invalid status: ${status}`);
   }

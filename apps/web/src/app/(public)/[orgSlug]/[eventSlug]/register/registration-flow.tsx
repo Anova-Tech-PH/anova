@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Ticket, ChevronDown, X } from "lucide-react";
+import { Check, Ticket, ChevronDown, X, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { registerForEvent } from "@/features/registration/actions";
 import { validatePromoCode } from "@/features/promo-codes/actions";
@@ -45,6 +45,7 @@ export function RegistrationFlow({
     qr_code: string;
     name: string;
     email: string;
+    status: string;
   } | null>(null);
 
   // Promo code state
@@ -130,6 +131,25 @@ export function RegistrationFlow({
   }
 
   if (confirmation) {
+    // If the registration is pending approval, show a different message instead of the QR code
+    if (confirmation.status === "pending") {
+      return (
+        <div className="mt-8 flex flex-col items-center gap-4 rounded-xl border bg-card p-8 text-center shadow-sm">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
+            <Clock className="h-8 w-8 text-amber-600 dark:text-amber-400" />
+          </div>
+          <h2 className="text-xl font-semibold">Registration Pending</h2>
+          <p className="text-muted-foreground max-w-sm">
+            Your registration is pending approval. You will receive an email at{" "}
+            <strong>{confirmation.email}</strong> once approved by the organizer.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Thank you for your interest, {confirmation.name}!
+          </p>
+        </div>
+      );
+    }
+
     return (
       <QrConfirmation
         name={confirmation.name}

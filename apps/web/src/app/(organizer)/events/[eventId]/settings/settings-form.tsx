@@ -21,6 +21,7 @@ type Event = {
   is_virtual: boolean;
   virtual_url: string | null;
   cover_image: string | null;
+  require_approval: boolean;
   status: string;
 };
 
@@ -44,6 +45,7 @@ export function EventSettingsForm({ event }: { event: Event }) {
     is_virtual: event.is_virtual,
     virtual_url: event.virtual_url ?? "",
     cover_image: event.cover_image ?? "",
+    require_approval: event.require_approval,
   });
   const [status, setStatus] = useState(event.status);
   const [saving, setSaving] = useState(false);
@@ -68,6 +70,7 @@ export function EventSettingsForm({ event }: { event: Event }) {
         is_virtual: form.is_virtual,
         virtual_url: form.virtual_url || null,
         cover_image: form.cover_image || null,
+        require_approval: form.require_approval,
         updated_at: new Date().toISOString(),
       })
       .eq("id", event.id);
@@ -198,6 +201,24 @@ export function EventSettingsForm({ event }: { event: Event }) {
               className="rounded"
             />
             <label htmlFor="is_virtual" className="text-sm">Virtual event</label>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              id="require_approval"
+              checked={form.require_approval}
+              onChange={(e) => setForm((f) => ({ ...f, require_approval: e.target.checked }))}
+              className="rounded"
+            />
+            <div>
+              <label htmlFor="require_approval" className="text-sm font-medium">
+                Require approval for registrations
+              </label>
+              <p className="text-xs text-muted-foreground">
+                New registrations will be set to pending until you approve them.
+              </p>
+            </div>
           </div>
 
           {form.is_virtual ? (

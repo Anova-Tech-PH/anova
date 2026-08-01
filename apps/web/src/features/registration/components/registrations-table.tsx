@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useTransition } from "react";
-import { Search, Download, ChevronDown, Users, UserCheck, UserX, CheckCircle } from "lucide-react";
+import { Search, Download, ChevronDown, Users, UserCheck, UserX, CheckCircle, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { updateRegistrationStatus } from "../actions";
 import { Badge } from "@attendly/ui/components";
@@ -59,8 +59,9 @@ export function RegistrationsTable({
   }, [registrations, search, statusFilter]);
 
   const stats = useMemo(() => {
-    const s = { total: registrations.length, confirmed: 0, checked_in: 0, cancelled: 0 };
+    const s = { total: registrations.length, pending: 0, confirmed: 0, checked_in: 0, cancelled: 0 };
     for (const r of registrations) {
+      if (r.status === "pending") s.pending++;
       if (r.status === "confirmed") s.confirmed++;
       if (r.status === "checked_in") s.checked_in++;
       if (r.status === "cancelled") s.cancelled++;
@@ -123,6 +124,13 @@ export function RegistrationsTable({
       iconColor: "text-slate-600 dark:text-slate-400",
     },
     {
+      label: "Pending",
+      value: stats.pending,
+      icon: Clock,
+      gradient: "from-amber-50 to-amber-100/80 dark:from-amber-900/30 dark:to-amber-800/20",
+      iconColor: "text-amber-600 dark:text-amber-400",
+    },
+    {
       label: "Confirmed",
       value: stats.confirmed,
       icon: CheckCircle,
@@ -148,7 +156,7 @@ export function RegistrationsTable({
   return (
     <div className="space-y-5">
       {/* Stats */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
         {statCards.map((s) => (
           <Card
             key={s.label}
@@ -198,6 +206,7 @@ export function RegistrationsTable({
               )}
             >
               <option value="all">All statuses</option>
+              <option value="pending">Pending</option>
               <option value="confirmed">Confirmed</option>
               <option value="checked_in">Checked In</option>
               <option value="cancelled">Cancelled</option>
@@ -261,24 +270,46 @@ export function RegistrationsTable({
                     {new Date(reg.created_at).toLocaleDateString()}
                   </span>
                 </div>
-                <div className="relative">
-                  <select
-                    value={reg.status}
-                    onChange={(e) => handleStatusChange(reg.id, e.target.value)}
-                    disabled={isPending}
-                    className={cn(
-                      "h-8 appearance-none rounded-md border bg-background pl-2.5 pr-7 text-xs font-medium",
-                      "outline-none transition-all",
-                      "focus:ring-2 focus:ring-ring focus:ring-offset-1",
-                      "disabled:cursor-not-allowed disabled:opacity-50"
-                    )}
-                  >
-                    <option value="confirmed">Confirmed</option>
-                    <option value="checked_in">Checked In</option>
-                    <option value="cancelled">Cancelled</option>
-                  </select>
-                  <ChevronDown className="pointer-events-none absolute right-1.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-                </div>
+                {reg.status === "pending" ? (
+                  <div className="flex items-center gap-1.5">
+                    <Button
+                      size="sm"
+                      onClick={() => handleStatusChange(reg.id, "confirmed")}
+                      disabled={isPending}
+                      className="h-7 px-2.5 text-xs bg-emerald-600 hover:bg-emerald-700"
+                    >
+                      Approve
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => handleStatusChange(reg.id, "cancelled")}
+                      disabled={isPending}
+                      className="h-7 px-2.5 text-xs"
+                    >
+                      Reject
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <select
+                      value={reg.status}
+                      onChange={(e) => handleStatusChange(reg.id, e.target.value)}
+                      disabled={isPending}
+                      className={cn(
+                        "h-8 appearance-none rounded-md border bg-background pl-2.5 pr-7 text-xs font-medium",
+                        "outline-none transition-all",
+                        "focus:ring-2 focus:ring-ring focus:ring-offset-1",
+                        "disabled:cursor-not-allowed disabled:opacity-50"
+                      )}
+                    >
+                      <option value="confirmed">Confirmed</option>
+                      <option value="checked_in">Checked In</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                    <ChevronDown className="pointer-events-none absolute right-1.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -350,25 +381,47 @@ export function RegistrationsTable({
                     {new Date(reg.created_at).toLocaleDateString()}
                   </td>
                   <td className="px-4 py-3.5">
-                    <div className="relative inline-block">
-                      <select
-                        value={reg.status}
-                        onChange={(e) => handleStatusChange(reg.id, e.target.value)}
-                        disabled={isPending}
-                        className={cn(
-                          "h-8 appearance-none rounded-md border bg-background pl-2.5 pr-7 text-xs font-medium",
-                          "outline-none transition-all",
-                          "focus:ring-2 focus:ring-ring focus:ring-offset-1",
-                          "hover:border-foreground/30 hover:bg-muted/30",
-                          "disabled:cursor-not-allowed disabled:opacity-50"
-                        )}
-                      >
-                        <option value="confirmed">Confirmed</option>
-                        <option value="checked_in">Checked In</option>
-                        <option value="cancelled">Cancelled</option>
-                      </select>
-                      <ChevronDown className="pointer-events-none absolute right-1.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-                    </div>
+                    {reg.status === "pending" ? (
+                      <div className="flex items-center gap-1.5">
+                        <Button
+                          size="sm"
+                          onClick={() => handleStatusChange(reg.id, "confirmed")}
+                          disabled={isPending}
+                          className="h-7 px-2.5 text-xs bg-emerald-600 hover:bg-emerald-700"
+                        >
+                          Approve
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleStatusChange(reg.id, "cancelled")}
+                          disabled={isPending}
+                          className="h-7 px-2.5 text-xs"
+                        >
+                          Reject
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="relative inline-block">
+                        <select
+                          value={reg.status}
+                          onChange={(e) => handleStatusChange(reg.id, e.target.value)}
+                          disabled={isPending}
+                          className={cn(
+                            "h-8 appearance-none rounded-md border bg-background pl-2.5 pr-7 text-xs font-medium",
+                            "outline-none transition-all",
+                            "focus:ring-2 focus:ring-ring focus:ring-offset-1",
+                            "hover:border-foreground/30 hover:bg-muted/30",
+                            "disabled:cursor-not-allowed disabled:opacity-50"
+                          )}
+                        >
+                          <option value="confirmed">Confirmed</option>
+                          <option value="checked_in">Checked In</option>
+                          <option value="cancelled">Cancelled</option>
+                        </select>
+                        <ChevronDown className="pointer-events-none absolute right-1.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))}
