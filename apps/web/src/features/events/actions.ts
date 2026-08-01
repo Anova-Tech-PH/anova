@@ -180,6 +180,17 @@ export async function duplicateEvent(eventId: string) {
     }
   }
 
+  // Clone custom_registration_fields
+  const { data: customFields } = await supabase
+    .from("custom_registration_fields")
+    .select("label, field_key, type, required, options, placeholder, sort_order")
+    .eq("event_id", eventId);
+  if (customFields && customFields.length > 0) {
+    await supabase
+      .from("custom_registration_fields")
+      .insert(customFields.map((f) => ({ ...f, event_id: newEventId })));
+  }
+
   revalidatePath("/events");
 
   return { id: newEventId };

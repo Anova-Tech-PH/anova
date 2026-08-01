@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, Calendar, Users, QrCode, BarChart3, Settings, Ticket, DoorOpen, Mail } from "lucide-react";
+import { ArrowLeft, Calendar, Users, QrCode, BarChart3, Settings, Ticket, DoorOpen, Mail, ListChecks } from "lucide-react";
 import { createClient } from "@attendly/ui/supabase/server";
 import { notFound } from "next/navigation";
 import { Badge } from "@attendly/ui/components";
@@ -27,6 +27,7 @@ export default async function EventLayout({
     { href: `/events/${eventId}`, label: "Overview", icon: BarChart3 },
     { href: `/events/${eventId}/schedule`, label: "Schedule", icon: Calendar },
     { href: `/events/${eventId}/tickets`, label: "Tickets", icon: Ticket },
+    { href: `/events/${eventId}/custom-fields`, label: "Form Fields", icon: ListChecks },
     { href: `/events/${eventId}/registrations`, label: "Registrations", icon: Users },
     { href: `/events/${eventId}/check-in`, label: "Check-in", icon: QrCode },
     { href: `/events/${eventId}/rooms`, label: "Rooms", icon: DoorOpen },

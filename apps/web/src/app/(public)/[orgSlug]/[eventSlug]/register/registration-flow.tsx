@@ -5,7 +5,7 @@ import { Check, Ticket } from "lucide-react";
 import { toast } from "sonner";
 import { registerForEvent } from "@/features/registration/actions";
 import { QrConfirmation } from "./qr-confirmation";
-import { Input, Button } from "@attendly/ui/components";
+import { Input, Button, Textarea } from "@attendly/ui/components";
 
 type TicketType = {
   id: string;
@@ -16,21 +16,29 @@ type TicketType = {
   available: number | null;
 };
 
+type CustomFieldDef = {
+  id: string;
+  label: string;
+  field_key: string;
+  type: string;
+  required: boolean;
+  options: string[];
+  placeholder: string | null;
+};
+
 export function RegistrationFlow({
   eventId,
   tickets,
+  customFields = [],
 }: {
   eventId: string;
   tickets: TicketType[];
+  customFields?: CustomFieldDef[];
 }) {
   const [selectedTicket, setSelectedTicket] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [gender, setGender] = useState("");
-  const [birthday, setBirthday] = useState("");
-  const [address, setAddress] = useState("");
-  const [city, setCity] = useState("");
-  const [country, setCountry] = useState("");
+  const [customValues, setCustomValues] = useState<Record<string, string | boolean>>({});
   const [loading, setLoading] = useState(false);
   const [confirmation, setConfirmation] = useState<{
     qr_code: string;
@@ -40,24 +48,31 @@ export function RegistrationFlow({
 
   const selected = tickets.find((t) => t.id === selectedTicket);
 
+  function setCustomValue(key: string, value: string | boolean) {
+    setCustomValues((prev) => ({ ...prev, [key]: value }));
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!selectedTicket) return;
     setLoading(true);
 
     try {
+      // Build custom_fields from dynamic values
+      const custom_fields: Record<string, string | boolean> = {};
+      for (const field of customFields) {
+        const val = customValues[field.field_key];
+        if (val !== undefined && val !== "" && val !== false) {
+          custom_fields[field.field_key] = val;
+        }
+      }
+
       const reg = await registerForEvent({
         event_id: eventId,
         ticket_type_id: selectedTicket,
         name,
         email,
-        custom_fields: {
-          ...(gender && { gender }),
-          ...(birthday && { birthday }),
-          ...(address && { address }),
-          ...(city && { city }),
-          ...(country && { country }),
-        },
+        custom_fields,
       });
       setConfirmation(reg);
     } catch (err) {
@@ -161,61 +176,89 @@ export function RegistrationFlow({
             />
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">Gender</label>
-              <select
-                value={gender}
-                onChange={(e) => setGender(e.target.value)}
-                className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <option value="">Select...</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="non-binary">Non-binary</option>
-                <option value="prefer-not-to-say">Prefer not to say</option>
-              </select>
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">Birthday</label>
-              <Input
-                type="date"
-                value={birthday}
-                onChange={(e) => setBirthday(e.target.value)}
-              />
-            </div>
-          </div>
+          {/* Dynamic custom fields */}
+          {customFields.map((field) => (
+            <div key={field.id} className="space-y-1.5">
+              <label className="text-sm font-medium">
+                {field.label}
+                {field.required && " *"}
+              </label>
 
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">Address</label>
-            <Input
-              type="text"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              placeholder="Street address"
-            />
-          </div>
+              {field.type === "text" && (
+                <Input
+                  type="text"
+                  required={field.required}
+                  value={(customValues[field.field_key] as string) ?? ""}
+                  onChange={(e) => setCustomValue(field.field_key, e.target.value)}
+                  placeholder={field.placeholder ?? undefined}
+                />
+              )}
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">City</label>
-              <Input
-                type="text"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                placeholder="City"
-              />
+              {field.type === "textarea" && (
+                <Textarea
+                  required={field.required}
+                  value={(customValues[field.field_key] as string) ?? ""}
+                  onChange={(e) => setCustomValue(field.field_key, e.target.value)}
+                  placeholder={field.placeholder ?? undefined}
+                  rows={3}
+                />
+              )}
+
+              {field.type === "select" && (
+                <select
+                  required={field.required}
+                  value={(customValues[field.field_key] as string) ?? ""}
+                  onChange={(e) => setCustomValue(field.field_key, e.target.value)}
+                  className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <option value="">
+                    {field.placeholder || "Select..."}
+                  </option>
+                  {(field.options ?? []).map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
+              )}
+
+              {field.type === "checkbox" && (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={!!customValues[field.field_key]}
+                    onChange={(e) => setCustomValue(field.field_key, e.target.checked)}
+                    required={field.required}
+                    className="h-4 w-4 rounded border-input"
+                  />
+                  {field.placeholder && (
+                    <span className="text-sm text-muted-foreground">
+                      {field.placeholder}
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {field.type === "number" && (
+                <Input
+                  type="number"
+                  required={field.required}
+                  value={(customValues[field.field_key] as string) ?? ""}
+                  onChange={(e) => setCustomValue(field.field_key, e.target.value)}
+                  placeholder={field.placeholder ?? undefined}
+                />
+              )}
+
+              {field.type === "date" && (
+                <Input
+                  type="date"
+                  required={field.required}
+                  value={(customValues[field.field_key] as string) ?? ""}
+                  onChange={(e) => setCustomValue(field.field_key, e.target.value)}
+                />
+              )}
             </div>
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">Country</label>
-              <Input
-                type="text"
-                value={country}
-                onChange={(e) => setCountry(e.target.value)}
-                placeholder="Country"
-              />
-            </div>
-          </div>
+          ))}
 
           <Button
             type="submit"

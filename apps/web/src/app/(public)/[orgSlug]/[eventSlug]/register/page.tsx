@@ -3,6 +3,7 @@ import { ArrowLeft, Calendar, MapPin, Wifi, Shield } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@attendly/ui/supabase/server";
 import { RegistrationFlow } from "./registration-flow";
+import { getCustomFieldsByEvent } from "@/features/custom-fields/queries";
 
 export default async function RegisterPage({
   params,
@@ -53,6 +54,8 @@ export default async function RegisterPage({
     sold: countMap[t.id] ?? 0,
     available: t.quantity ? t.quantity - (countMap[t.id] ?? 0) : null,
   }));
+
+  const customFields = await getCustomFieldsByEvent(event.id);
 
   const startDate = new Date(event.start_date);
   const endDate = new Date(event.end_date);
@@ -106,6 +109,7 @@ export default async function RegisterPage({
         <RegistrationFlow
           eventId={event.id}
           tickets={ticketsWithAvailability}
+          customFields={customFields}
         />
       )}
 
