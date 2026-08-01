@@ -13,38 +13,33 @@ export type TeamMember = {
 export async function getTeamMembers(orgId: string): Promise<TeamMember[]> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
+  const { data: members, error } = await supabase
     .from("organization_members")
-    .select("id, user_id, role, created_at, profiles(full_name, avatar_url)")
+    .select("id, user_id, role, created_at")
     .eq("organization_id", orgId)
     .order("created_at", { ascending: true });
 
   if (error) throw new Error(error.message);
+  if (!members?.length) return [];
 
-  // We need to get emails from auth — but since we can't access auth.users
-  // from the client, we'll look up profiles and use the user_id.
-  // For email, we query each user's profile. Since profiles don't store email,
-  // we'll use the supabase admin or just show the name.
-  // Actually, let's get the current user's info and use a service role approach.
-  // For simplicity, we'll get emails through auth.getUser for the current user
-  // and show user_id for others (or use a lookup).
+  // Fetch profiles separately (no direct FK between organization_members and profiles)
+  const userIds = members.map((m) => m.user_id);
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("id, full_name, avatar_url")
+    .in("id", userIds);
 
-  // Get all user IDs to look up emails
-  const userIds = data?.map((m) => m.user_id) ?? [];
+  const profileMap = new Map(
+    (profiles ?? []).map((p) => [p.id, p])
+  );
 
-  // Use profiles table — email isn't stored there, so we'll use an RPC or
-  // just display the name. For a real app, you'd store email in profiles
-  // or use a service role client. For now, we'll get the current user's email
-  // and leave others blank.
+  // Get current user's email (profiles don't store email)
   const {
     data: { user: currentUser },
   } = await supabase.auth.getUser();
 
-  return (data ?? []).map((member) => {
-    const profile = member.profiles as unknown as {
-      full_name: string;
-      avatar_url: string | null;
-    } | null;
+  return members.map((member) => {
+    const profile = profileMap.get(member.user_id);
 
     return {
       id: member.id,
