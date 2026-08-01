@@ -1,63 +1,7 @@
-import {
-  Calendar,
-  Users,
-  QrCode,
-  BarChart3,
-  MessageCircle,
-  Zap,
-  ArrowRight,
-  Check,
-} from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import Image from "next/image";
 
 const APP_URL = "https://app.evenstry.com";
-
-const features = [
-  {
-    icon: Calendar,
-    title: "Event Creation",
-    description:
-      "Multi-step wizard with schedule builder, speaker management, and track organization.",
-  },
-  {
-    icon: Users,
-    title: "Registration & Ticketing",
-    description:
-      "Custom ticket types, QR code generation, and registration forms that actually work.",
-  },
-  {
-    icon: QrCode,
-    title: "QR Check-in",
-    description:
-      "Scan QR codes at the door for instant check-in with real-time tracking.",
-  },
-  {
-    icon: MessageCircle,
-    title: "Social & Networking",
-    description:
-      "Activity feed, direct messaging, and attendee connections at every event.",
-  },
-  {
-    icon: BarChart3,
-    title: "Analytics Dashboard",
-    description:
-      "Registration trends, ticket breakdowns, revenue tracking, and check-in rates.",
-  },
-  {
-    icon: Zap,
-    title: "Breakout Rooms",
-    description:
-      "Organize focused discussions and workshops within your larger events.",
-  },
-];
-
-const highlights = [
-  "Unlimited events",
-  "QR code check-in",
-  "Real-time analytics",
-  "Attendee networking",
-  "Custom registration fields",
-  "Email automations",
-];
 
 function Logo() {
   return (
@@ -74,161 +18,305 @@ function Logo() {
   );
 }
 
-function LogoSmall() {
-  return (
-    <picture>
-      <source srcSet="/logo.svg" type="image/svg+xml" />
-      <img
-        src="/logo.png"
-        alt="Evenstry"
-        width={90}
-        height={28}
-        className="block object-contain opacity-40"
-      />
-    </picture>
-  );
-}
-
 export default function HomePage() {
   return (
-    <div className="flex min-h-screen flex-col">
-      {/* Header */}
-      <header className="sticky top-0 z-50 flex items-center justify-between border-b bg-background/80 px-6 py-4 backdrop-blur-lg">
+    <div className="min-h-screen">
+      {/* Nav */}
+      <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
         <Logo />
-        <nav className="flex items-center gap-4">
+        <div className="flex items-center gap-8">
+          <a
+            href="#features"
+            className="hidden text-[15px] text-muted-foreground hover:text-foreground transition-colors sm:block"
+          >
+            Features
+          </a>
+          <a
+            href="#use-cases"
+            className="hidden text-[15px] text-muted-foreground hover:text-foreground transition-colors sm:block"
+          >
+            Use Cases
+          </a>
           <a
             href={`${APP_URL}/login`}
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            className="text-[15px] text-muted-foreground hover:text-foreground transition-colors"
           >
             Log in
           </a>
           <a
             href={`${APP_URL}/signup`}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors"
+            className="rounded-full bg-foreground px-5 py-2.5 text-[15px] font-medium text-background hover:bg-foreground/85 transition-colors"
           >
             Get Started
           </a>
-        </nav>
-      </header>
+        </div>
+      </nav>
 
-      <main className="flex-1">
-        {/* Hero */}
-        <section className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-primary/2 to-transparent" />
-          <div
-            className="absolute inset-0"
-            style={{
-              backgroundImage:
-                "radial-gradient(circle at 25% 0%, oklch(0.445 0.107 195 / 0.08) 0%, transparent 50%), radial-gradient(circle at 75% 100%, oklch(0.55 0.12 180 / 0.06) 0%, transparent 50%)",
-            }}
-          />
-          <div className="relative mx-auto max-w-4xl px-4 py-24 text-center sm:py-32">
-            <div className="inline-flex items-center gap-2 rounded-full border bg-card px-4 py-1.5 text-sm font-medium text-muted-foreground shadow-sm">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/60" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
-              </span>
-              Now with QR check-in
-            </div>
-            <h1 className="mt-8 text-5xl font-bold tracking-tight font-serif sm:text-6xl lg:text-7xl">
-              Run events without{" "}
-              <span className="bg-gradient-to-r from-primary to-info bg-clip-text text-transparent">
-                the chaos.
-              </span>
-            </h1>
-            <p className="mx-auto mt-6 max-w-xl text-lg text-muted-foreground leading-relaxed">
-              Tickets, registrations, schedules, check-ins, and attendee
-              networking — in one place. No more duct-taping five tools
-              together.
-            </p>
-            <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-              <a
-                href={`${APP_URL}/signup`}
-                className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-8 py-3 text-base font-medium text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90 transition-colors"
-              >
-                Start for free
-                <ArrowRight className="h-4 w-4" />
-              </a>
-              <a
-                href={`${APP_URL}/login`}
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Already have an account?
-              </a>
-            </div>
-            <div className="mt-12 flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
-              {highlights.map((item) => (
-                <span
-                  key={item}
-                  className="flex items-center gap-1.5 text-sm text-muted-foreground"
-                >
-                  <Check className="h-3.5 w-3.5 text-primary" />
-                  {item}
-                </span>
-              ))}
-            </div>
+      {/* Hero */}
+      <section className="mx-auto max-w-3xl px-6 pt-20 pb-16 text-center sm:pt-28 sm:pb-20">
+        <h1 className="font-serif text-[clamp(2.5rem,6vw,4.25rem)] font-700 leading-[1.08] tracking-tight text-foreground">
+          Everything your event needs.
+          <br />
+          One place.
+        </h1>
+        <p className="mx-auto mt-6 max-w-lg text-[17px] leading-relaxed text-muted-foreground">
+          Create, manage, and run conferences, meetups, and workshops — in
+          minutes, not weeks.
+        </p>
+        <div className="mt-10 flex items-center justify-center gap-5">
+          <a
+            href={`${APP_URL}/signup`}
+            className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3 text-[15px] font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
+            Start for free
+            <ArrowRight className="h-4 w-4" />
+          </a>
+        </div>
+        <p className="mt-4 text-[13px] text-muted-foreground/70">
+          No credit card required
+        </p>
+      </section>
+
+      {/* Product Screenshot */}
+      <section className="mx-auto max-w-5xl px-6 pb-24">
+        <div className="overflow-hidden rounded-xl border border-border bg-white shadow-[0_2px_40px_-12px_rgba(0,0,0,0.08)]">
+          <div className="flex items-center gap-2 border-b border-border/60 px-4 py-3">
+            <span className="h-3 w-3 rounded-full bg-border" />
+            <span className="h-3 w-3 rounded-full bg-border" />
+            <span className="h-3 w-3 rounded-full bg-border" />
+            <span className="ml-3 text-xs text-muted-foreground/50">
+              app.evenstry.com
+            </span>
           </div>
-        </section>
+          <Image
+            src="/screenshots/dashboard.png"
+            alt="Evenstry dashboard showing event overview, registrations, and recent events"
+            width={1920}
+            height={1080}
+            className="w-full"
+            priority
+          />
+        </div>
+      </section>
 
-        {/* Features */}
-        <section className="border-t bg-muted/30 px-4 py-20">
-          <div className="mx-auto max-w-5xl">
-            <div className="text-center">
-              <h2 className="text-3xl font-bold tracking-tight font-serif">
-                What you get out of the box
-              </h2>
-              <p className="mt-3 text-muted-foreground">
-                Six things you'd otherwise build yourself or pay three vendors
-                for.
+      {/* How It Works */}
+      <section className="border-t border-border/60 bg-white">
+        <div className="mx-auto max-w-5xl px-6 py-24">
+          <p className="text-[13px] font-medium tracking-widest text-muted-foreground/60 uppercase">
+            How it works
+          </p>
+          <div className="mt-12 grid gap-12 sm:grid-cols-3 sm:gap-8">
+            <div>
+              <span className="font-serif text-[40px] font-600 leading-none text-primary/25">
+                1
+              </span>
+              <h3 className="mt-3 text-lg font-semibold text-foreground">
+                Create your event
+              </h3>
+              <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">
+                Set up your event with tickets, schedule, and speakers in a
+                guided flow. Publish when you're ready.
               </p>
             </div>
-            <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {features.map((feature) => (
-                <div
-                  key={feature.title}
-                  className="group rounded-lg border bg-card p-6 transition-all hover:shadow-lg hover:border-primary/20 hover:-translate-y-0.5"
-                >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                    <feature.icon className="h-5 w-5" />
-                  </div>
-                  <h3 className="mt-4 font-semibold">{feature.title}</h3>
-                  <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                    {feature.description}
-                  </p>
-                </div>
-              ))}
+            <div>
+              <span className="font-serif text-[40px] font-600 leading-none text-primary/25">
+                2
+              </span>
+              <h3 className="mt-3 text-lg font-semibold text-foreground">
+                Share your page
+              </h3>
+              <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">
+                Every event gets a public page with registration, schedule, and
+                all the details. Just share the link.
+              </p>
+            </div>
+            <div>
+              <span className="font-serif text-[40px] font-600 leading-none text-primary/25">
+                3
+              </span>
+              <h3 className="mt-3 text-lg font-semibold text-foreground">
+                Manage everything
+              </h3>
+              <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">
+                Track registrations, check in attendees with QR codes, and
+                communicate — all from one dashboard.
+              </p>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* CTA */}
-        <section className="px-4 py-20">
-          <div className="mx-auto max-w-2xl rounded-lg bg-gradient-to-br from-primary/10 via-primary/5 to-info/5 border p-12 text-center">
-            <h2 className="text-3xl font-bold tracking-tight font-serif">
-              Your next event starts here
-            </h2>
-            <p className="mt-3 text-muted-foreground">
-              Free plan. No credit card. Set up in 5 minutes.
-            </p>
+      {/* Feature 1 — Schedule */}
+      <section id="features" className="border-t border-border/60">
+        <div className="mx-auto max-w-5xl px-6 py-24">
+          <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
+            <div>
+              <p className="text-[13px] font-medium tracking-widest text-primary uppercase">
+                Schedule
+              </p>
+              <h2 className="mt-3 font-serif text-[clamp(1.75rem,3vw,2.5rem)] font-700 leading-tight tracking-tight">
+                Your schedule, organized
+              </h2>
+              <p className="mt-4 text-[16px] leading-relaxed text-muted-foreground">
+                Build multi-track schedules with sessions, speakers, and
+                breakout rooms. Attendees see a clear timeline — you see who's
+                going where.
+              </p>
+            </div>
+            <div className="overflow-hidden rounded-xl border border-border bg-white shadow-[0_1px_20px_-8px_rgba(0,0,0,0.06)]">
+              <Image
+                src="/screenshots/schedule.png"
+                alt="Schedule view with tracks, speakers, and sessions organized by day"
+                width={1920}
+                height={1080}
+                className="w-full"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Feature 2 — Registration */}
+      <section className="border-t border-border/60 bg-white">
+        <div className="mx-auto max-w-5xl px-6 py-24">
+          <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
+            <div className="order-2 lg:order-1 overflow-hidden rounded-xl border border-border shadow-[0_1px_20px_-8px_rgba(0,0,0,0.06)]">
+              <Image
+                src="/screenshots/event-detail.png"
+                alt="Event detail view with overview, schedule, tickets, and registrations tabs"
+                width={1920}
+                height={1080}
+                className="w-full"
+              />
+            </div>
+            <div className="order-1 lg:order-2">
+              <p className="text-[13px] font-medium tracking-widest text-primary uppercase">
+                Registration
+              </p>
+              <h2 className="mt-3 font-serif text-[clamp(1.75rem,3vw,2.5rem)] font-700 leading-tight tracking-tight">
+                Registration that works
+              </h2>
+              <p className="mt-4 text-[16px] leading-relaxed text-muted-foreground">
+                Create ticket types, set capacity limits, and collect the info
+                you need. Every registrant gets a QR code for check-in at the
+                door.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Feature 3 — Dashboard */}
+      <section className="border-t border-border/60">
+        <div className="mx-auto max-w-5xl px-6 py-24">
+          <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
+            <div>
+              <p className="text-[13px] font-medium tracking-widest text-primary uppercase">
+                Dashboard
+              </p>
+              <h2 className="mt-3 font-serif text-[clamp(1.75rem,3vw,2.5rem)] font-700 leading-tight tracking-tight">
+                Know what's happening
+              </h2>
+              <p className="mt-4 text-[16px] leading-relaxed text-muted-foreground">
+                See total registrations, check-in rates, and upcoming events at
+                a glance. No digging through spreadsheets — it's all there when
+                you open the app.
+              </p>
+            </div>
+            <div className="overflow-hidden rounded-xl border border-border bg-white shadow-[0_1px_20px_-8px_rgba(0,0,0,0.06)]">
+              <Image
+                src="/screenshots/public-event.png"
+                alt="Analytics dashboard showing event stats and registration data"
+                width={1920}
+                height={1080}
+                className="w-full"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Use Cases */}
+      <section
+        id="use-cases"
+        className="border-t border-border/60 bg-white"
+      >
+        <div className="mx-auto max-w-5xl px-6 py-24">
+          <p className="text-[13px] font-medium tracking-widest text-muted-foreground/60 uppercase">
+            Built for every kind of event
+          </p>
+          <div className="mt-12 grid gap-6 sm:grid-cols-3">
+            <div className="rounded-xl border border-border p-8">
+              <h3 className="text-lg font-semibold text-foreground">
+                Conferences
+              </h3>
+              <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
+                Multi-day schedules, speaker management, tracks, breakout rooms,
+                and attendee networking built in.
+              </p>
+            </div>
+            <div className="rounded-xl border border-border p-8">
+              <h3 className="text-lg font-semibold text-foreground">
+                Meetups
+              </h3>
+              <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
+                Quick setup, easy registration, and QR check-in at the door.
+                Perfect for recurring community events.
+              </p>
+            </div>
+            <div className="rounded-xl border border-border p-8">
+              <h3 className="text-lg font-semibold text-foreground">
+                Workshops
+              </h3>
+              <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
+                Focused sessions, attendee limits, direct messaging, and
+                everything you need for hands-on learning.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Final CTA */}
+      <section className="border-t border-border/60">
+        <div className="mx-auto max-w-2xl px-6 py-28 text-center">
+          <h2 className="font-serif text-[clamp(1.75rem,4vw,2.75rem)] font-700 leading-tight tracking-tight">
+            Ready to run your next event?
+          </h2>
+          <div className="mt-8">
             <a
               href={`${APP_URL}/signup`}
-              className="mt-8 inline-flex items-center justify-center gap-2 rounded-md bg-primary px-8 py-3 font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+              className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3 text-[15px] font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
             >
-              Create your first event
+              Start for free
               <ArrowRight className="h-4 w-4" />
             </a>
           </div>
-        </section>
-      </main>
+          <p className="mt-4 text-[13px] text-muted-foreground/70">
+            Free plan. No credit card. Set up in minutes.
+          </p>
+        </div>
+      </section>
 
       {/* Footer */}
-      <footer className="border-t px-6 py-6 text-center">
-        <div className="mx-auto">
-          <LogoSmall />
+      <footer className="border-t border-border/60 bg-white">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-8">
+          <div className="flex items-center gap-3">
+            <picture>
+              <source srcSet="/logo.svg" type="image/svg+xml" />
+              <img
+                src="/logo.png"
+                alt="Evenstry"
+                width={90}
+                height={28}
+                className="block object-contain opacity-50"
+              />
+            </picture>
+          </div>
+          <p className="text-[13px] text-muted-foreground/60">
+            &copy; {new Date().getFullYear()} Evenstry
+          </p>
         </div>
-        <p className="mt-2 text-xs text-muted-foreground">
-          &copy; {new Date().getFullYear()} Evenstry. All rights reserved.
-        </p>
       </footer>
     </div>
   );

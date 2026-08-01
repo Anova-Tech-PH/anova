@@ -14,9 +14,9 @@ const sourceSerif = Source_Serif_4({
 });
 
 export const metadata: Metadata = {
-  title: "Evenstry - Modern Event Management",
+  title: "Evenstry — Event management that just works",
   description:
-    "Tickets, registrations, schedules, check-ins, and attendee networking — in one place.",
+    "Create, manage, and run conferences, meetups, and workshops. Registrations, tickets, schedules, check-ins — one platform.",
 };
 
 export default function RootLayout({
