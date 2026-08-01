@@ -1,5 +1,7 @@
 import { getEventAnalytics } from "@/features/dashboard/analytics-queries";
+import { getEventRevenue } from "@/features/dashboard/revenue-queries";
 import { AnalyticsCharts } from "@/features/dashboard/components/analytics-charts";
+import { RevenueCharts } from "@/features/dashboard/components/revenue-charts";
 
 export default async function AnalyticsPage({
   params,
@@ -7,7 +9,10 @@ export default async function AnalyticsPage({
   params: Promise<{ eventId: string }>;
 }) {
   const { eventId } = await params;
-  const data = await getEventAnalytics(eventId);
+  const [data, revenueData] = await Promise.all([
+    getEventAnalytics(eventId),
+    getEventRevenue(eventId),
+  ]);
 
   return (
     <div className="space-y-8">
@@ -17,6 +22,8 @@ export default async function AnalyticsPage({
           Event performance and registration analytics.
         </p>
       </div>
+
+      {revenueData.hasPaidTickets && <RevenueCharts data={revenueData} />}
 
       <AnalyticsCharts data={data} />
     </div>
