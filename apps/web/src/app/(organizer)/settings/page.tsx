@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@attendly/ui/supabase/server";
 import { SignOutButton } from "./sign-out-button";
 import { Card } from "@attendly/ui/components";
-import { User, Building2, LogOut, Mail, Tag } from "lucide-react";
+import { User, Building2, LogOut, Mail, Tag, Users, ChevronRight } from "lucide-react";
 
 export default async function SettingsPage() {
   const supabase = await createClient();
@@ -77,6 +78,28 @@ export default async function SettingsPage() {
           </div>
         </Card>
       )}
+
+      <Link
+        href="/settings/team"
+        className="group block"
+      >
+        <Card className="p-6 transition-colors hover:bg-muted/30">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[oklch(0.445_0.107_195)]/10">
+                <Users className="h-5 w-5 text-[oklch(0.445_0.107_195)]" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold">Team</h2>
+                <p className="text-sm text-muted-foreground">
+                  Manage team members and their roles.
+                </p>
+              </div>
+            </div>
+            <ChevronRight className="h-5 w-5 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+          </div>
+        </Card>
+      </Link>
 
       <div className="rounded-xl border-2 border-destructive/40 bg-gradient-to-br from-destructive/5 to-destructive/10 p-6 shadow-sm">
         <div className="mb-2 flex items-center gap-2">

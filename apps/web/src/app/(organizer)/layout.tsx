@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Calendar, Settings, Menu, X } from "lucide-react";
+import { LayoutDashboard, Calendar, Settings, Menu, X, Users } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { PageTransition } from "@attendly/ui/components";
 import { Logo } from "@attendly/ui/logo";
@@ -12,6 +12,7 @@ import { cn } from "@attendly/ui/cn";
 const organizerNav = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/events", label: "Events", icon: Calendar },
+  { href: "/settings/team", label: "Team", icon: Users },
 ];
 
 function NavItem({ item, active }: { item: { href: string; label: string; icon: React.ComponentType<{ className?: string }> }; active: boolean }) {
