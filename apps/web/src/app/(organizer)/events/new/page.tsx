@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@attendly/ui/supabase/client";
 import { toast } from "sonner";
@@ -24,8 +24,16 @@ import {
   ArrowRight,
   ArrowLeft,
   Sparkles,
+  LayoutTemplate,
 } from "lucide-react";
 import { ImageUpload } from "@/shared/components/image-upload";
+import { createEventFromTemplate } from "@/features/templates/actions";
+
+type Template = {
+  id: string;
+  name: string;
+  description: string | null;
+};
 
 type Step = "basics" | "location" | "details";
 
@@ -38,7 +46,57 @@ const STEPS: { key: Step; label: string; icon: typeof Calendar }[] = [
 export default function NewEventPage() {
   const [step, setStep] = useState<Step>("basics");
   const [loading, setLoading] = useState(false);
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [creatingFromTemplate, setCreatingFromTemplate] = useState<string | null>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    async function fetchTemplates() {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: membership } = await supabase
+        .from("organization_members")
+        .select("organization_id")
+        .eq("user_id", user.id)
+        .limit(1)
+        .single();
+      if (!membership) return;
+
+      const { data } = await supabase
+        .from("event_templates")
+        .select("id, name, description")
+        .eq("organization_id", membership.organization_id)
+        .order("created_at", { ascending: false });
+
+      if (data && data.length > 0) {
+        setTemplates(data);
+      }
+    }
+    fetchTemplates();
+  }, []);
+
+  async function handleCreateFromTemplate(templateId: string) {
+    setCreatingFromTemplate(templateId);
+    try {
+      const result = await createEventFromTemplate(templateId, {
+        title: "New Event (from template)",
+        slug: `event-${Date.now()}`,
+        start_date: new Date().toISOString(),
+        end_date: new Date(Date.now() + 86400000).toISOString(),
+      });
+      toast.success("Event created from template");
+      router.push(`/events/${result.id}/settings`);
+    } catch (err: unknown) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to create from template"
+      );
+      setCreatingFromTemplate(null);
+    }
+  }
 
   const [form, setForm] = useState({
     title: "",
@@ -152,6 +210,38 @@ export default function NewEventPage() {
           </div>
         </div>
       </div>
+
+      {templates.length > 0 && (
+        <div className="mb-6">
+          <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+            <LayoutTemplate className="h-4 w-4" />
+            Start from a template
+          </h2>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {templates.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => handleCreateFromTemplate(t.id)}
+                disabled={creatingFromTemplate !== null}
+                className="group relative rounded-xl border bg-card p-4 text-left transition-all hover:border-primary/50 hover:shadow-md disabled:opacity-60"
+              >
+                <p className="font-medium text-sm">{t.name}</p>
+                {t.description && (
+                  <p className="mt-1 text-xs text-muted-foreground line-clamp-2">
+                    {t.description}
+                  </p>
+                )}
+                {creatingFromTemplate === t.id && (
+                  <p className="mt-2 text-xs text-primary">Creating...</p>
+                )}
+              </button>
+            ))}
+          </div>
+          <p className="mt-3 text-center text-xs text-muted-foreground">
+            Or start from scratch below
+          </p>
+        </div>
+      )}
 
       <Card className="overflow-hidden">
         {/* Step indicator */}

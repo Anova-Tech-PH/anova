@@ -3,8 +3,9 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Upload, X, ImageIcon, Copy } from "lucide-react";
+import { Upload, X, ImageIcon, Copy, FileDown } from "lucide-react";
 import { duplicateEvent } from "@/features/events/actions";
+import { saveAsTemplate } from "@/features/templates/actions";
 import { createClient } from "@attendly/ui/supabase/client";
 import { Input, Textarea, Button, Badge, Card } from "@attendly/ui/components";
 
@@ -51,6 +52,8 @@ export function EventSettingsForm({ event }: { event: Event }) {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [duplicating, setDuplicating] = useState(false);
+  const [templateName, setTemplateName] = useState("");
+  const [savingTemplate, setSavingTemplate] = useState(false);
 
   async function handleSave() {
     setSaving(true);
@@ -115,6 +118,22 @@ export function EventSettingsForm({ event }: { event: Event }) {
       toast.success("Event deleted");
       router.push("/events");
     }
+  }
+
+  async function handleSaveTemplate() {
+    if (!templateName.trim()) {
+      toast.error("Please enter a template name");
+      return;
+    }
+    setSavingTemplate(true);
+    try {
+      await saveAsTemplate(event.id, templateName.trim());
+      toast.success("Template saved");
+      setTemplateName("");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to save template");
+    }
+    setSavingTemplate(false);
   }
 
   async function handleDuplicate() {
@@ -318,6 +337,35 @@ export function EventSettingsForm({ event }: { event: Event }) {
           <Copy className="h-4 w-4" />
           {duplicating ? "Duplicating..." : "Duplicate Event"}
         </Button>
+      </Card>
+
+      {/* Save as Template */}
+      <Card className="p-6">
+        <h2 className="mb-2 text-lg font-semibold">Save as Template</h2>
+        <p className="text-sm text-muted-foreground">
+          Save this event&apos;s configuration as a reusable template.
+        </p>
+        <div className="mt-4 flex items-end gap-3">
+          <div className="flex-1 space-y-1.5">
+            <label className="text-sm font-medium">Template name</label>
+            <Input
+              type="text"
+              value={templateName}
+              onChange={(e) => setTemplateName(e.target.value)}
+              placeholder="e.g. Annual Conference"
+            />
+          </div>
+          <Button
+            variant="outline"
+            onClick={handleSaveTemplate}
+            loading={savingTemplate}
+            disabled={!templateName.trim()}
+            className="gap-2"
+          >
+            <FileDown className="h-4 w-4" />
+            {savingTemplate ? "Saving..." : "Save Template"}
+          </Button>
+        </div>
       </Card>
 
       {/* Danger zone */}
