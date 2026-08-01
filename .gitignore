@@ -8,4 +8,8 @@ dist/
 *.tsbuildinfo
 packages/supabase/.branches/
 packages/supabase/.temp/
+supabase/.branches/
+supabase/.temp/
+supabase/.temp/start-secrets/
+screenshots/
 .vercel
