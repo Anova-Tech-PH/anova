@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Ticket } from "lucide-react";
+import { Check, Ticket, ChevronDown, X } from "lucide-react";
 import { toast } from "sonner";
 import { registerForEvent } from "@/features/registration/actions";
+import { validatePromoCode } from "@/features/promo-codes/actions";
 import { QrConfirmation } from "./qr-confirmation";
 import { Input, Button, Textarea } from "@attendly/ui/components";
 
@@ -46,7 +47,51 @@ export function RegistrationFlow({
     email: string;
   } | null>(null);
 
+  // Promo code state
+  const [promoOpen, setPromoOpen] = useState(false);
+  const [promoInput, setPromoInput] = useState("");
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [appliedPromo, setAppliedPromo] = useState<{
+    id: string;
+    code: string;
+    discount_type: "percentage" | "fixed";
+    discount_value: number;
+  } | null>(null);
+
   const selected = tickets.find((t) => t.id === selectedTicket);
+
+  // Calculate discounted price
+  const originalPrice = selected ? selected.price : 0;
+  const discountAmount = appliedPromo
+    ? appliedPromo.discount_type === "percentage"
+      ? Math.round(originalPrice * appliedPromo.discount_value) / 100
+      : Math.min(appliedPromo.discount_value, originalPrice)
+    : 0;
+  const finalPrice = Math.max(0, originalPrice - discountAmount);
+
+  async function handleApplyPromo() {
+    if (!promoInput.trim() || !selectedTicket) return;
+    setPromoLoading(true);
+    try {
+      const result = await validatePromoCode(eventId, promoInput, selectedTicket);
+      setAppliedPromo({
+        id: result.id,
+        code: promoInput.toUpperCase().trim(),
+        discount_type: result.discount_type,
+        discount_value: result.discount_value,
+      });
+      toast.success("Promo code applied!");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Invalid promo code");
+    } finally {
+      setPromoLoading(false);
+    }
+  }
+
+  function removePromo() {
+    setAppliedPromo(null);
+    setPromoInput("");
+  }
 
   function setCustomValue(key: string, value: string | boolean) {
     setCustomValues((prev) => ({ ...prev, [key]: value }));
@@ -73,6 +118,8 @@ export function RegistrationFlow({
         name,
         email,
         custom_fields,
+        promo_code_id: appliedPromo?.id,
+        discount_amount: appliedPromo ? discountAmount : undefined,
       });
       setConfirmation(reg);
     } catch (err) {
@@ -150,6 +197,71 @@ export function RegistrationFlow({
           );
         })}
       </div>
+
+      {/* Promo code section */}
+      {selectedTicket && (
+        <div className="space-y-2">
+          <button
+            type="button"
+            onClick={() => setPromoOpen(!promoOpen)}
+            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ChevronDown
+              className={`h-4 w-4 transition-transform ${promoOpen ? "rotate-180" : ""}`}
+            />
+            Have a promo code?
+          </button>
+
+          {promoOpen && (
+            <div className="space-y-2">
+              {appliedPromo ? (
+                <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm dark:border-green-800 dark:bg-green-950">
+                  <Check className="h-4 w-4 text-green-600" />
+                  <span>
+                    Code <strong>{appliedPromo.code}</strong> applied:{" "}
+                    {appliedPromo.discount_type === "percentage"
+                      ? `${appliedPromo.discount_value}% off`
+                      : `$${appliedPromo.discount_value.toFixed(2)} off`}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={removePromo}
+                    className="ml-auto text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <Input
+                    value={promoInput}
+                    onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+                    placeholder="Enter code"
+                    className="flex-1 uppercase"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleApplyPromo}
+                    disabled={!promoInput.trim() || promoLoading}
+                  >
+                    {promoLoading ? "Checking..." : "Apply"}
+                  </Button>
+                </div>
+              )}
+
+              {appliedPromo && selected && selected.type !== "free" && (
+                <div className="text-sm text-muted-foreground">
+                  <span className="line-through">${originalPrice.toFixed(2)}</span>{" "}
+                  <span className="font-semibold text-foreground">
+                    ${finalPrice.toFixed(2)}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Step 2: Fill form */}
       {selectedTicket && (

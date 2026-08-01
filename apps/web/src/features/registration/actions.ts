@@ -11,6 +11,8 @@ export async function registerForEvent(data: {
   name: string;
   email: string;
   custom_fields?: Record<string, unknown>;
+  promo_code_id?: string;
+  discount_amount?: number;
 }) {
   const supabase = await createClient();
 
@@ -48,23 +50,59 @@ export async function registerForEvent(data: {
     throw new Error("This email is already registered for this event");
   }
 
+  // Validate and increment promo code if provided
+  if (data.promo_code_id) {
+    const { data: promo, error: promoError } = await supabase
+      .from("promo_codes")
+      .select("*")
+      .eq("id", data.promo_code_id)
+      .eq("event_id", data.event_id)
+      .single();
+
+    if (promoError || !promo) throw new Error("Invalid promo code");
+    if (!promo.active) throw new Error("This promo code is no longer active");
+
+    const now = new Date();
+    if (promo.starts_at && new Date(promo.starts_at) > now) throw new Error("Promo code not yet active");
+    if (promo.expires_at && new Date(promo.expires_at) < now) throw new Error("Promo code has expired");
+    if (promo.max_uses !== null && promo.current_uses >= promo.max_uses) {
+      throw new Error("Promo code has reached its usage limit");
+    }
+
+    // Increment current_uses
+    await supabase
+      .from("promo_codes")
+      .update({
+        current_uses: promo.current_uses + 1,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", data.promo_code_id);
+  }
+
   // Get current user if logged in
   const { data: { user } } = await supabase.auth.getUser();
 
   const qrCode = nanoid(16);
 
+  const insertData: Record<string, unknown> = {
+    event_id: data.event_id,
+    ticket_type_id: data.ticket_type_id,
+    user_id: user?.id ?? null,
+    name: data.name,
+    email: data.email,
+    qr_code: qrCode,
+    status: "confirmed",
+    custom_fields: data.custom_fields ?? {},
+  };
+
+  if (data.promo_code_id) {
+    insertData.promo_code_id = data.promo_code_id;
+    insertData.discount_amount = data.discount_amount ?? 0;
+  }
+
   const { data: registration, error } = await supabase
     .from("registrations")
-    .insert({
-      event_id: data.event_id,
-      ticket_type_id: data.ticket_type_id,
-      user_id: user?.id ?? null,
-      name: data.name,
-      email: data.email,
-      qr_code: qrCode,
-      status: "confirmed",
-      custom_fields: data.custom_fields ?? {},
-    })
+    .insert(insertData)
     .select("id, qr_code, name, email")
     .single();
 
