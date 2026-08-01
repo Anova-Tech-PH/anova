@@ -61,14 +61,20 @@ export function Logo({ size = "md", variant = "color", className }: LogoProps) {
     return <SvgFallback size={size} variant={variant} className={className} />;
   }
 
+  const svgSrc = variant === "white" ? "/logo-white.svg" : "/logo.svg";
+  const pngSrc = variant === "white" ? "/logo-white.png" : "/logo.png";
+
   return (
-    <img
-      src={variant === "white" ? "/logo-white.png" : "/logo.png"}
-      alt="Evenstry"
-      width={width}
-      height={height}
-      className={cn("block object-contain", className)}
-      onError={() => setImgError(true)}
-    />
+    <picture>
+      <source srcSet={svgSrc} type="image/svg+xml" />
+      <img
+        src={pngSrc}
+        alt="Evenstry"
+        width={width}
+        height={height}
+        className={cn("block object-contain", className)}
+        onError={() => setImgError(true)}
+      />
+    </picture>
   );
 }
