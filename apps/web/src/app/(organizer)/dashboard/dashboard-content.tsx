@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { Calendar, Users, TrendingUp, ScanLine, ArrowRight } from "lucide-react";
-import { Card } from "@/shared/components/ui/card";
-import { Badge } from "@/shared/components/ui/badge";
-import { EmptyState } from "@/shared/components/ui/empty-state";
-import { StaggerList, StaggerItem } from "@/shared/components/ui/stagger-list";
+import { Card } from "@attendly/ui/components";
+import { Badge } from "@attendly/ui/components";
+import { EmptyState } from "@attendly/ui/components";
+import { StaggerList, StaggerItem } from "@attendly/ui/components";
 
 type RecentEvent = {
   id: string;

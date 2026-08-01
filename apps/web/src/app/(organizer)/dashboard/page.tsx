@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/shared/utils/supabase/server";
+import { createClient } from "@attendly/ui/supabase/server";
 import { getDashboardStats } from "@/features/dashboard/queries";
 import { DashboardContent } from "./dashboard-content";
 

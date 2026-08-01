@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { Plus, Pencil, Trash2, User } from "lucide-react";
 import { toast } from "sonner";
-import { Button, Card, Avatar, EmptyState } from "@/shared/components/ui";
+import { Button, Card, Avatar, EmptyState } from "@attendly/ui/components";
 import { SpeakerForm } from "./speaker-form";
 import { createSpeaker, updateSpeaker, deleteSpeaker } from "../actions";
 

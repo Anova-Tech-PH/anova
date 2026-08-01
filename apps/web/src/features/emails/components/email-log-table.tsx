@@ -1,6 +1,6 @@
 "use client";
 
-import { Badge } from "@/shared/components/ui/badge";
+import { Badge } from "@attendly/ui/components";
 
 type EmailLog = {
   id: string;

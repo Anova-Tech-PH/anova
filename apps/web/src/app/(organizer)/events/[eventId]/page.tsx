@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
-import { createClient } from "@/shared/utils/supabase/server";
-import { Card } from "@/shared/components/ui";
+import { createClient } from "@attendly/ui/supabase/server";
+import { Card } from "@attendly/ui/components";
 import { BookOpen, MapPin, Globe, Clock, Link, ExternalLink } from "lucide-react";
 import { CopyLinkButton } from "./copy-link-button";
 

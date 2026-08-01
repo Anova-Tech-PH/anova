@@ -2,16 +2,16 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/shared/utils/supabase/client";
+import { createClient } from "@attendly/ui/supabase/client";
 import { toast } from "sonner";
-import { Input, Textarea, Button } from "@/shared/components/ui";
+import { Input, Textarea, Button } from "@attendly/ui/components";
 import {
   Card,
   CardHeader,
   CardTitle,
   CardDescription,
   CardContent,
-} from "@/shared/components/ui/card";
+} from "@attendly/ui/components";
 import {
   Calendar,
   MapPin,
@@ -21,11 +21,11 @@ import {
   Globe,
   Video,
   Building2,
-  Image,
   ArrowRight,
   ArrowLeft,
   Sparkles,
 } from "lucide-react";
+import { ImageUpload } from "@/shared/components/image-upload";
 
 type Step = "basics" | "location" | "details";
 
@@ -440,20 +440,12 @@ export default function NewEventPage() {
                       placeholder="Tell attendees about your event..."
                     />
                   </div>
-                  <div className="space-y-2">
-                    <label className="flex items-center gap-1.5 text-sm font-medium">
-                      <Image className="h-3.5 w-3.5 text-muted-foreground" />
-                      Cover image URL
-                    </label>
-                    <Input
-                      type="url"
-                      value={form.cover_image}
-                      onChange={(e) =>
-                        updateForm("cover_image", e.target.value)
-                      }
-                      placeholder="https://..."
-                    />
-                  </div>
+                  <ImageUpload
+                    value={form.cover_image}
+                    onChange={(url) => updateForm("cover_image", url)}
+                    label="Cover image"
+                    folder="covers"
+                  />
                 </CardContent>
               </Card>
 

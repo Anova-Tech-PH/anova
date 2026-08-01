@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/shared/utils/supabase/server";
+import { createClient } from "@attendly/ui/supabase/server";
 import { revalidatePath } from "next/cache";
 
 export async function createTicketType(eventId: string, data: {

@@ -48,22 +48,6 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Protect attendee routes
-  if (
-    pathname.startsWith("/feed") ||
-    pathname.startsWith("/messages") ||
-    pathname.startsWith("/people") ||
-    pathname.startsWith("/profile") ||
-    pathname.startsWith("/my-events")
-  ) {
-    if (!user) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/login";
-      url.searchParams.set("redirect", pathname);
-      return NextResponse.redirect(url);
-    }
-  }
-
   // Redirect logged-in users away from auth pages (except onboarding)
   if (pathname.startsWith("/login") || pathname.startsWith("/signup")) {
     if (user) {

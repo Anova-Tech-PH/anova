@@ -5,7 +5,7 @@ import { Check, Ticket } from "lucide-react";
 import { toast } from "sonner";
 import { registerForEvent } from "@/features/registration/actions";
 import { QrConfirmation } from "./qr-confirmation";
-import { Input, Button } from "@/shared/components/ui";
+import { Input, Button } from "@attendly/ui/components";
 
 type TicketType = {
   id: string;

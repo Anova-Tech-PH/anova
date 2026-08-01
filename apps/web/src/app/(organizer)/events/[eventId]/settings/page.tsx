@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { createClient } from "@/shared/utils/supabase/server";
+import { createClient } from "@attendly/ui/supabase/server";
 import { EventSettingsForm } from "./settings-form";
 import { Settings } from "lucide-react";
 

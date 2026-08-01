@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { X } from "lucide-react";
-import { Button, Input, Textarea } from "@/shared/components/ui";
+import { Button, Input, Textarea, ModalOverlay } from "@attendly/ui/components";
+import { ImageUpload } from "@/shared/components/image-upload";
 
 type SpeakerData = {
   id?: string;
@@ -44,7 +45,7 @@ export function SpeakerForm({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+    <ModalOverlay onClose={onCancel}>
       <div className="w-full max-w-lg rounded-xl border bg-background p-6 shadow-lg">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold">
@@ -96,15 +97,12 @@ export function SpeakerForm({
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">Photo URL</label>
-            <Input
-              type="url"
-              value={form.photo}
-              onChange={(e) => setForm((f) => ({ ...f, photo: e.target.value }))}
-              placeholder="https://..."
-            />
-          </div>
+          <ImageUpload
+            value={form.photo}
+            onChange={(url) => setForm((f) => ({ ...f, photo: url }))}
+            label="Photo"
+            folder="speakers"
+          />
 
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Bio</label>
@@ -133,6 +131,6 @@ export function SpeakerForm({
           </div>
         </form>
       </div>
-    </div>
+    </ModalOverlay>
   );
 }

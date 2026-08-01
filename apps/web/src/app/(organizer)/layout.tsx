@@ -2,27 +2,18 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Calendar, Settings, Rss, MessageCircle, DoorOpen, Users, CalendarDays, User, Menu } from "lucide-react";
+import { LayoutDashboard, Calendar, Settings, Menu } from "lucide-react";
 import { motion } from "motion/react";
-import { PageTransition } from "@/shared/components/ui";
-import { Logo } from "@/shared/components/logo";
-import { cn } from "@/shared/utils/cn";
+import { PageTransition } from "@attendly/ui/components";
+import { Logo } from "@attendly/ui/logo";
+import { cn } from "@attendly/ui/cn";
 
 const organizerNav = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/events", label: "Events", icon: Calendar },
 ];
 
-const attendeeNav = [
-  { href: "/feed", label: "Feed", icon: Rss },
-  { href: "/messages", label: "Messages", icon: MessageCircle },
-  { href: "/rooms", label: "Rooms", icon: DoorOpen },
-  { href: "/people", label: "People", icon: Users },
-  { href: "/my-events", label: "My Events", icon: CalendarDays },
-  { href: "/profile", label: "Profile", icon: User },
-];
-
-function NavItem({ item, active, badge }: { item: { href: string; label: string; icon: React.ComponentType<{ className?: string }> }; active: boolean; badge?: string }) {
+function NavItem({ item, active }: { item: { href: string; label: string; icon: React.ComponentType<{ className?: string }> }; active: boolean }) {
   return (
     <Link
       href={item.href}
@@ -50,11 +41,6 @@ function NavItem({ item, active, badge }: { item: { href: string; label: string;
           <item.icon className="h-4 w-4" />
         </span>
         <span className="flex-1">{item.label}</span>
-        {badge && (
-          <span className="relative flex h-5 min-w-5 items-center justify-center rounded-full bg-[oklch(0.445_0.107_195)] px-1.5 text-[10px] font-semibold text-white shadow-sm">
-            {badge}
-          </span>
-        )}
       </span>
     </Link>
   );
@@ -85,30 +71,12 @@ export default function OrganizerLayout({
 
         {/* Navigation */}
         <nav className="flex flex-1 flex-col gap-0.5 p-2 pt-3">
-          {/* Organizer section */}
           <div className="flex items-center gap-2 px-3 py-1.5">
             <span className="h-1.5 w-1.5 rounded-full bg-[oklch(0.445_0.107_195)]" />
             <p className="text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">Organizer</p>
           </div>
           {organizerNav.map((item) => (
             <NavItem key={item.href} item={item} active={isActive(item.href)} />
-          ))}
-
-          {/* Divider */}
-          <div className="my-2.5 mx-3 border-t border-sidebar-accent/60" />
-
-          {/* Attendee section */}
-          <div className="flex items-center gap-2 px-3 py-1.5">
-            <span className="h-1.5 w-1.5 rounded-full bg-[oklch(0.6_0.1_195)]" />
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">Attendee</p>
-          </div>
-          {attendeeNav.map((item) => (
-            <NavItem
-              key={item.href}
-              item={item}
-              active={isActive(item.href)}
-              badge={item.label === "Messages" ? "3" : undefined}
-            />
           ))}
         </nav>
 

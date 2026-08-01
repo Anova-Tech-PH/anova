@@ -5,10 +5,10 @@ import { Plus, Pencil, Trash2, Ticket } from "lucide-react";
 import { toast } from "sonner";
 import { TicketForm } from "./ticket-form";
 import { createTicketType, updateTicketType, deleteTicketType } from "../actions";
-import { Badge } from "@/shared/components/ui/badge";
-import { Button } from "@/shared/components/ui/button";
-import { Card } from "@/shared/components/ui/card";
-import { EmptyState } from "@/shared/components/ui/empty-state";
+import { Badge } from "@attendly/ui/components";
+import { Button } from "@attendly/ui/components";
+import { Card } from "@attendly/ui/components";
+import { EmptyState } from "@attendly/ui/components";
 
 type TicketType = {
   id: string;

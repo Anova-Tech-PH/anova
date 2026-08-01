@@ -1,4 +1,4 @@
-import { createClient } from "@/shared/utils/supabase/server";
+import { createClient } from "@attendly/ui/supabase/server";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {

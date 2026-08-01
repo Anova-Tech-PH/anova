@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { X } from "lucide-react";
-import { Button, Input, Textarea } from "@/shared/components/ui";
+import { Button, Input, Textarea, ModalOverlay } from "@attendly/ui/components";
 
 type TicketFormData = {
   id?: string;
@@ -46,7 +46,7 @@ export function TicketForm({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+    <ModalOverlay onClose={onCancel}>
       <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border bg-background p-6 shadow-lg">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold">
@@ -160,6 +160,6 @@ export function TicketForm({
           </div>
         </form>
       </div>
-    </div>
+    </ModalOverlay>
   );
 }

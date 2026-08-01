@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { createClient } from "@/shared/utils/supabase/client";
-import { Input, Textarea, Button, Badge, Card } from "@/shared/components/ui";
+import { Upload, X, ImageIcon } from "lucide-react";
+import { createClient } from "@attendly/ui/supabase/client";
+import { Input, Textarea, Button, Badge, Card } from "@attendly/ui/components";
 
 type Event = {
   id: string;
@@ -165,11 +166,12 @@ export function EventSettingsForm({ event }: { event: Event }) {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">Cover image URL</label>
-            <Input
-              type="url"
-              value={form.cover_image}
-              onChange={(e) => setForm((f) => ({ ...f, cover_image: e.target.value }))}
+            <label className="text-sm font-medium">Hero background image</label>
+            <CoverImageUpload
+              eventId={event.id}
+              currentUrl={form.cover_image}
+              onUploaded={(url) => setForm((f) => ({ ...f, cover_image: url }))}
+              onRemoved={() => setForm((f) => ({ ...f, cover_image: "" }))}
             />
           </div>
 
@@ -281,6 +283,129 @@ export function EventSettingsForm({ event }: { event: Event }) {
           {deleting ? "Deleting..." : "Delete Event"}
         </Button>
       </div>
+    </div>
+  );
+}
+
+function CoverImageUpload({
+  eventId,
+  currentUrl,
+  onUploaded,
+  onRemoved,
+}: {
+  eventId: string;
+  currentUrl: string;
+  onUploaded: (url: string) => void;
+  onRemoved: () => void;
+}) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image must be under 5MB");
+      return;
+    }
+
+    setUploading(true);
+    const supabase = createClient();
+    const ext = file.name.split(".").pop();
+    const path = `${eventId}/hero.${ext}`;
+
+    const { error } = await supabase.storage
+      .from("event-images")
+      .upload(path, file, { upsert: true });
+
+    if (error) {
+      toast.error(error.message);
+      setUploading(false);
+      return;
+    }
+
+    const { data } = supabase.storage.from("event-images").getPublicUrl(path);
+    onUploaded(data.publicUrl);
+    setUploading(false);
+    toast.success("Image uploaded");
+
+    // Reset file input
+    if (fileRef.current) fileRef.current.value = "";
+  }
+
+  function handleRemove() {
+    onRemoved();
+  }
+
+  if (currentUrl) {
+    return (
+      <div className="space-y-2">
+        <div className="relative overflow-hidden rounded-lg border">
+          <img
+            src={currentUrl}
+            alt="Hero background"
+            className="h-40 w-full object-cover"
+          />
+          <button
+            type="button"
+            onClick={handleRemove}
+            className="absolute top-2 right-2 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80 transition-colors"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Click the X to remove, or upload a new image to replace.
+        </p>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          onChange={handleFile}
+          className="hidden"
+        />
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => fileRef.current?.click()}
+          disabled={uploading}
+          className="gap-2"
+        >
+          <Upload className="h-3.5 w-3.5" />
+          {uploading ? "Uploading..." : "Replace Image"}
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        onChange={handleFile}
+        className="hidden"
+      />
+      <button
+        type="button"
+        onClick={() => fileRef.current?.click()}
+        disabled={uploading}
+        className="flex w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-muted-foreground/25 p-8 text-muted-foreground transition-colors hover:border-primary/50 hover:text-primary"
+      >
+        <ImageIcon className="h-8 w-8" />
+        <span className="text-sm font-medium">
+          {uploading ? "Uploading..." : "Click to upload hero image"}
+        </span>
+        <span className="text-xs">PNG, JPG, WebP up to 5MB</span>
+      </button>
     </div>
   );
 }

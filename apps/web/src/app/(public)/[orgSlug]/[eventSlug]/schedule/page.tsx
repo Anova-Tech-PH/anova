@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Clock, MapPin, ArrowLeft } from "lucide-react";
-import { createClient } from "@/shared/utils/supabase/server";
-import { Badge, Avatar } from "@/shared/components/ui";
+import { createClient } from "@attendly/ui/supabase/server";
+import { Badge, Avatar } from "@attendly/ui/components";
 
 function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString("en-US", {

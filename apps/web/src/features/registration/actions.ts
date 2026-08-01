@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/shared/utils/supabase/server";
+import { createClient } from "@attendly/ui/supabase/server";
 import { nanoid } from "nanoid";
 import { revalidatePath } from "next/cache";
 import { sendRegistrationConfirmationEmail } from "@/features/emails/actions";
@@ -82,7 +82,7 @@ export async function registerForEvent(data: {
     email: data.email,
     ticketTypeName: ticketType?.name ?? "General",
     qrCode,
-  }).catch(() => {});
+  }).catch((err) => console.error("[Registration Email Error]", err));
 
   return registration;
 }

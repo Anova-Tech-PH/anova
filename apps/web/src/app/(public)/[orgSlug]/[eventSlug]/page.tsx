@@ -10,9 +10,9 @@ import {
   ArrowRight,
   Mic2,
 } from "lucide-react";
-import { createClient } from "@/shared/utils/supabase/server";
-import { buttonVariants } from "@/shared/components/ui";
-import { Badge, Avatar } from "@/shared/components/ui";
+import { createClient } from "@attendly/ui/supabase/server";
+import { buttonVariants } from "@attendly/ui/components";
+import { Badge, Avatar } from "@attendly/ui/components";
 
 function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString("en-US", {
@@ -117,47 +117,50 @@ export default async function PublicEventPage({
   return (
     <div className="min-h-screen">
       {/* ── Hero ── */}
-      <div className="relative overflow-hidden bg-gradient-to-b from-primary/8 via-primary/4 to-transparent">
-        {/* Decorative background elements */}
-        <div className="absolute inset-0" style={{
-          backgroundImage: "radial-gradient(circle at 20% 50%, oklch(0.445 0.107 195 / 0.06) 0%, transparent 50%), radial-gradient(circle at 80% 20%, oklch(0.55 0.14 245 / 0.05) 0%, transparent 40%)",
-        }} />
-        <div className="absolute top-20 left-10 h-64 w-64 rounded-full bg-primary/[0.03] blur-3xl" />
-        <div className="absolute bottom-10 right-10 h-48 w-48 rounded-full bg-info/[0.04] blur-3xl" />
-        {event.cover_image && (
-          <div className="absolute inset-0 overflow-hidden">
+      <div className={`relative overflow-hidden ${event.cover_image ? "bg-black" : "bg-gradient-to-b from-primary/8 via-primary/4 to-transparent"}`}>
+        {event.cover_image ? (
+          <>
             <img
               src={event.cover_image}
               alt=""
-              className="h-full w-full object-cover opacity-15 blur-sm"
+              className="absolute inset-0 h-full w-full object-cover opacity-60"
             />
-          </div>
+            <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/50 to-black/70" />
+          </>
+        ) : (
+          <>
+            <div className="absolute inset-0" style={{
+              backgroundImage: "radial-gradient(circle at 20% 50%, oklch(0.445 0.107 195 / 0.06) 0%, transparent 50%), radial-gradient(circle at 80% 20%, oklch(0.55 0.14 245 / 0.05) 0%, transparent 40%)",
+            }} />
+            <div className="absolute top-20 left-10 h-64 w-64 rounded-full bg-primary/[0.03] blur-3xl" />
+            <div className="absolute bottom-10 right-10 h-48 w-48 rounded-full bg-info/[0.04] blur-3xl" />
+          </>
         )}
-        <div className="relative mx-auto max-w-4xl px-4 py-24 text-center">
-          <span className="inline-flex items-center gap-2 rounded-full border bg-card/80 px-4 py-1.5 text-sm font-medium text-primary shadow-sm backdrop-blur-sm">
+        <div className={`relative mx-auto max-w-4xl px-4 py-24 text-center ${event.cover_image ? "text-white" : ""}`}>
+          <span className={`inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-medium shadow-sm backdrop-blur-sm ${event.cover_image ? "border-white/20 bg-white/10 text-white" : "bg-card/80 text-primary"}`}>
             <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/60" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+              <span className={`absolute inline-flex h-full w-full animate-ping rounded-full ${event.cover_image ? "bg-white/60" : "bg-primary/60"}`} />
+              <span className={`relative inline-flex h-2 w-2 rounded-full ${event.cover_image ? "bg-white" : "bg-primary"}`} />
             </span>
             {org.name}
           </span>
           <h1 className="mt-6 text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
             {event.title}
           </h1>
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-card/60 px-3 py-1.5 shadow-sm backdrop-blur-sm">
-              <Calendar className="h-4 w-4 text-primary" />
+          <div className={`mt-6 flex flex-wrap items-center justify-center gap-4 text-sm ${event.cover_image ? "text-white/80" : "text-muted-foreground"}`}>
+            <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 shadow-sm backdrop-blur-sm ${event.cover_image ? "bg-white/10" : "bg-card/60"}`}>
+              <Calendar className={`h-4 w-4 ${event.cover_image ? "text-white" : "text-primary"}`} />
               {formatDateRange(event.start_date, event.end_date)}
             </span>
             {event.venue_name && (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-card/60 px-3 py-1.5 shadow-sm backdrop-blur-sm">
-                <MapPin className="h-4 w-4 text-primary" />
+              <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 shadow-sm backdrop-blur-sm ${event.cover_image ? "bg-white/10" : "bg-card/60"}`}>
+                <MapPin className={`h-4 w-4 ${event.cover_image ? "text-white" : "text-primary"}`} />
                 {event.venue_name}
               </span>
             )}
             {event.is_virtual && (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-card/60 px-3 py-1.5 shadow-sm backdrop-blur-sm">
-                <ExternalLink className="h-4 w-4 text-primary" />
+              <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 shadow-sm backdrop-blur-sm ${event.cover_image ? "bg-white/10" : "bg-card/60"}`}>
+                <ExternalLink className={`h-4 w-4 ${event.cover_image ? "text-white" : "text-primary"}`} />
                 Virtual Event
               </span>
             )}
@@ -174,13 +177,13 @@ export default async function PublicEventPage({
               <ArrowRight className="h-4 w-4" />
             </Link>
             {startingPrice != null && (
-              <span className="text-sm text-muted-foreground">
-                Starting from <span className="font-semibold text-foreground">${Number(startingPrice).toFixed(0)}</span>
+              <span className={`text-sm ${event.cover_image ? "text-white/70" : "text-muted-foreground"}`}>
+                Starting from <span className={`font-semibold ${event.cover_image ? "text-white" : "text-foreground"}`}>${Number(startingPrice).toFixed(0)}</span>
               </span>
             )}
           </div>
           {/* Quick stats */}
-          <div className="mt-8 flex items-center justify-center gap-6 text-xs text-muted-foreground">
+          <div className={`mt-8 flex items-center justify-center gap-6 text-xs ${event.cover_image ? "text-white/70" : "text-muted-foreground"}`}>
             {(regCount ?? 0) > 0 && (
               <span className="flex items-center gap-1.5">
                 <Users className="h-3.5 w-3.5" />

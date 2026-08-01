@@ -20,8 +20,8 @@ import {
   BarChart3,
   Activity,
 } from "lucide-react";
-import { Card } from "@/shared/components/ui/card";
-import { cn } from "@/shared/utils/cn";
+import { Card } from "@attendly/ui/components";
+import { cn } from "@attendly/ui/cn";
 
 // Recharts requires hex/rgb colors — oklch CSS vars won't work
 const CHART_COLORS = {

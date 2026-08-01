@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Check } from "lucide-react";
 import QRCode from "qrcode";
-import { Card } from "@/shared/components/ui";
+import { Card } from "@attendly/ui/components";
 
 export function QrConfirmation({
   name,

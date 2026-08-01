@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Check, Copy, ExternalLink } from "lucide-react";
-import { Button } from "@/shared/components/ui";
+import { Button } from "@attendly/ui/components";
 
 export function CopyLinkButton({ path }: { path: string }) {
   const [copied, setCopied] = useState(false);

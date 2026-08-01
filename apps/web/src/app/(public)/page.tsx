@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { Logo } from "@/shared/components/logo";
-import { Button } from "@/shared/components/ui/button";
+import { Logo } from "@attendly/ui/logo";
+import { Button } from "@attendly/ui/components";
 import { Calendar, Users, QrCode, BarChart3, MessageCircle, Zap, ArrowRight, Check } from "lucide-react";
 
 const features = [

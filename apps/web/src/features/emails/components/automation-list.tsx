@@ -3,9 +3,9 @@
 import { useState, useTransition } from "react";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { Badge } from "@/shared/components/ui/badge";
-import { Button } from "@/shared/components/ui/button";
-import { Card } from "@/shared/components/ui/card";
+import { Badge } from "@attendly/ui/components";
+import { Button } from "@attendly/ui/components";
+import { Card } from "@attendly/ui/components";
 import { toggleEmailAutomation, deleteEmailAutomation } from "../actions";
 
 type Automation = {

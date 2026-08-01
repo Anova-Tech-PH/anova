@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Camera, CheckCircle, AlertCircle, XCircle, ListChecks } from "lucide-react";
 import { toast } from "sonner";
-import { Button, Input, Card, EmptyState } from "@/shared/components/ui";
+import { Button, Input, Card, EmptyState } from "@attendly/ui/components";
 import { checkInByQrCode } from "../actions";
 
 type ScanResult = Awaited<ReturnType<typeof checkInByQrCode>> | null;

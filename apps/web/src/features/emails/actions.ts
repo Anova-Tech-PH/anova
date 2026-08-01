@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/shared/utils/supabase/server";
+import { createClient } from "@attendly/ui/supabase/server";
 import { revalidatePath } from "next/cache";
 import { sendEmail, substituteVariables } from "./lib/send-email";
 import { getSegmentedRecipients } from "./lib/segments";
@@ -199,15 +199,24 @@ export async function sendRegistrationConfirmationEmail(
   eventId: string,
   registration: { name: string; email: string; ticketTypeName: string; qrCode: string }
 ) {
-  const supabase = await createClient();
+  // Use service role client — this may be called by anonymous/non-org users during registration
+  const { createClient: createSupabaseClient } = await import("@supabase/supabase-js");
+  const supabase = createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
 
-  const { data: event } = await supabase
+  const { data: event, error: eventError } = await supabase
     .from("events")
     .select("title, start_date, slug, organization_id, organizations(slug)")
     .eq("id", eventId)
     .single();
 
-  if (!event) return;
+  if (!event) {
+    console.error("[Registration Email] Event not found:", eventId, eventError);
+    return;
+  }
+  console.log("[Registration Email] Event found, sending email to:", registration.email);
 
   const { data: automation } = await supabase
     .from("email_automations")
@@ -216,7 +225,8 @@ export async function sendRegistrationConfirmationEmail(
     .eq("trigger", "on_registration")
     .single();
 
-  if (!automation?.enabled) return;
+  // If an automation row exists and is explicitly disabled, skip
+  if (automation && !automation.enabled) return;
 
   const orgs = event.organizations as unknown as { slug: string }[] | null;
   const orgSlug = orgs?.[0]?.slug ?? "";
@@ -249,7 +259,7 @@ export async function sendRegistrationConfirmationEmail(
       subject: `You're registered for ${event.title}!`,
       html,
     });
-  } catch {
-    console.error("Failed to send registration confirmation email");
+  } catch (err) {
+    console.error("Failed to send registration confirmation email:", err);
   }
 }

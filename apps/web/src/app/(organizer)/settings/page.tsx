@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/shared/utils/supabase/server";
+import { createClient } from "@attendly/ui/supabase/server";
 import { SignOutButton } from "./sign-out-button";
-import { Card } from "@/shared/components/ui";
+import { Card } from "@attendly/ui/components";
 import { User, Building2, LogOut, Mail, Tag } from "lucide-react";
 
 export default async function SettingsPage() {

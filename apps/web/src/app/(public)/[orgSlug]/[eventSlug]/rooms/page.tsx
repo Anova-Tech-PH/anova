@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
-import { createClient } from "@/shared/utils/supabase/server";
-import { Card } from "@/shared/components/ui/card";
-import { Badge } from "@/shared/components/ui/badge";
+import { createClient } from "@attendly/ui/supabase/server";
+import { Card } from "@attendly/ui/components";
+import { Badge } from "@attendly/ui/components";
 
 export default async function PublicRoomsPage({
   params,

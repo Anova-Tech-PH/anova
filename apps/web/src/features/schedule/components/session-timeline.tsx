@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { Plus, Pencil, Trash2, Clock, MapPin, User, CalendarDays } from "lucide-react";
 import { toast } from "sonner";
-import { Button, Badge, Card, EmptyState } from "@/shared/components/ui";
+import { Button, Badge, Card, EmptyState } from "@attendly/ui/components";
 import { SessionForm } from "./session-form";
 import { createSession, updateSession, deleteSession } from "../actions";
 

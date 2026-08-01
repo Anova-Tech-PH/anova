@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Plus, Calendar, MapPin, Wifi, Users, ArrowUpRight } from "lucide-react";
-import { createClient } from "@/shared/utils/supabase/server";
-import { Badge, EmptyState, Button } from "@/shared/components/ui";
+import { createClient } from "@attendly/ui/supabase/server";
+import { Badge, EmptyState, Button } from "@attendly/ui/components";
 
 function getStatusStyle(status: string) {
   switch (status) {

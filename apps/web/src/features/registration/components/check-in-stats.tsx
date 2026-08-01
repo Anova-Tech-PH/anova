@@ -1,5 +1,5 @@
 import { getCheckInStats } from "../queries";
-import { Card } from "@/shared/components/ui";
+import { Card } from "@attendly/ui/components";
 import { BarChart3 } from "lucide-react";
 
 function formatTime(iso: string) {

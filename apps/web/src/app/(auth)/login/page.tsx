@@ -3,12 +3,12 @@
 import { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { createClient } from "@/shared/utils/supabase/client";
+import { createClient } from "@attendly/ui/supabase/client";
 import { toast } from "sonner";
-import { Button } from "@/shared/components/ui/button";
-import { Input } from "@/shared/components/ui/input";
-import { PageTransition } from "@/shared/components/ui/page-transition";
-import { Logo } from "@/shared/components/logo";
+import { Button } from "@attendly/ui/components";
+import { Input } from "@attendly/ui/components";
+import { PageTransition } from "@attendly/ui/components";
+import { Logo } from "@attendly/ui/logo";
 import { Mail, Lock, Check, ArrowRight } from "lucide-react";
 
 export default function LoginPage() {

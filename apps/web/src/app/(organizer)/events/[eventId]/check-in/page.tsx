@@ -1,6 +1,6 @@
 import { QrScanner } from "@/features/registration/components/qr-scanner";
 import { CheckInStats } from "@/features/registration/components/check-in-stats";
-import { createClient } from "@/shared/utils/supabase/server";
+import { createClient } from "@attendly/ui/supabase/server";
 import { ScanLine } from "lucide-react";
 
 export default async function CheckInPage({

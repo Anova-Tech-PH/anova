@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Logo } from "@/shared/components/logo";
+import { Logo } from "@attendly/ui/logo";
 
 export default function PublicEventLayout({
   children,

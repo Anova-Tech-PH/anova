@@ -4,11 +4,11 @@ import { useState, useMemo, useTransition } from "react";
 import { Search, Download, ChevronDown, Users, UserCheck, UserX, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { updateRegistrationStatus } from "../actions";
-import { Badge } from "@/shared/components/ui/badge";
-import { Button } from "@/shared/components/ui/button";
-import { Card } from "@/shared/components/ui/card";
-import { Input } from "@/shared/components/ui/input";
-import { cn } from "@/shared/utils/cn";
+import { Badge } from "@attendly/ui/components";
+import { Button } from "@attendly/ui/components";
+import { Card } from "@attendly/ui/components";
+import { Input } from "@attendly/ui/components";
+import { cn } from "@attendly/ui/cn";
 
 type Registration = {
   id: string;

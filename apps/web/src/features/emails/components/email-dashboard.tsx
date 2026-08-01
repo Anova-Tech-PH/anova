@@ -1,7 +1,7 @@
 "use client";
 
 import { Mail, Send, AlertTriangle, CheckCircle } from "lucide-react";
-import { Card } from "@/shared/components/ui/card";
+import { Card } from "@attendly/ui/components";
 
 type EmailStats = {
   total: number;

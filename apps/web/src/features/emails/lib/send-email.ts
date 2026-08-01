@@ -1,5 +1,5 @@
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { getResend } from "./resend";
-import { createClient } from "@/shared/utils/supabase/server";
 
 type SendEmailParams = {
   organizationId: string;
@@ -10,17 +10,24 @@ type SendEmailParams = {
   html: string;
 };
 
-export async function sendEmail(params: SendEmailParams) {
-  const supabase = await createClient();
+function getServiceClient() {
+  return createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
+export async function sendEmail(params: SendEmailParams) {
   const { data, error: sendError } = await getResend().emails.send({
-    from: "Anova <noreply@anova.app>",
+    from: process.env.EMAIL_FROM || "Anova <onboarding@resend.dev>",
     to: params.to.email,
     subject: params.subject,
     html: params.html,
   });
 
-  const status = sendError ? "failed" : "sent";
+  // Use service role client for logging — this runs server-side
+  // and the calling user may not have RLS access to email_logs
+  const supabase = getServiceClient();
 
   await supabase.from("email_logs").insert({
     organization_id: params.organizationId,
@@ -29,7 +36,7 @@ export async function sendEmail(params: SendEmailParams) {
     recipient_email: params.to.email,
     recipient_name: params.to.name ?? null,
     subject: params.subject,
-    status,
+    status: sendError ? "failed" : "sent",
     resend_id: data?.id ?? null,
     sent_at: sendError ? null : new Date().toISOString(),
     error: sendError?.message ?? null,

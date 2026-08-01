@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { ArrowLeft, Calendar, Users, QrCode, BarChart3, Settings, Ticket, DoorOpen, Mail } from "lucide-react";
-import { createClient } from "@/shared/utils/supabase/server";
+import { createClient } from "@attendly/ui/supabase/server";
 import { notFound } from "next/navigation";
-import { Badge } from "@/shared/components/ui";
+import { Badge } from "@attendly/ui/components";
 
 export default async function EventLayout({
   children,

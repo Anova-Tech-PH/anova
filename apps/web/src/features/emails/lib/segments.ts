@@ -1,4 +1,4 @@
-import { createClient } from "@/shared/utils/supabase/server";
+import { createClient } from "@attendly/ui/supabase/server";
 
 type SegmentFilters = {
   ticket_type_ids?: string[];

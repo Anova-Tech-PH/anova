@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@attendly/shared": "workspace:*",
+    "@attendly/ui": "workspace:*",
     "@hookform/resolvers": "^5.4.0",
     "@react-email/components": "^1.0.12",
     "@supabase/ssr": "^0.12.0",

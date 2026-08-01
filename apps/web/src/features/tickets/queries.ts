@@ -1,4 +1,4 @@
-import { createClient } from "@/shared/utils/supabase/server";
+import { createClient } from "@attendly/ui/supabase/server";
 
 export async function getTicketTypesByEvent(eventId: string) {
   const supabase = await createClient();

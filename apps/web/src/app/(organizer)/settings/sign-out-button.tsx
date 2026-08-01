@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { createClient } from "@/shared/utils/supabase/client";
+import { createClient } from "@attendly/ui/supabase/client";
 
 export function SignOutButton() {
   const router = useRouter();

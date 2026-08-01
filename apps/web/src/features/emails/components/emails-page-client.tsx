@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Plus } from "lucide-react";
-import { Button } from "@/shared/components/ui/button";
+import { Button } from "@attendly/ui/components";
 import { ComposeEmail } from "./compose-email";
 
 type TicketType = {

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Send, X } from "lucide-react";
 import { toast } from "sonner";
-import { Button, Input, Textarea } from "@/shared/components/ui";
+import { Button, Input, Textarea, ModalOverlay } from "@attendly/ui/components";
 import { sendBroadcastEmail } from "../actions";
 
 type TicketType = {
@@ -65,7 +65,7 @@ export function ComposeEmail({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+    <ModalOverlay onClose={onClose}>
       <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl border bg-background p-6 shadow-lg">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold">Compose Broadcast Email</h2>
@@ -158,6 +158,6 @@ export function ComposeEmail({
           </div>
         </div>
       </div>
-    </div>
+    </ModalOverlay>
   );
 }

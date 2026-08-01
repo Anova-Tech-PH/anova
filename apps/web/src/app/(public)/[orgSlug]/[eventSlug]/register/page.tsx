@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { ArrowLeft, Calendar, MapPin, Wifi, Shield } from "lucide-react";
 import Link from "next/link";
-import { createClient } from "@/shared/utils/supabase/server";
+import { createClient } from "@attendly/ui/supabase/server";
 import { RegistrationFlow } from "./registration-flow";
 
 export default async function RegisterPage({

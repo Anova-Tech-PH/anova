@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { createClient } from "@/shared/utils/supabase/server";
+import { createClient } from "@attendly/ui/supabase/server";
 import { getRoomsByEvent } from "@/features/breakout-rooms/queries";
 import { RoomList } from "@/features/breakout-rooms/components/room-list";
 
