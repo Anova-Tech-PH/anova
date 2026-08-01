@@ -75,7 +75,7 @@ export function RegistrationConfirmation({
           </Button>
           <Hr style={{ margin: "24px 0", borderColor: "#e5e7eb" }} />
           <Text style={{ fontSize: "12px", color: "#9ca3af" }}>
-            Anova - Event Management Platform
+            Evenstry - Event Management Platform
           </Text>
         </Container>
       </Body>

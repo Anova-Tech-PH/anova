@@ -15,7 +15,7 @@ const sourceSerif = Source_Serif_4({
 });
 
 export const metadata: Metadata = {
-  title: "Anova",
+  title: "Evenstry",
   description: "Modern event management platform",
 };
 

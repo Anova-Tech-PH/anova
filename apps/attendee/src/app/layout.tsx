@@ -15,7 +15,7 @@ const sourceSerif = Source_Serif_4({
 });
 
 export const metadata: Metadata = {
-  title: "Anova - Attendee",
+  title: "Evenstry - Attendee",
   description: "Your event experience",
 };
 

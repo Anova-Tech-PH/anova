@@ -56,10 +56,10 @@ export default function SignupPage() {
           <Logo size="xl" variant="white" />
           <div className="space-y-4">
             <h2 className="text-4xl font-bold font-serif leading-tight">
-              Start something<br />unforgettable.
+              Stop juggling<br />spreadsheets.
             </h2>
-            <p className="text-lg text-primary-foreground/80">
-              From intimate workshops to large conferences, Anova gives you everything you need.
+            <p className="text-lg text-primary-foreground/80 leading-relaxed">
+              One place for tickets, schedules, speakers, and check-ins. Built for organizers who run 2–200 events a year.
             </p>
           </div>
           {/* Social proof */}
@@ -69,7 +69,7 @@ export default function SignupPage() {
             </div>
             <div>
               <p className="text-sm font-medium text-primary-foreground/90">Join 2,000+ organizers</p>
-              <p className="text-xs text-primary-foreground/60">who trust Anova for their events</p>
+              <p className="text-xs text-primary-foreground/60">run their events on Evenstry</p>
             </div>
           </div>
         </div>
@@ -191,7 +191,7 @@ export default function SignupPage() {
               <span className="underline cursor-pointer hover:text-muted-foreground">Privacy Policy</span>
             </p>
 
-            <div className="rounded-xl border bg-muted/30 p-4 text-center text-sm text-muted-foreground">
+            <div className="rounded-lg border bg-muted/30 p-4 text-center text-sm text-muted-foreground">
               Already have an account?{" "}
               <Link href="/login" className="text-primary font-semibold hover:underline">
                 Sign in

@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Image, BarChart3, Send, X, Plus } from "lucide-react";
+import { Image, Camera, BarChart3, Send, X, Plus, Upload, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { createPost } from "../actions";
+import { createPost, uploadPostImage } from "../actions";
 import { Button } from "@attendly/ui/components";
 import { Card } from "@attendly/ui/components";
 import { Input } from "@attendly/ui/components";
@@ -18,9 +18,13 @@ export function PostComposer({
   const [content, setContent] = useState("");
   const [type, setType] = useState<"text" | "photo" | "poll">("text");
   const [imageUrl, setImageUrl] = useState("");
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [pollOptions, setPollOptions] = useState(["", ""]);
   const [loading, setLoading] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const maxLength = 2000;
   const charCount = content.length;
@@ -38,10 +42,42 @@ export function PostComposer({
     if (pollOptions.length > 2) setPollOptions((prev) => prev.filter((_, i) => i !== index));
   }
 
+  async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Show local preview immediately
+    const previewUrl = URL.createObjectURL(file);
+    setImagePreview(previewUrl);
+    setType("photo");
+    setUploading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const url = await uploadPostImage(formData);
+      setImageUrl(url);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to upload image");
+      setImagePreview(null);
+      setType("text");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
+  function removeImage() {
+    setImageUrl("");
+    setImagePreview(null);
+    if (type === "photo") setType("text");
+  }
+
   function reset() {
     setContent("");
     setType("text");
     setImageUrl("");
+    setImagePreview(null);
     setPollOptions(["", ""]);
     setIsFocused(false);
   }
@@ -103,14 +139,42 @@ export function PostComposer({
         </div>
       </div>
 
-      {type === "photo" && (
-        <div className="mt-2 ml-12">
-          <Input
-            type="url"
-            value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
-            placeholder="Image URL..."
+      {/* Hidden file inputs */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/gif,image/webp"
+        onChange={handleFileSelect}
+        className="hidden"
+      />
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        capture="environment"
+        onChange={handleFileSelect}
+        className="hidden"
+      />
+
+      {/* Image preview */}
+      {imagePreview && (
+        <div className="mt-2 ml-12 relative inline-block">
+          <img
+            src={imagePreview}
+            alt="Upload preview"
+            className="max-h-48 rounded-lg object-cover"
           />
+          {uploading && (
+            <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/40">
+              <Loader2 className="h-6 w-6 animate-spin text-white" />
+            </div>
+          )}
+          <button
+            onClick={removeImage}
+            className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-foreground text-background shadow-md hover:bg-foreground/80 transition-colors"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
         </div>
       )}
 
@@ -143,14 +207,27 @@ export function PostComposer({
       <div className="mt-3 flex items-center justify-between border-t pt-3 ml-12">
         <div className="flex gap-1">
           <button
-            onClick={() => setType(type === "photo" ? "text" : "photo")}
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
             className={`group relative rounded-lg p-2.5 transition-colors ${
-              type === "photo" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-accent hover:text-foreground"
+              imagePreview ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-accent hover:text-foreground"
             }`}
           >
             <Image className="h-5 w-5" />
             <span className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-foreground px-2 py-1 text-[10px] text-background opacity-0 transition-opacity group-hover:opacity-100">
               Photo
+            </span>
+          </button>
+          <button
+            onClick={() => cameraInputRef.current?.click()}
+            disabled={uploading}
+            className={`group relative rounded-lg p-2.5 transition-colors ${
+              "text-muted-foreground hover:bg-accent hover:text-foreground"
+            }`}
+          >
+            <Camera className="h-5 w-5" />
+            <span className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-foreground px-2 py-1 text-[10px] text-background opacity-0 transition-opacity group-hover:opacity-100">
+              Camera
             </span>
           </button>
           <button
@@ -215,7 +292,7 @@ export function PostComposer({
 
           <Button
             onClick={handleSubmit}
-            disabled={loading || !content.trim() || (type === "poll" && pollOptions.filter((o) => o.trim()).length < 2)}
+            disabled={loading || uploading || !content.trim() || (type === "poll" && pollOptions.filter((o) => o.trim()).length < 2)}
             size="sm"
           >
             <Send className="h-3.5 w-3.5" />

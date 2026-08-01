@@ -56,10 +56,10 @@ export default function SignupPage() {
           <Logo size="xl" variant="white" />
           <div className="space-y-4">
             <h2 className="text-4xl font-bold font-serif leading-tight">
-              Join the<br />community.
+              Get more out<br />of every event.
             </h2>
-            <p className="text-lg text-primary-foreground/80">
-              Create your attendee profile and start connecting at events.
+            <p className="text-lg text-primary-foreground/80 leading-relaxed">
+              Your profile, your schedule, your connections — all in one place across every Evenstry event.
             </p>
           </div>
           {/* Social proof */}
@@ -69,7 +69,7 @@ export default function SignupPage() {
             </div>
             <div>
               <p className="text-sm font-medium text-primary-foreground/90">Join thousands of attendees</p>
-              <p className="text-xs text-primary-foreground/60">who connect through Anova events</p>
+              <p className="text-xs text-primary-foreground/60">use Evenstry at their events</p>
             </div>
           </div>
         </div>
@@ -102,7 +102,7 @@ export default function SignupPage() {
               </div>
               <h1 className="text-2xl font-semibold">Create your account</h1>
               <p className="text-sm text-muted-foreground">
-                Start connecting at events
+                Takes 30 seconds. No credit card.
               </p>
             </div>
 
@@ -191,7 +191,7 @@ export default function SignupPage() {
               <span className="underline cursor-pointer hover:text-muted-foreground">Privacy Policy</span>
             </p>
 
-            <div className="rounded-xl border bg-muted/30 p-4 text-center text-sm text-muted-foreground">
+            <div className="rounded-lg border bg-muted/30 p-4 text-center text-sm text-muted-foreground">
               Already have an account?{" "}
               <Link href="/login" className="text-primary font-semibold hover:underline">
                 Sign in

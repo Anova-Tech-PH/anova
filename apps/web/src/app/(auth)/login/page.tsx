@@ -63,24 +63,24 @@ function LoginForm() {
           <Logo size="xl" variant="white" />
           <div className="space-y-4">
             <h2 className="text-4xl font-bold font-serif leading-tight">
-              Events that bring<br />people together.
+              Your events,<br />under control.
             </h2>
-            <p className="text-lg text-primary-foreground/80">
-              Create, manage, and grow your events with a platform designed for modern organizers.
+            <p className="text-lg text-primary-foreground/80 leading-relaxed">
+              Registrations, check-ins, schedules, and attendee comms — one dashboard, zero spreadsheets.
             </p>
           </div>
           <ul className="space-y-3">
-            {["Free to get started", "No credit card required", "Cancel anytime"].map((item) => (
+            {["Launch an event in under 5 minutes", "QR check-in at the door", "See who registered, in real time"].map((item) => (
               <li key={item} className="flex items-center gap-2.5 text-sm text-primary-foreground/70">
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/15">
+                <span className="flex h-5 w-5 items-center justify-center rounded bg-white/15">
                   <Check className="h-3 w-3" />
                 </span>
                 {item}
               </li>
             ))}
           </ul>
-          <p className="text-sm text-primary-foreground/60">
-            Trusted by organizers worldwide
+          <p className="text-xs text-primary-foreground/40 tracking-wide uppercase">
+            Used by 2,000+ event organizers
           </p>
         </div>
 
@@ -171,7 +171,7 @@ function LoginForm() {
               </Button>
             </form>
 
-            <div className="rounded-xl border bg-muted/30 p-4 text-center text-sm text-muted-foreground">
+            <div className="rounded-lg border bg-muted/30 p-4 text-center text-sm text-muted-foreground">
               Don&apos;t have an account?{" "}
               <Link href="/signup" className="text-primary font-semibold hover:underline">
                 Sign up for free

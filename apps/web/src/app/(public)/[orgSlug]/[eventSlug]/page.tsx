@@ -130,7 +130,7 @@ export default async function PublicEventPage({
         ) : (
           <>
             <div className="absolute inset-0" style={{
-              backgroundImage: "radial-gradient(circle at 20% 50%, oklch(0.445 0.107 195 / 0.06) 0%, transparent 50%), radial-gradient(circle at 80% 20%, oklch(0.55 0.14 245 / 0.05) 0%, transparent 40%)",
+              backgroundImage: "radial-gradient(circle at 20% 50%, oklch(0.445 0.107 195 / 0.06) 0%, transparent 50%), radial-gradient(circle at 80% 20%, oklch(0.55 0.12 180 / 0.05) 0%, transparent 40%)",
             }} />
             <div className="absolute top-20 left-10 h-64 w-64 rounded-full bg-primary/[0.03] blur-3xl" />
             <div className="absolute bottom-10 right-10 h-48 w-48 rounded-full bg-info/[0.04] blur-3xl" />

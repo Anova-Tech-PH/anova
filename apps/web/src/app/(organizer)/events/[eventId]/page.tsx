@@ -97,8 +97,8 @@ export default async function EventDetailPage({
               Public Registration Link
             </h2>
           </div>
-          <div className="flex items-center gap-3">
-            <code className="flex-1 rounded-lg border bg-muted/50 px-3 py-2 text-sm">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <code className="min-w-0 truncate rounded-lg border bg-muted/50 px-3 py-2 text-sm sm:flex-1">
               {`/${(event.organizations as any).slug}/${event.slug}/register`}
             </code>
             <CopyLinkButton path={`/${(event.organizations as any).slug}/${event.slug}/register`} />

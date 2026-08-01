@@ -3,6 +3,7 @@ import { ArrowLeft, Calendar, Users, QrCode, BarChart3, Settings, Ticket, DoorOp
 import { createClient } from "@attendly/ui/supabase/server";
 import { notFound } from "next/navigation";
 import { Badge } from "@attendly/ui/components";
+import { MobileTabSelect } from "./mobile-tab-select";
 
 export default async function EventLayout({
   children,
@@ -60,24 +61,25 @@ export default async function EventLayout({
 
       <div className="space-y-4">
         {/* Event header */}
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0">
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-semibold truncate">{event.title}</h1>
-              <Badge variant={statusVariant} className="shrink-0 px-3 py-1">
-                {event.status}
-              </Badge>
-            </div>
-            <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
-              <Calendar className="h-3.5 w-3.5" />
-              {dateStr}
-            </p>
+        <div>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <h1 className="text-xl font-semibold sm:text-2xl">{event.title}</h1>
+            <Badge variant={statusVariant} className="shrink-0 px-3 py-1">
+              {event.status}
+            </Badge>
           </div>
+          <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
+            <Calendar className="h-3.5 w-3.5" />
+            {dateStr}
+          </p>
         </div>
 
-        {/* Tab navigation */}
-        <div className="relative">
-          <nav className="-mb-px flex gap-1 overflow-x-auto pb-px scrollbar-none">
+        {/* Mobile: dropdown select */}
+        <MobileTabSelect tabs={tabs.map((t) => ({ href: t.href, label: t.label }))} />
+
+        {/* Desktop: horizontal tabs */}
+        <div className="relative hidden sm:block">
+          <nav className="-mb-px flex gap-1 overflow-x-auto pb-px" style={{ scrollbarWidth: "none" }}>
             {tabs.map((tab) => (
               <Link
                 key={tab.href}

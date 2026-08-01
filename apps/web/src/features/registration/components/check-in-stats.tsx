@@ -31,7 +31,21 @@ export async function CheckInStats({ eventId }: { eventId: string }) {
         attendees have at least one check-in.
       </p>
 
-      <div className="overflow-x-auto">
+      {/* Mobile: list view */}
+      <div className="space-y-2 sm:hidden">
+        {stats.perSession.map((session) => (
+          <div key={session.id} className="flex items-center justify-between rounded-lg border px-3 py-2.5">
+            <div className="min-w-0">
+              <p className="text-sm font-medium truncate">{session.title}</p>
+              <p className="text-xs text-muted-foreground">{formatTime(session.start_time)}</p>
+            </div>
+            <span className="shrink-0 ml-3 text-sm font-semibold">{session.checked_in_count}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop: table view */}
+      <div className="hidden overflow-x-auto sm:block">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b text-left text-xs text-muted-foreground">

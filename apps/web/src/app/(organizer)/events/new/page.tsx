@@ -143,11 +143,11 @@ export default function NewEventPage() {
             <Sparkles className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl font-semibold font-[family-name:var(--font-display)]">
+            <h1 className="text-2xl font-bold font-serif">
               Create Event
             </h1>
             <p className="text-sm text-muted-foreground">
-              Set up your event in a few steps.
+              Fill in the basics, then add tickets, speakers, and sessions.
             </p>
           </div>
         </div>
@@ -250,8 +250,8 @@ export default function NewEventPage() {
                     <p className="flex items-center gap-1 text-xs text-muted-foreground">
                       <Globe className="h-3 w-3" />
                       {form.slug
-                        ? `anova.events/${form.slug}`
-                        : "anova.events/your-event-slug"}
+                        ? `evenstry.events/${form.slug}`
+                        : "evenstry.events/your-event-slug"}
                     </p>
                   </div>
                   <div className="grid gap-4 sm:grid-cols-2">

@@ -3,6 +3,36 @@
 import { createClient } from "@attendly/ui/supabase/server";
 import { revalidatePath } from "next/cache";
 
+export async function uploadPostImage(formData: FormData): Promise<string> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const file = formData.get("file") as File;
+  if (!file) throw new Error("No file provided");
+
+  const maxSize = 5 * 1024 * 1024; // 5MB
+  if (file.size > maxSize) throw new Error("File must be under 5MB");
+
+  const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+  if (!allowedTypes.includes(file.type)) throw new Error("Only JPEG, PNG, GIF, and WebP are allowed");
+
+  const ext = file.name.split(".").pop() || "jpg";
+  const path = `${user.id}/${Date.now()}.${ext}`;
+
+  const { error } = await supabase.storage
+    .from("post-images")
+    .upload(path, file);
+
+  if (error) throw new Error(error.message);
+
+  const { data: urlData } = supabase.storage
+    .from("post-images")
+    .getPublicUrl(path);
+
+  return urlData.publicUrl;
+}
+
 export async function createPost(data: {
   event_id: string;
   type: string;

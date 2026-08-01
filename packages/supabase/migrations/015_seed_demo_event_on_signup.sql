@@ -29,7 +29,7 @@ BEGIN
     gen_random_uuid(), _org_id,
     'Sample Conference 2026',
     'sample-conference-2026',
-    'This is a demo event to help you explore Anova. Feel free to edit or delete it. '
+    'This is a demo event to help you explore Evenstry. Feel free to edit or delete it. '
     || 'It includes sample speakers, sessions, ticket types, and registrations so you can see how everything works together.',
     (_start || ' 09:00:00')::timestamptz,
     (_start || ' 17:00:00')::timestamptz,
@@ -127,6 +127,30 @@ BEGIN
     ('demo-attendee2@example.com', 'Morgan Taylor'),
     ('demo-attendee3@example.com', 'Casey Brooks')
   ) AS t(email, name);
+
+  -- Create sample breakout rooms
+  INSERT INTO public.breakout_rooms (event_id, session_id, title, description, facilitator_name, location, max_capacity, starts_at, ends_at, status) VALUES
+    (_event_id, _session2_id,
+      'Product Design Workshop',
+      'Hands-on workshop exploring user research techniques and rapid prototyping methods.',
+      'Marcus Rivera', 'Room 201', 20,
+      (_start || ' 11:30:00')::timestamptz,
+      (_start || ' 12:30:00')::timestamptz,
+      'open'),
+    (_event_id, _session4_id,
+      'AI Ethics Roundtable',
+      'An open discussion on responsible AI development, bias mitigation, and governance frameworks.',
+      'Dr. Priya Sharma', 'Room 202', 15,
+      (_start || ' 14:00:00')::timestamptz,
+      (_start || ' 15:00:00')::timestamptz,
+      'open'),
+    (_event_id, NULL,
+      'Networking Lounge',
+      'Casual drop-in space to connect with fellow attendees, exchange ideas, and build your network.',
+      NULL, 'Lounge Area', 50,
+      (_start || ' 09:00:00')::timestamptz,
+      (_start || ' 17:00:00')::timestamptz,
+      'open');
 
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

@@ -253,7 +253,7 @@ export function EventSettingsForm({ event }: { event: Event }) {
           {status === "draft" ? (
             <Button
               onClick={() => handleStatusChange("published")}
-              className="bg-green-600 hover:bg-green-700"
+              className="bg-primary hover:bg-primary/90"
             >
               Publish Event
             </Button>

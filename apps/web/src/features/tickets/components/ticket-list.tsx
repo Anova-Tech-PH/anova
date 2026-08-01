@@ -113,13 +113,13 @@ export function TicketList({
       {tickets.length === 0 ? (
         <EmptyState
           icon={<Ticket className="h-8 w-8" />}
-          title="No ticket types yet"
+          title="No tickets yet"
           action={
             <button
               onClick={() => setShowForm(true)}
               className="text-sm font-medium text-primary underline"
             >
-              Create your first ticket type
+              Add a ticket type
             </button>
           }
         />

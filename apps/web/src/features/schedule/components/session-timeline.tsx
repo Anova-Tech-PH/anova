@@ -77,7 +77,7 @@ export function SessionTimeline({
 
   const dayGroups = groupByDay(sessions);
 
-  const speakerColors = ["bg-primary/60", "bg-amber-400/60", "bg-rose-400/60", "bg-violet-400/60", "bg-emerald-400/60"];
+  const speakerColors = ["bg-primary/60", "bg-amber-400/60", "bg-rose-400/60", "bg-emerald-400/60", "bg-emerald-400/60"];
 
   function toLocalInput(iso: string) {
     const d = new Date(iso);
@@ -212,8 +212,8 @@ export function SessionTimeline({
       {sessions.length === 0 ? (
         <EmptyState
           icon={<CalendarDays className="h-8 w-8" />}
-          title="No sessions yet"
-          description="Add your first session to build the schedule."
+          title="No sessions"
+          description="Add sessions to build out the event schedule."
         />
       ) : (
         dayGroups.map((group) => (

@@ -77,8 +77,8 @@ export function AnalyticsCharts({ data }: { data: AnalyticsData }) {
       label: "Check-in Rate",
       value: `${stats.checkInRate}%`,
       icon: TrendingUp,
-      gradient: "from-violet-50 to-violet-100/80 dark:from-violet-900/30 dark:to-violet-800/20",
-      iconColor: "text-violet-600 dark:text-violet-400",
+      gradient: "from-emerald-50 to-emerald-100/80 dark:from-emerald-900/30 dark:to-emerald-800/20",
+      iconColor: "text-emerald-600 dark:text-emerald-400",
     },
   ];
 

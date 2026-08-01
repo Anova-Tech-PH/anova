@@ -1,4 +1,4 @@
-# Anova — Development Notes
+# Evenstry — Development Notes
 
 ## Supabase
 

@@ -126,7 +126,7 @@ export function TrackManager({
                 autoFocus
                 onKeyDown={(e) => e.key === "Enter" && handleUpdate(track.id)}
               />
-              <button onClick={() => handleUpdate(track.id)} className="text-green-600 hover:text-green-700">
+              <button onClick={() => handleUpdate(track.id)} className="text-primary hover:text-primary/80">
                 <Check className="h-3.5 w-3.5" />
               </button>
               <button onClick={() => setEditingId(null)} className="text-muted-foreground hover:text-foreground">
@@ -175,7 +175,7 @@ export function TrackManager({
               autoFocus
               onKeyDown={(e) => e.key === "Enter" && handleAdd()}
             />
-            <button onClick={handleAdd} className="text-green-600 hover:text-green-700">
+            <button onClick={handleAdd} className="text-primary hover:text-primary/80">
               <Check className="h-3.5 w-3.5" />
             </button>
             <button onClick={() => setAdding(false)} className="text-muted-foreground hover:text-foreground">

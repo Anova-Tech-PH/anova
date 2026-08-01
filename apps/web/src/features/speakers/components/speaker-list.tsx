@@ -114,8 +114,8 @@ export function SpeakerList({
       {speakers.length === 0 ? (
         <EmptyState
           icon={<User className="h-8 w-8" />}
-          title="No speakers yet"
-          description="Add your first speaker."
+          title="No speakers added"
+          description="Add speakers to show them on the event page."
         />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -129,7 +129,7 @@ export function SpeakerList({
                 className="pointer-events-none absolute inset-x-0 top-0 h-20 rounded-t-xl opacity-30"
                 style={{
                   background: `linear-gradient(135deg, ${
-                    ["oklch(0.445 0.107 195)", "oklch(0.5 0.1 260)", "oklch(0.5 0.1 320)", "oklch(0.5 0.1 50)"][index % 4]
+                    ["oklch(0.445 0.107 195)", "oklch(0.55 0.12 180)", "oklch(0.50 0.10 200)", "oklch(0.48 0.09 210)"][index % 4]
                   } 0%, transparent 100%)`,
                 }}
               />

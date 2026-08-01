@@ -63,14 +63,14 @@ function LoginForm() {
           <Logo size="xl" variant="white" />
           <div className="space-y-4">
             <h2 className="text-4xl font-bold font-serif leading-tight">
-              Your event<br />experience awaits.
+              Know what's on.<br />Show up ready.
             </h2>
-            <p className="text-lg text-primary-foreground/80">
-              Connect with fellow attendees, join breakout rooms, and make the most of every event.
+            <p className="text-lg text-primary-foreground/80 leading-relaxed">
+              See schedules, save sessions, message other attendees, and check in with a QR code — all from your phone.
             </p>
           </div>
           <ul className="space-y-3">
-            {["Network with attendees", "Join breakout rooms", "Never miss a session"].map((item) => (
+            {["Browse sessions before you arrive", "Message speakers and attendees", "Check in with a tap"].map((item) => (
               <li key={item} className="flex items-center gap-2.5 text-sm text-primary-foreground/70">
                 <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/15">
                   <Check className="h-3 w-3" />
@@ -165,7 +165,7 @@ function LoginForm() {
               </Button>
             </form>
 
-            <div className="rounded-xl border bg-muted/30 p-4 text-center text-sm text-muted-foreground">
+            <div className="rounded-lg border bg-muted/30 p-4 text-center text-sm text-muted-foreground">
               Don&apos;t have an account?{" "}
               <Link href="/signup" className="text-primary font-semibold hover:underline">
                 Sign up for free

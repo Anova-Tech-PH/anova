@@ -61,8 +61,8 @@ export function RoomList({
 
       {rooms.length === 0 ? (
         <Card className="p-12 text-center">
-          <p className="text-muted-foreground">No breakout rooms yet</p>
-          <p className="mt-1 text-sm text-muted-foreground">Create rooms for discussions, networking, or post-session breakouts.</p>
+          <p className="text-muted-foreground">No breakout rooms</p>
+          <p className="mt-1 text-sm text-muted-foreground">Add rooms for smaller discussions or workshops within this event.</p>
         </Card>
       ) : (
         <div className="space-y-3">

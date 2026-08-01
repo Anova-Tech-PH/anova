@@ -212,50 +212,107 @@ export function RegistrationsTable({
         </div>
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto rounded-xl border shadow-sm">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b bg-muted/60">
-              <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Name
-              </th>
-              <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden sm:table-cell">
-                Email
-              </th>
-              <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">
-                Ticket
-              </th>
-              <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Status
-              </th>
-              <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden lg:table-cell">
-                Registered
-              </th>
-              <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {filtered.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">
-                  <div className="flex flex-col items-center gap-2">
-                    <Users className="h-8 w-8 text-muted-foreground/40" />
-                    <p className="font-medium">
-                      {registrations.length === 0
-                        ? "No registrations yet"
-                        : "No results match your search"}
-                    </p>
-                    {registrations.length > 0 && (
-                      <p className="text-xs">Try adjusting your filters</p>
+      {/* Empty state */}
+      {filtered.length === 0 && (
+        <div className="flex flex-col items-center gap-2 rounded-xl border py-12 text-center shadow-sm">
+          <Users className="h-8 w-8 text-muted-foreground/40" />
+          <p className="font-medium text-muted-foreground">
+            {registrations.length === 0
+              ? "No registrations yet"
+              : "No results match your search"}
+          </p>
+          {registrations.length > 0 && (
+            <p className="text-xs text-muted-foreground">Try adjusting your filters</p>
+          )}
+        </div>
+      )}
+
+      {/* Mobile: List view */}
+      {filtered.length > 0 && (
+        <div className="space-y-3 sm:hidden">
+          {filtered.map((reg) => (
+            <div
+              key={reg.id}
+              className="rounded-xl border bg-card p-4 shadow-sm"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-medium truncate">{reg.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">{reg.email}</p>
+                </div>
+                <span className="inline-flex shrink-0 items-center gap-1.5">
+                  <span
+                    className={cn(
+                      "inline-block h-2 w-2 rounded-full",
+                      statusDotColors[reg.status] ?? "bg-gray-400"
                     )}
-                  </div>
-                </td>
+                  />
+                  <span className="text-xs font-medium capitalize">
+                    {reg.status.replace("_", " ")}
+                  </span>
+                </span>
+              </div>
+              <div className="mt-3 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  {reg.ticket_types?.name && (
+                    <Badge variant="default">{reg.ticket_types.name}</Badge>
+                  )}
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(reg.created_at).toLocaleDateString()}
+                  </span>
+                </div>
+                <div className="relative">
+                  <select
+                    value={reg.status}
+                    onChange={(e) => handleStatusChange(reg.id, e.target.value)}
+                    disabled={isPending}
+                    className={cn(
+                      "h-8 appearance-none rounded-md border bg-background pl-2.5 pr-7 text-xs font-medium",
+                      "outline-none transition-all",
+                      "focus:ring-2 focus:ring-ring focus:ring-offset-1",
+                      "disabled:cursor-not-allowed disabled:opacity-50"
+                    )}
+                  >
+                    <option value="confirmed">Confirmed</option>
+                    <option value="checked_in">Checked In</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-1.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Desktop: Table view */}
+      {filtered.length > 0 && (
+        <div className="hidden overflow-x-auto rounded-xl border shadow-sm sm:block">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-muted/60">
+                <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Name
+                </th>
+                <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Email
+                </th>
+                <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">
+                  Ticket
+                </th>
+                <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Status
+                </th>
+                <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden lg:table-cell">
+                  Registered
+                </th>
+                <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Actions
+                </th>
               </tr>
-            ) : (
-              filtered.map((reg, index) => (
+            </thead>
+            <tbody className="divide-y">
+              {filtered.map((reg, index) => (
                 <tr
                   key={reg.id}
                   className={cn(
@@ -264,14 +321,9 @@ export function RegistrationsTable({
                   )}
                 >
                   <td className="px-4 py-3.5">
-                    <div>
-                      <span className="font-medium">{reg.name}</span>
-                      <span className="block text-xs text-muted-foreground sm:hidden">
-                        {reg.email}
-                      </span>
-                    </div>
+                    <span className="font-medium">{reg.name}</span>
                   </td>
-                  <td className="px-4 py-3.5 text-muted-foreground hidden sm:table-cell">
+                  <td className="px-4 py-3.5 text-muted-foreground">
                     {reg.email}
                   </td>
                   <td className="px-4 py-3.5 hidden md:table-cell">
@@ -319,11 +371,11 @@ export function RegistrationsTable({
                     </div>
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       <p className="text-xs text-muted-foreground">
         Showing {filtered.length} of {registrations.length} registration{registrations.length !== 1 ? "s" : ""}

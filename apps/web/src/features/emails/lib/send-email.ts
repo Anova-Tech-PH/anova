@@ -19,7 +19,7 @@ function getServiceClient() {
 
 export async function sendEmail(params: SendEmailParams) {
   const { data, error: sendError } = await getResend().emails.send({
-    from: process.env.EMAIL_FROM || "Anova <onboarding@resend.dev>",
+    from: process.env.EMAIL_FROM || "Evenstry <onboarding@resend.dev>",
     to: params.to.email,
     subject: params.subject,
     html: params.html,
