@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useTransition } from "react";
-import { Search, Download, ChevronDown, Users, UserCheck, UserX, CheckCircle, Clock } from "lucide-react";
+import { Search, Download, ChevronDown, Users, UserCheck, UserX, CheckCircle, Clock, Award } from "lucide-react";
 import { toast } from "sonner";
 import { updateRegistrationStatus } from "../actions";
 import { Badge } from "@attendly/ui/components";
@@ -270,6 +270,19 @@ export function RegistrationsTable({
                     {new Date(reg.created_at).toLocaleDateString()}
                   </span>
                 </div>
+                <div className="flex items-center gap-1.5">
+                  {(reg.status === "confirmed" || reg.status === "checked_in") && (
+                    <a
+                      href={`/api/certificates/${reg.id}`}
+                      title="Download certificate"
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-md border bg-background text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                    >
+                      <Award className="h-3.5 w-3.5" />
+                    </a>
+                  )}
+                </div>
+              </div>
+              <div className="mt-2 flex items-center justify-end gap-2">
                 {reg.status === "pending" ? (
                   <div className="flex items-center gap-1.5">
                     <Button
@@ -337,6 +350,9 @@ export function RegistrationsTable({
                 <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden lg:table-cell">
                   Registered
                 </th>
+                <th className="px-4 py-3.5 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground hidden lg:table-cell">
+                  Cert.
+                </th>
                 <th className="px-4 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Actions
                 </th>
@@ -379,6 +395,19 @@ export function RegistrationsTable({
                   </td>
                   <td className="px-4 py-3.5 text-muted-foreground hidden lg:table-cell">
                     {new Date(reg.created_at).toLocaleDateString()}
+                  </td>
+                  <td className="px-4 py-3.5 text-center hidden lg:table-cell">
+                    {(reg.status === "confirmed" || reg.status === "checked_in") ? (
+                      <a
+                        href={`/api/certificates/${reg.id}`}
+                        title="Download certificate"
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-md border bg-background text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                      >
+                        <Award className="h-4 w-4" />
+                      </a>
+                    ) : (
+                      <span className="text-muted-foreground">-</span>
+                    )}
                   </td>
                   <td className="px-4 py-3.5">
                     {reg.status === "pending" ? (
