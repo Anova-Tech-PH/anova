@@ -14,7 +14,7 @@ const sourceSerif = Source_Serif_4({
 });
 
 export const metadata: Metadata = {
-  title: "Evenstry — Modern Event Management",
+  title: "Evenstry - Modern Event Management",
   description:
     "Tickets, registrations, schedules, check-ins, and attendee networking — in one place.",
 };
