@@ -115,21 +115,35 @@ export default function HomePage() {
               Free while in early access. No credit card required.
             </p>
 
-            {/* Mockup */}
-            <div className="mt-20 mx-auto max-w-5xl rounded-2xl md:rounded-[2rem] bg-white/50 backdrop-blur-xl p-2 md:p-4 border border-outline-variant/30 shadow-2xl relative group hover:shadow-primary/20 transition-shadow duration-500 animate-float">
-              <div className="absolute top-4 left-6 flex gap-2 z-20">
-                <div className="w-3 h-3 rounded-full bg-outline-variant/50" />
-                <div className="w-3 h-3 rounded-full bg-outline-variant/50" />
-                <div className="w-3 h-3 rounded-full bg-outline-variant/50" />
+            {/* Composite Mockup */}
+            <div className="mt-20 mx-auto max-w-5xl relative">
+              {/* Main — Schedule (full, dominant) */}
+              <div className="rounded-2xl md:rounded-[2rem] bg-white/50 backdrop-blur-xl p-2 md:p-4 border border-outline-variant/30 shadow-2xl relative z-10 animate-float">
+                <div className="absolute top-4 left-6 flex gap-2 z-20">
+                  <div className="w-3 h-3 rounded-full bg-outline-variant/50" />
+                  <div className="w-3 h-3 rounded-full bg-outline-variant/50" />
+                  <div className="w-3 h-3 rounded-full bg-outline-variant/50" />
+                </div>
+                <Image
+                  src="/screenshots/schedule.png"
+                  alt="Schedule builder with speakers, tracks, and sessions"
+                  width={1920}
+                  height={1080}
+                  className="w-full h-auto rounded-xl md:rounded-2xl border border-outline-variant/20 shadow-sm object-cover object-top aspect-[16/12]"
+                  priority
+                />
               </div>
-              <Image
-                src="/screenshots/dashboard.png"
-                alt="Evenstry Dashboard Interface Preview"
-                width={1920}
-                height={1200}
-                className="w-full h-auto rounded-xl md:rounded-2xl border border-outline-variant/20 shadow-sm relative z-10 object-cover aspect-[16/10]"
-                priority
-              />
+
+              {/* Floating accent — Ticket selection (bottom-right) */}
+              <div className="hidden md:block absolute -right-8 lg:-right-16 -bottom-10 w-[280px] lg:w-[320px] rounded-2xl bg-white/90 backdrop-blur-xl p-2.5 border border-primary/20 shadow-xl shadow-primary/10 z-20 rotate-2 hover:rotate-0 hover:shadow-primary/20 transition-all duration-500">
+                <Image
+                  src="/screenshots/public-event.png"
+                  alt="Public event page with ticket selection"
+                  width={1920}
+                  height={1080}
+                  className="w-full h-auto rounded-xl border border-outline-variant/20 shadow-sm object-cover object-top aspect-[4/3]"
+                />
+              </div>
             </div>
           </div>
 
