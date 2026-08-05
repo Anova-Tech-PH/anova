@@ -2,6 +2,7 @@
 
 import { createClient } from "@attendly/ui/supabase/server";
 import { revalidatePath } from "next/cache";
+import { joinRoomMutation, leaveRoomMutation } from "@attendly/supabase-client/mutations/rooms";
 
 export async function createRoom(eventId: string, data: {
   title: string;
@@ -86,51 +87,7 @@ export async function joinRoom(roomId: string) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Authentication required");
 
-  // Check room exists and is open
-  const { data: room } = await supabase
-    .from("breakout_rooms")
-    .select("id, max_capacity, status, event_id")
-    .eq("id", roomId)
-    .single();
-
-  if (!room) throw new Error("Room not found");
-  if (room.status === "closed") throw new Error("Room is closed");
-
-  // Check capacity
-  if (room.max_capacity) {
-    const { count } = await supabase
-      .from("breakout_room_participants")
-      .select("id", { count: "exact", head: true })
-      .eq("room_id", roomId);
-
-    if (count !== null && count >= room.max_capacity) {
-      throw new Error("Room is full");
-    }
-  }
-
-  const { error } = await supabase
-    .from("breakout_room_participants")
-    .insert({ room_id: roomId, user_id: user.id });
-
-  if (error) {
-    if (error.code === "23505") throw new Error("Already joined this room");
-    throw new Error(error.message);
-  }
-
-  // Auto-update status to full if at capacity
-  if (room.max_capacity) {
-    const { count } = await supabase
-      .from("breakout_room_participants")
-      .select("id", { count: "exact", head: true })
-      .eq("room_id", roomId);
-
-    if (count !== null && count >= room.max_capacity) {
-      await supabase
-        .from("breakout_rooms")
-        .update({ status: "full", updated_at: new Date().toISOString() })
-        .eq("id", roomId);
-    }
-  }
+  const room = await joinRoomMutation(supabase, roomId, user.id);
 
   revalidatePath(`/events/${room.event_id}/rooms`);
   revalidatePath("/rooms");
@@ -142,29 +99,7 @@ export async function leaveRoom(roomId: string) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Authentication required");
 
-  const { data: room } = await supabase
-    .from("breakout_rooms")
-    .select("id, event_id, status, max_capacity")
-    .eq("id", roomId)
-    .single();
-
-  if (!room) throw new Error("Room not found");
-
-  const { error } = await supabase
-    .from("breakout_room_participants")
-    .delete()
-    .eq("room_id", roomId)
-    .eq("user_id", user.id);
-
-  if (error) throw new Error(error.message);
-
-  // If room was full, reopen it
-  if (room.status === "full") {
-    await supabase
-      .from("breakout_rooms")
-      .update({ status: "open", updated_at: new Date().toISOString() })
-      .eq("id", roomId);
-  }
+  const room = await leaveRoomMutation(supabase, roomId, user.id);
 
   revalidatePath(`/events/${room.event_id}/rooms`);
   revalidatePath("/rooms");
