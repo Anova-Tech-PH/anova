@@ -1,0 +1,22 @@
+{
+  "name": "@attendly/supabase-client",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./queries/*": "./src/queries/*.ts",
+    "./mutations/*": "./src/mutations/*.ts",
+    "./realtime/*": "./src/realtime/*.ts"
+  },
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.110.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.0"
+  }
+}
