@@ -60,6 +60,12 @@ export default function HomePage() {
               >
                 Use Cases
               </a>
+              <a
+                href="#pricing"
+                className="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors"
+              >
+                Pricing
+              </a>
             </nav>
           </div>
           <div className="flex items-center space-x-4">
@@ -73,7 +79,7 @@ export default function HomePage() {
               href={`${APP_URL}/signup`}
               className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary transition-all active:scale-95"
             >
-              Get Started
+              Get Early Access
             </a>
           </div>
         </div>
@@ -84,26 +90,29 @@ export default function HomePage() {
         <section className="pt-24 pb-16 md:pt-32 md:pb-24 overflow-hidden relative">
           <div className="absolute inset-0 mesh-gradient -z-10" />
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+            <p className="text-sm font-medium uppercase tracking-widest text-primary mb-6">
+              Stop juggling spreadsheets, emails, and five different tools
+            </p>
             <h1 className="font-display text-5xl md:text-7xl lg:text-8xl tracking-tight text-on-surface mx-auto max-w-4xl leading-[1.1] font-bold relative [text-wrap:balance]">
               Everything your event needs.{" "}
               <br />
               <span className="text-primary">One place.</span>
             </h1>
             <p className="mt-8 text-lg md:text-xl text-on-surface-variant max-w-2xl mx-auto leading-relaxed">
-              Create, manage, and run conferences, meetups, and workshops — in
-              minutes, not weeks.
+              Create, manage, and run conferences, meetups, and workshops — set
+              up in under 5 minutes, not weeks.
             </p>
             <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
               <a
                 href={`${APP_URL}/signup`}
                 className="inline-flex items-center justify-center rounded-full bg-primary px-8 py-3.5 text-base font-semibold text-white shadow-lg shadow-primary/30 hover:bg-primary-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary transition-all active:scale-95 group"
               >
-                Start for free
+                Get early access
                 <ArrowIcon className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </a>
             </div>
             <p className="mt-4 text-sm text-outline">
-              No credit card required
+              Free while in early access. No credit card required.
             </p>
 
             {/* Mockup */}
@@ -414,24 +423,162 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* Pricing */}
+        <section id="pricing" className="py-20 md:py-32 bg-surface relative">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="text-center mb-16">
+              <h2 className="text-sm font-semibold uppercase tracking-widest text-primary">
+                Pricing
+              </h2>
+              <h3 className="mt-4 font-display text-4xl md:text-5xl font-medium text-on-surface [text-wrap:balance]">
+                Free to start. Free to grow.
+              </h3>
+              <p className="mt-4 text-lg text-on-surface-variant max-w-xl mx-auto">
+                Evenstry is free during early access. No hidden fees, no credit card, no catch.
+              </p>
+            </div>
+            <div className="max-w-md mx-auto bg-white rounded-3xl p-10 border-2 border-primary/20 shadow-xl shadow-primary/5 relative overflow-hidden">
+              <div className="absolute top-0 right-0 bg-primary text-white text-xs font-semibold px-4 py-1.5 rounded-bl-xl">
+                Early Access
+              </div>
+              <p className="text-sm font-semibold uppercase tracking-widest text-primary">
+                Starter
+              </p>
+              <div className="mt-4 flex items-baseline gap-2">
+                <span className="font-display text-6xl font-bold text-on-surface">$0</span>
+                <span className="text-on-surface-variant">/month</span>
+              </div>
+              <p className="mt-2 text-on-surface-variant">
+                Everything you need to run events, completely free.
+              </p>
+              <ul className="mt-8 space-y-4">
+                {[
+                  "Unlimited events",
+                  "Ticketing & registration",
+                  "Multi-track schedules",
+                  "Speaker management",
+                  "QR code check-in",
+                  "Attendee messaging",
+                  "Analytics dashboard",
+                  "Public event pages",
+                ].map((feature) => (
+                  <li key={feature} className="flex items-start gap-3">
+                    <svg
+                      className="w-5 h-5 text-primary mt-0.5 shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        d="M5 13l4 4L19 7"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                      />
+                    </svg>
+                    <span className="text-on-surface">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+              <a
+                href={`${APP_URL}/signup`}
+                className="mt-10 w-full inline-flex items-center justify-center rounded-full bg-primary px-8 py-3.5 text-base font-semibold text-white shadow-lg shadow-primary/30 hover:bg-primary-hover transition-all active:scale-95 group"
+              >
+                Get early access
+                <ArrowIcon className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </a>
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ */}
+        <section className="py-20 md:py-32 bg-surface-container-low border-y border-outline-variant/20">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <h2 className="text-sm font-semibold uppercase tracking-widest text-primary">
+                Questions & Answers
+              </h2>
+              <h3 className="mt-4 font-display text-4xl md:text-5xl font-medium text-on-surface [text-wrap:balance]">
+                Frequently asked questions
+              </h3>
+            </div>
+            <div className="space-y-6">
+              {[
+                {
+                  q: "Is Evenstry really free?",
+                  a: "Yes. During early access, every feature is completely free. No credit card, no trial period. We\u2019ll introduce paid plans later for advanced needs, but the core features will always have a free tier.",
+                },
+                {
+                  q: "How long does it take to set up an event?",
+                  a: "Under 5 minutes. Create your event, add tickets and a schedule, and publish your public event page. You can always add more details later.",
+                },
+                {
+                  q: "Do I need any technical skills?",
+                  a: "Not at all. Evenstry is designed so anyone can create and manage events. If you can fill out a form, you can run an event.",
+                },
+                {
+                  q: "What types of events can I run?",
+                  a: "Conferences, meetups, workshops, seminars, community events \u2014 anything with attendees. Whether it\u2019s 10 people or 10,000, the platform scales with you.",
+                },
+                {
+                  q: "How does QR code check-in work?",
+                  a: "Every registered attendee gets a unique QR code. At the door, scan it with any phone camera or our built-in scanner. No extra hardware needed.",
+                },
+                {
+                  q: "Can I customize my event page?",
+                  a: "Yes. Every event gets a public page with your event details, schedule, speakers, and registration. You control what\u2019s shown and can share the link anywhere.",
+                },
+              ].map((faq) => (
+                <details
+                  key={faq.q}
+                  className="group bg-white rounded-2xl border border-outline-variant/20 shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <summary className="flex items-center justify-between cursor-pointer p-6 text-on-surface font-semibold text-lg select-none">
+                    {faq.q}
+                    <svg
+                      className="w-5 h-5 text-on-surface-variant shrink-0 ml-4 transition-transform group-open:rotate-180"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        d="M19 9l-7 7-7-7"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                      />
+                    </svg>
+                  </summary>
+                  <div className="px-6 pb-6 text-on-surface-variant leading-relaxed">
+                    {faq.a}
+                  </div>
+                </details>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* Bottom CTA */}
         <section className="py-32 bg-primary/5 text-center relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-transparent to-primary/10 z-0" />
           <div className="absolute -top-24 -left-24 w-64 h-64 bg-primary/10 rounded-full blur-3xl" />
           <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-primary/10 rounded-full blur-3xl" />
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 max-w-3xl relative z-10">
-            <h2 className="font-display text-4xl md:text-5xl font-medium text-on-surface mb-10 [text-wrap:balance]">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <h2 className="font-display text-4xl md:text-5xl font-medium text-on-surface mb-4 [text-wrap:balance]">
               Ready to run your next event?
             </h2>
+            <p className="text-lg text-on-surface-variant mb-10 max-w-lg mx-auto">
+              Be one of the first organizers on the platform. Get in early, shape the product, and run events for free.
+            </p>
             <a
               href={`${APP_URL}/signup`}
               className="inline-flex items-center justify-center rounded-full bg-primary px-8 py-3.5 text-base font-semibold text-white shadow-lg shadow-primary/30 hover:bg-primary-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary transition-all active:scale-95 group"
             >
-              Start for free
+              Get early access
               <ArrowIcon className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </a>
             <p className="mt-6 text-sm text-outline">
-              Free plan. No credit card. Set up in minutes.
+              Free while in early access. No credit card required.
             </p>
           </div>
         </section>
@@ -464,7 +611,7 @@ export default function HomePage() {
                 Use Cases
               </a>
               <a
-                href="#"
+                href="#pricing"
                 className="text-sm text-on-surface-variant hover:text-primary transition-colors"
               >
                 Pricing
