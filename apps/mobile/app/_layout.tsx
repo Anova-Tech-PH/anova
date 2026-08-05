@@ -3,6 +3,10 @@ import { ActivityIndicator, View } from "react-native";
 import { Slot, useRouter, useSegments } from "expo-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider, useAuth } from "../src/lib/auth-context";
+import {
+  registerForPushNotifications,
+  addNotificationListeners,
+} from "../src/lib/notifications";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -30,6 +34,27 @@ function AuthGuard() {
       router.replace("/(app)/rooms");
     }
   }, [session, isLoading, segments]);
+
+  // Push notifications: register token and set up listeners when authenticated
+  useEffect(() => {
+    if (!session?.user) return;
+
+    registerForPushNotifications(session.user.id).catch((err) =>
+      console.warn("Failed to register for push notifications:", err)
+    );
+
+    const cleanup = addNotificationListeners(
+      undefined, // onReceived — default handler shows the alert
+      (response) => {
+        const data = response.notification.request.content.data;
+        if (data?.type === "connection") {
+          router.replace("/(app)/people");
+        }
+      }
+    );
+
+    return cleanup;
+  }, [session?.user?.id]);
 
   if (isLoading) {
     return (
