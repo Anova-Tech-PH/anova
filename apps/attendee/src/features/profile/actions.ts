@@ -2,6 +2,7 @@
 
 import { createClient } from "@attendly/ui/supabase/server";
 import { revalidatePath } from "next/cache";
+import { updateProfileMutation } from "@attendly/supabase-client/mutations/profile";
 
 export async function updateProfile(data: {
   full_name: string;
@@ -18,22 +19,6 @@ export async function updateProfile(data: {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
-  const { error } = await supabase
-    .from("profiles")
-    .update({
-      full_name: data.full_name,
-      avatar_url: data.avatar_url || null,
-      bio: data.bio || null,
-      company: data.company || null,
-      job_title: data.job_title || null,
-      interests: data.interests ?? [],
-      looking_for: data.looking_for ?? [],
-      linkedin_url: data.linkedin_url || null,
-      twitter_handle: data.twitter_handle || null,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", user.id);
-
-  if (error) throw new Error(error.message);
+  await updateProfileMutation(supabase, user.id, data);
   revalidatePath("/profile");
 }
