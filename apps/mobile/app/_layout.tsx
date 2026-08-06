@@ -3,6 +3,7 @@ import { ActivityIndicator, View } from "react-native";
 import { Slot, useRouter, useSegments } from "expo-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider, useAuth } from "../src/lib/auth-context";
+import { EventProvider } from "../src/lib/event-context";
 import {
   registerForPushNotifications,
   addNotificationListeners,
@@ -64,7 +65,11 @@ function AuthGuard() {
     );
   }
 
-  return <Slot />;
+  return (
+    <EventProvider>
+      <Slot />
+    </EventProvider>
+  );
 }
 
 export default function RootLayout() {
