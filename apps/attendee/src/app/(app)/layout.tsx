@@ -2,15 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Newspaper, MessageCircle, DoorOpen, Users, User, Calendar, Settings } from "lucide-react";
+import { DoorOpen, Users, User, Calendar, Settings } from "lucide-react";
 import { PageTransition } from "@attendly/ui/components";
 import { Logo } from "@attendly/ui/logo";
-import { UnreadBadge } from "@/features/messaging/components/unread-badge";
 import { cn } from "@attendly/ui/cn";
 
 const attendeeNav = [
-  { href: "/feed", label: "Feed", icon: Newspaper },
-  { href: "/messages", label: "Messages", icon: MessageCircle },
   { href: "/rooms", label: "Rooms", icon: DoorOpen },
   { href: "/people", label: "People", icon: Users },
   { href: "/my-events", label: "My Events", icon: Calendar },
@@ -67,9 +64,6 @@ export default function AppLayout({
                   <item.icon className="h-4 w-4" />
                 </span>
                 <span className="flex-1">{item.label}</span>
-                {item.label === "Messages" && (
-                  <UnreadBadge className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[oklch(0.445_0.107_195)] px-1.5 text-[10px] font-semibold text-white shadow-sm" />
-                )}
               </Link>
             ))}
           </nav>
@@ -118,9 +112,6 @@ export default function AppLayout({
             >
               <span className="relative">
                 <item.icon className={cn("h-5 w-5", active && "drop-shadow-sm")} />
-                {item.label === "Messages" && (
-                  <UnreadBadge className="absolute -right-2 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[oklch(0.445_0.107_195)] px-1 text-[9px] font-bold text-white shadow-sm" />
-                )}
               </span>
               <span>{item.label}</span>
               {active && (
