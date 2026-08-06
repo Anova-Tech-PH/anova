@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { use, useState, useEffect, useRef } from "react";
-import { Calendar, Mic2, DoorOpen, Ticket, LogIn, LogOut, UserCircle } from "lucide-react";
+import { Calendar, Mic2, DoorOpen, Ticket, LogIn, LogOut } from "lucide-react";
 import { createClient } from "@attendly/ui/supabase/client";
 
 const navItems = [
@@ -87,20 +87,6 @@ export function EventNav({
           </button>
           {menuOpen && (
             <div className="absolute right-0 top-full mt-1 w-48 rounded-lg border bg-card p-1 shadow-lg z-50">
-              <Link
-                href="/my"
-                className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-muted"
-                onClick={() => setMenuOpen(false)}
-              >
-                <Ticket className="h-3.5 w-3.5" /> My Tickets
-              </Link>
-              <Link
-                href="/my/profile"
-                className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-muted"
-                onClick={() => setMenuOpen(false)}
-              >
-                <UserCircle className="h-3.5 w-3.5" /> Profile
-              </Link>
               <button
                 onClick={handleSignOut}
                 className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-destructive hover:bg-muted"

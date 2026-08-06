@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, UserPlus, Lock, ArrowRight } from "lucide-react";
-import Link from "next/link";
+import { Check, UserPlus, Lock } from "lucide-react";
 import QRCode from "qrcode";
 import { toast } from "sonner";
 import { Card, Button, Input } from "@attendly/ui/components";
@@ -85,12 +84,9 @@ export function QrConfirmation({
       {accountCreated ? (
         <div className="rounded-xl border bg-primary/5 p-4 text-center">
           <p className="text-sm font-medium">Account created!</p>
-          <Link
-            href="/my"
-            className="mt-2 inline-flex items-center gap-1.5 text-sm text-primary font-medium hover:underline"
-          >
-            Go to My Tickets <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Sign in to the attendee app to manage your tickets.
+          </p>
         </div>
       ) : showAccountForm ? (
         <form onSubmit={handleCreateAccount} className="rounded-xl border p-4 space-y-3">

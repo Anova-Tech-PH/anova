@@ -48,26 +48,11 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Protect attendee routes
-  if (pathname.startsWith("/my")) {
-    if (!user) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/login";
-      url.searchParams.set("redirect", pathname);
-      return NextResponse.redirect(url);
-    }
-  }
-
   // Redirect logged-in users away from auth pages (except onboarding)
   if (pathname.startsWith("/login") || pathname.startsWith("/signup")) {
     if (user) {
-      const { count } = await supabase
-        .from("organization_members")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", user.id);
-
       const url = request.nextUrl.clone();
-      url.pathname = count && count > 0 ? "/dashboard" : "/my";
+      url.pathname = "/dashboard";
       return NextResponse.redirect(url);
     }
   }
