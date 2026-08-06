@@ -19,8 +19,6 @@ import {
   colors,
   typography,
   spacing,
-  radius,
-  shadows,
 } from "../../src/theme";
 
 export default function SignInScreen() {
@@ -28,6 +26,7 @@ export default function SignInScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
 
   const handleSignIn = async () => {
@@ -56,85 +55,121 @@ export default function SignInScreen() {
         keyboardShouldPersistTaps="handled"
         bounces={false}
       >
-        {/* Gradient Hero */}
+        {/* Gradient Hero with decorative elements */}
         <LinearGradient
-          colors={[colors.gradientStart, colors.gradientEnd]}
+          colors={["#0a6365", "#0d7377", "#0a9396", "#14b8a6"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.hero}
         >
+          {/* Floating decorative circles */}
+          <View style={styles.decoContainer}>
+            <View style={[styles.decoCircle, styles.decoCircle1]} />
+            <View style={[styles.decoCircle, styles.decoCircle2]} />
+            <View style={[styles.decoCircle, styles.decoCircle3]} />
+            <View style={[styles.decoDot, styles.decoDot1]} />
+            <View style={[styles.decoDot, styles.decoDot2]} />
+            <View style={[styles.decoDot, styles.decoDot3]} />
+          </View>
+
+          {/* Icon badge */}
+          <View style={styles.iconBadge}>
+            <Ionicons name="calendar" size={32} color={colors.white} />
+          </View>
+
           <Text style={styles.brand}>Evenstry</Text>
           <Text style={styles.heroSubtitle}>
-            Welcome back. Your next great event awaits.
+            Your next great event awaits
           </Text>
         </LinearGradient>
 
         {/* Form Card */}
         <View style={styles.formCard}>
-          <Text style={styles.formTitle}>Sign In</Text>
+          <Text style={styles.formTitle}>Welcome back</Text>
           <Text style={styles.formSubtitle}>
-            Enter your credentials to continue
+            Sign in to continue to your events
           </Text>
 
           {/* Email Input */}
-          <View
-            style={[
-              styles.inputRow,
-              focusedField === "email" && styles.inputRowFocused,
-            ]}
-          >
-            <Ionicons
-              name="mail-outline"
-              size={20}
-              color={
-                focusedField === "email"
-                  ? colors.primary
-                  : colors.textMuted
-              }
-              style={styles.inputIcon}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Email"
-              placeholderTextColor={colors.textMuted}
-              value={email}
-              onChangeText={setEmail}
-              autoCapitalize="none"
-              keyboardType="email-address"
-              textContentType="emailAddress"
-              onFocus={() => setFocusedField("email")}
-              onBlur={() => setFocusedField(null)}
-            />
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Email</Text>
+            <View
+              style={[
+                styles.inputRow,
+                focusedField === "email" && styles.inputRowFocused,
+              ]}
+            >
+              <Ionicons
+                name="mail-outline"
+                size={18}
+                color={
+                  focusedField === "email"
+                    ? colors.primary
+                    : colors.textMuted
+                }
+                style={styles.inputIcon}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="you@example.com"
+                placeholderTextColor={colors.textMuted}
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                textContentType="emailAddress"
+                onFocus={() => setFocusedField("email")}
+                onBlur={() => setFocusedField(null)}
+              />
+            </View>
           </View>
 
           {/* Password Input */}
-          <View
-            style={[
-              styles.inputRow,
-              focusedField === "password" && styles.inputRowFocused,
-            ]}
-          >
-            <Ionicons
-              name="lock-closed-outline"
-              size={20}
-              color={
-                focusedField === "password"
-                  ? colors.primary
-                  : colors.textMuted
-              }
-              style={styles.inputIcon}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              placeholderTextColor={colors.textMuted}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              textContentType="password"
-              onFocus={() => setFocusedField("password")}
-              onBlur={() => setFocusedField(null)}
-            />
+          <View style={styles.inputGroup}>
+            <View style={styles.labelRow}>
+              <Text style={styles.inputLabel}>Password</Text>
+              <TouchableOpacity>
+                <Text style={styles.forgotLink}>Forgot password?</Text>
+              </TouchableOpacity>
+            </View>
+            <View
+              style={[
+                styles.inputRow,
+                focusedField === "password" && styles.inputRowFocused,
+              ]}
+            >
+              <Ionicons
+                name="lock-closed-outline"
+                size={18}
+                color={
+                  focusedField === "password"
+                    ? colors.primary
+                    : colors.textMuted
+                }
+                style={styles.inputIcon}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Enter your password"
+                placeholderTextColor={colors.textMuted}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                textContentType="password"
+                onFocus={() => setFocusedField("password")}
+                onBlur={() => setFocusedField(null)}
+              />
+              <TouchableOpacity
+                onPress={() => setShowPassword(!showPassword)}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons
+                  name={showPassword ? "eye-off-outline" : "eye-outline"}
+                  size={20}
+                  color={colors.textMuted}
+                />
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Sign In Button */}
@@ -142,10 +177,10 @@ export default function SignInScreen() {
             onPress={handleSignIn}
             disabled={loading}
             activeOpacity={0.85}
-            style={{ marginTop: spacing.lg }}
+            style={{ marginTop: spacing.xxl }}
           >
             <LinearGradient
-              colors={[colors.gradientStart, colors.gradientEnd]}
+              colors={["#0d7377", "#0a9396"]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={[styles.button, loading && styles.buttonDisabled]}
@@ -153,10 +188,37 @@ export default function SignInScreen() {
               {loading ? (
                 <ActivityIndicator color={colors.white} />
               ) : (
-                <Text style={styles.buttonText}>Sign In</Text>
+                <View style={styles.buttonInner}>
+                  <Text style={styles.buttonText}>Sign In</Text>
+                  <Ionicons
+                    name="arrow-forward"
+                    size={20}
+                    color={colors.white}
+                    style={{ marginLeft: spacing.sm }}
+                  />
+                </View>
               )}
             </LinearGradient>
           </TouchableOpacity>
+
+          {/* Divider */}
+          <View style={styles.dividerRow}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>or continue with</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          {/* Social Login Buttons */}
+          <View style={styles.socialRow}>
+            <TouchableOpacity style={styles.socialButton} activeOpacity={0.7}>
+              <Ionicons name="logo-google" size={20} color="#DB4437" />
+              <Text style={styles.socialButtonText}>Google</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.socialButton} activeOpacity={0.7}>
+              <Ionicons name="logo-apple" size={20} color={colors.black} />
+              <Text style={styles.socialButtonText}>Apple</Text>
+            </TouchableOpacity>
+          </View>
 
           {/* Footer */}
           <View style={styles.footer}>
@@ -176,71 +238,148 @@ export default function SignInScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.gradientStart,
+    backgroundColor: "#0a6365",
   },
   scrollContent: {
     flexGrow: 1,
   },
-  // ── Hero ──────────────────────────────────────────────
+  // -- Hero ---------------------------------------------------
   hero: {
-    paddingTop: Platform.OS === "ios" ? 100 : 80,
-    paddingBottom: 60,
-    paddingHorizontal: spacing.xxxl,
+    paddingTop: Platform.OS === "ios" ? 80 : 60,
+    paddingBottom: 70,
     alignItems: "center",
+    overflow: "hidden",
+  },
+  decoContainer: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  decoCircle: {
+    position: "absolute",
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: "rgba(255,255,255,0.12)",
+  },
+  decoCircle1: {
+    width: 180,
+    height: 180,
+    top: -40,
+    right: -50,
+  },
+  decoCircle2: {
+    width: 120,
+    height: 120,
+    bottom: -20,
+    left: -30,
+  },
+  decoCircle3: {
+    width: 80,
+    height: 80,
+    top: 30,
+    left: 40,
+    borderColor: "rgba(255,255,255,0.08)",
+  },
+  decoDot: {
+    position: "absolute",
+    borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.15)",
+  },
+  decoDot1: {
+    width: 8,
+    height: 8,
+    top: 50,
+    right: 60,
+  },
+  decoDot2: {
+    width: 12,
+    height: 12,
+    bottom: 40,
+    right: 40,
+  },
+  decoDot3: {
+    width: 6,
+    height: 6,
+    top: 90,
+    left: 80,
+  },
+  iconBadge: {
+    width: 64,
+    height: 64,
+    borderRadius: 20,
+    backgroundColor: "rgba(255,255,255,0.18)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.25)",
   },
   brand: {
     ...typography.brand,
-    fontSize: 38,
+    fontSize: 36,
     color: colors.white,
     textAlign: "center",
-    marginBottom: spacing.sm,
+    marginBottom: 6,
+    letterSpacing: -1,
   },
   heroSubtitle: {
     ...typography.body,
-    color: "rgba(255, 255, 255, 0.85)",
+    color: "rgba(255,255,255,0.80)",
     textAlign: "center",
-    maxWidth: 260,
-    lineHeight: 22,
+    fontSize: 14,
   },
-  // ── Form Card ─────────────────────────────────────────
+  // -- Form Card -----------------------------------------------
   formCard: {
     flex: 1,
     backgroundColor: colors.surface,
-    borderTopLeftRadius: radius.xl + 8,
-    borderTopRightRadius: radius.xl + 8,
-    marginTop: -24,
-    paddingHorizontal: spacing.xxl + 4,
-    paddingTop: spacing.xxxl + 8,
-    paddingBottom: spacing.xxxl,
-    ...shadows.md,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    marginTop: -28,
+    paddingHorizontal: 28,
+    paddingTop: 36,
+    paddingBottom: 40,
   },
   formTitle: {
     ...typography.h1,
+    fontSize: 26,
     color: colors.textPrimary,
-    marginBottom: spacing.xs,
+    marginBottom: 4,
   },
   formSubtitle: {
     ...typography.body,
     color: colors.textSecondary,
-    marginBottom: spacing.xxxl,
+    marginBottom: spacing.xxl + 4,
+    fontSize: 14,
   },
-  // ── Input Row ─────────────────────────────────────────
+  // -- Inputs --------------------------------------------------
+  inputGroup: {
+    marginBottom: spacing.lg + 2,
+  },
+  inputLabel: {
+    ...typography.captionBold,
+    color: colors.textPrimary,
+    marginBottom: 8,
+  },
+  labelRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  forgotLink: {
+    ...typography.caption,
+    color: colors.primary,
+  },
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.surfaceElevated,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    marginBottom: spacing.lg,
+    backgroundColor: "#f8faf5",
+    borderWidth: 1.5,
+    borderColor: colors.borderLight,
+    borderRadius: 14,
     paddingHorizontal: spacing.lg,
-    borderLeftWidth: 3,
-    borderLeftColor: colors.border,
   },
   inputRowFocused: {
-    borderLeftColor: colors.primary,
+    borderColor: colors.primary,
     backgroundColor: colors.primaryMuted,
-    borderColor: colors.primarySoft,
   },
   inputIcon: {
     marginRight: spacing.md,
@@ -248,27 +387,82 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     paddingVertical: 15,
-    fontSize: 16,
+    fontSize: 15,
     color: colors.textPrimary,
   },
-  // ── Button ────────────────────────────────────────────
+  // -- Button --------------------------------------------------
   button: {
-    borderRadius: radius.md,
-    paddingVertical: 16,
+    borderRadius: 14,
+    paddingVertical: 17,
     alignItems: "center",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#0d7377",
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.3,
+        shadowRadius: 12,
+      },
+      android: { elevation: 8 },
+      default: {},
+    }),
   },
   buttonDisabled: {
     opacity: 0.7,
   },
+  buttonInner: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
   buttonText: {
     ...typography.button,
     color: colors.white,
+    fontSize: 17,
   },
-  // ── Footer ────────────────────────────────────────────
+  // -- Divider -------------------------------------------------
+  dividerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: spacing.xxl + 4,
+    marginBottom: spacing.xl,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.borderLight,
+  },
+  dividerText: {
+    ...typography.caption,
+    color: colors.textMuted,
+    marginHorizontal: spacing.lg,
+    fontSize: 12,
+  },
+  // -- Social --------------------------------------------------
+  socialRow: {
+    flexDirection: "row",
+    gap: spacing.md,
+  },
+  socialButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.sm,
+    paddingVertical: 14,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: colors.borderLight,
+    backgroundColor: colors.surface,
+  },
+  socialButtonText: {
+    ...typography.bodyMedium,
+    color: colors.textPrimary,
+    fontSize: 14,
+  },
+  // -- Footer --------------------------------------------------
   footer: {
     flexDirection: "row",
     justifyContent: "center",
-    marginTop: spacing.xxl,
+    marginTop: spacing.xxl + 4,
   },
   footerText: {
     ...typography.caption,
