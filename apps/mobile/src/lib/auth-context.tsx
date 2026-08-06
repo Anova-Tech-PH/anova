@@ -5,8 +5,13 @@ import React, {
   useState,
   useCallback,
 } from "react";
+import { Platform } from "react-native";
 import type { Session, User } from "@supabase/supabase-js";
+import * as AuthSession from "expo-auth-session";
+import * as WebBrowser from "expo-web-browser";
 import { supabase } from "./supabase";
+
+WebBrowser.maybeCompleteAuthSession();
 
 interface AuthContextValue {
   session: Session | null;
@@ -15,6 +20,8 @@ interface AuthContextValue {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, fullName: string) => Promise<void>;
   signOut: () => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
+  signInWithApple: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -24,13 +31,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Get the initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setIsLoading(false);
     });
 
-    // Listen for auth state changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -69,6 +74,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) throw error;
   }, []);
 
+  const signInWithOAuth = useCallback(async (provider: "google" | "apple") => {
+    const redirectTo = AuthSession.makeRedirectUri({ scheme: "evenstry" });
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo,
+        skipBrowserRedirect: true,
+      },
+    });
+
+    if (error) throw error;
+    if (!data.url) throw new Error("No OAuth URL returned");
+
+    const result = await WebBrowser.openAuthSessionAsync(
+      data.url,
+      redirectTo
+    );
+
+    if (result.type === "success") {
+      const url = new URL(result.url);
+      // Handle both hash fragment and query params
+      const params = url.hash
+        ? new URLSearchParams(url.hash.substring(1))
+        : url.searchParams;
+
+      const accessToken = params.get("access_token");
+      const refreshToken = params.get("refresh_token");
+
+      if (accessToken && refreshToken) {
+        await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+      }
+    }
+  }, []);
+
+  const signInWithGoogle = useCallback(
+    () => signInWithOAuth("google"),
+    [signInWithOAuth]
+  );
+
+  const signInWithApple = useCallback(
+    () => signInWithOAuth("apple"),
+    [signInWithOAuth]
+  );
+
   return (
     <AuthContext.Provider
       value={{
@@ -78,6 +131,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signIn,
         signUp,
         signOut,
+        signInWithGoogle,
+        signInWithApple,
       }}
     >
       {children}
@@ -92,3 +147,6 @@ export function useAuth() {
   }
   return context;
 }
+
+export const isAppleDevice =
+  Platform.OS === "ios" || Platform.OS === "macos";

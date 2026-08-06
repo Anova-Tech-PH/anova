@@ -14,7 +14,7 @@ import {
 import { Link } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import { useAuth } from "../../src/lib/auth-context";
+import { useAuth, isAppleDevice } from "../../src/lib/auth-context";
 import {
   colors,
   typography,
@@ -22,7 +22,7 @@ import {
 } from "../../src/theme";
 
 export default function SignUpScreen() {
-  const { signUp } = useAuth();
+  const { signUp, signInWithGoogle, signInWithApple } = useAuth();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -240,14 +240,28 @@ export default function SignUpScreen() {
 
           {/* Social Login Buttons */}
           <View style={styles.socialRow}>
-            <TouchableOpacity style={styles.socialButton} activeOpacity={0.7}>
+            <TouchableOpacity
+              style={[styles.socialButton, !isAppleDevice && { flex: 1 }]}
+              activeOpacity={0.7}
+              onPress={() => signInWithGoogle().catch((e: any) =>
+                Alert.alert("Google Sign In Failed", e.message)
+              )}
+            >
               <Ionicons name="logo-google" size={20} color="#DB4437" />
               <Text style={styles.socialButtonText}>Google</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.socialButton} activeOpacity={0.7}>
-              <Ionicons name="logo-apple" size={20} color={colors.black} />
-              <Text style={styles.socialButtonText}>Apple</Text>
-            </TouchableOpacity>
+            {isAppleDevice && (
+              <TouchableOpacity
+                style={styles.socialButton}
+                activeOpacity={0.7}
+                onPress={() => signInWithApple().catch((e: any) =>
+                  Alert.alert("Apple Sign In Failed", e.message)
+                )}
+              >
+                <Ionicons name="logo-apple" size={20} color={colors.black} />
+                <Text style={styles.socialButtonText}>Apple</Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           {/* Terms */}

@@ -14,7 +14,7 @@ port = 54333
 [auth]
 enabled = true
 site_url = "http://localhost:3000"
-additional_redirect_urls = ["http://localhost:3000/auth/callback"]
+additional_redirect_urls = ["http://localhost:3000/auth/callback", "evenstry://auth/callback", "http://localhost:8081"]
 
 [auth.email]
 enable_signup = true
@@ -22,7 +22,16 @@ double_confirm_changes = false
 enable_confirmations = false
 
 [auth.external.google]
-enabled = false
+enabled = true
+client_id = "env(GOOGLE_OAUTH_CLIENT_ID)"
+secret = "env(GOOGLE_OAUTH_CLIENT_SECRET)"
+redirect_uri = "http://127.0.0.1:54321/auth/v1/callback"
+
+[auth.external.apple]
+enabled = true
+client_id = "com.bertwin.evenstry"
+secret = "env(APPLE_OAUTH_CLIENT_SECRET)"
+redirect_uri = "http://127.0.0.1:54321/auth/v1/callback"
 
 [storage]
 enabled = true
