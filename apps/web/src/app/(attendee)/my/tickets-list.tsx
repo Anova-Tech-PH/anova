@@ -12,7 +12,7 @@ type Registration = {
   status: string;
   qr_code: string;
   created_at: string;
-  ticket_types: { name: string; type: string; price: number } | null;
+  ticket_types: { name: string; type: string; price: number }[] | null;
   events: {
     id: string;
     title: string;
@@ -20,8 +20,8 @@ type Registration = {
     start_date: string;
     end_date: string;
     venue_name: string | null;
-    organizations: { slug: string } | null;
-  } | null;
+    organizations: { slug: string }[];
+  }[] | null;
 };
 
 const statusVariant: Record<string, "success" | "warning" | "default" | "primary"> = {
@@ -63,7 +63,8 @@ export function TicketsList({ registrations }: { registrations: Registration[] }
     <div className="mt-6 space-y-4">
       {registrations.map((reg) => {
         const expanded = expandedId === reg.id;
-        const event = reg.events;
+        const event = Array.isArray(reg.events) ? reg.events[0] : reg.events;
+        const ticket = Array.isArray(reg.ticket_types) ? reg.ticket_types[0] : reg.ticket_types;
         const dateStr = event
           ? new Date(event.start_date).toLocaleDateString("en-US", {
               month: "short",
@@ -82,7 +83,7 @@ export function TicketsList({ registrations }: { registrations: Registration[] }
                 <div>
                   <h3 className="font-medium">{event?.title ?? "Event"}</h3>
                   <p className="mt-0.5 text-sm text-muted-foreground">
-                    {reg.ticket_types?.name ?? "Ticket"} &middot; {dateStr}
+                    {ticket?.name ?? "Ticket"} &middot; {dateStr}
                   </p>
                   {event?.venue_name && (
                     <p className="text-xs text-muted-foreground">{event.venue_name}</p>
