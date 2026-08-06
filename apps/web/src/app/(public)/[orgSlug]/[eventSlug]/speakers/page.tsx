@@ -1,6 +1,5 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, User } from "lucide-react";
+import { User } from "lucide-react";
 import { createClient } from "@attendly/ui/supabase/server";
 
 export default async function PublicSpeakersPage({
@@ -37,14 +36,6 @@ export default async function PublicSpeakersPage({
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-12">
-      <Link
-        href={`/${orgSlug}/${eventSlug}`}
-        className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back to event
-      </Link>
-
       <h1 className="text-2xl font-semibold">{event.title} — Speakers</h1>
 
       {!speakers || speakers.length === 0 ? (

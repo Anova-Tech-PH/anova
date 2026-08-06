@@ -116,13 +116,19 @@ export async function registerForEvent(data: {
     insertData.discount_amount = data.discount_amount ?? 0;
   }
 
-  const { data: registration, error } = await supabase
+  const { error } = await supabase
     .from("registrations")
-    .insert(insertData)
-    .select("id, qr_code, name, email, status")
-    .single();
+    .insert(insertData);
 
   if (error) throw new Error(error.message);
+
+  const registration = {
+    id: "",
+    qr_code: qrCode,
+    name: data.name,
+    email: data.email,
+    status: registrationStatus,
+  };
 
   // Only send confirmation email for confirmed registrations.
   // Pending registrations will receive an email when approved by the organizer.

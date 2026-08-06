@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Clock, MapPin, ArrowLeft } from "lucide-react";
+import { Clock, MapPin } from "lucide-react";
 import { createClient } from "@attendly/ui/supabase/server";
 import { Badge, Avatar } from "@attendly/ui/components";
+import { BookmarkButton } from "./bookmark-button";
 
 function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString("en-US", {
@@ -55,6 +55,21 @@ export default async function PublicSchedulePage({
     .eq("event_id", event.id)
     .order("start_time");
 
+  // Check if user is logged in for bookmark state
+  const { data: { user } } = await supabase.auth.getUser();
+  let bookmarkedIds = new Set<string>();
+  if (user) {
+    const sessionIds = (sessions ?? []).map((s) => s.id);
+    if (sessionIds.length > 0) {
+      const { data: bookmarks } = await supabase
+        .from("session_bookmarks")
+        .select("session_id")
+        .eq("user_id", user.id)
+        .in("session_id", sessionIds);
+      bookmarkedIds = new Set((bookmarks ?? []).map((b) => b.session_id));
+    }
+  }
+
   // Group by day
   const dayGroups: Record<string, typeof sessions> = {};
   for (const s of sessions ?? []) {
@@ -68,14 +83,6 @@ export default async function PublicSchedulePage({
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-12">
-      <Link
-        href={`/${orgSlug}/${eventSlug}`}
-        className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back to event
-      </Link>
-
       <h1 className="text-2xl font-semibold">{event.title} — Schedule</h1>
 
       {!sessions || sessions.length === 0 ? (
@@ -97,14 +104,22 @@ export default async function PublicSchedulePage({
                       borderLeftColor: session.track?.color ?? "transparent",
                     }}
                   >
-                    <div className="flex items-center gap-2">
-                      <Badge variant={typeBadgeVariant[session.type] ?? "default"}>
-                        {session.type}
-                      </Badge>
-                      {session.track && (
-                        <span className="text-[10px] text-muted-foreground">
-                          {session.track.name}
-                        </span>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Badge variant={typeBadgeVariant[session.type] ?? "default"}>
+                          {session.type}
+                        </Badge>
+                        {session.track && (
+                          <span className="text-[10px] text-muted-foreground">
+                            {session.track.name}
+                          </span>
+                        )}
+                      </div>
+                      {user && (
+                        <BookmarkButton
+                          sessionId={session.id}
+                          initialBookmarked={bookmarkedIds.has(session.id)}
+                        />
                       )}
                     </div>
                     <h3 className="mt-1.5 font-medium">{session.title}</h3>

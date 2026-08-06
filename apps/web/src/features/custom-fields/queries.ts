@@ -20,6 +20,6 @@ export async function getCustomFieldsByEvent(eventId: string) {
     .eq("event_id", eventId)
     .order("sort_order");
 
-  if (error) throw new Error(error.message);
+  if (error) return [];
   return data as CustomField[];
 }

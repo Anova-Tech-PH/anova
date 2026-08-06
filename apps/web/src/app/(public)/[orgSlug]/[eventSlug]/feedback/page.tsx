@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
-import { ArrowLeft, Shield } from "lucide-react";
-import Link from "next/link";
+import { Shield } from "lucide-react";
 import { createClient } from "@attendly/ui/supabase/server";
 import { FeedbackForm } from "./feedback-form";
 
@@ -44,13 +43,6 @@ export default async function FeedbackPage({
         <p className="mt-4 text-muted-foreground">
           No survey is currently available for this event.
         </p>
-        <Link
-          href={`/${orgSlug}/${eventSlug}`}
-          className="mt-6 inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to event
-        </Link>
       </div>
     );
   }
@@ -65,14 +57,6 @@ export default async function FeedbackPage({
 
   return (
     <div className="mx-auto max-w-lg px-4 py-12">
-      <Link
-        href={`/${orgSlug}/${eventSlug}`}
-        className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back to event
-      </Link>
-
       <div className="mb-8 rounded-xl border bg-gradient-to-br from-primary/[0.04] to-transparent p-5">
         <h1 className="text-xl font-semibold">{survey.title}</h1>
         <p className="mt-1 text-sm text-muted-foreground">{event.title}</p>

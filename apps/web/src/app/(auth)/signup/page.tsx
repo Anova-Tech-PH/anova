@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@attendly/ui/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@attendly/ui/components";
@@ -12,11 +12,20 @@ import { Logo } from "@attendly/ui/logo";
 import { User, Mail, Lock, ArrowRight, Users } from "lucide-react";
 
 export default function SignupPage() {
+  return (
+    <Suspense>
+      <SignupForm />
+    </Suspense>
+  );
+}
+
+function SignupForm() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -37,7 +46,9 @@ export default function SignupPage() {
       return;
     }
 
-    router.push("/onboarding");
+    const redirect = searchParams.get("redirect");
+    const dest = redirect && redirect.startsWith("/") && !redirect.startsWith("//") ? redirect : "/onboarding";
+    router.push(dest);
     router.refresh();
   }
 
