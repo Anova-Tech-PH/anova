@@ -19,6 +19,16 @@ import {
 import { supabase } from "../../../src/lib/supabase";
 import { useAuth } from "../../../src/lib/auth-context";
 import { useEventContext } from "../../../src/lib/event-context";
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
+import {
+  colors,
+  typography,
+  spacing,
+  radius,
+  shadows,
+  shared,
+} from "../../../src/theme";
 
 function formatTime(dateStr: string | null) {
   if (!dateStr) return "";
@@ -31,13 +41,29 @@ function formatTime(dateStr: string | null) {
 function statusLabel(status: string) {
   switch (status) {
     case "open":
-      return { text: "Open", color: "#16a34a" };
+      return {
+        text: "Open",
+        color: colors.success,
+        bg: colors.successSoft,
+      };
     case "full":
-      return { text: "Full", color: "#f59e0b" };
+      return {
+        text: "Full",
+        color: colors.warning,
+        bg: colors.warningSoft,
+      };
     case "closed":
-      return { text: "Closed", color: "#ef4444" };
+      return {
+        text: "Closed",
+        color: colors.error,
+        bg: colors.errorSoft,
+      };
     default:
-      return { text: status, color: "#6b7280" };
+      return {
+        text: status,
+        color: colors.textMuted,
+        bg: colors.overlay,
+      };
   }
 }
 
@@ -47,10 +73,7 @@ export default function RoomsScreen() {
   const queryClient = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
 
-  const {
-    data: rooms,
-    isLoading,
-  } = useQuery({
+  const { data: rooms, isLoading } = useQuery({
     queryKey: ["rooms", currentEvent?.id],
     queryFn: () => getRoomsByEvent(supabase, currentEvent!.id),
     enabled: !!currentEvent?.id,
@@ -89,6 +112,12 @@ export default function RoomsScreen() {
   if (!currentEvent) {
     return (
       <SafeAreaView style={styles.centered} edges={["bottom"]}>
+        <Ionicons
+          name="calendar-outline"
+          size={64}
+          color={colors.textMuted}
+          style={styles.emptyIcon}
+        />
         <Text style={styles.emptyTitle}>Select an event from My Events</Text>
       </SafeAreaView>
     );
@@ -97,7 +126,7 @@ export default function RoomsScreen() {
   if (isLoading) {
     return (
       <SafeAreaView style={styles.centered} edges={["bottom"]}>
-        <ActivityIndicator size="large" color="#0d7377" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </SafeAreaView>
     );
   }
@@ -112,11 +141,17 @@ export default function RoomsScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#0d7377"
+            tintColor={colors.primary}
           />
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
+            <Ionicons
+              name="grid-outline"
+              size={64}
+              color={colors.textMuted}
+              style={styles.emptyIcon}
+            />
             <Text style={styles.emptyTitle}>No rooms available</Text>
             <Text style={styles.emptySubtitle}>
               Check back later for breakout rooms
@@ -132,80 +167,149 @@ export default function RoomsScreen() {
           const status = statusLabel(item.status);
           const isMutating =
             joinMutation.isPending || leaveMutation.isPending;
+          const capacityRatio =
+            item.max_capacity && item.max_capacity > 0
+              ? Math.min(participantCount / item.max_capacity, 1)
+              : null;
 
           return (
             <View style={styles.card}>
+              {/* Header: Title + Status Badge */}
               <View style={styles.cardHeader}>
-                <Text style={styles.roomTitle}>{item.title}</Text>
-                <View
-                  style={[
-                    styles.statusBadge,
-                    { backgroundColor: status.color + "20" },
-                  ]}
-                >
+                <Text style={styles.roomTitle} numberOfLines={2}>
+                  {item.title}
+                </Text>
+                <View style={[styles.statusBadge, { backgroundColor: status.bg }]}>
                   <Text style={[styles.statusText, { color: status.color }]}>
                     {status.text}
                   </Text>
                 </View>
               </View>
 
+              {/* Description */}
               {item.description && (
-                <Text style={styles.meta} numberOfLines={2}>
+                <Text style={styles.description} numberOfLines={2}>
                   {item.description}
                 </Text>
               )}
 
-              {item.facilitator && (
-                <Text style={styles.meta}>Host: {item.facilitator}</Text>
-              )}
+              {/* Meta Grid */}
+              <View style={styles.metaGrid}>
+                {item.facilitator && (
+                  <View style={styles.metaRow}>
+                    <Ionicons
+                      name="person-outline"
+                      size={15}
+                      color={colors.textMuted}
+                      style={styles.metaIcon}
+                    />
+                    <Text style={styles.metaText}>{item.facilitator}</Text>
+                  </View>
+                )}
 
-              {item.location && (
-                <Text style={styles.meta}>Location: {item.location}</Text>
-              )}
+                {item.location && (
+                  <View style={styles.metaRow}>
+                    <Ionicons
+                      name="location-outline"
+                      size={15}
+                      color={colors.textMuted}
+                      style={styles.metaIcon}
+                    />
+                    <Text style={styles.metaText}>{item.location}</Text>
+                  </View>
+                )}
 
-              {(item.starts_at || item.ends_at) && (
-                <Text style={styles.meta}>
-                  {item.starts_at ? formatTime(item.starts_at) : ""}
-                  {item.starts_at && item.ends_at ? " - " : ""}
-                  {item.ends_at ? formatTime(item.ends_at) : ""}
-                </Text>
-              )}
-
-              <View style={styles.footerRow}>
-                <Text style={styles.meta}>
-                  {participantCount}
-                  {item.max_capacity ? ` / ${item.max_capacity}` : ""}{" "}
-                  participants
-                </Text>
-
-                {item.status !== "closed" && (
-                  <TouchableOpacity
-                    style={[
-                      styles.actionButton,
-                      hasJoined ? styles.leaveButton : styles.joinButton,
-                    ]}
-                    onPress={() =>
-                      hasJoined
-                        ? leaveMutation.mutate(item.id)
-                        : joinMutation.mutate(item.id)
-                    }
-                    disabled={
-                      isMutating ||
-                      (!hasJoined && item.status === "full")
-                    }
-                    activeOpacity={0.7}
-                  >
-                    <Text
-                      style={[
-                        styles.actionButtonText,
-                        hasJoined && styles.leaveButtonText,
-                      ]}
-                    >
-                      {hasJoined ? "Leave" : "Join"}
+                {(item.starts_at || item.ends_at) && (
+                  <View style={styles.metaRow}>
+                    <Ionicons
+                      name="time-outline"
+                      size={15}
+                      color={colors.textMuted}
+                      style={styles.metaIcon}
+                    />
+                    <Text style={styles.metaText}>
+                      {item.starts_at ? formatTime(item.starts_at) : ""}
+                      {item.starts_at && item.ends_at ? " - " : ""}
+                      {item.ends_at ? formatTime(item.ends_at) : ""}
                     </Text>
-                  </TouchableOpacity>
+                  </View>
                 )}
               </View>
+
+              {/* Divider */}
+              <View style={styles.divider} />
+
+              {/* Participant count + capacity bar */}
+              <View style={styles.capacitySection}>
+                <View style={styles.metaRow}>
+                  <Ionicons
+                    name="people-outline"
+                    size={15}
+                    color={colors.textSecondary}
+                    style={styles.metaIcon}
+                  />
+                  <Text style={styles.participantText}>
+                    {participantCount}
+                    {item.max_capacity ? ` / ${item.max_capacity}` : ""}{" "}
+                    participants
+                  </Text>
+                </View>
+
+                {capacityRatio !== null && (
+                  <View style={styles.capacityBarBg}>
+                    <View
+                      style={[
+                        styles.capacityBarFill,
+                        {
+                          width: `${Math.round(capacityRatio * 100)}%`,
+                          backgroundColor:
+                            capacityRatio >= 1
+                              ? colors.error
+                              : capacityRatio >= 0.75
+                              ? colors.warning
+                              : colors.primary,
+                        },
+                      ]}
+                    />
+                  </View>
+                )}
+              </View>
+
+              {/* Action Button */}
+              {item.status !== "closed" && (
+                <View style={styles.actionRow}>
+                  {hasJoined ? (
+                    <TouchableOpacity
+                      style={styles.leaveButton}
+                      onPress={() => leaveMutation.mutate(item.id)}
+                      disabled={isMutating}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={styles.leaveButtonText}>Leave</Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <TouchableOpacity
+                      onPress={() => joinMutation.mutate(item.id)}
+                      disabled={isMutating || item.status === "full"}
+                      activeOpacity={0.7}
+                      style={styles.joinButtonWrapper}
+                    >
+                      <LinearGradient
+                        colors={[colors.gradientStart, colors.gradientEnd]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={[
+                          styles.joinButton,
+                          (isMutating || item.status === "full") &&
+                            styles.buttonDisabled,
+                        ]}
+                      >
+                        <Text style={styles.joinButtonText}>Join</Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              )}
             </View>
           );
         }}
@@ -216,81 +320,119 @@ export default function RoomsScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: "#f8faf5",
+    ...shared.screen,
   },
   centered: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#f8faf5",
+    ...shared.centered,
   },
   list: {
-    padding: 16,
-    paddingBottom: 32,
+    ...shared.listContent,
   },
   card: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.xl,
+    marginBottom: spacing.lg,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: colors.borderLight,
+    ...shadows.md,
   },
   cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: 6,
+    marginBottom: spacing.sm,
   },
   roomTitle: {
-    fontSize: 17,
-    fontWeight: "700",
-    color: "#1a2e05",
+    ...typography.h3,
+    color: colors.textPrimary,
     flex: 1,
-    marginRight: 8,
-  },
-  meta: {
-    fontSize: 13,
-    color: "#6b7280",
-    marginBottom: 2,
+    marginRight: spacing.md,
   },
   statusBadge: {
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    ...shared.badge,
   },
   statusText: {
-    fontSize: 12,
-    fontWeight: "600",
+    ...typography.small,
     textTransform: "capitalize",
   },
-  footerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: 10,
+  description: {
+    ...typography.body,
+    color: colors.textSecondary,
+    marginBottom: spacing.md,
   },
-  actionButton: {
-    borderRadius: 8,
-    paddingHorizontal: 20,
-    paddingVertical: 8,
+  metaGrid: {
+    gap: spacing.sm,
+    marginBottom: spacing.xs,
+  },
+  metaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  metaIcon: {
+    marginRight: spacing.sm,
+    width: 18,
+  },
+  metaText: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    flex: 1,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: colors.divider,
+    marginVertical: spacing.md,
+  },
+  capacitySection: {
+    gap: spacing.sm,
+  },
+  participantText: {
+    ...typography.captionBold,
+    color: colors.textSecondary,
+  },
+  capacityBarBg: {
+    height: 4,
+    backgroundColor: colors.borderLight,
+    borderRadius: radius.full,
+    overflow: "hidden",
+    marginTop: spacing.xs,
+  },
+  capacityBarFill: {
+    height: "100%",
+    borderRadius: radius.full,
+  },
+  actionRow: {
+    marginTop: spacing.lg,
+  },
+  joinButtonWrapper: {
+    borderRadius: radius.md,
+    overflow: "hidden",
   },
   joinButton: {
-    backgroundColor: "#0d7377",
+    borderRadius: radius.md,
+    paddingVertical: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  joinButtonText: {
+    color: colors.white,
+    ...typography.button,
   },
   leaveButton: {
-    backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: "#ef4444",
-  },
-  actionButtonText: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "700",
+    borderRadius: radius.md,
+    paddingVertical: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1.5,
+    borderColor: colors.error,
+    backgroundColor: colors.surface,
   },
   leaveButtonText: {
-    color: "#ef4444",
+    color: colors.error,
+    ...typography.button,
+  },
+  buttonDisabled: {
+    opacity: 0.5,
   },
   emptyContainer: {
     flex: 1,
@@ -298,14 +440,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingTop: 100,
   },
+  emptyIcon: {
+    marginBottom: spacing.lg,
+  },
   emptyTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#1a2e05",
+    ...typography.h2,
+    color: colors.textPrimary,
   },
   emptySubtitle: {
-    fontSize: 14,
-    color: "#6b7280",
-    marginTop: 8,
+    ...typography.body,
+    color: colors.textSecondary,
+    marginTop: spacing.sm,
   },
 });

@@ -1,20 +1,47 @@
 import { Tabs } from "expo-router";
+import { Platform } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { LinearGradient } from "expo-linear-gradient";
+import { colors } from "../../src/theme";
 
 export default function AppLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: "#0d7377",
-        tabBarInactiveTintColor: "#9ca3af",
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: {
-          backgroundColor: "#fff",
-          borderTopColor: "#e5e7eb",
+          backgroundColor: colors.surface,
+          borderTopWidth: 0,
+          ...Platform.select({
+            ios: {
+              shadowColor: colors.black,
+              shadowOffset: { width: 0, height: -2 },
+              shadowOpacity: 0.06,
+              shadowRadius: 8,
+            },
+            android: {
+              elevation: 8,
+            },
+            default: {},
+          }),
+          paddingBottom: Platform.OS === "ios" ? 24 : 8,
+          paddingTop: 8,
+          height: Platform.OS === "ios" ? 88 : 64,
         },
-        headerStyle: {
-          backgroundColor: "#0d7377",
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: "600",
         },
-        headerTintColor: "#fff",
+        headerBackground: () => (
+          <LinearGradient
+            colors={[colors.gradientStart, colors.gradientEnd]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{ flex: 1 }}
+          />
+        ),
+        headerTintColor: colors.white,
         headerTitleStyle: {
           fontWeight: "700",
         },

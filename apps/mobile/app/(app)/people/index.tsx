@@ -7,6 +7,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   RefreshControl,
+  TouchableOpacity,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -14,6 +15,16 @@ import { getEventAttendees } from "@attendly/supabase-client";
 import { supabase } from "../../../src/lib/supabase";
 import { useAuth } from "../../../src/lib/auth-context";
 import { useEventContext } from "../../../src/lib/event-context";
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
+import {
+  colors,
+  typography,
+  spacing,
+  radius,
+  shadows,
+  shared,
+} from "../../../src/theme";
 
 function getInitials(name: string | null) {
   if (!name) return "?";
@@ -63,6 +74,12 @@ export default function PeopleScreen() {
   if (!currentEvent) {
     return (
       <SafeAreaView style={styles.centered} edges={["bottom"]}>
+        <Ionicons
+          name="calendar-outline"
+          size={64}
+          color={colors.textMuted}
+          style={styles.emptyIcon}
+        />
         <Text style={styles.emptyTitle}>Select an event from My Events</Text>
       </SafeAreaView>
     );
@@ -71,23 +88,31 @@ export default function PeopleScreen() {
   if (isLoading) {
     return (
       <SafeAreaView style={styles.centered} edges={["bottom"]}>
-        <ActivityIndicator size="large" color="#0d7377" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView style={styles.container} edges={["bottom"]}>
-      <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search by name or company..."
-          placeholderTextColor="#9ca3af"
-          value={search}
-          onChangeText={setSearch}
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
+      <View style={styles.searchWrapper}>
+        <View style={styles.searchContainer}>
+          <Ionicons
+            name="search-outline"
+            size={20}
+            color={colors.textMuted}
+            style={styles.searchIcon}
+          />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search by name or company..."
+            placeholderTextColor={colors.textMuted}
+            value={search}
+            onChangeText={setSearch}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+        </View>
       </View>
       <FlatList
         data={filtered}
@@ -97,11 +122,17 @@ export default function PeopleScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#0d7377"
+            tintColor={colors.primary}
           />
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
+            <Ionicons
+              name="people-outline"
+              size={64}
+              color={colors.textMuted}
+              style={styles.emptyIcon}
+            />
             <Text style={styles.emptyTitle}>No attendees found</Text>
           </View>
         }
@@ -116,21 +147,36 @@ export default function PeopleScreen() {
             job_title: string | null;
           };
         }) => (
-          <View style={styles.card}>
-            <View style={styles.avatar}>
+          <TouchableOpacity activeOpacity={0.8} style={styles.card}>
+            <LinearGradient
+              colors={[colors.gradientStart, colors.gradientEnd]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.avatar}
+            >
               <Text style={styles.avatarText}>
                 {getInitials(item.full_name)}
               </Text>
-            </View>
+            </LinearGradient>
             <View style={styles.info}>
               <Text style={styles.name}>{item.full_name ?? "Unknown"}</Text>
               {(item.job_title || item.company) && (
-                <Text style={styles.meta} numberOfLines={1}>
-                  {[item.job_title, item.company].filter(Boolean).join(" at ")}
-                </Text>
+                <View style={styles.metaRow}>
+                  <Ionicons
+                    name="briefcase-outline"
+                    size={13}
+                    color={colors.textSecondary}
+                    style={styles.metaIcon}
+                  />
+                  <Text style={styles.meta} numberOfLines={1}>
+                    {[item.job_title, item.company]
+                      .filter(Boolean)
+                      .join(" at ")}
+                  </Text>
+                </View>
               )}
             </View>
-          </View>
+          </TouchableOpacity>
         )}
       />
     </SafeAreaView>
@@ -139,56 +185,59 @@ export default function PeopleScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: "#f8faf5",
+    ...shared.screen,
   },
   centered: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#f8faf5",
+    ...shared.centered,
+  },
+  searchWrapper: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.xs,
   },
   searchContainer: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 4,
-  },
-  searchInput: {
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    fontSize: 15,
-    color: "#1a2e05",
-  },
-  list: {
-    padding: 16,
-    paddingTop: 8,
-    paddingBottom: 32,
-  },
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
     flexDirection: "row",
     alignItems: "center",
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.lg,
+    ...shadows.md,
+  },
+  searchIcon: {
+    marginRight: spacing.sm,
+  },
+  searchInput: {
+    flex: 1,
+    paddingVertical: 14,
+    ...typography.body,
+    color: colors.textPrimary,
+  },
+  list: {
+    padding: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: 40,
+  },
+  card: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    ...shadows.sm,
   },
   avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "#0d737720",
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 12,
+    marginRight: spacing.md,
   },
   avatarText: {
-    color: "#0d7377",
+    color: colors.white,
     fontSize: 16,
     fontWeight: "700",
   },
@@ -196,14 +245,21 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   name: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#1a2e05",
+    ...typography.h3,
+    color: colors.textPrimary,
+  },
+  metaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: spacing.xs,
+  },
+  metaIcon: {
+    marginRight: spacing.xs,
   },
   meta: {
-    fontSize: 13,
-    color: "#6b7280",
-    marginTop: 2,
+    ...typography.caption,
+    color: colors.textSecondary,
+    flex: 1,
   },
   emptyContainer: {
     flex: 1,
@@ -211,9 +267,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingTop: 100,
   },
+  emptyIcon: {
+    marginBottom: spacing.md,
+  },
   emptyTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#1a2e05",
+    ...typography.h2,
+    color: colors.textPrimary,
   },
 });

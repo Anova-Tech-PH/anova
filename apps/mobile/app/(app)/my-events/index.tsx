@@ -10,8 +10,18 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQueryClient } from "@tanstack/react-query";
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../../../src/lib/auth-context";
 import { useEventContext } from "../../../src/lib/event-context";
+import {
+  colors,
+  typography,
+  spacing,
+  radius,
+  shadows,
+  shared,
+} from "../../../src/theme";
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString("en-US", {
@@ -25,13 +35,27 @@ function statusColor(status: string) {
   switch (status) {
     case "confirmed":
     case "checked_in":
-      return "#16a34a";
+      return colors.success;
     case "pending":
-      return "#f59e0b";
+      return colors.warning;
     case "cancelled":
-      return "#ef4444";
+      return colors.error;
     default:
-      return "#6b7280";
+      return colors.textMuted;
+  }
+}
+
+function statusBgColor(status: string) {
+  switch (status) {
+    case "confirmed":
+    case "checked_in":
+      return colors.successSoft;
+    case "pending":
+      return colors.warningSoft;
+    case "cancelled":
+      return colors.errorSoft;
+    default:
+      return colors.overlay;
   }
 }
 
@@ -52,7 +76,7 @@ export default function MyEventsScreen() {
   if (isLoading) {
     return (
       <SafeAreaView style={styles.centered} edges={["bottom"]}>
-        <ActivityIndicator size="large" color="#0d7377" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </SafeAreaView>
     );
   }
@@ -67,11 +91,16 @@ export default function MyEventsScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#0d7377"
+            tintColor={colors.primary}
           />
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
+            <Ionicons
+              name="calendar-outline"
+              size={64}
+              color={colors.textMuted}
+            />
             <Text style={styles.emptyTitle}>No events yet</Text>
             <Text style={styles.emptySubtitle}>
               Register for events to see them here
@@ -86,50 +115,96 @@ export default function MyEventsScreen() {
 
           return (
             <TouchableOpacity
-              style={[styles.card, isSelected && styles.cardSelected]}
+              style={[styles.card]}
               onPress={() => setCurrentEvent(event)}
               activeOpacity={0.7}
             >
+              {/* Left accent bar for selected card */}
               {isSelected && (
-                <View style={styles.selectedBadge}>
-                  <Text style={styles.selectedBadgeText}>Current</Text>
+                <View style={styles.accentBar} />
+              )}
+
+              <View style={styles.cardContent}>
+                {/* Current badge */}
+                {isSelected && (
+                  <LinearGradient
+                    colors={[colors.gradientStart, colors.gradientEnd]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.currentBadge}
+                  >
+                    <Text style={styles.currentBadgeText}>Current</Text>
+                  </LinearGradient>
+                )}
+
+                <Text style={styles.eventTitle}>{event.title}</Text>
+
+                {/* Date row with icon */}
+                <View style={styles.metaRow}>
+                  <Ionicons
+                    name="calendar-outline"
+                    size={14}
+                    color={colors.textMuted}
+                    style={styles.metaIcon}
+                  />
+                  <Text style={styles.metaText}>
+                    {formatDate(event.start_date)}
+                    {event.end_date && event.end_date !== event.start_date
+                      ? ` - ${formatDate(event.end_date)}`
+                      : ""}
+                  </Text>
                 </View>
-              )}
-              <Text style={styles.eventTitle}>{event.title}</Text>
-              <Text style={styles.meta}>
-                {formatDate(event.start_date)}
-                {event.end_date && event.end_date !== event.start_date
-                  ? ` - ${formatDate(event.end_date)}`
-                  : ""}
-              </Text>
-              {event.venue_name && (
-                <Text style={styles.meta}>{event.venue_name}</Text>
-              )}
-              {event.is_virtual && (
-                <Text style={styles.meta}>Virtual Event</Text>
-              )}
-              <View style={styles.row}>
-                {item.ticket_types?.name && (
-                  <View style={styles.ticketBadge}>
-                    <Text style={styles.ticketBadgeText}>
-                      {item.ticket_types.name}
-                    </Text>
+
+                {/* Venue row with icon */}
+                {event.venue_name && (
+                  <View style={styles.metaRow}>
+                    <Ionicons
+                      name="location-outline"
+                      size={14}
+                      color={colors.textMuted}
+                      style={styles.metaIcon}
+                    />
+                    <Text style={styles.metaText}>{event.venue_name}</Text>
                   </View>
                 )}
-                <View
-                  style={[
-                    styles.statusBadge,
-                    { backgroundColor: statusColor(item.status) + "20" },
-                  ]}
-                >
-                  <Text
+
+                {/* Virtual event row */}
+                {event.is_virtual && (
+                  <View style={styles.metaRow}>
+                    <Ionicons
+                      name="videocam-outline"
+                      size={14}
+                      color={colors.textMuted}
+                      style={styles.metaIcon}
+                    />
+                    <Text style={styles.metaText}>Virtual Event</Text>
+                  </View>
+                )}
+
+                {/* Badges row */}
+                <View style={styles.badgesRow}>
+                  {item.ticket_types?.name && (
+                    <View style={styles.ticketBadge}>
+                      <Text style={styles.ticketBadgeText}>
+                        {item.ticket_types.name}
+                      </Text>
+                    </View>
+                  )}
+                  <View
                     style={[
-                      styles.statusBadgeText,
-                      { color: statusColor(item.status) },
+                      styles.statusBadge,
+                      { backgroundColor: statusBgColor(item.status) },
                     ]}
                   >
-                    {item.status.replace("_", " ")}
-                  </Text>
+                    <Text
+                      style={[
+                        styles.statusBadgeText,
+                        { color: statusColor(item.status) },
+                      ]}
+                    >
+                      {item.status.replace("_", " ")}
+                    </Text>
+                  </View>
                 </View>
               </View>
             </TouchableOpacity>
@@ -142,80 +217,88 @@ export default function MyEventsScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: "#f8faf5",
+    ...shared.screen,
   },
   centered: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#f8faf5",
+    ...shared.centered,
   },
   list: {
-    padding: 16,
-    paddingBottom: 32,
+    ...shared.listContent,
   },
   card: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: colors.borderLight,
+    overflow: "hidden",
+    flexDirection: "row",
+    ...shadows.md,
   },
-  cardSelected: {
-    borderColor: "#0d7377",
-    borderWidth: 2,
+  accentBar: {
+    width: 3,
+    backgroundColor: colors.primary,
+    borderTopLeftRadius: radius.lg,
+    borderBottomLeftRadius: radius.lg,
   },
-  selectedBadge: {
+  cardContent: {
+    flex: 1,
+    padding: spacing.lg,
+  },
+  currentBadge: {
     alignSelf: "flex-start",
-    backgroundColor: "#0d7377",
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    marginBottom: 8,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    marginBottom: spacing.sm,
   },
-  selectedBadgeText: {
-    color: "#fff",
-    fontSize: 11,
-    fontWeight: "700",
+  currentBadgeText: {
+    color: colors.white,
+    ...typography.small,
   },
   eventTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#1a2e05",
-    marginBottom: 4,
+    ...typography.h2,
+    color: colors.textPrimary,
+    marginBottom: spacing.sm,
   },
-  meta: {
-    fontSize: 14,
-    color: "#6b7280",
-    marginBottom: 2,
-  },
-  row: {
+  metaRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 10,
-    gap: 8,
+    marginBottom: spacing.xs,
+  },
+  metaIcon: {
+    marginRight: spacing.xs,
+  },
+  metaText: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    fontWeight: "400",
+  },
+  badgesRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: spacing.md,
+    gap: spacing.sm,
   },
   ticketBadge: {
-    backgroundColor: "#0d737715",
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    backgroundColor: "transparent",
   },
   ticketBadgeText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#0d7377",
+    ...typography.small,
+    color: colors.primary,
   },
   statusBadge: {
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
   },
   statusBadgeText: {
-    fontSize: 12,
-    fontWeight: "600",
+    ...typography.small,
     textTransform: "capitalize",
   },
   emptyContainer: {
@@ -225,13 +308,14 @@ const styles = StyleSheet.create({
     paddingTop: 100,
   },
   emptyTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#1a2e05",
+    ...typography.h2,
+    color: colors.textPrimary,
+    marginTop: spacing.lg,
   },
   emptySubtitle: {
-    fontSize: 14,
-    color: "#6b7280",
-    marginTop: 8,
+    ...typography.caption,
+    color: colors.textSecondary,
+    fontWeight: "400",
+    marginTop: spacing.sm,
   },
 });
