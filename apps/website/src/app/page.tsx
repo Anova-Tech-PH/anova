@@ -631,13 +631,13 @@ export default function HomePage() {
                 Pricing
               </a>
               <a
-                href="#"
+                href="/privacy-policy"
                 className="text-sm text-on-surface-variant hover:text-primary transition-colors"
               >
                 Privacy Policy
               </a>
               <a
-                href="#"
+                href="/terms-of-service"
                 className="text-sm text-on-surface-variant hover:text-primary transition-colors"
               >
                 Terms of Service
