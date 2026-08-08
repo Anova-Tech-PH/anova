@@ -7,9 +7,6 @@ import { createClient } from "@attendly/ui/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@attendly/ui/components";
 import { Input } from "@attendly/ui/components";
-import { PageTransition } from "@attendly/ui/components";
-import { Logo } from "@attendly/ui/logo";
-import { Mail, Lock, Check, ArrowRight } from "lucide-react";
 
 export default function LoginPage() {
   return (
@@ -19,11 +16,28 @@ export default function LoginPage() {
   );
 }
 
+const steps = [
+  {
+    number: "01",
+    title: "Pick a template",
+    description: "Tickets, form and schedule arrive with it",
+  },
+  {
+    number: "02",
+    title: "Share the page",
+    description: "Two fields to register, pass on the phone",
+  },
+  {
+    number: "03",
+    title: "Open door mode",
+    description: "Volunteers scan, the count moves live",
+  },
+];
+
 function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -51,134 +65,140 @@ function LoginForm() {
 
   return (
     <div className="flex min-h-screen">
-      {/* Left branded panel */}
-      <div className="hidden lg:flex lg:w-1/2 flex-col justify-center bg-gradient-to-br from-primary via-primary/90 to-primary/80 p-12 text-primary-foreground relative overflow-hidden">
-        {/* Floating decorative shapes */}
-        <div className="absolute top-20 right-16 h-64 w-64 rounded-full bg-white/5 animate-[float_20s_ease-in-out_infinite]" />
-        <div className="absolute bottom-32 right-32 h-40 w-40 rounded-full bg-white/[0.07] animate-[float_15s_ease-in-out_infinite_reverse]" />
-        <div className="absolute top-1/2 right-8 h-20 w-20 rounded-full bg-info/10 animate-[float_12s_ease-in-out_infinite]" />
-        <div className="absolute bottom-16 left-8 h-32 w-32 rounded-full bg-white/[0.04] animate-[float_18s_ease-in-out_infinite_reverse]" />
-
-        <div className="max-w-md space-y-8 relative z-10">
-          <Logo size="xl" variant="white" />
-          <div className="space-y-4">
-            <h2 className="text-4xl font-bold font-serif leading-tight">
-              Your events,<br />under control.
-            </h2>
-            <p className="text-lg text-primary-foreground/80 leading-relaxed">
-              Registrations, check-ins, schedules, and attendee comms — one dashboard, zero spreadsheets.
-            </p>
-          </div>
-          <ul className="space-y-3">
-            {["Launch an event in under 5 minutes", "QR check-in at the door", "See who registered, in real time"].map((item) => (
-              <li key={item} className="flex items-center gap-2.5 text-sm text-primary-foreground/70">
-                <span className="flex h-5 w-5 items-center justify-center rounded bg-white/15">
-                  <Check className="h-3 w-3" />
-                </span>
-                {item}
-              </li>
-            ))}
-          </ul>
-          <p className="text-xs text-primary-foreground/40 tracking-wide uppercase">
-            Used by 2,000+ event organizers
-          </p>
+      {/* Left panel */}
+      <div className="hidden lg:flex lg:w-1/2 flex-col justify-between bg-ink p-12 min-h-screen">
+        {/* Top — wordmark */}
+        <div>
+          <span className="font-display text-[22px] font-extrabold uppercase tracking-[-0.03em] text-white">
+            EVENSTRY
+          </span>
         </div>
 
-        <style>{`
-          @keyframes float {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            33% { transform: translateY(-15px) rotate(1deg); }
-            66% { transform: translateY(10px) rotate(-1deg); }
-          }
-        `}</style>
+        {/* Middle — headline + steps */}
+        <div>
+          <h1 className="font-display text-[46px] font-extrabold text-white max-w-[20ch] leading-[1.02]">
+            One screen. Every gathering.
+          </h1>
+
+          <div className="flex flex-col gap-6 mt-10">
+            {steps.map((step) => (
+              <div key={step.number} className="flex gap-4 items-start">
+                <span className="font-display text-[15px] font-extrabold text-accent w-5">
+                  {step.number}
+                </span>
+                <div>
+                  <p className="text-[15px] font-semibold text-white">
+                    {step.title}
+                  </p>
+                  <p className="text-[13px] text-white/60 mt-1">
+                    {step.description}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Bottom — early access note */}
+        <div>
+          <p className="text-[12px] font-bold tracking-[0.14em] uppercase text-white/40">
+            FREE WHILE IN EARLY ACCESS
+          </p>
+        </div>
       </div>
 
-      {/* Right form panel */}
-      <div className="flex flex-1 items-center justify-center px-4">
-        <PageTransition>
-          <div className="w-full max-w-sm space-y-6">
-            {/* Mobile logo */}
-            <div className="lg:hidden flex justify-center mb-4">
-              <Logo size="lg" />
-            </div>
-
-            <div className="space-y-2 text-center lg:text-left">
-              {/* Decorative dots */}
-              <div className="flex gap-1 justify-center lg:justify-start mb-3">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary/40" />
-                <span className="h-1.5 w-8 rounded-full bg-primary/25" />
-                <span className="h-1.5 w-1.5 rounded-full bg-primary/40" />
-              </div>
-              <h1 className="text-2xl font-semibold">Welcome back</h1>
-              <p className="text-sm text-muted-foreground">
-                Sign in to your account
-              </p>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <label htmlFor="email" className="flex items-center gap-1.5 text-sm font-medium">
-                  <Mail className="h-3.5 w-3.5 text-muted-foreground" />
-                  Email
-                </label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  placeholder="you@example.com"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label htmlFor="password" className="flex items-center gap-1.5 text-sm font-medium">
-                    <Lock className="h-3.5 w-3.5 text-muted-foreground" />
-                    Password
-                  </label>
-                  <Link href="/forgot-password" className="text-xs text-muted-foreground hover:text-foreground">
-                    Forgot password?
-                  </Link>
-                </div>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-
-              {/* Remember me */}
-              <label className="flex items-center gap-2 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="h-4 w-4 rounded border-border text-primary focus:ring-primary/30"
-                />
-                <span className="text-sm text-muted-foreground">Remember me</span>
-              </label>
-
-              <Button type="submit" loading={loading} className="w-full group">
-                {loading ? "Signing in..." : (
-                  <span className="flex items-center justify-center gap-2">
-                    Sign in
-                    <ArrowRight className="h-4 w-4 opacity-0 -translate-x-2 transition-all group-hover:opacity-100 group-hover:translate-x-0" />
-                  </span>
-                )}
-              </Button>
-            </form>
-
-            <div className="rounded-lg border bg-muted/30 p-4 text-center text-sm text-muted-foreground">
-              Don&apos;t have an account?{" "}
-              <Link href="/signup" className="text-primary font-semibold hover:underline">
-                Sign up for free
-              </Link>
-            </div>
+      {/* Right panel */}
+      <div className="flex flex-1 items-center justify-center bg-card">
+        <div className="max-w-[380px] w-full px-4">
+          {/* Mobile wordmark */}
+          <div className="lg:hidden mb-8">
+            <span className="font-display text-[22px] font-extrabold uppercase tracking-[-0.03em]">
+              EVENSTRY
+            </span>
           </div>
-        </PageTransition>
+
+          <h1 className="font-display text-[32px] font-extrabold">Sign in</h1>
+          <p className="text-[14px] text-muted-strong mt-1">
+            Welcome back to Grace Chapel.
+          </p>
+
+          <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+            {/* Email */}
+            <div>
+              <label
+                htmlFor="email"
+                className="text-[12px] font-bold uppercase tracking-[0.06em] text-muted-foreground mb-2 block"
+              >
+                EMAIL
+              </label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                placeholder="you@example.com"
+              />
+            </div>
+
+            {/* Password */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label
+                  htmlFor="password"
+                  className="text-[12px] font-bold uppercase tracking-[0.06em] text-muted-foreground"
+                >
+                  PASSWORD
+                </label>
+                <Link
+                  href="/forgot-password"
+                  className="text-[12px] font-semibold text-primary"
+                >
+                  Forgot?
+                </Link>
+              </div>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+
+            {/* Submit */}
+            <Button
+              type="submit"
+              loading={loading}
+              className="w-full py-[14px] text-[15px] font-bold"
+            >
+              {loading ? "Signing in..." : "Sign in"}
+            </Button>
+          </form>
+
+          {/* Divider */}
+          <div className="flex items-center gap-4 my-5">
+            <hr className="flex-1 border-border-subtle" />
+            <span className="text-[13px] text-muted-foreground">or</span>
+            <hr className="flex-1 border-border-subtle" />
+          </div>
+
+          {/* Google button */}
+          <button
+            type="button"
+            className="border-[1.5px] border-border rounded-[6px] py-[14px] w-full text-[14px] font-semibold"
+          >
+            Continue with Google
+          </button>
+
+          {/* Sign up link */}
+          <p className="text-[14px] text-muted-foreground mt-5 text-center">
+            New here?{" "}
+            <Link href="/signup" className="text-primary font-semibold">
+              Create an organisation
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );
