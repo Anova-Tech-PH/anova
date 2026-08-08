@@ -12,7 +12,7 @@ type Session = {
   end_time: string;
   location: string | null;
   enable_check_in: boolean;
-  track: { id: string; name: string; color: string } | null;
+  track: { id: string; name: string; color: string }[] | { id: string; name: string; color: string } | null;
 };
 
 interface ProgrammePaneProps {

@@ -9,7 +9,7 @@ type Registration = {
   email: string;
   status: string;
   created_at: string;
-  ticket_types: { name: string } | null;
+  ticket_types: { name: string }[] | { name: string } | null;
 };
 
 interface PeoplePaneProps {
@@ -84,7 +84,7 @@ export function PeoplePane({ registrations }: PeoplePaneProps) {
             <div className="min-w-0 flex-1">
               <div className="text-[13px] font-bold truncate">{r.full_name}</div>
               <div className="text-[11px] font-medium text-muted-foreground truncate">
-                {r.ticket_types?.name ?? r.email}
+                {(Array.isArray(r.ticket_types) ? r.ticket_types[0]?.name : r.ticket_types?.name) ?? r.email}
               </div>
             </div>
             <div
