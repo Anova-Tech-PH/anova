@@ -17,7 +17,7 @@ export async function getDashboardStats(userId: string) {
   // Get all events
   const { data: events } = await supabase
     .from("events")
-    .select("id, title, slug, status, start_date, end_date, cover_image, created_at")
+    .select("id, title, slug, status, start_date, end_date, venue_name, cover_image, created_at")
     .in("organization_id", orgIds)
     .order("created_at", { ascending: false });
 
@@ -45,7 +45,7 @@ export async function getDashboardStats(userId: string) {
     regCountMap[r.event_id] = (regCountMap[r.event_id] ?? 0) + 1;
   }
 
-  const recentEvents = allEvents.slice(0, 5).map((e) => ({
+  const recentEvents = allEvents.map((e) => ({
     ...e,
     registrations_count: regCountMap[e.id] ?? 0,
   }));
