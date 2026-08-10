@@ -13,3 +13,9 @@ supabase/.temp/
 supabase/.temp/start-secrets/
 /screenshots/
 .vercel
+
+# Test artifacts
+coverage/
+test-results/
+playwright-report/
+.playwright-mcp/

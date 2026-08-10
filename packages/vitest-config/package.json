@@ -1,0 +1,13 @@
+{
+  "name": "@attendly/vitest-config",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "devDependencies": {
+    "vitest": "^3.2.0",
+    "@vitejs/plugin-react": "^4.5.0",
+    "jsdom": "^26.0.0"
+  }
+}
