@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, Calendar, Users, QrCode, BarChart2, BarChart3, Settings, Ticket, DoorOpen, Mail, ListChecks, Tag, ClipboardList, Megaphone, MessageSquare, CalendarCheck } from "lucide-react";
+import { ArrowLeft, Calendar, Users, QrCode, BarChart2, BarChart3, Settings, Ticket, DoorOpen, Mail, ListChecks, Tag, ClipboardList, Megaphone, MessageSquare, CalendarCheck, IdCard, Award } from "lucide-react";
 import { createClient } from "@attendly/ui/supabase/server";
 import { notFound } from "next/navigation";
 import { Badge } from "@attendly/ui/components";
@@ -31,6 +31,7 @@ export default async function EventLayout({
     { href: `/events/${eventId}/promo-codes`, label: "Promo Codes", icon: Tag },
     { href: `/events/${eventId}/registrations`, label: "Registrations", icon: Users },
     { href: `/events/${eventId}/check-in`, label: "Check-in", icon: QrCode },
+    { href: `/events/${eventId}/badges`, label: "Badges", icon: IdCard },
     { href: `/events/${eventId}/rooms`, label: "Rooms", icon: DoorOpen },
     { href: `/events/${eventId}/announcements`, label: "Announcements", icon: Megaphone },
     { href: `/events/${eventId}/feedback`, label: "Feedback", icon: MessageSquare },
@@ -38,6 +39,7 @@ export default async function EventLayout({
     { href: `/events/${eventId}/rsvp`, label: "RSVPs", icon: CalendarCheck },
     { href: `/events/${eventId}/emails`, label: "Emails", icon: Mail },
     { href: `/events/${eventId}/survey`, label: "Survey", icon: ClipboardList },
+    { href: `/events/${eventId}/certificates`, label: "Certificates", icon: Award },
     { href: `/events/${eventId}/analytics`, label: "Analytics", icon: BarChart3 },
     { href: `/events/${eventId}/settings`, label: "Settings", icon: Settings },
   ];
