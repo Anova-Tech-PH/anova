@@ -57,3 +57,71 @@ export async function getCertificateData(registrationId: string) {
     },
   };
 }
+
+export async function getCertificateConfig(eventId: string) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("certificate_configs")
+    .select("*")
+    .eq("event_id", eventId)
+    .single();
+  return data;
+}
+
+export async function getEligibleAttendees(eventId: string) {
+  const supabase = await createClient();
+
+  const { data: config } = await supabase
+    .from("certificate_configs")
+    .select("*")
+    .eq("event_id", eventId)
+    .single();
+
+  if (!config || !config.enabled) return { config: null, eligible: [], issued: [] };
+
+  // Get all check-ins for this event
+  const { data: checkIns } = await supabase
+    .from("check_ins")
+    .select("registration_id, session_id")
+    .eq("event_id", eventId);
+
+  // Count check-ins per registration and track which sessions
+  const regCheckIns: Record<string, { count: number; sessionIds: Set<string> }> = {};
+  for (const ci of checkIns ?? []) {
+    if (!regCheckIns[ci.registration_id]) {
+      regCheckIns[ci.registration_id] = { count: 0, sessionIds: new Set() };
+    }
+    regCheckIns[ci.registration_id].count++;
+    regCheckIns[ci.registration_id].sessionIds.add(ci.session_id);
+  }
+
+  // Get registrations
+  const { data: registrations } = await supabase
+    .from("registrations")
+    .select("id, name, email, status, ticket_types(name)")
+    .eq("event_id", eventId)
+    .in("status", ["confirmed", "checked_in"])
+    .order("name");
+
+  // Filter by eligibility criteria
+  const requiredSessions = (config.required_session_ids ?? []) as string[];
+  const eligible = (registrations ?? []).filter((r) => {
+    const info = regCheckIns[r.id];
+    if (!info) return false;
+    if (info.count < config.min_check_ins) return false;
+    if (requiredSessions.length > 0) {
+      for (const sid of requiredSessions) {
+        if (!info.sessionIds.has(sid)) return false;
+      }
+    }
+    return true;
+  });
+
+  // Get already-issued certificates
+  const { data: issued } = await supabase
+    .from("certificates_issued")
+    .select("registration_id, issued_at, emailed_at")
+    .eq("config_id", config.id);
+
+  return { config, eligible, issued: issued ?? [] };
+}
