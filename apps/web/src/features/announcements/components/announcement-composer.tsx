@@ -3,10 +3,12 @@
 import { useState, useTransition } from "react";
 import { createAnnouncement, sendAnnouncement } from "@/features/announcements/actions";
 
-export function AnnouncementComposer({ eventId }: { eventId: string }) {
+export function AnnouncementComposer({ eventId, ticketTypes }: { eventId: string; ticketTypes: { id: string; name: string }[] }) {
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [channels, setChannels] = useState<string[]>(["in_app"]);
+  const [audience, setAudience] = useState<"all" | "ticket_types">("all");
+  const [selectedTicketTypes, setSelectedTicketTypes] = useState<string[]>([]);
   const [isPending, startTransition] = useTransition();
 
   function toggleChannel(channel: string) {
@@ -19,6 +21,14 @@ export function AnnouncementComposer({ eventId }: { eventId: string }) {
     setSubject("");
     setBody("");
     setChannels(["in_app"]);
+    setAudience("all");
+    setSelectedTicketTypes([]);
+  }
+
+  function getTargetAudience() {
+    return audience === "ticket_types" && selectedTicketTypes.length > 0
+      ? { type: "ticket_types", ticket_type_ids: selectedTicketTypes }
+      : { type: "all" };
   }
 
   function handleSaveDraft() {
@@ -27,7 +37,7 @@ export function AnnouncementComposer({ eventId }: { eventId: string }) {
       await createAnnouncement(eventId, {
         subject: subject.trim(),
         body: body.trim(),
-        target_audience: { type: "all" },
+        target_audience: getTargetAudience(),
         channels,
       });
       resetForm();
@@ -40,7 +50,7 @@ export function AnnouncementComposer({ eventId }: { eventId: string }) {
       const announcement = await createAnnouncement(eventId, {
         subject: subject.trim(),
         body: body.trim(),
-        target_audience: { type: "all" },
+        target_audience: getTargetAudience(),
         channels,
       });
       await sendAnnouncement(eventId, announcement.id);
@@ -82,11 +92,38 @@ export function AnnouncementComposer({ eventId }: { eventId: string }) {
 
       <div className="space-y-1.5">
         <span className="text-sm font-medium">Target Audience</span>
-        <div className="flex items-center gap-4 text-sm">
+        <div className="space-y-2 text-sm">
           <label className="flex items-center gap-2">
-            <input type="radio" name="audience" value="all" defaultChecked className="accent-foreground" />
+            <input type="radio" name="audience" value="all" checked={audience === "all"} onChange={() => setAudience("all")} className="accent-foreground" />
             All Attendees
           </label>
+          {ticketTypes.length > 0 && (
+            <>
+              <label className="flex items-center gap-2">
+                <input type="radio" name="audience" value="ticket_types" checked={audience === "ticket_types"} onChange={() => setAudience("ticket_types")} className="accent-foreground" />
+                By Ticket Type
+              </label>
+              {audience === "ticket_types" && (
+                <div className="ml-6 space-y-1.5">
+                  {ticketTypes.map((tt) => (
+                    <label key={tt.id} className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={selectedTicketTypes.includes(tt.id)}
+                        onChange={(e) =>
+                          setSelectedTicketTypes((prev) =>
+                            e.target.checked ? [...prev, tt.id] : prev.filter((id) => id !== tt.id)
+                          )
+                        }
+                        className="accent-foreground"
+                      />
+                      {tt.name}
+                    </label>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
 
