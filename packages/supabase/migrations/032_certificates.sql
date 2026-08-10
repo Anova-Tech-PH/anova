@@ -53,13 +53,16 @@ CREATE POLICY "Anyone can view enabled certificate configs" ON public.certificat
   ));
 
 -- Org members can view all issued certificates
-CREATE POLICY "Org members can view issued certificates" ON public.certificates_issued FOR ALL TO authenticated
+CREATE POLICY "Org members can view issued certificates" ON public.certificates_issued FOR SELECT TO authenticated
   USING (EXISTS (
     SELECT 1 FROM certificate_configs cc
     JOIN events e ON e.id = cc.event_id
     WHERE cc.id = certificates_issued.config_id
     AND is_org_member(e.organization_id)
-  ))
+  ));
+
+-- Org editors can insert issued certificates
+CREATE POLICY "Org editors can insert issued certificates" ON public.certificates_issued FOR INSERT TO authenticated
   WITH CHECK (EXISTS (
     SELECT 1 FROM certificate_configs cc
     JOIN events e ON e.id = cc.event_id
