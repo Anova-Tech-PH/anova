@@ -6,6 +6,7 @@ import { DoorOpen, Users, User, Calendar, Settings } from "lucide-react";
 import { PageTransition } from "@attendly/ui/components";
 import { Logo } from "@attendly/ui/logo";
 import { cn } from "@attendly/ui/cn";
+import { NotificationBell } from "./notifications/notification-bell";
 
 const attendeeNav = [
   { href: "/rooms", label: "Rooms", icon: DoorOpen },
@@ -31,11 +32,12 @@ export default function AppLayout({
       <div className="flex flex-1">
         <aside className="hidden w-60 shrink-0 border-r bg-sidebar lg:flex lg:flex-col">
           {/* Logo area with subtle gradient */}
-          <div className="relative flex h-14 items-center border-b px-4">
+          <div className="relative flex h-14 items-center justify-between border-b px-4">
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[oklch(0.445_0.107_195)]/5 to-transparent" />
             <Link href="/feed" className="relative">
               <Logo size="sm" />
             </Link>
+            <NotificationBell className="relative text-sidebar-foreground/70 hover:text-sidebar-foreground transition-colors" />
           </div>
 
           {/* Navigation */}
@@ -92,9 +94,19 @@ export default function AppLayout({
           </div>
         </aside>
 
-        <main className="flex-1 p-4 pb-24 lg:p-6 lg:pb-6">
-          <PageTransition>{children}</PageTransition>
-        </main>
+        <div className="flex-1 flex flex-col">
+          {/* Mobile top bar */}
+          <header className="flex h-12 items-center justify-between border-b px-4 lg:hidden">
+            <Link href="/feed">
+              <Logo size="sm" />
+            </Link>
+            <NotificationBell className="text-foreground/70 hover:text-foreground transition-colors" />
+          </header>
+
+          <main className="flex-1 p-4 pb-24 lg:p-6 lg:pb-6">
+            <PageTransition>{children}</PageTransition>
+          </main>
+        </div>
       </div>
 
       {/* Mobile bottom tabs — frosted glass */}
