@@ -11,26 +11,26 @@ vi.mock('@/features/announcements/actions', () => ({
 
 describe('AnnouncementComposer', () => {
   it('renders subject and body fields', () => {
-    render(<AnnouncementComposer eventId="test-event" />);
+    render(<AnnouncementComposer eventId="test-event" ticketTypes={[]} />);
     expect(screen.getByPlaceholderText(/schedule update/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/write your announcement/i)).toBeInTheDocument();
   });
 
   it('renders channel checkboxes with in-app checked by default', () => {
-    render(<AnnouncementComposer eventId="test-event" />);
+    render(<AnnouncementComposer eventId="test-event" ticketTypes={[]} />);
     const inAppCheckbox = screen.getByLabelText(/in-app/i);
     expect(inAppCheckbox).toBeChecked();
   });
 
   it('disables save/send buttons when subject is empty', () => {
-    render(<AnnouncementComposer eventId="test-event" />);
+    render(<AnnouncementComposer eventId="test-event" ticketTypes={[]} />);
     expect(screen.getByRole('button', { name: /save draft/i })).toBeDisabled();
     expect(screen.getByRole('button', { name: /send now/i })).toBeDisabled();
   });
 
   it('enables buttons when subject has content', async () => {
     const user = userEvent.setup();
-    render(<AnnouncementComposer eventId="test-event" />);
+    render(<AnnouncementComposer eventId="test-event" ticketTypes={[]} />);
 
     await user.type(screen.getByPlaceholderText(/schedule update/i), 'Test Subject');
 
@@ -40,7 +40,7 @@ describe('AnnouncementComposer', () => {
 
   it('toggles email channel checkbox', async () => {
     const user = userEvent.setup();
-    render(<AnnouncementComposer eventId="test-event" />);
+    render(<AnnouncementComposer eventId="test-event" ticketTypes={[]} />);
 
     const emailCheckbox = screen.getByLabelText(/email/i);
     expect(emailCheckbox).not.toBeChecked();
