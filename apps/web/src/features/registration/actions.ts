@@ -248,3 +248,71 @@ export async function updateRegistrationStatus(
 
   revalidatePath(`/events/${eventId}/registrations`);
 }
+
+export async function checkInByRegistrationId(registrationId: string, eventId: string, sessionId: string) {
+  const supabase = await createClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Authentication required");
+
+  const { data: registration, error: findError } = await supabase
+    .from("registrations")
+    .select("id, name, email, status, qr_code, event_id, ticket_type_id, ticket_types(name)")
+    .eq("id", registrationId)
+    .eq("event_id", eventId)
+    .single();
+
+  if (findError || !registration) throw new Error("Registration not found");
+  if (registration.status === "cancelled") throw new Error("This registration has been cancelled");
+
+  const { error: checkInError } = await supabase
+    .from("check_ins")
+    .insert({
+      registration_id: registration.id,
+      event_id: eventId,
+      session_id: sessionId,
+      checked_in_by: user.id,
+    });
+
+  if (checkInError) {
+    if (checkInError.code === "23505") {
+      return { ...registration, already_checked_in: true };
+    }
+    throw new Error(checkInError.message);
+  }
+
+  if (registration.status !== "checked_in") {
+    await supabase
+      .from("registrations")
+      .update({
+        status: "checked_in",
+        checked_in_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", registration.id);
+  }
+
+  revalidatePath(`/events/${eventId}/registrations`);
+  revalidatePath(`/events/${eventId}/check-in`);
+
+  return { ...registration, status: "checked_in", checked_in_at: new Date().toISOString(), already_checked_in: false };
+}
+
+export async function searchRegistrations(eventId: string, query: string) {
+  const supabase = await createClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Authentication required");
+
+  const { data, error } = await supabase
+    .from("registrations")
+    .select("id, name, email, status, ticket_type_id, ticket_types(name)")
+    .eq("event_id", eventId)
+    .in("status", ["confirmed", "checked_in"])
+    .or(`name.ilike.%${query}%,email.ilike.%${query}%`)
+    .order("name")
+    .limit(10);
+
+  if (error) throw new Error(error.message);
+  return data;
+}

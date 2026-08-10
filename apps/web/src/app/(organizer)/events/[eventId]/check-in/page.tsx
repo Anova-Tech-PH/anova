@@ -1,7 +1,8 @@
 import { QrScanner } from "@/features/registration/components/qr-scanner";
 import { CheckInStats } from "@/features/registration/components/check-in-stats";
 import { createClient } from "@attendly/ui/supabase/server";
-import { ScanLine } from "lucide-react";
+import Link from "next/link";
+import { ScanLine, Monitor } from "lucide-react";
 
 export default async function CheckInPage({
   params,
@@ -34,6 +35,14 @@ export default async function CheckInPage({
           </p>
         </div>
       </div>
+
+      <Link
+        href={`/events/${eventId}/check-in/kiosk`}
+        className="inline-flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium hover:bg-muted/50 transition-colors"
+      >
+        <Monitor className="h-4 w-4" />
+        Launch Kiosk Mode
+      </Link>
 
       <QrScanner eventId={eventId} sessions={checkInSessions ?? []} />
 
