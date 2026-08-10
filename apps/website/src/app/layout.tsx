@@ -1,23 +1,23 @@
 import type { Metadata } from "next";
-import { Bricolage_Grotesque, Public_Sans } from "next/font/google";
+import { Montserrat, Inter } from "next/font/google";
 import "./globals.css";
 
-const bricolage = Bricolage_Grotesque({
-  variable: "--font-bricolage",
+const montserrat = Montserrat({
+  variable: "--font-montserrat",
   subsets: ["latin"],
-  weight: ["500", "600", "700", "800"],
+  weight: ["300", "400", "500", "600", "700"],
 });
 
-const publicSans = Public_Sans({
-  variable: "--font-public-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600"],
 });
 
 export const metadata: Metadata = {
-  title: "Evenstry — Run the whole event from a single screen",
+  title: "Evenstry — Event management that just works",
   description:
-    "Publish the page, take the registrations, mark who walked in. One workspace per event.",
+    "Create, manage, and run conferences, meetups, and workshops. Registrations, tickets, schedules, check-ins — one platform.",
 };
 
 export default function RootLayout({
@@ -28,7 +28,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="scroll-smooth">
       <body
-        className={`${bricolage.variable} ${publicSans.variable} font-sans antialiased`}
+        className={`${montserrat.variable} ${inter.variable} font-sans antialiased`}
       >
         {children}
       </body>

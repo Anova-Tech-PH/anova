@@ -1,18 +1,17 @@
 import type { Metadata } from "next";
-import { Bricolage_Grotesque, Public_Sans } from "next/font/google";
+import { DM_Sans, Source_Serif_4 } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
 
-const bricolage = Bricolage_Grotesque({
-  variable: "--font-bricolage",
+const dmSans = DM_Sans({
+  variable: "--font-dm-sans",
   subsets: ["latin"],
-  weight: ["500", "600", "700", "800"],
 });
 
-const publicSans = Public_Sans({
-  variable: "--font-public-sans",
+const sourceSerif = Source_Serif_4({
+  variable: "--font-source-serif",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -28,14 +27,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${bricolage.variable} ${publicSans.variable} font-sans antialiased`}
+        className={`${dmSans.variable} ${sourceSerif.variable} font-sans antialiased`}
       >
         {children}
         <Toaster
           position="bottom-right"
           gap={8}
           toastOptions={{
-            className: "!bg-card !text-card-foreground !border-border !shadow-lg !rounded-[10px]",
+            className: "!bg-card !text-card-foreground !border-border !shadow-lg !rounded-xl",
             style: {
               padding: "14px 16px",
             },

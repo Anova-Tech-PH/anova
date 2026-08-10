@@ -6,18 +6,18 @@ import { cn } from "../../utils/cn";
 
 const sizes = {
   xs: "h-6 w-6 text-[10px]",
-  sm: "h-8 w-8 text-[11px]",
+  sm: "h-8 w-8 text-xs",
   md: "h-10 w-10 text-sm",
   lg: "h-12 w-12 text-base",
   xl: "h-16 w-16 text-lg",
 };
 
 const avatarColors = [
-  "bg-[oklch(0.93_0.03_255)] text-[oklch(0.42_0.14_255)]",
-  "bg-[oklch(0.93_0.05_150)] text-[oklch(0.42_0.13_150)]",
-  "bg-[oklch(0.93_0.04_200)] text-[oklch(0.50_0.16_200)]",
-  "bg-[oklch(0.95_0.05_75)] text-[oklch(0.52_0.13_65)]",
-  "bg-[oklch(0.577_0.245_27.325/0.1)] text-[oklch(0.577_0.245_27.325)]",
+  "bg-primary/15 text-primary",
+  "bg-success-light text-success",
+  "bg-info-light text-info",
+  "bg-warning-light text-warning",
+  "bg-destructive/10 text-destructive",
 ];
 
 function hashName(name: string): number {
@@ -58,7 +58,7 @@ export function Avatar({ src, name, size = "md", className, ring }: AvatarProps)
         src={src}
         alt={name || "Avatar"}
         onError={() => setImgError(true)}
-        className={cn("shrink-0 rounded-[6px] object-cover", sizeClass, ringClass, className)}
+        className={cn("shrink-0 rounded-full object-cover", sizeClass, ringClass, className)}
       />
     );
   }
@@ -67,7 +67,7 @@ export function Avatar({ src, name, size = "md", className, ring }: AvatarProps)
     return (
       <div
         className={cn(
-          "flex shrink-0 items-center justify-center rounded-[6px] font-bold",
+          "flex shrink-0 items-center justify-center rounded-full font-medium",
           sizeClass,
           colorClass,
           ringClass,
@@ -82,7 +82,7 @@ export function Avatar({ src, name, size = "md", className, ring }: AvatarProps)
   return (
     <div
       className={cn(
-        "flex shrink-0 items-center justify-center rounded-[6px] bg-muted text-muted-foreground",
+        "flex shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground",
         sizeClass,
         ringClass,
         className

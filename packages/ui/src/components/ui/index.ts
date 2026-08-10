@@ -7,4 +7,3 @@ export { EmptyState } from "./empty-state";
 export { PageTransition } from "./page-transition";
 export { StaggerList, StaggerItem } from "./stagger-list";
 export { ModalOverlay } from "./modal-overlay";
-export { CommandPalette, type CommandItem } from "./command-palette";

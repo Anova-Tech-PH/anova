@@ -1,10 +1,10 @@
-import { createClient } from "@attendly/ui/supabase/server";
 import { notFound } from "next/navigation";
-import { PeoplePane } from "./workspace/people-pane";
-import { ProgrammePane } from "./workspace/programme-pane";
-import { DoorPane } from "./workspace/door-pane";
+import { createClient } from "@attendly/ui/supabase/server";
+import { Card } from "@attendly/ui/components";
+import { BookOpen, MapPin, Globe, Clock, Link, ExternalLink } from "lucide-react";
+import { CopyLinkButton } from "./copy-link-button";
 
-export default async function EventWorkspacePage({
+export default async function EventDetailPage({
   params,
 }: {
   params: Promise<{ eventId: string }>;
@@ -12,57 +12,102 @@ export default async function EventWorkspacePage({
   const { eventId } = await params;
   const supabase = await createClient();
 
-  // Fetch registrations
-  const { data: registrations } = await supabase
-    .from("registrations")
-    .select("id, full_name, email, status, created_at, ticket_types(name)")
-    .eq("event_id", eventId)
-    .order("created_at", { ascending: false });
+  const { data: event } = await supabase
+    .from("events")
+    .select("*, organizations(slug)")
+    .eq("id", eventId)
+    .single();
 
-  // Fetch sessions
-  const { data: sessions } = await supabase
-    .from("sessions")
-    .select("id, title, type, start_time, end_time, location, enable_check_in, track:tracks(id, name, color)")
-    .eq("event_id", eventId)
-    .order("start_time");
-
-  // Fetch check-in stats
-  const { count: checkedInCount } = await supabase
-    .from("check_ins")
-    .select("id", { count: "exact", head: true })
-    .eq("event_id", eventId);
-
-  // Fetch ticket types with quantities
-  const { data: ticketTypes } = await supabase
-    .from("ticket_types")
-    .select("id, name, price, quantity")
-    .eq("event_id", eventId);
-
-  // Count registrations per ticket type
-  const { data: ticketCounts } = await supabase
-    .from("registrations")
-    .select("ticket_type_id")
-    .eq("event_id", eventId);
-
-  const ticketCountMap = new Map<string, number>();
-  for (const r of ticketCounts ?? []) {
-    ticketCountMap.set(r.ticket_type_id, (ticketCountMap.get(r.ticket_type_id) ?? 0) + 1);
-  }
-
-  const ticketsWithCounts = (ticketTypes ?? []).map((t) => ({
-    ...t,
-    sold: ticketCountMap.get(t.id) ?? 0,
-  }));
+  if (!event) notFound();
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr_300px] min-h-[560px]">
-      <PeoplePane registrations={registrations ?? []} />
-      <ProgrammePane sessions={sessions ?? []} eventId={eventId} />
-      <DoorPane
-        checkedInCount={checkedInCount ?? 0}
-        totalCapacity={registrations?.length ?? 0}
-        tickets={ticketsWithCounts}
+    <div className="relative space-y-6">
+      {/* Decorative background grid */}
+      <div
+        className="pointer-events-none absolute inset-0 -z-10 opacity-[0.03]"
+        style={{
+          backgroundImage:
+            "linear-gradient(oklch(0.445 0.107 195) 1px, transparent 1px), linear-gradient(90deg, oklch(0.445 0.107 195) 1px, transparent 1px)",
+          backgroundSize: "40px 40px",
+        }}
       />
+
+      {event.description && (
+        <Card className="p-6">
+          <div className="mb-3 flex items-center gap-2">
+            <BookOpen className="h-4 w-4 text-[oklch(0.445_0.107_195)]" />
+            <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+              About
+            </h2>
+          </div>
+          <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap">
+            {event.description}
+          </p>
+        </Card>
+      )}
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <Card className="relative overflow-hidden p-6 bg-gradient-to-br from-card to-[oklch(0.445_0.107_195_/_0.03)]">
+          <div className="absolute top-0 left-0 h-full w-1 bg-gradient-to-b from-[oklch(0.445_0.107_195)] to-[oklch(0.445_0.107_195_/_0.1)]" />
+          <div className="flex items-center gap-2">
+            {event.is_virtual ? (
+              <Globe className="h-4 w-4 text-[oklch(0.445_0.107_195)]" />
+            ) : (
+              <MapPin className="h-4 w-4 text-[oklch(0.445_0.107_195)]" />
+            )}
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Venue
+            </p>
+          </div>
+          <p className="mt-2 text-lg font-semibold">
+            {event.is_virtual
+              ? "Virtual Event"
+              : event.venue_name || "Not set"}
+          </p>
+        </Card>
+
+        <Card className="relative overflow-hidden p-6 bg-gradient-to-br from-card to-[oklch(0.445_0.107_195_/_0.03)]">
+          <div className="absolute top-0 left-0 h-full w-1 bg-gradient-to-b from-[oklch(0.445_0.107_195)] to-[oklch(0.445_0.107_195_/_0.1)]" />
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-[oklch(0.445_0.107_195)]" />
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Timezone
+            </p>
+          </div>
+          <p className="mt-2 text-lg font-semibold">{event.timezone}</p>
+        </Card>
+
+        <Card className="relative overflow-hidden p-6 bg-gradient-to-br from-card to-[oklch(0.445_0.107_195_/_0.03)]">
+          <div className="absolute top-0 left-0 h-full w-1 bg-gradient-to-b from-[oklch(0.445_0.107_195)] to-[oklch(0.445_0.107_195_/_0.1)]" />
+          <div className="flex items-center gap-2">
+            <Link className="h-4 w-4 text-[oklch(0.445_0.107_195)]" />
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Slug
+            </p>
+          </div>
+          <p className="mt-2 text-lg font-semibold">{event.slug}</p>
+        </Card>
+      </div>
+
+      {event.organizations && (
+        <Card className="p-6">
+          <div className="mb-3 flex items-center gap-2">
+            <ExternalLink className="h-4 w-4 text-[oklch(0.445_0.107_195)]" />
+            <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+              Public Registration Link
+            </h2>
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <code className="min-w-0 truncate rounded-lg border bg-muted/50 px-3 py-2 text-sm sm:flex-1">
+              {`/${(event.organizations as any).slug}/${event.slug}/register`}
+            </code>
+            <CopyLinkButton path={`/${(event.organizations as any).slug}/${event.slug}/register`} />
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Share this link with attendees to register for your event.
+          </p>
+        </Card>
+      )}
     </div>
   );
 }

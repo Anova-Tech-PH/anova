@@ -1,15 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { ScanLine } from "lucide-react";
-import { Badge, Button } from "@attendly/ui/components";
+import { Calendar, Users, TrendingUp, ScanLine, ArrowRight, Plus } from "lucide-react";
+import { Badge } from "@attendly/ui/components";
+import { Button } from "@attendly/ui/components";
 
-type EventRow = {
+type RecentEvent = {
   id: string;
   title: string;
   status: string;
   start_date: string;
-  venue_name: string | null;
   registrations_count: number;
 };
 
@@ -18,25 +18,22 @@ type Stats = {
   totalRegistrations: number;
   upcomingEvents: number;
   checkInRate: number;
-  recentEvents: EventRow[];
+  recentEvents: RecentEvent[];
 };
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
 }
 
-function getTodayLabel(): string {
-  return new Date()
-    .toLocaleDateString("en-US", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-    })
-    .toUpperCase();
+function getFormattedDate(): string {
+  return new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
 }
 
 export function DashboardContent({
@@ -47,128 +44,154 @@ export function DashboardContent({
   stats: Stats;
 }) {
   return (
-    <div className="space-y-6">
-      {/* ── Today strip (demo / happening-now) ── */}
-      <div className="flex items-center justify-between rounded-[10px] bg-primary p-5 px-6 text-white">
-        {/* Left */}
-        <div className="min-w-0">
-          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-accent">
-            HAPPENING NOW &middot; {getTodayLabel()}
+    <div className="space-y-10">
+      {/* Header row */}
+      <div className="flex items-end justify-between">
+        <div>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground/60 mb-1">
+            {getFormattedDate()}
           </p>
-          <h2 className="mt-1 font-display text-[28px] font-extrabold leading-tight">
-            {userName ? `Welcome back, ${userName}` : "Welcome back"}
-          </h2>
-          <p className="mt-0.5 text-[14px] text-white/[0.85]">
-            Main stage &middot; Keynote in progress
-          </p>
+          <h1 className="text-2xl font-bold tracking-tight">
+            {getGreeting()}{userName ? `, ${userName}` : ""}
+          </h1>
         </div>
-
-        {/* Right */}
-        <div className="flex shrink-0 items-center gap-5">
-          <div className="text-right">
-            <p className="font-display text-[32px] font-extrabold tabular-nums leading-none">
-              612
-            </p>
-            <p className="mt-0.5 text-[13px] text-white/[0.7]">/ in the room</p>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-1.5 border-white/30 bg-white/10 text-white hover:bg-white/20"
-          >
-            <ScanLine className="h-3.5 w-3.5" />
-            Open door mode
+        <Link href="/events/new">
+          <Button size="sm" className="gap-1.5">
+            <Plus className="h-3.5 w-3.5" />
+            New Event
           </Button>
-        </div>
+        </Link>
       </div>
 
-      {/* ── Stat strip ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 overflow-hidden rounded-[10px] border border-border">
+      {/* Stats — simple row, no cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-px rounded-lg border bg-border overflow-hidden">
         {[
-          { label: "Registered this month", value: stats.totalRegistrations.toLocaleString() },
-          { label: "Turned up", value: `${stats.checkInRate}%` },
-          { label: "First-time guests", value: "147" },
-          { label: "Volunteers online", value: "3" },
-        ].map((stat, i) => (
-          <div
-            key={stat.label}
-            className={`p-4 px-5 ${i > 0 ? "border-l border-border" : ""}`}
-          >
-            <p className="text-[12px] font-semibold text-muted-foreground">
-              {stat.label}
-            </p>
-            <p className="mt-1 font-display text-[30px] font-extrabold tabular-nums leading-none tracking-tight">
+          { label: "Events", value: stats.totalEvents, icon: Calendar },
+          { label: "Registrations", value: stats.totalRegistrations, icon: Users },
+          { label: "Upcoming", value: stats.upcomingEvents, icon: TrendingUp },
+          { label: "Check-in rate", value: `${stats.checkInRate}%`, icon: ScanLine },
+        ].map((stat) => (
+          <div key={stat.label} className="bg-card px-5 py-4">
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">{stat.label}</p>
+              <stat.icon className="h-3.5 w-3.5 text-muted-foreground/40" />
+            </div>
+            <p className="mt-1.5 text-2xl font-semibold tabular-nums tracking-tight">
               {stat.value}
             </p>
           </div>
         ))}
       </div>
 
-      {/* ── Events table ── */}
+      {/* Recent events */}
       <div>
-        <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
-          All Events
-        </p>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-sm font-medium text-muted-foreground">Recent Events</h2>
+          <Link
+            href="/events"
+            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            View all <ArrowRight className="h-3 w-3" />
+          </Link>
+        </div>
 
         {stats.recentEvents.length === 0 ? (
-          <div className="rounded-[10px] border border-dashed py-12 text-center">
+          <div className="rounded-lg border border-dashed py-12 text-center">
             <p className="text-sm text-muted-foreground">No events yet</p>
-            <Link
-              href="/events/new"
-              className="mt-2 inline-block text-sm font-medium text-primary hover:underline"
-            >
+            <Link href="/events/new" className="mt-2 inline-block text-sm font-medium text-primary hover:underline">
               Create one now
             </Link>
           </div>
         ) : (
-          <div className="overflow-hidden rounded-[10px] border border-border">
-            {/* Header */}
-            <div className="flex items-center bg-[oklch(0.955_0.006_250)] px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
-              <span className="flex-1">Event</span>
-              <span className="w-[200px]">Venue</span>
-              <span className="w-[130px]">Date</span>
-              <span className="w-[110px] text-right">Registered</span>
-              <span className="w-[90px] text-right">Status</span>
-            </div>
-
-            {/* Rows */}
-            {stats.recentEvents.map((event) => {
-              const isLive = event.status === "live";
-              return (
-                <Link
-                  key={event.id}
-                  href={`/events/${event.id}`}
-                  className={`flex items-center border-t border-border/60 px-5 py-3.5 transition-colors hover:bg-muted/30 ${
-                    isLive ? "bg-primary/[0.04]" : ""
-                  }`}
-                >
-                  <span className="flex-1 min-w-0">
-                    <span className="block truncate text-[14px] font-bold">
-                      {event.title}
-                    </span>
+          <>
+          {/* Mobile: list view */}
+          <div className="space-y-3 sm:hidden">
+            {stats.recentEvents.map((event) => (
+              <Link
+                key={event.id}
+                href={`/events/${event.id}`}
+                className="block rounded-lg border bg-card p-4 transition-colors hover:border-primary/20"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <p className="font-medium truncate">{event.title}</p>
+                  <Badge
+                    variant={
+                      event.status === "published" ? "success"
+                        : event.status === "draft" ? "warning"
+                        : "default"
+                    }
+                    className="shrink-0 text-[11px] capitalize"
+                  >
+                    {event.status}
+                  </Badge>
+                </div>
+                <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+                  <span>
+                    {new Date(event.start_date).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
                   </span>
-                  <span className="w-[200px] truncate text-[13px] text-muted-foreground">
-                    {event.venue_name ?? "---"}
+                  <span className="flex items-center gap-1">
+                    <Users className="h-3 w-3" />
+                    {event.registrations_count}
                   </span>
-                  <span className="w-[130px] text-[13px] text-muted-foreground">
-                    {formatDate(event.start_date)}
-                  </span>
-                  <span className="w-[110px] text-right font-display text-[14px] font-bold tabular-nums">
-                    {event.registrations_count.toLocaleString()}
-                  </span>
-                  <span className="w-[90px] text-right">
-                    {isLive ? (
-                      <Badge variant="live">Live</Badge>
-                    ) : event.status === "published" ? (
-                      <Badge variant="success">Open</Badge>
-                    ) : (
-                      <Badge variant="outline">Draft</Badge>
-                    )}
-                  </span>
-                </Link>
-              );
-            })}
+                </div>
+              </Link>
+            ))}
           </div>
+
+          {/* Desktop: table view */}
+          <div className="hidden rounded-lg border overflow-hidden sm:block">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-muted/30">
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Event</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Status</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Date</th>
+                  <th className="px-4 py-2.5 text-right text-xs font-medium text-muted-foreground">Registrations</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {stats.recentEvents.map((event) => (
+                  <tr key={event.id} className="hover:bg-muted/20 transition-colors">
+                    <td className="px-4 py-3">
+                      <Link
+                        href={`/events/${event.id}`}
+                        className="font-medium hover:text-primary transition-colors"
+                      >
+                        {event.title}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3">
+                      <Badge
+                        variant={
+                          event.status === "published" ? "success"
+                            : event.status === "draft" ? "warning"
+                            : "default"
+                        }
+                        className="text-[11px] capitalize"
+                      >
+                        {event.status}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {new Date(event.start_date).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums">
+                      {event.registrations_count}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          </>
         )}
       </div>
     </div>
