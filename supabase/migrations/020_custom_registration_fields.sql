@@ -1,1 +1,0 @@
-/Users/bertwinromero/Documents/billionsoulharves-workspace/attendly/packages/supabase/migrations/020_custom_registration_fields.sql

@@ -1,1 +1,0 @@
-/Users/bertwinromero/Documents/billionsoulharves-workspace/attendly/packages/supabase/migrations/021_promo_codes.sql
