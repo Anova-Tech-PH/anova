@@ -19,6 +19,8 @@ type Session = {
   end_time: string;
   location: string | null;
   enable_check_in: boolean;
+  rsvp_enabled: boolean;
+  capacity: number | null;
   track: Track | null;
   session_speakers: SessionSpeaker[];
 };
@@ -96,6 +98,8 @@ export function SessionTimeline({
     track_id: string;
     speaker_ids: string[];
     enable_check_in: boolean;
+    rsvp_enabled: boolean;
+    capacity: number | null;
   }) {
     try {
       const session = await createSession(eventId, {
@@ -108,6 +112,8 @@ export function SessionTimeline({
         track_id: data.track_id || undefined,
         speaker_ids: data.speaker_ids,
         enable_check_in: data.enable_check_in,
+        rsvp_enabled: data.rsvp_enabled,
+        capacity: data.capacity,
       });
 
       // Refetch to get joined data
@@ -142,6 +148,8 @@ export function SessionTimeline({
     track_id: string;
     speaker_ids: string[];
     enable_check_in: boolean;
+    rsvp_enabled: boolean;
+    capacity: number | null;
   }) {
     if (!editingSession) return;
     try {
@@ -155,6 +163,8 @@ export function SessionTimeline({
         track_id: data.track_id || null,
         speaker_ids: data.speaker_ids,
         enable_check_in: data.enable_check_in,
+        rsvp_enabled: data.rsvp_enabled,
+        capacity: data.capacity,
       });
 
       setSessions((prev) =>
@@ -363,6 +373,8 @@ export function SessionTimeline({
             track_id: editingSession.track?.id ?? "",
             speaker_ids: editingSession.session_speakers.map((ss) => ss.speaker_id),
             enable_check_in: editingSession.enable_check_in,
+            rsvp_enabled: editingSession.rsvp_enabled ?? false,
+            capacity: editingSession.capacity ?? null,
           }}
           tracks={tracks}
           speakers={speakers}

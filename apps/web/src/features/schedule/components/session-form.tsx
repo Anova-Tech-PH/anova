@@ -26,6 +26,8 @@ type SessionFormData = {
   track_id: string;
   speaker_ids: string[];
   enable_check_in: boolean;
+  rsvp_enabled: boolean;
+  capacity: number | null;
 };
 
 export function SessionForm({
@@ -51,6 +53,8 @@ export function SessionForm({
     track_id: session?.track_id ?? "",
     speaker_ids: session?.speaker_ids ?? [],
     enable_check_in: session?.enable_check_in ?? false,
+    rsvp_enabled: session?.rsvp_enabled ?? false,
+    capacity: session?.capacity ?? null,
   });
   const [loading, setLoading] = useState(false);
 
@@ -174,6 +178,33 @@ export function SessionForm({
               <p className="text-xs text-muted-foreground">Allows scanning attendee QR codes for this session</p>
             </div>
           </label>
+
+          <label className="flex items-center gap-3 rounded-lg border px-4 py-3 cursor-pointer hover:bg-accent/50 transition-colors">
+            <input
+              type="checkbox"
+              checked={form.rsvp_enabled}
+              onChange={(e) => setForm((f) => ({ ...f, rsvp_enabled: e.target.checked, capacity: e.target.checked ? f.capacity : null }))}
+              className="h-4 w-4 rounded border-input accent-primary"
+            />
+            <div>
+              <span className="text-sm font-medium">Enable RSVP</span>
+              <p className="text-xs text-muted-foreground">Allow attendees to RSVP for this session</p>
+            </div>
+          </label>
+
+          {form.rsvp_enabled && (
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Capacity</label>
+              <Input
+                type="number"
+                min={1}
+                placeholder="Unlimited"
+                value={form.capacity ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, capacity: e.target.value ? parseInt(e.target.value, 10) : null }))}
+              />
+              <p className="text-xs text-muted-foreground">Leave empty for unlimited capacity</p>
+            </div>
+          )}
 
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Description</label>

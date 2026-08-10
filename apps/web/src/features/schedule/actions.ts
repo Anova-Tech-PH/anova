@@ -68,10 +68,12 @@ export async function createSession(eventId: string, data: {
   track_id?: string;
   speaker_ids?: string[];
   enable_check_in?: boolean;
+  capacity?: number | null;
+  rsvp_enabled?: boolean;
 }) {
   const supabase = await createClient();
 
-  const { speaker_ids, ...sessionData } = data;
+  const { speaker_ids, capacity, rsvp_enabled, ...sessionData } = data;
 
   const { data: session, error } = await supabase
     .from("sessions")
@@ -79,6 +81,8 @@ export async function createSession(eventId: string, data: {
       event_id: eventId,
       ...sessionData,
       track_id: sessionData.track_id || null,
+      capacity: capacity ?? null,
+      rsvp_enabled: rsvp_enabled ?? false,
     })
     .select()
     .single();
@@ -108,14 +112,21 @@ export async function updateSession(eventId: string, sessionId: string, data: {
   track_id?: string | null;
   speaker_ids?: string[];
   enable_check_in?: boolean;
+  capacity?: number | null;
+  rsvp_enabled?: boolean;
 }) {
   const supabase = await createClient();
 
-  const { speaker_ids, ...sessionData } = data;
+  const { speaker_ids, capacity, rsvp_enabled, ...sessionData } = data;
 
   const { error } = await supabase
     .from("sessions")
-    .update({ ...sessionData, updated_at: new Date().toISOString() })
+    .update({
+      ...sessionData,
+      updated_at: new Date().toISOString(),
+      ...(capacity !== undefined ? { capacity } : {}),
+      ...(rsvp_enabled !== undefined ? { rsvp_enabled } : {}),
+    })
     .eq("id", sessionId);
 
   if (error) throw new Error(error.message);
