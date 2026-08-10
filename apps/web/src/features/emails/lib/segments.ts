@@ -4,7 +4,11 @@ type SegmentFilters = {
   ticket_type_ids?: string[];
   statuses?: string[];
   checked_in?: boolean;
+  custom_field_filters?: { field_id: string; value: string }[];
+  min_check_ins?: number;
 };
+
+export type { SegmentFilters };
 
 export async function getSegmentedRecipients(
   eventId: string,
@@ -14,7 +18,7 @@ export async function getSegmentedRecipients(
 
   let query = supabase
     .from("registrations")
-    .select("id, name, email, status, ticket_type_id, ticket_types(name)")
+    .select("id, name, email, status, ticket_type_id, custom_fields, ticket_types(name)")
     .eq("event_id", eventId)
     .eq("unsubscribed", false);
 
@@ -25,7 +29,6 @@ export async function getSegmentedRecipients(
   if (filters?.statuses && filters.statuses.length > 0) {
     query = query.in("status", filters.statuses);
   } else {
-    // Default: only confirmed and checked-in attendees
     query = query.in("status", ["confirmed", "checked_in"]);
   }
 
@@ -36,7 +39,36 @@ export async function getSegmentedRecipients(
   }
 
   const { data, error } = await query.order("name");
-
   if (error) throw new Error(error.message);
-  return data;
+
+  let results = data;
+
+  // Client-side filter for custom field values (JSONB filtering)
+  if (filters?.custom_field_filters && filters.custom_field_filters.length > 0) {
+    results = results.filter((r) => {
+      const cf = (r.custom_fields ?? {}) as Record<string, unknown>;
+      return filters.custom_field_filters!.every(
+        (f) => String(cf[f.field_id] ?? "") === f.value
+      );
+    });
+  }
+
+  // Client-side filter for min check-ins (requires separate query)
+  if (filters?.min_check_ins && filters.min_check_ins > 0) {
+    const { data: checkIns } = await supabase
+      .from("check_ins")
+      .select("registration_id")
+      .eq("event_id", eventId);
+
+    const countByReg: Record<string, number> = {};
+    for (const ci of checkIns ?? []) {
+      countByReg[ci.registration_id] = (countByReg[ci.registration_id] ?? 0) + 1;
+    }
+
+    results = results.filter(
+      (r) => (countByReg[r.id] ?? 0) >= filters.min_check_ins!
+    );
+  }
+
+  return results;
 }
