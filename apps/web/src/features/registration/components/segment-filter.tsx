@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 type TicketType = { id: string; name: string };
-type CustomField = { id: string; label: string; field_type: string; options: string[] | null };
+type CustomField = { id: string; label: string; type: string; options: string[] | null };
 
 export type SegmentCriteria = {
   ticket_type_ids: string[];

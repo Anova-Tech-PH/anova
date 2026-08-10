@@ -92,7 +92,7 @@ export async function getCustomFieldDefinitions(eventId: string) {
   const supabase = await createClient();
   const { data } = await supabase
     .from("custom_registration_fields")
-    .select("id, label, field_type, options")
+    .select("id, label, type, options")
     .eq("event_id", eventId)
     .order("sort_order");
   return data ?? [];
