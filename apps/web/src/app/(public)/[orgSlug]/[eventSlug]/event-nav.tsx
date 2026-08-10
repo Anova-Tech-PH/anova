@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { use, useState, useEffect, useRef } from "react";
-import { Calendar, Mic2, DoorOpen, Ticket, LogIn, LogOut } from "lucide-react";
+import { Calendar, Mic2, DoorOpen, Ticket, Megaphone, LogIn, LogOut } from "lucide-react";
 import { createClient } from "@attendly/ui/supabase/client";
 
 const navItems = [
@@ -11,6 +11,7 @@ const navItems = [
   { label: "Schedule", path: "/schedule", icon: Calendar },
   { label: "Speakers", path: "/speakers", icon: Mic2 },
   { label: "Rooms", path: "/rooms", icon: DoorOpen },
+  { label: "Announcements", path: "/announcements", icon: Megaphone },
   { label: "Register", path: "/register", icon: Ticket },
 ];
 
