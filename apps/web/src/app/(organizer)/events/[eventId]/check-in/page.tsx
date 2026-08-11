@@ -37,7 +37,7 @@ export default async function CheckInPage({
       </div>
 
       <Link
-        href={`/events/${eventId}/check-in/kiosk`}
+        href={`/kiosk/${eventId}`}
         className="inline-flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium hover:bg-muted/50 transition-colors"
       >
         <Monitor className="h-4 w-4" />
