@@ -267,5 +267,58 @@ describe("Email Actions", () => {
         expect(sendEmail).toHaveBeenCalled();
       });
     });
+
+    describe("sendCampaign", () => {
+      it("sends campaign to contact list recipients", async () => {
+        let callIdx = 0;
+        mockFrom.mockImplementation((table: string) => {
+          if (table === "email_campaigns" && callIdx === 0) {
+            callIdx++;
+            return createQueryMock({
+              data: {
+                id: "camp-1",
+                event_id: "evt-1",
+                subject: "Hello {{first_name}}",
+                body_html: "<p>Hi</p>",
+                recipient_source: "contact_list",
+                contact_list_id: "cl-1",
+                status: "draft",
+                include_cta: true,
+              },
+              error: null,
+            });
+          }
+          if (table === "events") {
+            return createQueryMock({
+              data: {
+                id: "evt-1",
+                title: "Test Event",
+                organization_id: "org-1",
+                start_date: "2026-09-15",
+                slug: "test",
+                location: "Venue",
+                organizations: [{ slug: "test-org" }],
+              },
+              error: null,
+            });
+          }
+          if (table === "contacts") {
+            return createQueryMock({
+              data: [
+                { email: "a@test.com", first_name: "Alice", unsubscribed: false },
+                { email: "b@test.com", first_name: "Bob", unsubscribed: false },
+              ],
+              error: null,
+            });
+          }
+          return createQueryMock({ data: null, error: null });
+        });
+
+        const { sendCampaign } = await import("./actions");
+        const result = await sendCampaign("camp-1");
+
+        expect(result).toHaveProperty("sentCount");
+      });
+    });
   });
 });

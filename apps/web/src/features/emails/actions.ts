@@ -383,6 +383,119 @@ export async function updateCampaign(
   if (error) throw new Error(error.message);
 }
 
+export async function sendCampaign(campaignId: string) {
+  const supabase = await createClient();
+
+  // Fetch campaign
+  const { data: campaign, error: campError } = await supabase
+    .from("email_campaigns")
+    .select("*")
+    .eq("id", campaignId)
+    .single();
+
+  if (campError || !campaign) throw new Error("Campaign not found");
+  if (campaign.status === "sent") throw new Error("Campaign already sent");
+
+  // Fetch event
+  const { data: event, error: eventError } = await supabase
+    .from("events")
+    .select("id, title, organization_id, start_date, slug, location, organizations(slug)")
+    .eq("id", campaign.event_id)
+    .single();
+
+  if (eventError || !event) throw new Error("Event not found");
+
+  // Mark as sending
+  await supabase
+    .from("email_campaigns")
+    .update({ status: "sending", updated_at: new Date().toISOString() })
+    .eq("id", campaignId);
+
+  // Get recipients
+  let recipients: { email: string; first_name?: string | null; name?: string | null }[];
+
+  if (campaign.recipient_source === "contact_list" && campaign.contact_list_id) {
+    const { data: contacts } = await supabase
+      .from("contacts")
+      .select("email, first_name")
+      .eq("contact_list_id", campaign.contact_list_id)
+      .eq("unsubscribed", false);
+    recipients = contacts ?? [];
+  } else {
+    const segmented = await getSegmentedRecipients(campaign.event_id, campaign.segment_filters ?? undefined);
+    recipients = segmented;
+  }
+
+  if (recipients.length === 0) {
+    await supabase
+      .from("email_campaigns")
+      .update({ status: "sent", sent_count: 0, failed_count: 0, sent_at: new Date().toISOString() })
+      .eq("id", campaignId);
+    return { sentCount: 0, failedCount: 0 };
+  }
+
+  const orgs = event.organizations as unknown as { slug: string }[] | null;
+  const orgSlug = orgs?.[0]?.slug ?? "";
+
+  let sentCount = 0;
+  let failedCount = 0;
+
+  for (let i = 0; i < recipients.length; i += 50) {
+    const batch = recipients.slice(i, i + 50);
+
+    const results = await Promise.allSettled(
+      batch.map((recipient) => {
+        const firstName = (recipient as any).first_name ?? (recipient as any).name ?? "there";
+        const variables: Record<string, string> = {
+          first_name: firstName,
+          attendee_name: firstName,
+          event_name: event.title,
+          event_date: new Date(event.start_date).toLocaleDateString("en-US", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          }),
+          event_url: `/${orgSlug}/${event.slug}`,
+        };
+
+        const subject = substituteVariables(campaign.subject, variables);
+        const html = substituteVariables(campaign.body_html, variables);
+
+        return sendEmail({
+          organizationId: event.organization_id,
+          eventId: campaign.event_id,
+          to: { email: recipient.email, name: firstName },
+          subject,
+          html,
+          campaignId,
+        });
+      })
+    );
+
+    for (const result of results) {
+      if (result.status === "fulfilled") sentCount++;
+      else failedCount++;
+    }
+  }
+
+  // Mark as sent
+  await supabase
+    .from("email_campaigns")
+    .update({
+      status: "sent",
+      sent_count: sentCount,
+      failed_count: failedCount,
+      sent_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", campaignId);
+
+  revalidatePath(`/events/${campaign.event_id}/emails`);
+
+  return { sentCount, failedCount };
+}
+
 export async function sendTestEmail(data: {
   eventId: string;
   subject: string;

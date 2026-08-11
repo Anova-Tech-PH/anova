@@ -5,6 +5,7 @@ type SendEmailParams = {
   organizationId: string;
   eventId: string;
   templateId?: string;
+  campaignId?: string;
   to: { email: string; name?: string };
   subject: string;
   html: string;
@@ -33,6 +34,7 @@ export async function sendEmail(params: SendEmailParams) {
     organization_id: params.organizationId,
     event_id: params.eventId,
     template_id: params.templateId ?? null,
+    campaign_id: params.campaignId ?? null,
     recipient_email: params.to.email,
     recipient_name: params.to.name ?? null,
     subject: params.subject,
