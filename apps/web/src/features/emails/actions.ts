@@ -315,3 +315,110 @@ export async function uploadContacts(
   if (error) throw new Error(error.message);
   return { count: data?.length ?? 0 };
 }
+
+export async function createCampaign(data: {
+  eventId: string;
+  subject: string;
+  bodyHtml: string;
+  recipientSource: "contact_list" | "registrants";
+  contactListId?: string;
+  segmentFilters?: Record<string, unknown>;
+  senderName?: string;
+  replyTo?: string;
+  includeCta?: boolean;
+}) {
+  const supabase = await createClient();
+
+  const { data: campaign, error } = await supabase
+    .from("email_campaigns")
+    .insert({
+      event_id: data.eventId,
+      subject: data.subject,
+      body_html: data.bodyHtml,
+      recipient_source: data.recipientSource,
+      contact_list_id: data.contactListId ?? null,
+      segment_filters: data.segmentFilters ?? null,
+      sender_name: data.senderName ?? null,
+      reply_to: data.replyTo ?? null,
+      include_cta: data.includeCta ?? true,
+      status: "draft",
+    })
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  return campaign;
+}
+
+export async function updateCampaign(
+  campaignId: string,
+  data: {
+    subject?: string;
+    bodyHtml?: string;
+    recipientSource?: string;
+    contactListId?: string | null;
+    segmentFilters?: Record<string, unknown> | null;
+    senderName?: string;
+    replyTo?: string;
+    includeCta?: boolean;
+  }
+) {
+  const supabase = await createClient();
+
+  const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if (data.subject !== undefined) update.subject = data.subject;
+  if (data.bodyHtml !== undefined) update.body_html = data.bodyHtml;
+  if (data.recipientSource !== undefined) update.recipient_source = data.recipientSource;
+  if (data.contactListId !== undefined) update.contact_list_id = data.contactListId;
+  if (data.segmentFilters !== undefined) update.segment_filters = data.segmentFilters;
+  if (data.senderName !== undefined) update.sender_name = data.senderName;
+  if (data.replyTo !== undefined) update.reply_to = data.replyTo;
+  if (data.includeCta !== undefined) update.include_cta = data.includeCta;
+
+  const { error } = await supabase
+    .from("email_campaigns")
+    .update(update)
+    .eq("id", campaignId);
+
+  if (error) throw new Error(error.message);
+}
+
+export async function sendTestEmail(data: {
+  eventId: string;
+  subject: string;
+  bodyHtml: string;
+  recipientEmail: string;
+}) {
+  const supabase = await createClient();
+
+  const { data: event, error: eventError } = await supabase
+    .from("events")
+    .select("id, title, organization_id, start_date, slug, location, organizations(slug)")
+    .eq("id", data.eventId)
+    .single();
+
+  if (eventError || !event) throw new Error("Event not found");
+
+  const variables: Record<string, string> = {
+    first_name: "Test User",
+    event_name: event.title,
+    event_date: new Date(event.start_date).toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }),
+    event_url: `/${(event.organizations as any)?.[0]?.slug ?? ""}/${event.slug}`,
+  };
+
+  const subject = substituteVariables(data.subject, variables);
+  const html = substituteVariables(data.bodyHtml, variables);
+
+  await sendEmail({
+    organizationId: event.organization_id,
+    eventId: data.eventId,
+    to: { email: data.recipientEmail, name: "Test" },
+    subject: `[TEST] ${subject}`,
+    html,
+  });
+}

@@ -201,4 +201,71 @@ describe("Email Actions", () => {
       });
     });
   });
+
+  describe("Campaign Actions", () => {
+    describe("createCampaign", () => {
+      it("creates a draft campaign", async () => {
+        mockFrom.mockReturnValue(
+          createQueryMock({
+            data: { id: "camp-1", status: "draft", subject: "Hello" },
+            error: null,
+          })
+        );
+
+        const { createCampaign } = await import("./actions");
+        const result = await createCampaign({
+          eventId: "evt-1",
+          subject: "Hello",
+          bodyHtml: "<p>Hi</p>",
+          recipientSource: "registrants",
+        });
+
+        expect(result).toHaveProperty("id", "camp-1");
+        expect(result).toHaveProperty("status", "draft");
+        expect(mockFrom).toHaveBeenCalledWith("email_campaigns");
+      });
+    });
+
+    describe("updateCampaign", () => {
+      it("updates campaign fields", async () => {
+        mockFrom.mockReturnValue(createQueryMock({ data: null, error: null }));
+
+        const { updateCampaign } = await import("./actions");
+        await updateCampaign("camp-1", { subject: "Updated" });
+
+        expect(mockFrom).toHaveBeenCalledWith("email_campaigns");
+      });
+    });
+
+    describe("sendTestEmail", () => {
+      it("sends a test email to the given address", async () => {
+        mockFrom.mockReturnValue(
+          createQueryMock({
+            data: {
+              id: "evt-1",
+              title: "My Event",
+              organization_id: "org-1",
+              start_date: "2026-09-15",
+              slug: "my-event",
+              location: "Venue",
+              organizations: [{ slug: "my-org" }],
+            },
+            error: null,
+          })
+        );
+
+        const { sendTestEmail } = await import("./actions");
+        const { sendEmail } = await import("./lib/send-email");
+
+        await sendTestEmail({
+          eventId: "evt-1",
+          subject: "Test",
+          bodyHtml: "<p>Test</p>",
+          recipientEmail: "me@test.com",
+        });
+
+        expect(sendEmail).toHaveBeenCalled();
+      });
+    });
+  });
 });

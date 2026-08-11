@@ -93,3 +93,29 @@ export async function getContactsByList(contactListId: string) {
   if (error) throw new Error(error.message);
   return data;
 }
+
+export async function getCampaigns(eventId: string) {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("email_campaigns")
+    .select("*, contact_lists(name)")
+    .eq("event_id", eventId)
+    .order("created_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+export async function getCampaignById(campaignId: string) {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("email_campaigns")
+    .select("*, contact_lists(name)")
+    .eq("id", campaignId)
+    .single();
+
+  if (error) throw new Error(error.message);
+  return data;
+}
