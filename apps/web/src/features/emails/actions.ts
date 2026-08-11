@@ -263,3 +263,55 @@ export async function sendRegistrationConfirmationEmail(
     console.error("Failed to send registration confirmation email:", err);
   }
 }
+
+export async function createContactList(data: {
+  organizationId: string;
+  name: string;
+}) {
+  const supabase = await createClient();
+
+  const { data: list, error } = await supabase
+    .from("contact_lists")
+    .insert({
+      organization_id: data.organizationId,
+      name: data.name,
+    })
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  return list;
+}
+
+export async function deleteContactList(listId: string) {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("contact_lists")
+    .delete()
+    .eq("id", listId);
+
+  if (error) throw new Error(error.message);
+}
+
+export async function uploadContacts(
+  contactListId: string,
+  contacts: { email: string; firstName?: string; lastName?: string }[]
+) {
+  const supabase = await createClient();
+
+  const rows = contacts.map((c) => ({
+    contact_list_id: contactListId,
+    email: c.email.toLowerCase().trim(),
+    first_name: c.firstName ?? null,
+    last_name: c.lastName ?? null,
+  }));
+
+  const { data, error } = await supabase
+    .from("contacts")
+    .upsert(rows, { onConflict: "contact_list_id,email", ignoreDuplicates: true })
+    .select();
+
+  if (error) throw new Error(error.message);
+  return { count: data?.length ?? 0 };
+}

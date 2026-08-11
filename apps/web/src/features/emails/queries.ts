@@ -66,3 +66,30 @@ export async function getEmailStats(eventId: string) {
 
   return stats;
 }
+
+export async function getContactLists(organizationId: string) {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("contact_lists")
+    .select("*, contacts(count)")
+    .eq("organization_id", organizationId)
+    .order("created_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+export async function getContactsByList(contactListId: string) {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("contacts")
+    .select("*")
+    .eq("contact_list_id", contactListId)
+    .eq("unsubscribed", false)
+    .order("email");
+
+  if (error) throw new Error(error.message);
+  return data;
+}

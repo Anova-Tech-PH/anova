@@ -154,4 +154,51 @@ describe("Email Actions", () => {
       expect(revalidatePath).toHaveBeenCalledWith("/events/evt-1/emails");
     });
   });
+
+  describe("Contact List Actions", () => {
+    describe("createContactList", () => {
+      it("creates a contact list and returns it", async () => {
+        mockFrom.mockReturnValue(
+          createQueryMock({ data: { id: "cl-1", name: "Newsletter" }, error: null })
+        );
+
+        const { createContactList } = await import("./actions");
+        const result = await createContactList({
+          organizationId: "org-1",
+          name: "Newsletter",
+        });
+
+        expect(result).toHaveProperty("id", "cl-1");
+        expect(mockFrom).toHaveBeenCalledWith("contact_lists");
+      });
+    });
+
+    describe("deleteContactList", () => {
+      it("deletes a contact list", async () => {
+        mockFrom.mockReturnValue(createQueryMock({ data: null, error: null }));
+
+        const { deleteContactList } = await import("./actions");
+        await deleteContactList("cl-1");
+
+        expect(mockFrom).toHaveBeenCalledWith("contact_lists");
+      });
+    });
+
+    describe("uploadContacts", () => {
+      it("inserts contacts and returns count", async () => {
+        mockFrom.mockReturnValue(
+          createQueryMock({ data: [{ id: "c-1" }, { id: "c-2" }], error: null })
+        );
+
+        const { uploadContacts } = await import("./actions");
+        const result = await uploadContacts("cl-1", [
+          { email: "a@test.com", firstName: "Alice", lastName: "A" },
+          { email: "b@test.com", firstName: "Bob", lastName: "B" },
+        ]);
+
+        expect(result.count).toBe(2);
+        expect(mockFrom).toHaveBeenCalledWith("contacts");
+      });
+    });
+  });
 });
