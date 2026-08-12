@@ -55,28 +55,25 @@ export async function getModerationQueue(
 
   const { data, error } = await supabase
     .from("session_questions")
-    .select(
-      "*, sessions:session_id(title)"
-    )
+    .select("*")
     .eq("event_id", eventId)
     .eq("status", "pending")
     .order("created_at", { ascending: true });
 
   if (error) throw new Error(error.message);
 
-  return (data ?? []).map((q: Record<string, unknown>) => {
-    const sessions = q.sessions as
-      | { title: string }
-      | { title: string }[]
-      | null;
-    const sessionTitle = Array.isArray(sessions)
-      ? sessions[0]?.title
-      : sessions?.title;
-    return {
-      ...q,
-      session_title: sessionTitle ?? undefined,
-    };
-  }) as SessionQuestion[];
+  // Fetch session titles separately to avoid FK ambiguity issues
+  const sessionIds = [...new Set((data ?? []).map((q) => q.session_id))];
+  const { data: sessions } = sessionIds.length > 0
+    ? await supabase.from("sessions").select("id, title").in("id", sessionIds)
+    : { data: [] };
+
+  const titleMap = new Map((sessions ?? []).map((s: { id: string; title: string }) => [s.id, s.title]));
+
+  return (data ?? []).map((q) => ({
+    ...q,
+    session_title: titleMap.get(q.session_id) ?? undefined,
+  })) as SessionQuestion[];
 }
 
 export async function getQAStats(eventId: string): Promise<QAStats> {

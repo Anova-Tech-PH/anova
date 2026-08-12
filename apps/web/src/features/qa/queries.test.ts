@@ -72,17 +72,22 @@ describe("Q&A Queries", () => {
       const mockPending = [
         {
           id: "q-3",
+          session_id: "sess-1",
           question_text: "Pending question",
           status: "pending",
-          sessions: { title: "Opening Keynote" },
           profiles: { full_name: "Charlie", avatar_url: null },
           created_at: "2026-08-12T10:00:00Z",
         },
       ];
 
-      mockFrom.mockReturnValue(
-        createQueryMock({ data: mockPending, error: null })
-      );
+      const mockSessions = [
+        { id: "sess-1", title: "Opening Keynote" },
+      ];
+
+      // First call returns questions, second returns sessions
+      mockFrom
+        .mockReturnValueOnce(createQueryMock({ data: mockPending, error: null }))
+        .mockReturnValueOnce(createQueryMock({ data: mockSessions, error: null }));
 
       const { getModerationQueue } = await import("./queries");
       const result = await getModerationQueue("evt-1");
@@ -90,6 +95,7 @@ describe("Q&A Queries", () => {
       expect(result).toHaveLength(1);
       expect(result[0]).toHaveProperty("session_title", "Opening Keynote");
       expect(mockFrom).toHaveBeenCalledWith("session_questions");
+      expect(mockFrom).toHaveBeenCalledWith("sessions");
     });
 
     it("returns empty array when no pending questions", async () => {

@@ -1,27 +1,76 @@
 "use client";
 
 import { useState } from "react";
-import { Eye, FileText, Tag, Users, Globe, Mail, Video, Store } from "lucide-react";
-import { Badge, Card } from "@attendly/ui/components";
+import { Eye, FileText, Tag, Users, Globe, Mail, Video, Store, Pencil } from "lucide-react";
+import { Badge, Button, Card } from "@attendly/ui/components";
 import { SponsorDocsManager } from "./sponsor-docs-manager";
 import { SponsorCouponsManager } from "./sponsor-coupons-manager";
+import { SponsorForm } from "./sponsor-form";
+import { updateSponsor } from "../actions";
+import { toast } from "sonner";
 import type { SponsorWithDetails, SponsorLead } from "../queries";
+import type { SponsorTier } from "../tier-queries";
 
 const TABS = ["Details", "Documents", "Coupons", "Leads"] as const;
 type Tab = (typeof TABS)[number];
 
 export function SponsorDetailPanel({
   eventId,
-  sponsor,
+  sponsor: initialSponsor,
   leads,
   analytics,
+  tiers,
 }: {
   eventId: string;
   sponsor: SponsorWithDetails;
   leads: SponsorLead[];
   analytics: { visit_count: number; lead_count: number };
+  tiers: SponsorTier[];
 }) {
   const [activeTab, setActiveTab] = useState<Tab>("Details");
+  const [sponsor, setSponsor] = useState(initialSponsor);
+  const [editing, setEditing] = useState(false);
+
+  async function handleUpdate(data: {
+    name: string;
+    logo: string;
+    description: string;
+    website_url: string;
+    promo_video_url: string;
+    tier_id: string;
+    booth_enabled: boolean;
+    contact_email: string;
+    sort_order: number;
+  }) {
+    try {
+      await updateSponsor(eventId, sponsor.id, {
+        name: data.name,
+        logo: data.logo || null,
+        description: data.description || null,
+        website_url: data.website_url || null,
+        promo_video_url: data.promo_video_url || null,
+        tier_id: data.tier_id || null,
+        booth_enabled: data.booth_enabled,
+        contact_email: data.contact_email || null,
+        sort_order: data.sort_order,
+      });
+      setSponsor((prev) => ({
+        ...prev,
+        ...data,
+        logo: data.logo || null,
+        description: data.description || null,
+        website_url: data.website_url || null,
+        promo_video_url: data.promo_video_url || null,
+        tier_id: data.tier_id || null,
+        contact_email: data.contact_email || null,
+        tier: tiers.find((t) => t.id === data.tier_id) ?? undefined,
+      }));
+      setEditing(false);
+      toast.success("Sponsor updated");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update sponsor");
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -73,6 +122,12 @@ export function SponsorDetailPanel({
       {/* Tab content */}
       {activeTab === "Details" && (
         <div className="space-y-4">
+          <div className="flex justify-end">
+            <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+              <Pencil className="mr-1.5 h-3.5 w-3.5" />
+              Edit Sponsor
+            </Button>
+          </div>
           <div className="rounded-lg border bg-card p-6 space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
@@ -206,6 +261,16 @@ export function SponsorDetailPanel({
             </div>
           )}
         </div>
+      )}
+
+      {editing && (
+        <SponsorForm
+          eventId={eventId}
+          tiers={tiers}
+          sponsor={sponsor}
+          onSubmit={handleUpdate}
+          onCancel={() => setEditing(false)}
+        />
       )}
     </div>
   );

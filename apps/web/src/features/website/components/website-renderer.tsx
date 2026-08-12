@@ -24,7 +24,7 @@ interface Session {
   start_time: string;
   end_time: string;
   session_speakers?: Array<{
-    speakers: { id: string; name: string } | null;
+    speakers: { id: string; name: string } | { id: string; name: string }[] | null;
   }>;
 }
 

@@ -6,7 +6,7 @@ interface Session {
   start_time: string;
   end_time: string;
   session_speakers?: Array<{
-    speakers: { id: string; name: string } | null;
+    speakers: { id: string; name: string } | { id: string; name: string }[] | null;
   }>;
 }
 
@@ -52,7 +52,11 @@ export function AgendaSection({ section, sessions, basePath }: AgendaSectionProp
                     minute: "2-digit",
                   });
                   const speakerNames = (session.session_speakers ?? [])
-                    .map((ss) => ss.speakers?.name)
+                    .map((ss) => {
+                      const s = ss.speakers;
+                      if (!s) return null;
+                      return Array.isArray(s) ? s[0]?.name : s.name;
+                    })
                     .filter(Boolean)
                     .join(", ");
 

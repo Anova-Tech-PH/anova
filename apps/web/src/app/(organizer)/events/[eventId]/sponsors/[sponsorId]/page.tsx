@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { getSponsorById, getSponsorLeads } from "@/features/sponsors/queries";
+import { getTiersByEvent } from "@/features/sponsors/tier-queries";
 import { SponsorDetailPanel } from "@/features/sponsors/components/sponsor-detail-panel";
 import { createClient } from "@attendly/ui/supabase/server";
 
@@ -11,9 +12,10 @@ export default async function SponsorDetailPage({
 }) {
   const { eventId, sponsorId } = await params;
 
-  const [sponsor, leads] = await Promise.all([
+  const [sponsor, leads, tiers] = await Promise.all([
     getSponsorById(sponsorId),
     getSponsorLeads(sponsorId),
+    getTiersByEvent(eventId),
   ]);
 
   // Get analytics counts via direct queries
@@ -53,6 +55,7 @@ export default async function SponsorDetailPage({
         eventId={eventId}
         sponsor={sponsor}
         leads={leads}
+        tiers={tiers}
         analytics={{
           visit_count: visitCount ?? 0,
           lead_count: leadCount ?? 0,

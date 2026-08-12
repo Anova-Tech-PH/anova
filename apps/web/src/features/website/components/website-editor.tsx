@@ -28,9 +28,10 @@ const sectionMeta: Record<SectionType, { label: string; icon: LucideIcon }> = {
 interface WebsiteEditorProps {
   eventId: string;
   initialConfig: WebsiteConfig;
+  previewUrl?: string;
 }
 
-export function WebsiteEditor({ eventId, initialConfig }: WebsiteEditorProps) {
+export function WebsiteEditor({ eventId, initialConfig, previewUrl }: WebsiteEditorProps) {
   const [config, setConfig] = useState<WebsiteConfig>(initialConfig);
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -105,15 +106,17 @@ export function WebsiteEditor({ eventId, initialConfig }: WebsiteEditorProps) {
             />
             {config.enabled ? "Published" : "Disabled"}
           </label>
-          <a
-            href={`/preview-website/${eventId}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
-          >
-            <ExternalLink className="h-4 w-4" />
-            Preview
-          </a>
+          {previewUrl && (
+            <a
+              href={previewUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+            >
+              <ExternalLink className="h-4 w-4" />
+              Preview
+            </a>
+          )}
           <Button onClick={handleSave} disabled={isPending} size="sm">
             <Save className="mr-1.5 h-4 w-4" />
             {isPending ? "Saving..." : "Save"}
