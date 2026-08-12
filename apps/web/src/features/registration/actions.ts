@@ -122,6 +122,18 @@ export async function registerForEvent(data: {
 
   if (error) throw new Error(error.message);
 
+  // Mark any matching registration intent as converted (fire-and-forget)
+  supabase
+    .from("registration_intents")
+    .update({
+      status: "converted",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("event_id", data.event_id)
+    .eq("email", data.email.toLowerCase().trim())
+    .eq("status", "pending")
+    .then(() => {});
+
   const registration = {
     id: "",
     qr_code: qrCode,
