@@ -47,6 +47,12 @@ export default async function EventLayout({
       ],
     },
     {
+      label: "Sponsors",
+      items: [
+        { href: `/events/${eventId}/sponsors`, label: "Sponsors", icon: "award" },
+      ],
+    },
+    {
       label: "Engagement",
       items: [
         { href: `/events/${eventId}/announcements`, label: "Announcements", icon: "megaphone" },
