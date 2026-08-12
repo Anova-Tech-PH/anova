@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import type { PollWithResults } from "@/features/polls/queries";
+import { useConfirm } from "@attendly/ui/components";
 import { openPoll, closePoll, deletePoll, togglePollResults } from "@/features/polls/actions";
 import { PollResultsChart } from "./poll-results-chart";
 
@@ -13,6 +14,7 @@ export function PollList({
   eventId: string;
 }) {
   const [isPending, startTransition] = useTransition();
+  const { confirm, dialog: confirmDialog } = useConfirm();
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   function handleOpen(pollId: string) {
@@ -27,8 +29,13 @@ export function PollList({
     });
   }
 
-  function handleDelete(pollId: string) {
-    if (!window.confirm("Are you sure you want to delete this poll?")) return;
+  async function handleDelete(pollId: string) {
+    const ok = await confirm({
+      title: "Delete Poll",
+      description: "Are you sure you want to delete this poll? This action cannot be undone.",
+      confirmLabel: "Delete",
+    });
+    if (!ok) return;
     startTransition(async () => {
       await deletePoll(eventId, pollId);
     });
@@ -175,6 +182,8 @@ export function PollList({
           </tbody>
         </table>
       </div>
+
+      {confirmDialog}
     </div>
   );
 }

@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { ArrowLeft, Calendar, Users, QrCode, BarChart2, BarChart3, Settings, Ticket, DoorOpen, Mail, ListChecks, Tag, ClipboardList, Megaphone, MessageSquare, CalendarCheck, IdCard, Award } from "lucide-react";
+import { ArrowLeft, Calendar } from "lucide-react";
 import { createClient } from "@attendly/ui/supabase/server";
 import { notFound } from "next/navigation";
 import { Badge } from "@attendly/ui/components";
 import { MobileTabSelect } from "./mobile-tab-select";
+import { DesktopTabs } from "./desktop-tabs";
 
 export default async function EventLayout({
   children,
@@ -24,24 +25,24 @@ export default async function EventLayout({
   if (!event) notFound();
 
   const tabs = [
-    { href: `/events/${eventId}`, label: "Overview", icon: BarChart3 },
-    { href: `/events/${eventId}/schedule`, label: "Schedule", icon: Calendar },
-    { href: `/events/${eventId}/tickets`, label: "Tickets", icon: Ticket },
-    { href: `/events/${eventId}/custom-fields`, label: "Form Fields", icon: ListChecks },
-    { href: `/events/${eventId}/promo-codes`, label: "Promo Codes", icon: Tag },
-    { href: `/events/${eventId}/registrations`, label: "Registrations", icon: Users },
-    { href: `/events/${eventId}/check-in`, label: "Check-in", icon: QrCode },
-    { href: `/events/${eventId}/badges`, label: "Badges", icon: IdCard },
-    { href: `/events/${eventId}/rooms`, label: "Rooms", icon: DoorOpen },
-    { href: `/events/${eventId}/announcements`, label: "Announcements", icon: Megaphone },
-    { href: `/events/${eventId}/feedback`, label: "Feedback", icon: MessageSquare },
-    { href: `/events/${eventId}/polls`, label: "Polls", icon: BarChart2 },
-    { href: `/events/${eventId}/rsvp`, label: "RSVPs", icon: CalendarCheck },
-    { href: `/events/${eventId}/emails`, label: "Emails", icon: Mail },
-    { href: `/events/${eventId}/survey`, label: "Survey", icon: ClipboardList },
-    { href: `/events/${eventId}/certificates`, label: "Certificates", icon: Award },
-    { href: `/events/${eventId}/analytics`, label: "Analytics", icon: BarChart3 },
-    { href: `/events/${eventId}/settings`, label: "Settings", icon: Settings },
+    { href: `/events/${eventId}`, label: "Overview", icon: "bar-chart-3" as const },
+    { href: `/events/${eventId}/schedule`, label: "Schedule", icon: "calendar" as const },
+    { href: `/events/${eventId}/tickets`, label: "Tickets", icon: "ticket" as const },
+    { href: `/events/${eventId}/custom-fields`, label: "Form Fields", icon: "list-checks" as const },
+    { href: `/events/${eventId}/promo-codes`, label: "Promo Codes", icon: "tag" as const },
+    { href: `/events/${eventId}/registrations`, label: "Registrations", icon: "users" as const },
+    { href: `/events/${eventId}/check-in`, label: "Check-in", icon: "qr-code" as const },
+    { href: `/events/${eventId}/badges`, label: "Badges", icon: "id-card" as const },
+    { href: `/events/${eventId}/rooms`, label: "Rooms", icon: "door-open" as const },
+    { href: `/events/${eventId}/announcements`, label: "Announcements", icon: "megaphone" as const },
+    { href: `/events/${eventId}/feedback`, label: "Feedback", icon: "message-square" as const },
+    { href: `/events/${eventId}/polls`, label: "Polls", icon: "bar-chart-2" as const },
+    { href: `/events/${eventId}/rsvp`, label: "RSVPs", icon: "calendar-check" as const },
+    { href: `/events/${eventId}/emails`, label: "Emails", icon: "mail" as const },
+    { href: `/events/${eventId}/survey`, label: "Survey", icon: "clipboard-list" as const },
+    { href: `/events/${eventId}/certificates`, label: "Certificates", icon: "award" as const },
+    { href: `/events/${eventId}/analytics`, label: "Analytics", icon: "bar-chart-3" as const },
+    { href: `/events/${eventId}/settings`, label: "Settings", icon: "settings" as const },
   ];
 
   const statusVariant = event.status === "published"
@@ -87,21 +88,7 @@ export default async function EventLayout({
         <MobileTabSelect tabs={tabs.map((t) => ({ href: t.href, label: t.label }))} />
 
         {/* Desktop: horizontal tabs */}
-        <div className="relative hidden sm:block">
-          <nav className="-mb-px flex gap-1 overflow-x-auto pb-px" style={{ scrollbarWidth: "none" }}>
-            {tabs.map((tab) => (
-              <Link
-                key={tab.href}
-                href={tab.href}
-                className="group relative flex items-center gap-2 whitespace-nowrap rounded-t-lg px-4 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
-              >
-                <tab.icon className="h-4 w-4" />
-                {tab.label}
-              </Link>
-            ))}
-          </nav>
-          <div className="absolute inset-x-0 bottom-0 h-px bg-border" />
-        </div>
+        <DesktopTabs tabs={tabs} />
       </div>
 
       <div className="pt-2">{children}</div>

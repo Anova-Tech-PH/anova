@@ -46,7 +46,7 @@ export default async function EmailsPage({
             href={`/events/${eventId}/emails/campaigns/new`}
             className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
           >
-            <Plus className="h-4 w-4" /> Create Campaign
+            <Plus className="h-4 w-4" /> New Campaign
           </Link>
         </div>
       </div>

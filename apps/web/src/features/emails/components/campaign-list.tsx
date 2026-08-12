@@ -48,7 +48,7 @@ export function CampaignList({ campaigns, eventId }: { campaigns: Campaign[]; ev
                   href={`/events/${eventId}/emails/campaigns/${c.id}`}
                   className="font-medium hover:underline"
                 >
-                  {c.subject || "(No subject)"}
+                  {c.subject?.replace(/\{\{[^}]+\}\}/g, "...") || "(No subject)"}
                 </Link>
               </td>
               <td className="px-4 py-2.5 text-muted-foreground">

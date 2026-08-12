@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
+import { useConfirm } from "@attendly/ui/components";
 import type { Announcement } from "@/features/announcements/queries";
 import { deleteAnnouncement, sendAnnouncement } from "@/features/announcements/actions";
 
@@ -12,16 +13,28 @@ export function AnnouncementList({
   eventId: string;
 }) {
   const [isPending, startTransition] = useTransition();
+  const { confirm, dialog: confirmDialog } = useConfirm();
 
-  function handleSend(announcementId: string) {
-    if (!window.confirm("Send this announcement to all recipients now?")) return;
+  async function handleSend(announcementId: string) {
+    const ok = await confirm({
+      title: "Send Announcement",
+      description: "Send this announcement to all recipients now?",
+      confirmLabel: "Send",
+      variant: "primary",
+    });
+    if (!ok) return;
     startTransition(async () => {
       await sendAnnouncement(eventId, announcementId);
     });
   }
 
-  function handleDelete(announcementId: string) {
-    if (!window.confirm("Are you sure you want to delete this announcement?")) return;
+  async function handleDelete(announcementId: string) {
+    const ok = await confirm({
+      title: "Delete Announcement",
+      description: "Are you sure you want to delete this announcement? This action cannot be undone.",
+      confirmLabel: "Delete",
+    });
+    if (!ok) return;
     startTransition(async () => {
       await deleteAnnouncement(eventId, announcementId);
     });
@@ -102,6 +115,8 @@ export function AnnouncementList({
           </tbody>
         </table>
       </div>
+
+      {confirmDialog}
     </div>
   );
 }

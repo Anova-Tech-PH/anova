@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Plus, Pencil, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
-import { Button, Input, Badge, Card } from "@attendly/ui/components";
+import { Button, Input, Badge, Card, useConfirm } from "@attendly/ui/components";
 import {
   createPromoCode,
   updatePromoCode,
@@ -66,6 +66,7 @@ export function PromoCodeManager({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<PromoCodeFormData>(emptyForm);
   const [loading, setLoading] = useState(false);
+  const { confirm, dialog: confirmDialog } = useConfirm();
 
   function openCreate() {
     setEditingId(null);
@@ -131,7 +132,12 @@ export function PromoCodeManager({
   }
 
   async function handleDelete(codeId: string) {
-    if (!confirm("Delete this promo code?")) return;
+    const ok = await confirm({
+      title: "Delete Promo Code",
+      description: "Delete this promo code? This action cannot be undone.",
+      confirmLabel: "Delete",
+    });
+    if (!ok) return;
     try {
       await deletePromoCode(eventId, codeId);
       setCodes((prev) => prev.filter((c) => c.id !== codeId));
@@ -359,6 +365,8 @@ export function PromoCodeManager({
           })}
         </div>
       )}
+
+      {confirmDialog}
     </div>
   );
 }

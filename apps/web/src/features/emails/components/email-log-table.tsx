@@ -24,9 +24,12 @@ const statusVariant: Record<string, "success" | "destructive" | "warning" | "def
 export function EmailLogTable({ logs }: { logs: EmailLog[] }) {
   if (logs.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground py-8 text-center">
-        No emails sent yet.
-      </p>
+      <div className="rounded-lg border border-dashed p-6 text-center">
+        <p className="text-sm font-medium">No emails sent yet</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Email delivery logs will appear here after you send campaigns or test emails.
+        </p>
+      </div>
     );
   }
 

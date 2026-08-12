@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useTransition } from "react";
+import { useConfirm } from "@attendly/ui/components";
 import { Upload, Plus, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 import { createContactList, uploadContacts, deleteContactList } from "../actions";
@@ -24,6 +25,7 @@ export function ContactLists({
   const [isPending, startTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadListId, setUploadListId] = useState<string | null>(null);
+  const { confirm, dialog: confirmDialog } = useConfirm();
 
   function getCount(list: ContactList): number {
     if (Array.isArray(list.contacts) && list.contacts.length > 0) {
@@ -46,8 +48,13 @@ export function ContactLists({
     });
   }
 
-  function handleDelete(listId: string) {
-    if (!confirm("Delete this contact list and all its contacts?")) return;
+  async function handleDelete(listId: string) {
+    const ok = await confirm({
+      title: "Delete Contact List",
+      description: "Delete this contact list and all its contacts? This action cannot be undone.",
+      confirmLabel: "Delete",
+    });
+    if (!ok) return;
     startTransition(async () => {
       try {
         await deleteContactList(listId);
@@ -161,11 +168,12 @@ export function ContactLists({
                   disabled={isPending}
                   className="inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium hover:bg-muted disabled:opacity-50"
                 >
-                  <Upload className="h-3.5 w-3.5" /> CSV
+                  <Upload className="h-3.5 w-3.5" /> Import CSV
                 </button>
                 <button
                   onClick={() => handleDelete(list.id)}
                   disabled={isPending}
+                  aria-label={`Delete ${list.name}`}
                   className="inline-flex items-center justify-center rounded-md p-1.5 hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -175,6 +183,7 @@ export function ContactLists({
           ))}
         </div>
       )}
+      {confirmDialog}
     </div>
   );
 }

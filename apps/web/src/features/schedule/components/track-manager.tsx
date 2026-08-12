@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { Plus, Pencil, Trash2, X, Check } from "lucide-react";
 import { toast } from "sonner";
+import { useConfirm } from "@attendly/ui/components";
 import { createTrack, updateTrack, deleteTrack } from "../actions";
 
 const TRACK_COLORS = [
@@ -32,6 +33,7 @@ export function TrackManager({
   const [name, setName] = useState("");
   const [color, setColor] = useState(TRACK_COLORS[0]);
   const [isPending, startTransition] = useTransition();
+  const { confirm, dialog: confirmDialog } = useConfirm();
 
   function updateTracks(newTracks: Track[]) {
     setTracks(newTracks);
@@ -64,8 +66,13 @@ export function TrackManager({
     }
   }
 
-  function handleDeleteTrack(track: Track) {
-    if (!confirm(`Delete track "${track.name}"? Sessions in this track will become unassigned.`)) return;
+  async function handleDeleteTrack(track: Track) {
+    const ok = await confirm({
+      title: "Delete Track",
+      description: `Delete track "${track.name}"? Sessions in this track will become unassigned.`,
+      confirmLabel: "Delete",
+    });
+    if (!ok) return;
     startTransition(async () => {
       try {
         await deleteTrack(eventId, track.id);
@@ -190,6 +197,8 @@ export function TrackManager({
           No tracks yet. Tracks let you organize sessions into parallel streams.
         </p>
       )}
+
+      {confirmDialog}
     </div>
   );
 }

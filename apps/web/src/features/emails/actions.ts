@@ -5,6 +5,28 @@ import { revalidatePath } from "next/cache";
 import { sendEmail, substituteVariables } from "./lib/send-email";
 import { getSegmentedRecipients } from "./lib/segments";
 
+async function renderCampaignHtml(params: {
+  bodyHtml: string;
+  eventName: string;
+  eventDate: string;
+  eventLocation?: string;
+  ctaUrl?: string;
+  includeCta: boolean;
+}): Promise<string> {
+  const { render } = await import("@react-email/components");
+  const { CampaignEmail } = await import("./lib/templates/campaign-email");
+  return render(
+    CampaignEmail({
+      eventName: params.eventName,
+      eventDate: params.eventDate,
+      eventLocation: params.eventLocation,
+      bodyHtml: params.bodyHtml,
+      ctaUrl: params.includeCta ? params.ctaUrl : undefined,
+      unsubscribeUrl: "#",
+    })
+  );
+}
+
 export async function createEmailTemplate(data: {
   organizationId: string;
   name: string;
@@ -147,7 +169,7 @@ export async function sendBroadcastEmail(data: {
 
   const { data: event, error: eventError } = await supabase
     .from("events")
-    .select("id, title, organization_id")
+    .select("id, title, organization_id, start_date, venue_name, slug, organizations(slug)")
     .eq("id", data.eventId)
     .single();
 
@@ -158,6 +180,12 @@ export async function sendBroadcastEmail(data: {
   if (recipients.length === 0) {
     throw new Error("No recipients match the selected filters");
   }
+
+  const orgs = event.organizations as unknown as { slug: string }[] | null;
+  const orgSlug = orgs?.[0]?.slug ?? "";
+  const eventDate = new Date(event.start_date).toLocaleDateString("en-US", {
+    weekday: "long", year: "numeric", month: "long", day: "numeric",
+  });
 
   let sentCount = 0;
   let failedCount = 0;
@@ -172,15 +200,24 @@ export async function sendBroadcastEmail(data: {
           event_name: event.title,
         };
         const subject = substituteVariables(data.subject, variables);
-        const html = substituteVariables(data.bodyHtml, variables);
+        const bodyContent = substituteVariables(data.bodyHtml, variables);
 
-        return sendEmail({
-          organizationId: event.organization_id,
-          eventId: data.eventId,
-          to: { email: recipient.email, name: recipient.name },
-          subject,
-          html,
-        });
+        return renderCampaignHtml({
+          bodyHtml: bodyContent,
+          eventName: event.title,
+          eventDate,
+          eventLocation: event.venue_name ?? undefined,
+          ctaUrl: `/${orgSlug}/${event.slug}`,
+          includeCta: false,
+        }).then((html) =>
+          sendEmail({
+            organizationId: event.organization_id,
+            eventId: data.eventId,
+            to: { email: recipient.email, name: recipient.name },
+            subject,
+            html,
+          })
+        );
       })
     );
 
@@ -399,7 +436,7 @@ export async function sendCampaign(campaignId: string) {
   // Fetch event
   const { data: event, error: eventError } = await supabase
     .from("events")
-    .select("id, title, organization_id, start_date, slug, location, organizations(slug)")
+    .select("id, title, organization_id, start_date, slug, venue_name, organizations(slug)")
     .eq("id", campaign.event_id)
     .single();
 
@@ -460,16 +497,25 @@ export async function sendCampaign(campaignId: string) {
         };
 
         const subject = substituteVariables(campaign.subject, variables);
-        const html = substituteVariables(campaign.body_html, variables);
+        const bodyContent = substituteVariables(campaign.body_html, variables);
 
-        return sendEmail({
-          organizationId: event.organization_id,
-          eventId: campaign.event_id,
-          to: { email: recipient.email, name: firstName },
-          subject,
-          html,
-          campaignId,
-        });
+        return renderCampaignHtml({
+          bodyHtml: bodyContent,
+          eventName: event.title,
+          eventDate: variables.event_date,
+          eventLocation: event.venue_name ?? undefined,
+          ctaUrl: variables.event_url,
+          includeCta: campaign.include_cta ?? true,
+        }).then((html) =>
+          sendEmail({
+            organizationId: event.organization_id,
+            eventId: campaign.event_id,
+            to: { email: recipient.email, name: firstName },
+            subject,
+            html,
+            campaignId,
+          })
+        );
       })
     );
 
@@ -506,7 +552,7 @@ export async function sendTestEmail(data: {
 
   const { data: event, error: eventError } = await supabase
     .from("events")
-    .select("id, title, organization_id, start_date, slug, location, organizations(slug)")
+    .select("id, title, organization_id, start_date, slug, venue_name, organizations(slug)")
     .eq("id", data.eventId)
     .single();
 
@@ -525,7 +571,16 @@ export async function sendTestEmail(data: {
   };
 
   const subject = substituteVariables(data.subject, variables);
-  const html = substituteVariables(data.bodyHtml, variables);
+  const bodyContent = substituteVariables(data.bodyHtml, variables);
+
+  const html = await renderCampaignHtml({
+    bodyHtml: bodyContent,
+    eventName: event.title,
+    eventDate: variables.event_date,
+    eventLocation: event.venue_name ?? undefined,
+    ctaUrl: variables.event_url,
+    includeCta: true,
+  });
 
   await sendEmail({
     organizationId: event.organization_id,

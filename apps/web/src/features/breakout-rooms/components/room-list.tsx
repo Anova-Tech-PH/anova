@@ -5,9 +5,7 @@ import { Plus, Pencil, Trash2, Users, Clock, Link as LinkIcon } from "lucide-rea
 import { toast } from "sonner";
 import { deleteRoom } from "../actions";
 import { RoomForm } from "./room-form";
-import { Badge } from "@attendly/ui/components";
-import { Button } from "@attendly/ui/components";
-import { Card } from "@attendly/ui/components";
+import { Badge, Button, Card, useConfirm } from "@attendly/ui/components";
 
 type Room = {
   id: string;
@@ -36,9 +34,15 @@ export function RoomList({
   const [showForm, setShowForm] = useState(false);
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
   const [isPending, startTransition] = useTransition();
+  const { confirm, dialog: confirmDialog } = useConfirm();
 
-  function handleDelete(roomId: string) {
-    if (!confirm("Delete this breakout room?")) return;
+  async function handleDelete(roomId: string) {
+    const ok = await confirm({
+      title: "Delete Room",
+      description: "Delete this breakout room? This action cannot be undone.",
+      confirmLabel: "Delete",
+    });
+    if (!ok) return;
     startTransition(async () => {
       try {
         await deleteRoom(eventId, roomId);
@@ -126,6 +130,8 @@ export function RoomList({
           onClose={() => { setShowForm(false); setEditingRoom(null); }}
         />
       )}
+
+      {confirmDialog}
     </div>
   );
 }

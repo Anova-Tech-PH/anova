@@ -7,6 +7,7 @@ import {
   Card,
   Badge,
   ModalOverlay,
+  useConfirm,
 } from "@attendly/ui/components";
 import { UserPlus, Trash2, Users, Crown, Shield, Edit3, ScanLine, Eye } from "lucide-react";
 import type { TeamMember } from "../queries";
@@ -95,6 +96,7 @@ export function TeamManager({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const { confirm, dialog: confirmDialog } = useConfirm();
 
   const canManage =
     currentUserRole === "owner" || currentUserRole === "admin";
@@ -131,8 +133,13 @@ export function TeamManager({
     });
   }
 
-  function handleRemove(memberId: string, memberName: string) {
-    if (!confirm(`Remove ${memberName} from the team?`)) return;
+  async function handleRemove(memberId: string, memberName: string) {
+    const ok = await confirm({
+      title: "Remove Team Member",
+      description: `Remove ${memberName} from the team?`,
+      confirmLabel: "Remove",
+    });
+    if (!ok) return;
     setError(null);
     startTransition(async () => {
       try {
@@ -357,6 +364,8 @@ export function TeamManager({
           </Card>
         </ModalOverlay>
       )}
+
+      {confirmDialog}
     </div>
   );
 }

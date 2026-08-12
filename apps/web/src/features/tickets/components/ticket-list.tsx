@@ -5,10 +5,7 @@ import { Plus, Pencil, Trash2, Ticket } from "lucide-react";
 import { toast } from "sonner";
 import { TicketForm } from "./ticket-form";
 import { createTicketType, updateTicketType, deleteTicketType } from "../actions";
-import { Badge } from "@attendly/ui/components";
-import { Button } from "@attendly/ui/components";
-import { Card } from "@attendly/ui/components";
-import { EmptyState } from "@attendly/ui/components";
+import { Badge, Button, Card, EmptyState, useConfirm } from "@attendly/ui/components";
 
 type TicketType = {
   id: string;
@@ -40,6 +37,7 @@ export function TicketList({
   const [tickets, setTickets] = useState(initialTickets);
   const [showForm, setShowForm] = useState(false);
   const [editingTicket, setEditingTicket] = useState<TicketType | null>(null);
+  const { confirm, dialog: confirmDialog } = useConfirm();
   const [isPending, startTransition] = useTransition();
 
   async function handleCreate(data: any) {
@@ -87,8 +85,13 @@ export function TicketList({
     }
   }
 
-  function handleDelete(ticket: TicketType) {
-    if (!confirm(`Delete ticket type "${ticket.name}"?`)) return;
+  async function handleDelete(ticket: TicketType) {
+    const ok = await confirm({
+      title: "Delete Ticket Type",
+      description: `Delete ticket type "${ticket.name}"? This action cannot be undone.`,
+      confirmLabel: "Delete",
+    });
+    if (!ok) return;
     startTransition(async () => {
       try {
         await deleteTicketType(eventId, ticket.id);
@@ -236,6 +239,8 @@ export function TicketList({
           onCancel={() => setEditingTicket(null)}
         />
       )}
+
+      {confirmDialog}
     </div>
   );
 }

@@ -3,9 +3,7 @@
 import { useState, useTransition } from "react";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { Badge } from "@attendly/ui/components";
-import { Button } from "@attendly/ui/components";
-import { Card } from "@attendly/ui/components";
+import { Badge, Button, Card, useConfirm } from "@attendly/ui/components";
 import { toggleEmailAutomation, deleteEmailAutomation } from "../actions";
 
 type Automation = {
@@ -29,6 +27,7 @@ export function AutomationList({
 }) {
   const [automations, setAutomations] = useState(initialAutomations);
   const [isPending, startTransition] = useTransition();
+  const { confirm, dialog: confirmDialog } = useConfirm();
 
   function handleToggle(id: string, enabled: boolean) {
     startTransition(async () => {
@@ -44,8 +43,13 @@ export function AutomationList({
     });
   }
 
-  function handleDelete(id: string) {
-    if (!confirm("Delete this automation?")) return;
+  async function handleDelete(id: string) {
+    const ok = await confirm({
+      title: "Delete Automation",
+      description: "Delete this automation? This action cannot be undone.",
+      confirmLabel: "Delete",
+    });
+    if (!ok) return;
     startTransition(async () => {
       try {
         await deleteEmailAutomation(id);
@@ -59,9 +63,12 @@ export function AutomationList({
 
   if (automations.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground py-4 text-center">
-        No automations configured.
-      </p>
+      <div className="rounded-lg border border-dashed p-6 text-center">
+        <p className="text-sm font-medium">No automations configured</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Automatically send emails when attendees register, check in, or before the event starts.
+        </p>
+      </div>
     );
   }
 
@@ -103,6 +110,7 @@ export function AutomationList({
           </div>
         </Card>
       ))}
+      {confirmDialog}
     </div>
   );
 }

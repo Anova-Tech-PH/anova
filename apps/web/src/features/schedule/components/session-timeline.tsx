@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { Plus, Pencil, Trash2, Clock, MapPin, User, CalendarDays } from "lucide-react";
 import { toast } from "sonner";
-import { Button, Badge, Card, EmptyState } from "@attendly/ui/components";
+import { Button, Badge, Card, EmptyState, useConfirm } from "@attendly/ui/components";
 import { SessionForm } from "./session-form";
 import { createSession, updateSession, deleteSession } from "../actions";
 
@@ -76,6 +76,7 @@ export function SessionTimeline({
   const [showForm, setShowForm] = useState(false);
   const [editingSession, setEditingSession] = useState<Session | null>(null);
   const [isPending, startTransition] = useTransition();
+  const { confirm, dialog: confirmDialog } = useConfirm();
 
   const dayGroups = groupByDay(sessions);
 
@@ -193,8 +194,13 @@ export function SessionTimeline({
     }
   }
 
-  function handleDelete(session: Session) {
-    if (!confirm(`Delete session "${session.title}"?`)) return;
+  async function handleDelete(session: Session) {
+    const ok = await confirm({
+      title: "Delete Session",
+      description: `Delete session "${session.title}"? This action cannot be undone.`,
+      confirmLabel: "Delete",
+    });
+    if (!ok) return;
     startTransition(async () => {
       try {
         await deleteSession(eventId, session.id);
@@ -382,6 +388,8 @@ export function SessionTimeline({
           onCancel={() => setEditingSession(null)}
         />
       )}
+
+      {confirmDialog}
     </div>
   );
 }

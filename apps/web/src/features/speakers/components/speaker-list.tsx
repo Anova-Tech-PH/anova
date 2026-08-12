@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { Plus, Pencil, Trash2, User } from "lucide-react";
 import { toast } from "sonner";
-import { Button, Card, Avatar, EmptyState } from "@attendly/ui/components";
+import { Button, Card, Avatar, EmptyState, useConfirm } from "@attendly/ui/components";
 import { SpeakerForm } from "./speaker-form";
 import { createSpeaker, updateSpeaker, deleteSpeaker } from "../actions";
 
@@ -28,6 +28,7 @@ export function SpeakerList({
   const [showForm, setShowForm] = useState(false);
   const [editingSpeaker, setEditingSpeaker] = useState<Speaker | null>(null);
   const [isPending, startTransition] = useTransition();
+  const { confirm, dialog: confirmDialog } = useConfirm();
 
   async function handleCreate(data: {
     name: string;
@@ -84,8 +85,13 @@ export function SpeakerList({
     }
   }
 
-  function handleDelete(speaker: Speaker) {
-    if (!confirm(`Delete speaker "${speaker.name}"?`)) return;
+  async function handleDelete(speaker: Speaker) {
+    const ok = await confirm({
+      title: "Delete Speaker",
+      description: `Delete speaker "${speaker.name}"? This action cannot be undone.`,
+      confirmLabel: "Delete",
+    });
+    if (!ok) return;
     startTransition(async () => {
       try {
         await deleteSpeaker(eventId, speaker.id);
@@ -175,6 +181,8 @@ export function SpeakerList({
           onCancel={() => setShowForm(false)}
         />
       )}
+
+      {confirmDialog}
 
       {editingSpeaker && (
         <SpeakerForm

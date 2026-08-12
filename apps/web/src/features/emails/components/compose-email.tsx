@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Send, X } from "lucide-react";
 import { toast } from "sonner";
-import { Button, Input, Textarea, ModalOverlay } from "@attendly/ui/components";
+import { Button, Input, Textarea, ModalOverlay, useConfirm } from "@attendly/ui/components";
 import { sendBroadcastEmail } from "../actions";
 
 type TicketType = {
@@ -27,6 +27,7 @@ export function ComposeEmail({
   const [selectedTicketTypes, setSelectedTicketTypes] = useState<string[]>([]);
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const { confirm, dialog: confirmDialog } = useConfirm();
 
   const statuses = [
     { value: "confirmed", label: "Confirmed" },
@@ -41,7 +42,13 @@ export function ComposeEmail({
       return;
     }
 
-    if (!confirm("Send this email to the selected recipients?")) return;
+    const ok = await confirm({
+      title: "Send Email",
+      description: "Send this email to the selected recipients?",
+      confirmLabel: "Send",
+      variant: "primary",
+    });
+    if (!ok) return;
 
     setLoading(true);
     try {
@@ -158,6 +165,7 @@ export function ComposeEmail({
           </div>
         </div>
       </div>
+      {confirmDialog}
     </ModalOverlay>
   );
 }

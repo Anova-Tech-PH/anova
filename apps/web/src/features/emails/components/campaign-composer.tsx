@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useCallback } from "react";
+import { useConfirm } from "@attendly/ui/components";
 import { useRouter } from "next/navigation";
-import { Send, Save, FlaskConical, ArrowLeft } from "lucide-react";
+import { Send, Save, FlaskConical, ArrowLeft, Copy, Loader2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 import { createCampaign, updateCampaign, sendCampaign, sendTestEmail } from "../actions";
@@ -50,6 +51,7 @@ export function CampaignComposer({
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const { confirm, dialog: confirmDialog } = useConfirm();
 
   const [subject, setSubject] = useState(initial?.subject ?? "");
   const [bodyHtml, setBodyHtml] = useState(initial?.body_html ?? "");
@@ -114,12 +116,18 @@ export function CampaignComposer({
     });
   }
 
-  function handleSend() {
+  async function handleSend() {
     if (!subject.trim() || !bodyHtml.trim()) {
       toast.error("Subject and body are required");
       return;
     }
-    if (!confirm("Send this campaign? This cannot be undone.")) return;
+    const ok = await confirm({
+      title: "Send Campaign",
+      description: "Send this campaign? This cannot be undone.",
+      confirmLabel: "Send",
+      variant: "primary",
+    });
+    if (!ok) return;
 
     startTransition(async () => {
       try {
@@ -188,6 +196,28 @@ export function CampaignComposer({
           <h2 className="text-lg font-semibold">
             {isSent ? "View Campaign" : campaignId ? "Edit Campaign" : "Create Campaign"}
           </h2>
+
+          {isSent && initial && (
+            <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-800 dark:bg-emerald-950">
+              <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-300">
+                <CheckCircle2 className="h-5 w-5" />
+                <span className="font-medium">Campaign Sent</span>
+              </div>
+              <p className="mt-1 text-sm text-emerald-600 dark:text-emerald-400">
+                Delivered to {(initial as any).sent_count ?? 0} recipients
+                {(initial as any).failed_count > 0 && ` (${(initial as any).failed_count} failed)`}
+                {(initial as any).sent_at && ` on ${new Date((initial as any).sent_at).toLocaleString()}`}
+              </p>
+              <button
+                onClick={() => {
+                  router.push(`/events/${eventId}/emails/campaigns/new?reuse=${campaignId}`);
+                }}
+                className="mt-3 inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium hover:bg-white dark:hover:bg-emerald-900"
+              >
+                <Copy className="h-3.5 w-3.5" /> Duplicate as New Campaign
+              </button>
+            </div>
+          )}
 
           <fieldset disabled={isSent} className="space-y-4">
             {/* Recipients */}
@@ -344,21 +374,24 @@ export function CampaignComposer({
                 disabled={isPending || !subject.trim()}
                 className="inline-flex items-center gap-1.5 rounded-md border px-3 py-2 text-sm font-medium hover:bg-muted disabled:opacity-50"
               >
-                <FlaskConical className="h-4 w-4" /> Send Test
+                {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <FlaskConical className="h-4 w-4" />}
+                {isPending ? "Sending..." : "Send Test"}
               </button>
               <button
                 onClick={handleSaveDraft}
                 disabled={isPending}
                 className="inline-flex items-center gap-1.5 rounded-md border px-3 py-2 text-sm font-medium hover:bg-muted disabled:opacity-50"
               >
-                <Save className="h-4 w-4" /> Save Draft
+                {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                {isPending ? "Saving..." : "Save Draft"}
               </button>
               <button
                 onClick={handleSend}
                 disabled={isPending || !subject.trim() || !bodyHtml.trim()}
                 className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
               >
-                <Send className="h-4 w-4" /> {isPending ? "Sending..." : "Send Campaign"}
+                {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                {isPending ? "Sending..." : "Send Campaign"}
               </button>
             </div>
           )}
@@ -377,6 +410,7 @@ export function CampaignComposer({
           />
         </div>
       </div>
+      {confirmDialog}
     </div>
   );
 }

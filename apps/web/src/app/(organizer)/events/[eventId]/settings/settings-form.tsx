@@ -7,7 +7,7 @@ import { Upload, X, ImageIcon, Copy, FileDown } from "lucide-react";
 import { duplicateEvent } from "@/features/events/actions";
 import { saveAsTemplate } from "@/features/templates/actions";
 import { createClient } from "@attendly/ui/supabase/client";
-import { Input, Textarea, Button, Badge, Card } from "@attendly/ui/components";
+import { Input, Textarea, Button, Badge, Card, useConfirm } from "@attendly/ui/components";
 
 type Event = {
   id: string;
@@ -54,6 +54,7 @@ export function EventSettingsForm({ event }: { event: Event }) {
   const [duplicating, setDuplicating] = useState(false);
   const [templateName, setTemplateName] = useState("");
   const [savingTemplate, setSavingTemplate] = useState(false);
+  const { confirm, dialog: confirmDialog } = useConfirm();
 
   async function handleSave() {
     setSaving(true);
@@ -104,8 +105,12 @@ export function EventSettingsForm({ event }: { event: Event }) {
   }
 
   async function handleDelete() {
-    if (!confirm("Are you sure you want to delete this event? This action cannot be undone.")) return;
-    if (!confirm("This will also delete all registrations, sessions, and data. Continue?")) return;
+    const ok = await confirm({
+      title: "Delete Event",
+      description: "Are you sure you want to delete this event? This will permanently delete all registrations, sessions, and data. This action cannot be undone.",
+      confirmLabel: "Delete Event",
+    });
+    if (!ok) return;
 
     setDeleting(true);
     const supabase = createClient();
@@ -383,6 +388,7 @@ export function EventSettingsForm({ event }: { event: Event }) {
           {deleting ? "Deleting..." : "Delete Event"}
         </Button>
       </div>
+      {confirmDialog}
     </div>
   );
 }

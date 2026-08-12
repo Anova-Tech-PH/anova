@@ -21,13 +21,10 @@ export function EmailsPageClient({
 
   return (
     <>
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Emails</h2>
-        <Button onClick={() => setShowCompose(true)}>
-          <Plus className="h-4 w-4" />
-          Compose Email
-        </Button>
-      </div>
+      <Button variant="outline" onClick={() => setShowCompose(true)}>
+        <Plus className="h-4 w-4" />
+        Quick Broadcast
+      </Button>
 
       {showCompose && (
         <ComposeEmail

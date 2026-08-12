@@ -12,15 +12,20 @@ export default async function NewCampaignPage({
   const { eventId } = await params;
   const supabase = await createClient();
 
-  const { data: event } = await supabase
+  const { data: event, error } = await supabase
     .from("events")
-    .select("title, start_date, location, slug, organization_id, organizations(slug)")
+    .select("title, start_date, venue_name, slug, organization_id, organizations(slug)")
     .eq("id", eventId)
     .single();
 
-  if (!event) notFound();
+  if (!event) {
+    console.error("[NewCampaignPage] Event not found:", eventId, error);
+    notFound();
+  }
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const orgs = event.organizations as unknown as { slug: string }[] | null;
   const orgSlug = orgs?.[0]?.slug ?? "";
@@ -36,9 +41,12 @@ export default async function NewCampaignPage({
       eventId={eventId}
       eventName={event.title}
       eventDate={new Date(event.start_date).toLocaleDateString("en-US", {
-        weekday: "long", year: "numeric", month: "long", day: "numeric",
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
       })}
-      eventLocation={event.location}
+      eventLocation={event.venue_name}
       eventUrl={`/${orgSlug}/${event.slug}/register`}
       contactLists={contactLists}
       ticketTypes={ticketTypes}
