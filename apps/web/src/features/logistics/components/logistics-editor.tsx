@@ -22,7 +22,7 @@ export function LogisticsEditor({
   const [wifi, setWifi] = useState(initialData.logistics.wifi ?? { network: "", password: "" });
   const [hotels, setHotels] = useState<Hotel[]>(initialData.logistics.hotels ?? []);
   const [contacts, setContacts] = useState<Contact[]>(initialData.logistics.contacts ?? []);
-  const [customSections, setCustomSections] = useState<CustomSection[]>(initialData.logistics.customSections ?? []);
+  const [custom_sections, setCustomSections] = useState<CustomSection[]>(initialData.logistics.custom_sections ?? []);
 
   async function handleSave() {
     setSaving(true);
@@ -36,7 +36,7 @@ export function LogisticsEditor({
           wifi,
           hotels,
           contacts,
-          customSections,
+          custom_sections,
         },
       });
       toast.success("Logistics saved");
@@ -303,12 +303,12 @@ export function LogisticsEditor({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setCustomSections([...customSections, { title: "", body: "" }])}
+              onClick={() => setCustomSections([...custom_sections, { title: "", body: "" }])}
             >
               <Plus className="mr-1 h-4 w-4" /> Add Section
             </Button>
           </div>
-          {customSections.map((section, i) => (
+          {custom_sections.map((section, i) => (
             <div key={i} className="space-y-3 rounded-lg border p-3">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1">
@@ -316,7 +316,7 @@ export function LogisticsEditor({
                   <Input
                     value={section.title}
                     onChange={(e) => {
-                      const updated = [...customSections];
+                      const updated = [...custom_sections];
                       updated[i] = { ...section, title: e.target.value };
                       setCustomSections(updated);
                     }}
@@ -327,7 +327,7 @@ export function LogisticsEditor({
                   variant="ghost"
                   size="icon"
                   className="mt-5"
-                  onClick={() => setCustomSections(customSections.filter((_, j) => j !== i))}
+                  onClick={() => setCustomSections(custom_sections.filter((_, j) => j !== i))}
                 >
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
@@ -337,7 +337,7 @@ export function LogisticsEditor({
                 <Textarea
                   value={section.body}
                   onChange={(e) => {
-                    const updated = [...customSections];
+                    const updated = [...custom_sections];
                     updated[i] = { ...section, body: e.target.value };
                     setCustomSections(updated);
                   }}

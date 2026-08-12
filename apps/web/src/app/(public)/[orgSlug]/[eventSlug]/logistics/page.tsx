@@ -39,7 +39,7 @@ export default async function PublicLogisticsPage({
   const hasWifi = logistics.wifi?.network;
   const hasHotels = logistics.hotels && logistics.hotels.length > 0;
   const hasContacts = logistics.contacts && logistics.contacts.length > 0;
-  const hasCustom = logistics.customSections && logistics.customSections.length > 0;
+  const hasCustom = logistics.custom_sections && logistics.custom_sections.length > 0;
   const hasAnything = hasVenue || hasParking || hasTransportation || hasWifi || hasHotels || hasContacts || hasCustom;
 
   const isGoogleMapsEmbed = venueMapUrl.includes("google.com/maps/embed") || venueMapUrl.includes("maps.google.com/embed");
@@ -203,7 +203,7 @@ export default async function PublicLogisticsPage({
 
           {/* Custom Sections */}
           {hasCustom &&
-            logistics.customSections!.map((section, i) => (
+            logistics.custom_sections!.map((section, i) => (
               <section key={i}>
                 <h2 className="mb-4 text-lg font-semibold">{section.title}</h2>
                 <p className="whitespace-pre-wrap text-muted-foreground">{section.body}</p>

@@ -14,7 +14,9 @@ export async function updateLogistics(
 ) {
   const supabase = await createClient();
 
-  const updatePayload: Record<string, unknown> = {};
+  const updatePayload: Record<string, unknown> = {
+    updated_at: new Date().toISOString(),
+  };
 
   if (data.venue_description !== undefined) {
     updatePayload.venue_description = data.venue_description;

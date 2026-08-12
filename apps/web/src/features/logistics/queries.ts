@@ -24,7 +24,7 @@ export interface LogisticsData {
   wifi?: { network: string; password: string };
   hotels?: Hotel[];
   contacts?: Contact[];
-  customSections?: CustomSection[];
+  custom_sections?: CustomSection[];
 }
 
 export interface EventLogistics {
@@ -53,7 +53,7 @@ export async function getEventLogistics(eventId: string): Promise<EventLogistics
       wifi: data.logistics?.wifi ?? { network: "", password: "" },
       hotels: data.logistics?.hotels ?? [],
       contacts: data.logistics?.contacts ?? [],
-      customSections: data.logistics?.customSections ?? [],
+      custom_sections: data.logistics?.custom_sections ?? [],
     },
   };
 }
