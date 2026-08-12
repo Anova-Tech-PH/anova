@@ -49,6 +49,7 @@ export default async function EventLayout({
       label: "Engagement",
       items: [
         { href: `/events/${eventId}/announcements`, label: "Announcements", icon: "megaphone" },
+        { href: `/events/${eventId}/qa`, label: "Q&A", icon: "message-circle" },
         { href: `/events/${eventId}/feedback`, label: "Feedback", icon: "message-square" },
         { href: `/events/${eventId}/polls`, label: "Polls", icon: "bar-chart-2" },
         { href: `/events/${eventId}/rsvp`, label: "RSVPs", icon: "calendar-check" },
