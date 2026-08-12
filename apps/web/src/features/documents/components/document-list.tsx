@@ -67,7 +67,7 @@ export function DocumentList({ documents, eventId, sessions }: DocumentListProps
           {doc.type === "file" ? (doc.file_type ?? "File") : "Video"}
         </td>
         <td className="px-4 py-3 text-right">
-          <span className="invisible group-hover:visible flex items-center justify-end gap-1">
+          <span className="flex items-center justify-end gap-1 sm:invisible sm:group-hover:visible">
             <button
               onClick={() => handleEdit(doc)}
               className="rounded p-1 hover:bg-muted"

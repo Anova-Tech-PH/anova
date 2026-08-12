@@ -37,7 +37,7 @@ export async function getQuestionsBySession(
 
   const { data, error } = await supabase
     .from("session_questions")
-    .select("*, profiles:user_id(full_name, avatar_url)")
+    .select("*")
     .eq("session_id", sessionId)
     .in("status", ["approved", "answered"])
     .order("is_pinned", { ascending: false })
@@ -56,7 +56,7 @@ export async function getModerationQueue(
   const { data, error } = await supabase
     .from("session_questions")
     .select(
-      "*, profiles:user_id(full_name, avatar_url), sessions:session_id(title)"
+      "*, sessions:session_id(title)"
     )
     .eq("event_id", eventId)
     .eq("status", "pending")

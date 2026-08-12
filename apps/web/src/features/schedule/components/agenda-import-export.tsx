@@ -22,8 +22,11 @@ function triggerDownload(content: string, filename: string, mimeType: string) {
   a.download = filename;
   document.body.appendChild(a);
   a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  // Defer cleanup so the browser has time to initiate the download
+  setTimeout(() => {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 100);
 }
 
 export function AgendaImportExport({ eventId, sessions }: AgendaImportExportProps) {
