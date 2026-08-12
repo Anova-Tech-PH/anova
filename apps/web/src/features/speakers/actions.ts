@@ -79,14 +79,24 @@ export async function bulkImportSpeakers(eventId: string, rows: {
   website_url?: string;
 }[]) {
   if (rows.length === 0) {
-    throw new Error("No rows to import");
+    throw new Error("No speakers to import");
+  }
+  if (rows.length > 500) {
+    throw new Error("Cannot import more than 500 speakers at once");
   }
 
   const supabase = await createClient();
 
   const insertData = rows.map((row) => ({
     event_id: eventId,
-    ...row,
+    name: row.name,
+    title: row.title || null,
+    company: row.company || null,
+    bio: row.bio || null,
+    email: row.email || null,
+    linkedin_url: row.linkedin_url || null,
+    twitter_handle: row.twitter_handle || null,
+    website_url: row.website_url || null,
   }));
 
   const { data, error } = await supabase

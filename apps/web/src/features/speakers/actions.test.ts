@@ -146,7 +146,7 @@ describe("Speaker Actions", () => {
       const { bulkImportSpeakers } = await import("./actions");
 
       await expect(bulkImportSpeakers("evt-1", [])).rejects.toThrow(
-        "No rows to import"
+        "No speakers to import"
       );
     });
   });
