@@ -54,105 +54,110 @@ export async function GET(request: Request) {
     const orgSlug = (event.organizations as any)?.slug ?? "";
 
     for (const intent of intents) {
-      const emailIndex = intent.recovery_emails_sent;
-      const delayHours = event.recovery_delay_hours + (RECOVERY_SCHEDULE[emailIndex] ?? 0);
-      const sendAfter = new Date(intent.created_at);
-      sendAfter.setHours(sendAfter.getHours() + delayHours);
+      try {
+        const emailIndex = intent.recovery_emails_sent;
+        const delayHours = event.recovery_delay_hours + (RECOVERY_SCHEDULE[emailIndex] ?? 0);
+        const sendAfter = new Date(intent.created_at);
+        sendAfter.setHours(sendAfter.getHours() + delayHours);
 
-      // Not yet time to send
-      if (now < sendAfter) {
-        skipped++;
-        continue;
-      }
-
-      // Avoid duplicate sends within 1 hour
-      if (intent.last_recovery_email_at) {
-        const lastSent = new Date(intent.last_recovery_email_at);
-        if (now.getTime() - lastSent.getTime() < 60 * 60 * 1000) {
+        // Not yet time to send
+        if (now < sendAfter) {
           skipped++;
           continue;
         }
-      }
 
-      // Check if they've since registered (belt and suspenders)
-      const { data: existingReg } = await supabase
-        .from("registrations")
-        .select("id")
-        .eq("event_id", event.id)
-        .eq("email", intent.email)
-        .in("status", ["confirmed", "checked_in"])
-        .limit(1);
+        // Avoid duplicate sends within 1 hour
+        if (intent.last_recovery_email_at) {
+          const lastSent = new Date(intent.last_recovery_email_at);
+          if (now.getTime() - lastSent.getTime() < 60 * 60 * 1000) {
+            skipped++;
+            continue;
+          }
+        }
 
-      if (existingReg && existingReg.length > 0) {
+        // Check if they've since registered (belt and suspenders)
+        const { data: existingReg } = await supabase
+          .from("registrations")
+          .select("id")
+          .eq("event_id", event.id)
+          .eq("email", intent.email)
+          .in("status", ["confirmed", "checked_in"])
+          .limit(1);
+
+        if (existingReg && existingReg.length > 0) {
+          await supabase
+            .from("registration_intents")
+            .update({ status: "converted", updated_at: now.toISOString() })
+            .eq("id", intent.id);
+          continue;
+        }
+
+        // Build URLs
+        const registrationUrl = `${baseUrl}/${orgSlug}/${event.slug}/register?intent=${intent.id}`;
+        const unsubToken = await generateUnsubscribeToken({ email: intent.email });
+        const unsubscribeUrl = `${baseUrl}/api/unsubscribe?token=${unsubToken}`;
+
+        const ticketName = (intent.ticket_types as any)?.name ?? "General";
+
+        const html = await render(
+          RecoveryEmail({
+            eventName: event.title,
+            eventDate: new Date(event.start_date).toLocaleDateString("en-US", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+              hour: "numeric",
+              minute: "2-digit",
+            }),
+            venueName: event.venue_name ?? undefined,
+            ticketName,
+            registrationUrl,
+            unsubscribeUrl,
+          })
+        );
+
+        const subject = emailIndex === 0
+          ? `Complete your registration for ${event.title}`
+          : emailIndex === 1
+            ? `Your spot is still available — ${event.title}`
+            : `Last chance to register for ${event.title}`;
+
+        const { data: sentData, error: sendError } = await getResend().emails.send({
+          from: process.env.EMAIL_FROM || "Evenstry <onboarding@resend.dev>",
+          to: intent.email,
+          subject,
+          html,
+        });
+
+        // Log to email_logs
+        await supabase.from("email_logs").insert({
+          organization_id: event.organization_id,
+          event_id: event.id,
+          recipient_email: intent.email,
+          recipient_name: intent.name,
+          subject,
+          status: sendError ? "failed" : "sent",
+          resend_id: sentData?.id ?? null,
+          sent_at: sendError ? null : now.toISOString(),
+          error: sendError?.message ?? null,
+        });
+
+        // Update intent tracking
         await supabase
           .from("registration_intents")
-          .update({ status: "converted", updated_at: now.toISOString() })
+          .update({
+            recovery_emails_sent: intent.recovery_emails_sent + 1,
+            last_recovery_email_at: now.toISOString(),
+            updated_at: now.toISOString(),
+          })
           .eq("id", intent.id);
-        continue;
+
+        if (!sendError) sent++;
+      } catch (err) {
+        console.error(`[Recovery] Failed for intent ${intent.id}:`, err);
+        skipped++;
       }
-
-      // Build URLs
-      const registrationUrl = `${baseUrl}/${orgSlug}/${event.slug}/register?intent=${intent.id}`;
-      const unsubToken = await generateUnsubscribeToken({ email: intent.email });
-      const unsubscribeUrl = `${baseUrl}/api/unsubscribe?token=${unsubToken}`;
-
-      const ticketName = (intent.ticket_types as any)?.name ?? "General";
-
-      const html = await render(
-        RecoveryEmail({
-          eventName: event.title,
-          eventDate: new Date(event.start_date).toLocaleDateString("en-US", {
-            weekday: "long",
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-            hour: "numeric",
-            minute: "2-digit",
-          }),
-          venueName: event.venue_name ?? undefined,
-          ticketName,
-          registrationUrl,
-          unsubscribeUrl,
-        })
-      );
-
-      const subject = emailIndex === 0
-        ? `Complete your registration for ${event.title}`
-        : emailIndex === 1
-          ? `Your spot is still available — ${event.title}`
-          : `Last chance to register for ${event.title}`;
-
-      const { data: sentData, error: sendError } = await getResend().emails.send({
-        from: process.env.EMAIL_FROM || "Evenstry <onboarding@resend.dev>",
-        to: intent.email,
-        subject,
-        html,
-      });
-
-      // Log to email_logs
-      await supabase.from("email_logs").insert({
-        organization_id: event.organization_id,
-        event_id: event.id,
-        recipient_email: intent.email,
-        recipient_name: intent.name,
-        subject,
-        status: sendError ? "failed" : "sent",
-        resend_id: sentData?.id ?? null,
-        sent_at: sendError ? null : now.toISOString(),
-        error: sendError?.message ?? null,
-      });
-
-      // Update intent tracking
-      await supabase
-        .from("registration_intents")
-        .update({
-          recovery_emails_sent: intent.recovery_emails_sent + 1,
-          last_recovery_email_at: now.toISOString(),
-          updated_at: now.toISOString(),
-        })
-        .eq("id", intent.id);
-
-      if (!sendError) sent++;
     }
   }
 

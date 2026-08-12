@@ -132,7 +132,7 @@ export async function registerForEvent(data: {
     .eq("event_id", data.event_id)
     .eq("email", data.email.toLowerCase().trim())
     .eq("status", "pending")
-    .then(() => {});
+    .then(() => {}, (err) => console.error("[Intent conversion]", err));
 
   const registration = {
     id: "",
