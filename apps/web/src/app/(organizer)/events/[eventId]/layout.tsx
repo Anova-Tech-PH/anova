@@ -32,6 +32,7 @@ export default async function EventLayout({
         { href: `/events/${eventId}/schedule`, label: "Schedule", icon: "calendar" },
         { href: `/events/${eventId}/rooms`, label: "Rooms", icon: "door-open" },
         { href: `/events/${eventId}/documents`, label: "Documents", icon: "file-text" },
+        { href: `/events/${eventId}/logistics`, label: "Logistics", icon: "clipboard-list" },
       ],
     },
     {
