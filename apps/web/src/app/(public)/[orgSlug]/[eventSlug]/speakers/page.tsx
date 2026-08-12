@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { User, Star, Linkedin, Twitter, Globe } from "lucide-react";
+import { User, Star, Link2, AtSign, Globe } from "lucide-react";
 import { createClient } from "@attendly/ui/supabase/server";
 
 export default async function PublicSpeakersPage({
@@ -87,10 +87,10 @@ export default async function PublicSpeakersPage({
                 {(speaker.linkedin_url || speaker.twitter_handle || speaker.website_url) && (
                   <div className="mt-2 flex items-center gap-1.5">
                     {speaker.linkedin_url && (
-                      <Linkedin className="h-3.5 w-3.5 text-muted-foreground" />
+                      <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
                     )}
                     {speaker.twitter_handle && (
-                      <Twitter className="h-3.5 w-3.5 text-muted-foreground" />
+                      <AtSign className="h-3.5 w-3.5 text-muted-foreground" />
                     )}
                     {speaker.website_url && (
                       <Globe className="h-3.5 w-3.5 text-muted-foreground" />

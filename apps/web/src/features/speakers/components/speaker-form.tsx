@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Linkedin, Twitter, Globe, Star } from "lucide-react";
+import { X, Link2, AtSign, Globe, Star } from "lucide-react";
 import { Button, Input, Textarea, ModalOverlay } from "@attendly/ui/components";
 import { ImageUpload } from "@/shared/components/image-upload";
 
@@ -127,7 +127,7 @@ export function SpeakerForm({
             <div className="grid gap-3 sm:grid-cols-3">
               <div className="space-y-1.5">
                 <label className="flex items-center gap-1.5 text-sm font-medium">
-                  <Linkedin className="h-3.5 w-3.5" /> LinkedIn
+                  <Link2 className="h-3.5 w-3.5" /> LinkedIn
                 </label>
                 <Input
                   type="url"
@@ -138,7 +138,7 @@ export function SpeakerForm({
               </div>
               <div className="space-y-1.5">
                 <label className="flex items-center gap-1.5 text-sm font-medium">
-                  <Twitter className="h-3.5 w-3.5" /> Twitter
+                  <AtSign className="h-3.5 w-3.5" /> Twitter
                 </label>
                 <Input
                   type="text"

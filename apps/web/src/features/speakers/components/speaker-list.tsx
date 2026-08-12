@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus, Pencil, Trash2, User, Star, Linkedin, Twitter, Globe, Upload } from "lucide-react";
+import { Plus, Pencil, Trash2, User, Star, Link2, AtSign, Globe, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button, Card, Avatar, EmptyState, useConfirm } from "@attendly/ui/components";
 import { SpeakerForm } from "./speaker-form";
@@ -203,7 +203,7 @@ export function SpeakerList({
                     rel="noopener noreferrer"
                     className="rounded p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
                   >
-                    <Linkedin className="h-3.5 w-3.5" />
+                    <Link2 className="h-3.5 w-3.5" />
                   </a>
                 )}
                 {speaker.twitter_handle && (
@@ -213,7 +213,7 @@ export function SpeakerList({
                     rel="noopener noreferrer"
                     className="rounded p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
                   >
-                    <Twitter className="h-3.5 w-3.5" />
+                    <AtSign className="h-3.5 w-3.5" />
                   </a>
                 )}
                 {speaker.website_url && (
@@ -257,7 +257,19 @@ export function SpeakerList({
           eventId={eventId}
           onClose={() => setShowImport(false)}
           onImported={(imported) => {
-            setSpeakers((prev) => [...prev, ...imported].sort((a, b) => a.name.localeCompare(b.name)));
+            setSpeakers((prev) => [...prev, ...imported.map((s) => ({
+              id: s.id,
+              name: s.name,
+              title: (s.title as string) ?? null,
+              company: (s.company as string) ?? null,
+              bio: (s.bio as string) ?? null,
+              photo: (s.photo as string) ?? null,
+              email: (s.email as string) ?? null,
+              linkedin_url: (s.linkedin_url as string) ?? null,
+              twitter_handle: (s.twitter_handle as string) ?? null,
+              website_url: (s.website_url as string) ?? null,
+              is_featured: (s.is_featured as boolean) ?? false,
+            }))].sort((a, b) => a.name.localeCompare(b.name)));
             setShowImport(false);
           }}
         />

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, User, Linkedin, Twitter, Globe, MapPin, Clock, Tag } from "lucide-react";
+import { ArrowLeft, User, Link2, AtSign, Globe, MapPin, Clock, Tag } from "lucide-react";
 import { createClient } from "@attendly/ui/supabase/server";
 
 export default async function PublicSpeakerDetailPage({
@@ -89,7 +89,7 @@ export default async function PublicSpeakerDetailPage({
                 className="rounded-lg p-2 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
                 aria-label="LinkedIn"
               >
-                <Linkedin className="h-5 w-5" />
+                <Link2 className="h-5 w-5" />
               </a>
             )}
             {speaker.twitter_handle && (
@@ -100,7 +100,7 @@ export default async function PublicSpeakerDetailPage({
                 className="rounded-lg p-2 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
                 aria-label="Twitter"
               >
-                <Twitter className="h-5 w-5" />
+                <AtSign className="h-5 w-5" />
               </a>
             )}
             {speaker.website_url && (

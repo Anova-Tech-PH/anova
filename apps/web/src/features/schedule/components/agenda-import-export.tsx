@@ -128,12 +128,10 @@ export function AgendaImportExport({ eventId, sessions }: AgendaImportExportProp
             onChange={handleFileSelect}
             className="hidden"
           />
-          <Button variant="outline" size="sm" asChild>
-            <span>
-              <Upload className="mr-1.5 h-4 w-4" />
-              Import CSV
-            </span>
-          </Button>
+          <span className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3 cursor-pointer">
+            <Upload className="mr-1.5 h-4 w-4" />
+            Import CSV
+          </span>
         </label>
       </div>
 

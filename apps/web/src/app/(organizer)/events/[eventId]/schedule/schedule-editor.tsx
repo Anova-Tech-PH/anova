@@ -14,6 +14,10 @@ type Speaker = {
   bio: string | null;
   photo: string | null;
   email: string | null;
+  linkedin_url: string | null;
+  twitter_handle: string | null;
+  website_url: string | null;
+  is_featured: boolean;
 };
 
 export function ScheduleEditor({

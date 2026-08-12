@@ -38,7 +38,7 @@ describe("Feedback Actions", () => {
       const { createFeedbackForm } = await import("./actions");
       const result = await createFeedbackForm("evt-1", {
         name: "Session Feedback",
-        questions: [{ id: "q1", type: "rating", label: "Rate this" }],
+        questions: [{ id: "q1", type: "rating", label: "Rate this", required: true }],
       });
 
       expect(result).toHaveProperty("id", "form-1");
@@ -52,7 +52,7 @@ describe("Feedback Actions", () => {
 
       const { updateFeedbackForm } = await import("./actions");
       await updateFeedbackForm("evt-1", "form-1", {
-        questions: [{ id: "q1", type: "text", label: "Comments" }],
+        questions: [{ id: "q1", type: "text", label: "Comments", required: false }],
       });
 
       expect(mockFrom).toHaveBeenCalledWith("feedback_forms");
