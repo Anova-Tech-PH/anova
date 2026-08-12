@@ -6,10 +6,13 @@ import { getCustomFieldsByEvent } from "@/features/custom-fields/queries";
 
 export default async function RegisterPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ orgSlug: string; eventSlug: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { orgSlug, eventSlug } = await params;
+  const intentId = (await searchParams)?.intent as string | undefined;
   const supabase = await createClient();
 
   const { data: org } = await supabase
@@ -56,6 +59,31 @@ export default async function RegisterPage({
 
   const customFields = await getCustomFieldsByEvent(event.id);
 
+  let initialIntent: {
+    ticket_type_id: string;
+    email: string;
+    name?: string;
+    custom_fields?: Record<string, string | boolean>;
+  } | undefined;
+
+  if (intentId) {
+    const { data: intent } = await supabase
+      .from("registration_intents")
+      .select("ticket_type_id, email, name, custom_fields")
+      .eq("id", intentId)
+      .eq("status", "pending")
+      .single();
+
+    if (intent) {
+      initialIntent = {
+        ticket_type_id: intent.ticket_type_id,
+        email: intent.email,
+        name: intent.name ?? undefined,
+        custom_fields: (intent.custom_fields as Record<string, string | boolean>) ?? undefined,
+      };
+    }
+  }
+
   const startDate = new Date(event.start_date);
   const endDate = new Date(event.end_date);
   const dateStr = startDate.toDateString() === endDate.toDateString()
@@ -101,6 +129,7 @@ export default async function RegisterPage({
           eventId={event.id}
           tickets={ticketsWithAvailability}
           customFields={customFields}
+          initialIntent={initialIntent}
         />
       )}
 
