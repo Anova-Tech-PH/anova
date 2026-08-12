@@ -10,6 +10,11 @@ export async function createSpeaker(eventId: string, data: {
   bio?: string;
   photo?: string;
   email?: string;
+  linkedin_url?: string;
+  twitter_handle?: string;
+  website_url?: string;
+  is_featured?: boolean;
+  sort_order?: number;
 }) {
   const supabase = await createClient();
 
@@ -32,6 +37,11 @@ export async function updateSpeaker(eventId: string, speakerId: string, data: {
   bio?: string;
   photo?: string;
   email?: string;
+  linkedin_url?: string;
+  twitter_handle?: string;
+  website_url?: string;
+  is_featured?: boolean;
+  sort_order?: number;
 }) {
   const supabase = await createClient();
 
@@ -56,4 +66,36 @@ export async function deleteSpeaker(eventId: string, speakerId: string) {
   if (error) throw new Error(error.message);
 
   revalidatePath(`/events/${eventId}/schedule`);
+}
+
+export async function bulkImportSpeakers(eventId: string, rows: {
+  name: string;
+  title?: string;
+  company?: string;
+  bio?: string;
+  email?: string;
+  linkedin_url?: string;
+  twitter_handle?: string;
+  website_url?: string;
+}[]) {
+  if (rows.length === 0) {
+    throw new Error("No rows to import");
+  }
+
+  const supabase = await createClient();
+
+  const insertData = rows.map((row) => ({
+    event_id: eventId,
+    ...row,
+  }));
+
+  const { data, error } = await supabase
+    .from("speakers")
+    .insert(insertData)
+    .select();
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath(`/events/${eventId}/schedule`);
+  return data;
 }
