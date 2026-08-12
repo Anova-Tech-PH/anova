@@ -41,6 +41,7 @@ export default async function EventLayout({
     { href: `/events/${eventId}/emails`, label: "Emails", icon: "mail" as const },
     { href: `/events/${eventId}/survey`, label: "Survey", icon: "clipboard-list" as const },
     { href: `/events/${eventId}/certificates`, label: "Certificates", icon: "award" as const },
+    { href: `/events/${eventId}/marketing`, label: "Marketing", icon: "globe" as const },
     { href: `/events/${eventId}/analytics`, label: "Analytics", icon: "bar-chart-3" as const },
     { href: `/events/${eventId}/settings`, label: "Settings", icon: "settings" as const },
   ];

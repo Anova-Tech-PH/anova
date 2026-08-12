@@ -7,7 +7,7 @@ import { cn } from "@attendly/ui/cn";
 import {
   BarChart2, BarChart3, Calendar, CalendarCheck, ChevronLeft, ChevronRight,
   ClipboardList, DoorOpen, IdCard, ListChecks, Mail, Megaphone, MessageSquare,
-  QrCode, Settings, Tag, Ticket, Users, Award,
+  Globe, QrCode, Settings, Tag, Ticket, Users, Award,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -18,6 +18,7 @@ const iconMap: Record<string, LucideIcon> = {
   "calendar-check": CalendarCheck,
   "clipboard-list": ClipboardList,
   "door-open": DoorOpen,
+  "globe": Globe,
   "id-card": IdCard,
   "list-checks": ListChecks,
   "mail": Mail,
