@@ -6,6 +6,10 @@ type SegmentFilters = {
   checked_in?: boolean;
   custom_field_filters?: { field_id: string; value: string }[];
   min_check_ins?: number;
+  category?: string;
+  excluded_categories?: string[];
+  session_id?: string;
+  attendee_ids?: string[];
 };
 
 export type { SegmentFilters };
@@ -18,7 +22,7 @@ export async function getSegmentedRecipients(
 
   let query = supabase
     .from("registrations")
-    .select("id, name, email, status, ticket_type_id, custom_fields, ticket_types(name)")
+    .select("id, name, email, status, ticket_type_id, custom_fields, user_id, ticket_types(name)")
     .eq("event_id", eventId)
     .eq("unsubscribed", false);
 
@@ -38,6 +42,22 @@ export async function getSegmentedRecipients(
     query = query.neq("status", "checked_in");
   }
 
+  if (filters?.category) {
+    query = query.eq("category", filters.category);
+  }
+
+  if (filters?.excluded_categories && filters.excluded_categories.length > 0) {
+    query = query.not(
+      "category",
+      "in",
+      `(${filters.excluded_categories.join(",")})`
+    );
+  }
+
+  if (filters?.attendee_ids && filters.attendee_ids.length > 0) {
+    query = query.in("id", filters.attendee_ids);
+  }
+
   const { data, error } = await query.order("name");
   if (error) throw new Error(error.message);
 
@@ -51,6 +71,22 @@ export async function getSegmentedRecipients(
         (f) => String(cf[f.field_id] ?? "") === f.value
       );
     });
+  }
+
+  // Client-side filter for session RSVP (two-step: fetch confirmed user_ids, then filter)
+  if (filters?.session_id) {
+    const { data: rsvps } = await supabase
+      .from("session_rsvps")
+      .select("user_id")
+      .eq("session_id", filters.session_id)
+      .eq("status", "confirmed");
+
+    const confirmedUserIds = new Set(
+      (rsvps ?? []).map((r: { user_id: string }) => r.user_id)
+    );
+    results = results.filter(
+      (r) => r.user_id && confirmedUserIds.has(r.user_id as string)
+    );
   }
 
   // Client-side filter for min check-ins (requires separate query)
