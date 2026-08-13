@@ -24,4 +24,5 @@
 - Seed data uses fixed UUIDs (`00000000-0000-0000-0000-00000000XXXX`)
 - Tests collocated next to source files (`.test.ts` / `.test.tsx`), E2E tests in `tests/e2e/`
 - Every feature change must include tests (see `attendly-testing` skill)
+- **Always use `/test-driven-development` when building new features or fixing bugs** — write tests first, then implement
 - **Never use browser `alert()` or `confirm()` dialogs** — use proper UI dialog components (e.g. `AlertDialog` from `@attendly/ui/components`) for confirmations and alerts

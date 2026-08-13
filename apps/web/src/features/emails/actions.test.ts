@@ -25,6 +25,14 @@ vi.mock("./lib/send-email", () => ({
   substituteVariables: vi.fn((s: string) => s),
 }));
 
+vi.mock("@react-email/components", () => ({
+  render: vi.fn(() => "<html>mocked</html>"),
+}));
+
+vi.mock("./lib/templates/campaign-email", () => ({
+  CampaignEmail: vi.fn(() => null),
+}));
+
 vi.mock("./lib/segments", () => ({
   getSegmentedRecipients: vi.fn().mockResolvedValue([
     { email: "a@test.com", name: "Alice" },
@@ -137,7 +145,15 @@ describe("Email Actions", () => {
     it("sends to recipients and returns counts", async () => {
       mockFrom.mockReturnValue(
         createQueryMock({
-          data: { id: "evt-1", title: "Test Event", organization_id: "org-1" },
+          data: {
+            id: "evt-1",
+            title: "Test Event",
+            organization_id: "org-1",
+            start_date: "2026-01-01T00:00:00Z",
+            venue_name: "Test Venue",
+            slug: "test-event",
+            organizations: [{ slug: "test-org" }],
+          },
           error: null,
         })
       );
