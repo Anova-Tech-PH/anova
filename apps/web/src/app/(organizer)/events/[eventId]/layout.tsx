@@ -26,13 +26,14 @@ export default async function EventLayout({
 
   const groups = [
     {
-      label: "Event Setup",
+      label: "Content",
       items: [
-        { href: `/events/${eventId}`, label: "Overview", icon: "bar-chart-3" },
-        { href: `/events/${eventId}/schedule`, label: "Schedule", icon: "calendar" },
+        { href: `/events/${eventId}`, label: "Basics", icon: "settings" },
+        { href: `/events/${eventId}/schedule`, label: "Agenda Center", icon: "calendar" },
         { href: `/events/${eventId}/rooms`, label: "Rooms", icon: "door-open" },
-        { href: `/events/${eventId}/documents`, label: "Documents", icon: "file-text" },
-        { href: `/events/${eventId}/logistics`, label: "Logistics", icon: "clipboard-list" },
+        { href: `/events/${eventId}/sponsors`, label: "Sponsor Center", icon: "award" },
+        { href: `/events/${eventId}/documents`, label: "Documents & Videos", icon: "file-text" },
+        { href: `/events/${eventId}/logistics`, label: "Logistics Center", icon: "clipboard-list" },
       ],
     },
     {
@@ -44,12 +45,6 @@ export default async function EventLayout({
         { href: `/events/${eventId}/registrations`, label: "Registrations", icon: "users" },
         { href: `/events/${eventId}/check-in`, label: "Check-in", icon: "qr-code" },
         { href: `/events/${eventId}/badges`, label: "Badges", icon: "id-card" },
-      ],
-    },
-    {
-      label: "Sponsors",
-      items: [
-        { href: `/events/${eventId}/sponsors`, label: "Sponsors", icon: "award" },
       ],
     },
     {
