@@ -202,9 +202,11 @@ describe("AnnouncementComposer", () => {
       reply_to_email: "reply@test.com",
       signature: null,
       sent_at: null,
+      scheduled_for: null,
+      read_count: 0,
+      author_id: "user-1",
       created_at: "2026-01-01T00:00:00Z",
       updated_at: "2026-01-01T00:00:00Z",
-      created_by: "user-1",
     };
 
     render(<AnnouncementComposer {...defaultProps} draft={draft} />);

@@ -56,7 +56,7 @@ export function EventSubSidebar({
     const initial: Record<string, boolean> = {};
     if (activeGroup) {
       for (const item of activeGroup.items) {
-        if (item.children && activePathname.startsWith(item.href)) {
+        if (item.children && (activePathname.startsWith(item.href) || item.children.some((c) => activePathname === c.href))) {
           initial[item.href] = true;
         }
       }
@@ -69,7 +69,7 @@ export function EventSubSidebar({
     if (!activeGroup) return;
     const newExpanded: Record<string, boolean> = {};
     for (const item of activeGroup.items) {
-      if (item.children && activePathname.startsWith(item.href)) {
+      if (item.children && (activePathname.startsWith(item.href) || item.children.some((c) => activePathname === c.href))) {
         newExpanded[item.href] = true;
       }
     }
@@ -106,10 +106,11 @@ export function EventSubSidebar({
         <div className="flex flex-col gap-0.5">
           {activeGroup.items.map((item) => {
             const hasChildren = item.children && item.children.length > 0;
+            const childMatch = hasChildren && item.children!.some((c) => activePathname === c.href);
             const isActive = hasChildren
-              ? activePathname.startsWith(item.href)
+              ? activePathname.startsWith(item.href) || childMatch
               : activePathname === item.href;
-            const isExpanded = expanded[item.href] ?? activePathname.startsWith(item.href);
+            const isExpanded = expanded[item.href] ?? isActive;
             const Icon = iconMap[item.icon];
 
             if (hasChildren) {

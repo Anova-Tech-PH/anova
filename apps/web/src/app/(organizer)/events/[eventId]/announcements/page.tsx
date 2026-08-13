@@ -50,7 +50,7 @@ export default async function AnnouncementsPage({
       .in("status", ["confirmed", "checked_in"]),
     supabase
       .from("events")
-      .select("organization_id")
+      .select("title, organization_id")
       .eq("id", eventId)
       .single(),
   ]);
@@ -82,6 +82,7 @@ export default async function AnnouncementsPage({
       categories={uniqueCategories}
       totalAttendees={attendeeCountResult.count ?? 0}
       orgTemplates={orgTemplates}
+      eventName={eventResult.data?.title ?? "Your Event"}
       page={page}
       pageSize={pageSize}
     />

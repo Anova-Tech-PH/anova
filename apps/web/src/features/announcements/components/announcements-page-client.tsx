@@ -10,6 +10,7 @@ import type {
 import { AnnouncementComposer } from "./announcement-composer";
 import { AnnouncementList } from "./announcement-list";
 import { TemplatePicker } from "./template-picker";
+import { QuickReminderPicker } from "./quick-reminder-picker";
 
 interface AnnouncementsPageClientProps {
   eventId: string;
@@ -22,6 +23,7 @@ interface AnnouncementsPageClientProps {
   categories: string[];
   totalAttendees: number;
   orgTemplates: AnnouncementTemplate[];
+  eventName: string;
   page: number;
   pageSize: number;
 }
@@ -37,6 +39,7 @@ export function AnnouncementsPageClient({
   categories,
   totalAttendees,
   orgTemplates,
+  eventName,
   page,
   pageSize,
 }: AnnouncementsPageClientProps) {
@@ -48,6 +51,7 @@ export function AnnouncementsPageClient({
   const [templatePickerMode, setTemplatePickerMode] = useState<
     "reuse" | "org_templates"
   >("reuse");
+  const [quickReminderOpen, setQuickReminderOpen] = useState(false);
 
   function openComposerEmpty() {
     setEditDraft(null);
@@ -64,10 +68,12 @@ export function AnnouncementsPageClient({
   }
 
   function openQuickReminder() {
-    openComposerWithTemplate(
-      "Quick Reminder",
-      "<p>Hi there! Just a quick reminder about our upcoming event. We look forward to seeing you!</p>"
-    );
+    setQuickReminderOpen(true);
+  }
+
+  function handleQuickReminderSelect(subject: string, body: string) {
+    setQuickReminderOpen(false);
+    openComposerWithTemplate(subject, body);
   }
 
   function handleEditDraft(draft: Announcement) {
@@ -187,6 +193,14 @@ export function AnnouncementsPageClient({
         sessions={sessions}
         categories={categories}
         totalAttendees={totalAttendees}
+      />
+
+      {/* Quick reminder picker modal */}
+      <QuickReminderPicker
+        open={quickReminderOpen}
+        onClose={() => setQuickReminderOpen(false)}
+        onSelect={handleQuickReminderSelect}
+        eventName={eventName}
       />
 
       {/* Template picker modal */}

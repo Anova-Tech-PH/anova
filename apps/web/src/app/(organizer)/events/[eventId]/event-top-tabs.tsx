@@ -35,10 +35,12 @@ export interface TopTabGroup {
 
 export function isGroupActive(group: TopTabGroup, pathname: string): boolean {
   return group.items.some((item) => {
+    if (pathname === item.href) return true;
     if (item.children && item.children.length > 0) {
-      return pathname.startsWith(item.href);
+      return pathname.startsWith(item.href) ||
+        item.children.some((child) => pathname === child.href);
     }
-    return pathname === item.href;
+    return false;
   });
 }
 

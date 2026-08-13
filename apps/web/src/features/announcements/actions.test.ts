@@ -25,7 +25,7 @@ vi.mock("@attendly/ui/supabase/server", () => ({
 
 const mockSendEmail = vi.fn(() => Promise.resolve());
 vi.mock("@/features/emails/lib/send-email", () => ({
-  sendEmail: (...args: unknown[]) => mockSendEmail(...args),
+  sendEmail: (...args: unknown[]) => mockSendEmail(args[0]),
   substituteVariables: vi.fn((s: string) => s),
 }));
 
