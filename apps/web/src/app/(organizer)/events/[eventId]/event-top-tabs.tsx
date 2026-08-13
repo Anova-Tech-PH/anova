@@ -1,7 +1,5 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { cn } from "@attendly/ui/cn";
 import {
   BarChart3,
@@ -11,6 +9,7 @@ import {
   Ticket,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { useEventNav } from "./event-nav-context";
 
 const iconMap: Record<string, LucideIcon> = {
   "layout-grid": LayoutGrid,
@@ -34,7 +33,7 @@ export interface TopTabGroup {
   items: TabItem[];
 }
 
-function isGroupActive(group: TopTabGroup, pathname: string): boolean {
+export function isGroupActive(group: TopTabGroup, pathname: string): boolean {
   return group.items.some((item) => {
     if (item.children && item.children.length > 0) {
       return pathname.startsWith(item.href);
@@ -44,21 +43,22 @@ function isGroupActive(group: TopTabGroup, pathname: string): boolean {
 }
 
 export function EventTopTabs({ groups }: { groups: TopTabGroup[] }) {
-  const pathname = usePathname();
+  const { activePathname, navigate } = useEventNav();
 
   return (
     <div className="overflow-x-auto">
       <div className="flex items-center gap-1 rounded-lg bg-zinc-900 p-1">
         {groups.map((group) => {
-          const active = isGroupActive(group, pathname);
+          const active = isGroupActive(group, activePathname);
           const Icon = iconMap[group.icon];
 
           return (
-            <Link
+            <button
               key={group.label}
-              href={group.firstHref}
+              type="button"
+              onClick={() => navigate(group.firstHref)}
               className={cn(
-                "flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                "flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-colors cursor-pointer",
                 active
                   ? "bg-white text-zinc-900 shadow-sm"
                   : "text-zinc-300 hover:bg-white/10 hover:text-white"
@@ -66,7 +66,7 @@ export function EventTopTabs({ groups }: { groups: TopTabGroup[] }) {
             >
               {Icon && <Icon className="h-4 w-4 shrink-0" />}
               {group.label}
-            </Link>
+            </button>
           );
         })}
       </div>

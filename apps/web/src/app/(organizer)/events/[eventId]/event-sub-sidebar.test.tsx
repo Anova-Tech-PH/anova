@@ -5,6 +5,7 @@ let mockPathname = "/events/evt-1/schedule";
 
 vi.mock("next/navigation", () => ({
   usePathname: () => mockPathname,
+  useRouter: () => ({ push: vi.fn() }),
 }));
 
 vi.mock("motion/react", () => ({
@@ -22,7 +23,12 @@ vi.mock("motion/react", () => ({
 }));
 
 import { EventSubSidebar } from "./event-sub-sidebar";
+import { EventNavProvider } from "./event-nav-context";
 import type { TopTabGroup } from "./event-top-tabs";
+
+function renderWithProvider(ui: React.ReactElement) {
+  return render(<EventNavProvider>{ui}</EventNavProvider>);
+}
 
 const baseGroups: TopTabGroup[] = [
   {
@@ -93,19 +99,19 @@ describe("EventSubSidebar", () => {
   });
 
   it("renders event title", () => {
-    render(<EventSubSidebar eventTitle="My Event" groups={baseGroups} />);
+    renderWithProvider(<EventSubSidebar eventTitle="My Event" groups={baseGroups} />);
     expect(screen.getByText("My Event")).toBeInTheDocument();
   });
 
   it("renders parent items", () => {
-    render(<EventSubSidebar eventTitle="My Event" groups={baseGroups} />);
+    renderWithProvider(<EventSubSidebar eventTitle="My Event" groups={baseGroups} />);
     expect(screen.getByText("Agenda Center")).toBeInTheDocument();
     expect(screen.getByText("Attendees")).toBeInTheDocument();
   });
 
   it("shows children when parent path matches pathname", () => {
     mockPathname = "/events/evt-1/schedule/tracks";
-    render(<EventSubSidebar eventTitle="My Event" groups={baseGroups} />);
+    renderWithProvider(<EventSubSidebar eventTitle="My Event" groups={baseGroups} />);
     expect(screen.getByText("Session Manager")).toBeInTheDocument();
     expect(screen.getByText("Track Manager")).toBeInTheDocument();
     expect(screen.getByText("Conflict Check")).toBeInTheDocument();
@@ -114,21 +120,21 @@ describe("EventSubSidebar", () => {
 
   it("applies active style to child matching exact pathname", () => {
     mockPathname = "/events/evt-1/schedule/tracks";
-    render(<EventSubSidebar eventTitle="My Event" groups={baseGroups} />);
+    renderWithProvider(<EventSubSidebar eventTitle="My Event" groups={baseGroups} />);
     const trackLink = screen.getByText("Track Manager").closest("a");
     expect(trackLink?.className).toContain("font-medium");
   });
 
   it("does not apply active style to non-matching children", () => {
     mockPathname = "/events/evt-1/schedule/tracks";
-    render(<EventSubSidebar eventTitle="My Event" groups={baseGroups} />);
+    renderWithProvider(<EventSubSidebar eventTitle="My Event" groups={baseGroups} />);
     const conflictLink = screen.getByText("Conflict Check").closest("a");
     expect(conflictLink?.className).not.toContain("font-medium");
   });
 
   it("collapses children when chevron is clicked", () => {
     mockPathname = "/events/evt-1/schedule";
-    const { container } = render(
+    const { container } = renderWithProvider(
       <EventSubSidebar eventTitle="My Event" groups={baseGroups} />
     );
     // Children should be visible initially (pathname matches)
@@ -144,27 +150,27 @@ describe("EventSubSidebar", () => {
   });
 
   it("renders Back to Events link", () => {
-    render(<EventSubSidebar eventTitle="My Event" groups={baseGroups} />);
+    renderWithProvider(<EventSubSidebar eventTitle="My Event" groups={baseGroups} />);
     expect(screen.getByText("Back to Events")).toBeInTheDocument();
   });
 
   it("marks parent as active when pathname starts with parent href", () => {
     mockPathname = "/events/evt-1/schedule/qa";
-    render(<EventSubSidebar eventTitle="My Event" groups={baseGroups} />);
+    renderWithProvider(<EventSubSidebar eventTitle="My Event" groups={baseGroups} />);
     const agendaLink = screen.getByText("Agenda Center").closest("a");
     expect(agendaLink?.className).toContain("font-medium");
   });
 
   it("does not mark non-matching parent as active", () => {
     mockPathname = "/events/evt-1/schedule";
-    render(<EventSubSidebar eventTitle="My Event" groups={baseGroups} />);
+    renderWithProvider(<EventSubSidebar eventTitle="My Event" groups={baseGroups} />);
     const attendeesLink = screen.getByText("Attendees").closest("a");
     expect(attendeesLink?.className).not.toContain("font-medium");
   });
 
   it("only renders items from the active category", () => {
     mockPathname = "/events/evt-1/announcements";
-    render(<EventSubSidebar eventTitle="My Event" groups={twoGroupSetup} />);
+    renderWithProvider(<EventSubSidebar eventTitle="My Event" groups={twoGroupSetup} />);
 
     // Second group's items should be visible
     expect(screen.getByText("Announcements")).toBeInTheDocument();

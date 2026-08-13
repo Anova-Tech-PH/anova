@@ -12,7 +12,8 @@ import {
   MessageSquare, Globe, QrCode, Settings, Tag, Ticket, Users, Award,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import type { TopTabGroup, TabItem } from "./event-top-tabs";
+import { isGroupActive, type TopTabGroup, type TabItem } from "./event-top-tabs";
+import { useEventNav } from "./event-nav-context";
 
 const iconMap: Record<string, LucideIcon> = {
   "bar-chart-2": BarChart2,
@@ -37,26 +38,18 @@ const iconMap: Record<string, LucideIcon> = {
   award: Award,
 };
 
-function isGroupActive(group: TopTabGroup, pathname: string): boolean {
-  return group.items.some((item) => {
-    if (item.children && item.children.length > 0) {
-      return pathname.startsWith(item.href);
-    }
-    return pathname === item.href;
-  });
-}
-
 export function MobileEventNav({
   groups,
 }: {
   groups: TopTabGroup[];
 }) {
   const pathname = usePathname();
+  const { activePathname, navigate } = useEventNav();
   const [open, setOpen] = useState(false);
 
-  // Determine active group (same logic as EventTopTabs / EventSubSidebar)
+  // Use optimistic pathname for group detection
   const activeGroup =
-    groups.find((g) => isGroupActive(g, pathname)) ?? groups[0];
+    groups.find((g) => isGroupActive(g, activePathname)) ?? groups[0];
 
   const [expandedMobile, setExpandedMobile] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
@@ -91,15 +84,16 @@ export function MobileEventNav({
       <div className="overflow-x-auto">
         <div className="flex items-center gap-1 rounded-lg bg-zinc-900 p-1">
           {groups.map((group) => {
-            const active = isGroupActive(group, pathname);
+            const active = isGroupActive(group, activePathname);
             const Icon = iconMap[group.icon];
 
             return (
-              <Link
+              <button
                 key={group.label}
-                href={group.firstHref}
+                type="button"
+                onClick={() => navigate(group.firstHref)}
                 className={cn(
-                  "flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                  "flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-colors cursor-pointer",
                   active
                     ? "bg-white text-zinc-900 shadow-sm"
                     : "text-zinc-300 hover:bg-white/10 hover:text-white"
@@ -107,7 +101,7 @@ export function MobileEventNav({
               >
                 {Icon && <Icon className="h-4 w-4 shrink-0" />}
                 {group.label}
-              </Link>
+              </button>
             );
           })}
         </div>

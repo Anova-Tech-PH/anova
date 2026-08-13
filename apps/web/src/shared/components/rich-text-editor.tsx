@@ -73,7 +73,7 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
   });
 
   useEffect(() => {
-    if (editor && value !== editor.getHTML()) {
+    if (editor && !editor.isDestroyed && value !== editor.getHTML()) {
       editor.commands.setContent(value, { emitUpdate: false });
     }
   }, [value, editor]);

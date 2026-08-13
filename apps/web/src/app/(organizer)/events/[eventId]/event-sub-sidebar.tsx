@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@attendly/ui/cn";
@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { TopTabGroup, TabItem } from "./event-top-tabs";
+import { isGroupActive } from "./event-top-tabs";
+import { useEventNav } from "./event-nav-context";
 
 const iconMap: Record<string, LucideIcon> = {
   "bar-chart-2": BarChart2,
@@ -38,15 +40,6 @@ const iconMap: Record<string, LucideIcon> = {
   award: Award,
 };
 
-function isGroupActive(group: TopTabGroup, pathname: string): boolean {
-  return group.items.some((item) => {
-    if (item.children && item.children.length > 0) {
-      return pathname.startsWith(item.href);
-    }
-    return pathname === item.href;
-  });
-}
-
 export function EventSubSidebar({
   eventTitle,
   groups,
@@ -55,10 +48,11 @@ export function EventSubSidebar({
   groups: TopTabGroup[];
 }) {
   const pathname = usePathname();
+  const { activePathname } = useEventNav();
 
-  // Determine active group: first group whose items match pathname, or fallback to first
+  // Use optimistic pathname for group detection, real pathname for item highlighting
   const activeGroup =
-    groups.find((g) => isGroupActive(g, pathname)) ?? groups[0];
+    groups.find((g) => isGroupActive(g, activePathname)) ?? groups[0];
 
   // Track which parent items are expanded
   const [expanded, setExpanded] = useState<Record<string, boolean>>(() => {
@@ -72,6 +66,18 @@ export function EventSubSidebar({
     }
     return initial;
   });
+
+  // Auto-expand items when pathname changes
+  useEffect(() => {
+    if (!activeGroup) return;
+    const newExpanded: Record<string, boolean> = {};
+    for (const item of activeGroup.items) {
+      if (item.children && pathname.startsWith(item.href)) {
+        newExpanded[item.href] = true;
+      }
+    }
+    setExpanded((prev) => ({ ...prev, ...newExpanded }));
+  }, [pathname, activeGroup]);
 
   const toggleExpanded = (href: string) => {
     setExpanded((prev) => ({ ...prev, [href]: !prev[href] }));

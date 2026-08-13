@@ -6,6 +6,7 @@ import { Badge } from "@attendly/ui/components";
 import { EventSubSidebar } from "./event-sub-sidebar";
 import { MobileEventNav } from "./mobile-event-nav";
 import { EventTopTabs } from "./event-top-tabs";
+import { EventNavProvider } from "./event-nav-context";
 
 export default async function EventLayout({
   children,
@@ -142,6 +143,7 @@ export default async function EventLayout({
     : `${startDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })} - ${endDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
 
   return (
+    <EventNavProvider>
     <div className="flex min-h-[calc(100vh-3.5rem)] -m-4 lg:-m-6">
       {/* Desktop sub-sidebar */}
       <EventSubSidebar eventTitle={event.title} groups={groups} />
@@ -194,5 +196,6 @@ export default async function EventLayout({
         {children}
       </div>
     </div>
+    </EventNavProvider>
   );
 }

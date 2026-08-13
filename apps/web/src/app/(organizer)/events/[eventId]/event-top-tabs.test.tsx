@@ -5,12 +5,13 @@ let mockPathname = "/events/evt-1/schedule";
 
 vi.mock("next/navigation", () => ({
   usePathname: () => mockPathname,
+  useRouter: () => ({ push: vi.fn() }),
 }));
 
 import { EventTopTabs } from "./event-top-tabs";
+import { EventNavProvider } from "./event-nav-context";
 import type { TopTabGroup } from "./event-top-tabs";
 
-/** Check if an element has a specific class (space-delimited exact match) */
 function hasClass(el: Element | null, cls: string): boolean {
   if (!el) return false;
   return el.className.split(/\s+/).includes(cls);
@@ -68,13 +69,17 @@ const groups: TopTabGroup[] = [
   },
 ];
 
+function renderWithProvider(ui: React.ReactElement) {
+  return render(<EventNavProvider>{ui}</EventNavProvider>);
+}
+
 describe("EventTopTabs", () => {
   beforeEach(() => {
     mockPathname = "/events/evt-1/schedule";
   });
 
   it("renders all category labels", () => {
-    render(<EventTopTabs groups={groups} />);
+    renderWithProvider(<EventTopTabs groups={groups} />);
     expect(screen.getByText("Content")).toBeInTheDocument();
     expect(screen.getByText("Registration")).toBeInTheDocument();
     expect(screen.getByText("Engagement")).toBeInTheDocument();
@@ -84,42 +89,24 @@ describe("EventTopTabs", () => {
 
   it("marks active category based on pathname (exact match)", () => {
     mockPathname = "/events/evt-1/tickets";
-    render(<EventTopTabs groups={groups} />);
-    const registrationTab = screen.getByText("Registration").closest("a");
+    renderWithProvider(<EventTopTabs groups={groups} />);
+    const registrationTab = screen.getByText("Registration").closest("button");
     expect(hasClass(registrationTab, "bg-white")).toBe(true);
   });
 
   it("marks active category based on pathname (startsWith for items with children)", () => {
     mockPathname = "/events/evt-1/schedule/tracks";
-    render(<EventTopTabs groups={groups} />);
-    const contentTab = screen.getByText("Content").closest("a");
+    renderWithProvider(<EventTopTabs groups={groups} />);
+    const contentTab = screen.getByText("Content").closest("button");
     expect(hasClass(contentTab, "bg-white")).toBe(true);
   });
 
   it("does not mark inactive categories as active", () => {
     mockPathname = "/events/evt-1/schedule";
-    render(<EventTopTabs groups={groups} />);
-    expect(hasClass(screen.getByText("Registration").closest("a"), "bg-white")).toBe(false);
-    expect(hasClass(screen.getByText("Engagement").closest("a"), "bg-white")).toBe(false);
-    expect(hasClass(screen.getByText("Outreach").closest("a"), "bg-white")).toBe(false);
-    expect(hasClass(screen.getByText("Insights").closest("a"), "bg-white")).toBe(false);
-  });
-
-  it("links each tab to the firstHref of its group", () => {
-    render(<EventTopTabs groups={groups} />);
-    const contentTab = screen.getByText("Content").closest("a");
-    expect(contentTab).toHaveAttribute("href", "/events/evt-1/schedule");
-
-    const registrationTab = screen.getByText("Registration").closest("a");
-    expect(registrationTab).toHaveAttribute("href", "/events/evt-1/tickets");
-
-    const engagementTab = screen.getByText("Engagement").closest("a");
-    expect(engagementTab).toHaveAttribute("href", "/events/evt-1/polls");
-
-    const outreachTab = screen.getByText("Outreach").closest("a");
-    expect(outreachTab).toHaveAttribute("href", "/events/evt-1/emails");
-
-    const insightsTab = screen.getByText("Insights").closest("a");
-    expect(insightsTab).toHaveAttribute("href", "/events/evt-1/analytics");
+    renderWithProvider(<EventTopTabs groups={groups} />);
+    expect(hasClass(screen.getByText("Registration").closest("button"), "bg-white")).toBe(false);
+    expect(hasClass(screen.getByText("Engagement").closest("button"), "bg-white")).toBe(false);
+    expect(hasClass(screen.getByText("Outreach").closest("button"), "bg-white")).toBe(false);
+    expect(hasClass(screen.getByText("Insights").closest("button"), "bg-white")).toBe(false);
   });
 });
