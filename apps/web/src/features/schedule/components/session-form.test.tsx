@@ -159,6 +159,74 @@ describe("SessionForm", () => {
     });
   });
 
+  describe("Track pills (multi-select)", () => {
+    it("renders track pills instead of a dropdown", () => {
+      render(<SessionForm {...defaultProps} />);
+      // Should NOT have a <select> for tracks
+      expect(screen.queryByLabelText("Track")).not.toBeInTheDocument();
+      // Should render track name as a clickable button
+      expect(screen.getByRole("button", { name: /main stage/i })).toBeInTheDocument();
+    });
+
+    it("renders label 'Tracks' (plural)", () => {
+      render(<SessionForm {...defaultProps} />);
+      expect(screen.getByText("Tracks")).toBeInTheDocument();
+    });
+
+    it("toggles track selection on click", () => {
+      render(
+        <SessionForm
+          {...defaultProps}
+          tracks={[
+            { id: "t1", name: "Main Stage", color: "#3b82f6" },
+            { id: "t2", name: "Workshop", color: "#10b981" },
+          ]}
+        />
+      );
+      const mainStageBtn = screen.getByRole("button", { name: /main stage/i });
+      const workshopBtn = screen.getByRole("button", { name: /workshop/i });
+
+      // Click to select Main Stage
+      fireEvent.click(mainStageBtn);
+      expect(mainStageBtn).toHaveStyle({ backgroundColor: "#3b82f6" });
+
+      // Click to select Workshop too
+      fireEvent.click(workshopBtn);
+      expect(workshopBtn).toHaveStyle({ backgroundColor: "#10b981" });
+
+      // Click Main Stage again to deselect
+      fireEvent.click(mainStageBtn);
+      expect(mainStageBtn).not.toHaveStyle({ backgroundColor: "#3b82f6" });
+    });
+
+    it("pre-selects tracks from session.track_ids", () => {
+      render(
+        <SessionForm
+          {...defaultProps}
+          tracks={[
+            { id: "t1", name: "Main Stage", color: "#3b82f6" },
+            { id: "t2", name: "Workshop", color: "#10b981" },
+          ]}
+          session={{
+            id: "s1", title: "Test", description: "", type: "talk",
+            date: "2026-09-11", start_time: "09:00", end_time: "10:00",
+            location: "", track_ids: ["t1", "t2"], speaker_ids: [],
+            enable_check_in: false, rsvp_enabled: false, capacity: null,
+          }}
+        />
+      );
+      const mainStageBtn = screen.getByRole("button", { name: /main stage/i });
+      const workshopBtn = screen.getByRole("button", { name: /workshop/i });
+      expect(mainStageBtn).toHaveStyle({ backgroundColor: "#3b82f6" });
+      expect(workshopBtn).toHaveStyle({ backgroundColor: "#10b981" });
+    });
+
+    it("does not render track pills when no tracks provided", () => {
+      render(<SessionForm {...defaultProps} tracks={[]} />);
+      expect(screen.queryByText("Tracks")).not.toBeInTheDocument();
+    });
+  });
+
   describe("Separate date + time fields", () => {
     it("renders a Date field", () => {
       render(<SessionForm {...defaultProps} />);
@@ -216,7 +284,7 @@ describe("SessionForm", () => {
           session={{
             id: "s1", title: "Coffee", description: "", type: "break",
             date: "2026-09-11", start_time: "10:00", end_time: "10:30",
-            location: "", track_id: "", speaker_ids: [],
+            location: "", track_ids: [], speaker_ids: [],
             enable_check_in: false, rsvp_enabled: false, capacity: null,
           }}
         />
@@ -232,7 +300,7 @@ describe("SessionForm", () => {
           session={{
             id: "s1", title: "Test", description: "", type: "talk",
             date: "2026-09-11", start_time: "09:00", end_time: "10:00",
-            location: "", track_id: "", speaker_ids: ["sp1"],
+            location: "", track_ids: [], speaker_ids: ["sp1"],
             enable_check_in: false, rsvp_enabled: false, capacity: null,
           }}
         />
@@ -311,7 +379,7 @@ describe("SessionForm", () => {
           session={{
             id: "s1", title: "Test", description: "", type: "talk",
             date: "2026-09-11", start_time: "09:00", end_time: "10:00",
-            location: "", track_id: "", speaker_ids: [],
+            location: "", track_ids: [], speaker_ids: [],
             enable_check_in: false, rsvp_enabled: false, capacity: null,
             document_ids: ["d1"],
           }}
@@ -462,7 +530,7 @@ describe("SessionForm", () => {
           session={{
             id: "s1", title: "Test", description: "", type: "talk",
             date: "2026-09-11", start_time: "09:00", end_time: "10:00",
-            location: "", track_id: "", speaker_ids: [],
+            location: "", track_ids: [], speaker_ids: [],
             enable_check_in: false, rsvp_enabled: false, capacity: null,
             poll_ids: ["p2"],
           }}
@@ -508,7 +576,7 @@ describe("SessionForm", () => {
           session={{
             id: "s1", title: "Existing", description: "", type: "talk",
             date: "2026-09-11", start_time: "09:00", end_time: "10:00",
-            location: "", track_id: "", speaker_ids: [],
+            location: "", track_ids: [], speaker_ids: [],
             enable_check_in: false, rsvp_enabled: false, capacity: null,
           }}
         />
@@ -534,7 +602,7 @@ describe("SessionForm", () => {
           session={{
             id: "s1", title: "Test", description: "", type: "talk",
             date: "2026-09-11", start_time: "09:00", end_time: "10:00",
-            location: "Room A", track_id: "", speaker_ids: [],
+            location: "Room A", track_ids: [], speaker_ids: [],
             enable_check_in: false, rsvp_enabled: false, capacity: null,
           }}
         />

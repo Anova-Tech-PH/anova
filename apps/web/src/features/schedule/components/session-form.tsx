@@ -30,7 +30,7 @@ type SessionFormData = {
   start_time: string;
   end_time: string;
   location: string;
-  track_id: string;
+  track_ids: string[];
   speaker_ids: string[];
   enable_check_in: boolean;
   rsvp_enabled: boolean;
@@ -71,7 +71,7 @@ export function SessionForm({
     start_time: string;
     end_time: string;
     location: string;
-    track_id: string;
+    track_ids: string[];
     speaker_ids: string[];
     enable_check_in: boolean;
     rsvp_enabled: boolean;
@@ -98,7 +98,7 @@ export function SessionForm({
     start_time: session?.start_time ?? defaults?.start_time ?? "",
     end_time: session?.end_time ?? defaults?.end_time ?? "",
     location: session?.location ?? "",
-    track_id: session?.track_id ?? "",
+    track_ids: session?.track_ids ?? [],
     speaker_ids: session?.speaker_ids ?? [],
     enable_check_in: session?.enable_check_in ?? false,
     rsvp_enabled: session?.rsvp_enabled ?? false,
@@ -345,7 +345,7 @@ export function SessionForm({
         start_time: startISO,
         end_time: endISO,
         location: form.location,
-        track_id: form.track_id,
+        track_ids: form.track_ids,
         speaker_ids: form.speaker_ids,
         enable_check_in: form.enable_check_in,
         rsvp_enabled: form.rsvp_enabled,
@@ -450,19 +450,38 @@ export function SessionForm({
 
                   {tracks.length > 0 && (
                     <div className="space-y-1.5">
-                      <label className="text-sm font-medium">Track</label>
-                      <select
-                        value={form.track_id}
-                        onChange={(e) => setForm((f) => ({ ...f, track_id: e.target.value }))}
-                        className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-                      >
-                        <option value="">No track</option>
-                        {tracks.map((t) => (
-                          <option key={t.id} value={t.id}>
-                            {t.name}
-                          </option>
-                        ))}
-                      </select>
+                      <label className="text-sm font-medium">Tracks</label>
+                      <div className="flex flex-wrap gap-2">
+                        {tracks.map((t) => {
+                          const isSelected = form.track_ids.includes(t.id);
+                          return (
+                            <button
+                              key={t.id}
+                              type="button"
+                              onClick={() =>
+                                setForm((f) => ({
+                                  ...f,
+                                  track_ids: isSelected
+                                    ? f.track_ids.filter((id) => id !== t.id)
+                                    : [...f.track_ids, t.id],
+                                }))
+                              }
+                              className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                                isSelected
+                                  ? "border-transparent text-white"
+                                  : "border-input bg-background hover:bg-accent"
+                              }`}
+                              style={isSelected ? { backgroundColor: t.color ?? "#6b7280" } : undefined}
+                            >
+                              <span
+                                className="h-2 w-2 rounded-full"
+                                style={{ backgroundColor: t.color ?? "#6b7280" }}
+                              />
+                              {t.name}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
                   )}
                 </div>
