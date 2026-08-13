@@ -1,9 +1,19 @@
-import { Settings } from "lucide-react";
-import { ComingSoon } from "@/features/speakers/components/coming-soon";
+import { getSpeakerFormSettings, getSpeakerFormFields } from "@/features/speakers/settings-queries";
+import { SpeakerSettings } from "@/features/speakers/components/speaker-settings";
 
-export default function SpeakerSettingsPage() {
+export default async function SpeakerSettingsPage({
+  params,
+}: {
+  params: Promise<{ eventId: string }>;
+}) {
+  const { eventId } = await params;
+  const [settings, fields] = await Promise.all([
+    getSpeakerFormSettings(eventId),
+    getSpeakerFormFields(eventId),
+  ]);
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div>
         <h2 className="text-lg font-semibold">Speaker Settings</h2>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -11,10 +21,10 @@ export default function SpeakerSettingsPage() {
         </p>
       </div>
 
-      <ComingSoon
-        title="Speaker Form Settings"
-        description="Customize which fields to collect from speakers, set up speaker form emails, and configure notification preferences for profile updates."
-        icon={<Settings className="h-7 w-7" />}
+      <SpeakerSettings
+        eventId={eventId}
+        initialSettings={settings}
+        initialFields={fields ?? []}
       />
     </div>
   );

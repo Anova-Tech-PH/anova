@@ -19,6 +19,7 @@ import {
   AtSign,
   Globe,
   User,
+  Send,
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -27,6 +28,7 @@ import { cn } from "@attendly/ui/cn";
 import { SpeakerForm } from "./speaker-form";
 import { SpeakerCsvImport } from "./speaker-csv-import";
 import { createSpeaker, updateSpeaker, deleteSpeaker } from "../actions";
+import { sendSpeakerFormInvitation, sendSpeakerFormToAll } from "../settings-actions";
 
 type Speaker = {
   id: string;
@@ -327,6 +329,35 @@ export function SpeakerManager({
           <Mail className="h-3.5 w-3.5" />
           Email Reminder
         </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={async () => {
+            const speakersWithEmail = speakers.filter((s) => s.email);
+            if (speakersWithEmail.length === 0) {
+              toast.error("No speakers have email addresses");
+              return;
+            }
+            const ok = await confirm({
+              title: "Send Form to All Speakers",
+              description: `This will send a form invitation email to ${speakersWithEmail.length} speaker(s) with email addresses. Continue?`,
+              confirmLabel: "Send",
+            });
+            if (!ok) return;
+            startTransition(async () => {
+              try {
+                const results = await sendSpeakerFormToAll(eventId);
+                toast.success(`Form sent to ${results.sent} speaker(s)${results.failed > 0 ? `, ${results.failed} failed` : ""}`);
+              } catch (err) {
+                toast.error(err instanceof Error ? err.message : "Failed to send forms");
+              }
+            });
+          }}
+          disabled={isPending}
+        >
+          <Send className="mr-1.5 h-4 w-4" />
+          {isPending ? "Sending..." : "Send Form"}
+        </Button>
       </div>
 
       {/* Search + Filter + View Toggle row */}
@@ -467,6 +498,25 @@ export function SpeakerManager({
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
+                      {speaker.email && (
+                        <button
+                          onClick={() => {
+                            startTransition(async () => {
+                              try {
+                                await sendSpeakerFormInvitation(eventId, speaker.id);
+                                toast.success(`Form invitation sent to ${speaker.name}`);
+                              } catch (err) {
+                                toast.error(err instanceof Error ? err.message : "Failed to send form");
+                              }
+                            });
+                          }}
+                          disabled={isPending}
+                          className="rounded p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors disabled:opacity-50"
+                          title="Send form invitation"
+                        >
+                          <Send className="h-3.5 w-3.5" />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

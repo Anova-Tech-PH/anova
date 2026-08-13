@@ -25,6 +25,11 @@ vi.mock("./speaker-csv-import", () => ({
   SpeakerCsvImport: () => <div data-testid="speaker-csv-import" />,
 }));
 
+vi.mock("../settings-actions", () => ({
+  sendSpeakerFormInvitation: vi.fn(),
+  sendSpeakerFormToAll: vi.fn(),
+}));
+
 const mockSpeakers = [
   {
     id: "s1",
@@ -94,6 +99,11 @@ describe("SpeakerManager", () => {
     expect(screen.getByText(/settings/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /export/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /email reminder/i })).toBeInTheDocument();
+  });
+
+  it("renders Send Form button in toolbar", () => {
+    render(<SpeakerManager eventId="e1" initialSpeakers={mockSpeakers} />);
+    expect(screen.getByRole("button", { name: "Send Form" })).toBeInTheDocument();
   });
 
   it("default view is table", () => {
