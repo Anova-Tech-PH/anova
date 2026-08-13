@@ -70,10 +70,12 @@ export async function createSession(eventId: string, data: {
   enable_check_in?: boolean;
   capacity?: number | null;
   rsvp_enabled?: boolean;
+  document_ids?: string[];
+  poll_ids?: string[];
 }) {
   const supabase = await createClient();
 
-  const { speaker_ids, capacity, rsvp_enabled, ...sessionData } = data;
+  const { speaker_ids, capacity, rsvp_enabled, document_ids, poll_ids, ...sessionData } = data;
 
   const { data: session, error } = await supabase
     .from("sessions")
@@ -98,6 +100,22 @@ export async function createSession(eventId: string, data: {
     if (linkError) throw new Error(linkError.message);
   }
 
+  // Link documents
+  if (document_ids && document_ids.length > 0) {
+    await supabase
+      .from("event_documents")
+      .update({ session_id: session.id })
+      .in("id", document_ids);
+  }
+
+  // Link polls
+  if (poll_ids && poll_ids.length > 0) {
+    await supabase
+      .from("live_polls")
+      .update({ session_id: session.id })
+      .in("id", poll_ids);
+  }
+
   revalidatePath(`/events/${eventId}/schedule`, "layout");
   return session;
 }
@@ -114,10 +132,12 @@ export async function updateSession(eventId: string, sessionId: string, data: {
   enable_check_in?: boolean;
   capacity?: number | null;
   rsvp_enabled?: boolean;
+  document_ids?: string[];
+  poll_ids?: string[];
 }) {
   const supabase = await createClient();
 
-  const { speaker_ids, capacity, rsvp_enabled, ...sessionData } = data;
+  const { speaker_ids, capacity, rsvp_enabled, document_ids, poll_ids, ...sessionData } = data;
 
   const { error } = await supabase
     .from("sessions")
@@ -144,6 +164,40 @@ export async function updateSession(eventId: string, sessionId: string, data: {
         .insert(speaker_ids.map((sid) => ({ session_id: sessionId, speaker_id: sid })));
 
       if (linkError) throw new Error(linkError.message);
+    }
+  }
+
+  // Update document links if provided
+  if (document_ids !== undefined) {
+    // Unlink all documents currently linked to this session
+    await supabase
+      .from("event_documents")
+      .update({ session_id: null })
+      .eq("session_id", sessionId);
+
+    // Link selected documents
+    if (document_ids.length > 0) {
+      await supabase
+        .from("event_documents")
+        .update({ session_id: sessionId })
+        .in("id", document_ids);
+    }
+  }
+
+  // Update poll links if provided
+  if (poll_ids !== undefined) {
+    // Unlink all polls currently linked to this session
+    await supabase
+      .from("live_polls")
+      .update({ session_id: null })
+      .eq("session_id", sessionId);
+
+    // Link selected polls
+    if (poll_ids.length > 0) {
+      await supabase
+        .from("live_polls")
+        .update({ session_id: sessionId })
+        .in("id", poll_ids);
     }
   }
 

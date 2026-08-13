@@ -14,6 +14,12 @@ export type LivePoll = {
   options: PollOption[];
   status: "draft" | "open" | "closed";
   show_results: boolean;
+  is_anonymous: boolean;
+  prompt_attendee: boolean;
+  result_visibility: "everyone" | "after_closed" | "organizers_only";
+  open_time_mode: "now" | "before_session" | "scheduled";
+  open_before_minutes: number;
+  scheduled_open_at: string | null;
   sort_order: number;
   created_at: string;
   updated_at: string;

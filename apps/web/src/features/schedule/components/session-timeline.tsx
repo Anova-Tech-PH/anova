@@ -10,6 +10,8 @@ import { createSession, updateSession, deleteSession } from "../actions";
 type Track = { id: string; name: string; color: string | null };
 type Speaker = { id: string; name: string; title?: string | null; company?: string | null; photo?: string | null };
 type SessionSpeaker = { speaker_id: string; speakers: Speaker };
+type EventDocumentOption = { id: string; title: string };
+type EventPollOption = { id: string; question: string };
 type Session = {
   id: string;
   title: string;
@@ -23,27 +25,31 @@ type Session = {
   capacity: number | null;
   track: Track | null;
   session_speakers: SessionSpeaker[];
+  document_ids?: string[];
+  poll_ids?: string[];
 };
 
-type DayGroup = { label: string; month: string; day: string; sessions: Session[] };
+type DayGroup = { label: string; month: string; day: string; weekday: string; dateKey: string; sessions: Session[] };
 
 function groupByDay(sessions: Session[]): DayGroup[] {
   const groups: Record<string, DayGroup> = {};
   for (const s of sessions) {
     const d = new Date(s.start_time);
+    const dateKey = d.toISOString().slice(0, 10);
     const label = d.toLocaleDateString("en-US", {
       weekday: "long",
       month: "long",
       day: "numeric",
     });
-    const month = d.toLocaleDateString("en-US", { month: "short" }).toUpperCase();
+    const month = d.toLocaleDateString("en-US", { month: "short" });
     const day = d.getDate().toString();
-    if (!groups[label]) {
-      groups[label] = { label, month, day, sessions: [] };
+    const weekday = d.toLocaleDateString("en-US", { weekday: "short" });
+    if (!groups[dateKey]) {
+      groups[dateKey] = { label, month, day, weekday, dateKey, sessions: [] };
     }
-    groups[label].sessions.push(s);
+    groups[dateKey].sessions.push(s);
   }
-  return Object.values(groups);
+  return Object.values(groups).sort((a, b) => a.dateKey.localeCompare(b.dateKey));
 }
 
 function formatTime(iso: string) {
@@ -66,27 +72,63 @@ export function SessionTimeline({
   initialSessions,
   tracks,
   speakers,
+  rooms = [],
+  eventDocuments = [],
+  eventPolls = [],
 }: {
   eventId: string;
   initialSessions: Session[];
   tracks: Track[];
   speakers: Speaker[];
+  rooms?: string[];
+  eventDocuments?: EventDocumentOption[];
+  eventPolls?: EventPollOption[];
 }) {
   const [sessions, setSessions] = useState(initialSessions);
   const [showForm, setShowForm] = useState(false);
   const [editingSession, setEditingSession] = useState<Session | null>(null);
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const { confirm, dialog: confirmDialog } = useConfirm();
 
   const dayGroups = groupByDay(sessions);
+  const isMultiDay = dayGroups.length > 1;
+  const activeDayKey = selectedDay ?? dayGroups[0]?.dateKey ?? null;
+  const activeGroup = dayGroups.find((g) => g.dateKey === activeDayKey);
+
+  // Compute default date/time for new sessions based on last session on active day
+  const nextSessionDefaults = (() => {
+    if (!activeGroup) return undefined;
+    const daySessions = activeGroup.sessions;
+    if (daySessions.length === 0) {
+      // No sessions yet on this day — default to the day at 9:00 AM
+      return { date: activeGroup.dateKey, start_time: "09:00", end_time: "10:00" };
+    }
+    const lastSession = daySessions[daySessions.length - 1];
+    const lastEnd = new Date(lastSession.end_time);
+    const newStart = lastEnd;
+    const newEnd = new Date(lastEnd.getTime() + 60 * 60 * 1000); // +1 hour
+    return {
+      date: activeGroup.dateKey,
+      start_time: toLocalTime(newStart.toISOString()),
+      end_time: toLocalTime(newEnd.toISOString()),
+    };
+  })();
 
   const speakerColors = ["bg-primary/60", "bg-amber-400/60", "bg-rose-400/60", "bg-emerald-400/60", "bg-emerald-400/60"];
 
-  function toLocalInput(iso: string) {
+  function toLocalDate(iso: string) {
     const d = new Date(iso);
     const offset = d.getTimezoneOffset();
     const local = new Date(d.getTime() - offset * 60000);
-    return local.toISOString().slice(0, 16);
+    return local.toISOString().slice(0, 10);
+  }
+
+  function toLocalTime(iso: string) {
+    const d = new Date(iso);
+    const offset = d.getTimezoneOffset();
+    const local = new Date(d.getTime() - offset * 60000);
+    return local.toISOString().slice(11, 16);
   }
 
   async function handleCreate(data: {
@@ -101,6 +143,8 @@ export function SessionTimeline({
     enable_check_in: boolean;
     rsvp_enabled: boolean;
     capacity: number | null;
+    document_ids: string[];
+    poll_ids: string[];
   }) {
     try {
       const session = await createSession(eventId, {
@@ -115,6 +159,8 @@ export function SessionTimeline({
         enable_check_in: data.enable_check_in,
         rsvp_enabled: data.rsvp_enabled,
         capacity: data.capacity,
+        document_ids: data.document_ids,
+        poll_ids: data.poll_ids,
       });
 
       // Refetch to get joined data
@@ -151,6 +197,8 @@ export function SessionTimeline({
     enable_check_in: boolean;
     rsvp_enabled: boolean;
     capacity: number | null;
+    document_ids: string[];
+    poll_ids: string[];
   }) {
     if (!editingSession) return;
     try {
@@ -166,6 +214,8 @@ export function SessionTimeline({
         enable_check_in: data.enable_check_in,
         rsvp_enabled: data.rsvp_enabled,
         capacity: data.capacity,
+        document_ids: data.document_ids,
+        poll_ids: data.poll_ids,
       });
 
       setSessions((prev) =>
@@ -232,135 +282,165 @@ export function SessionTimeline({
           description="Add sessions to build out the event schedule."
         />
       ) : (
-        dayGroups.map((group) => (
-          <div key={group.label} className="space-y-3">
-            {/* Day header with calendar-page indicator */}
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-lg border bg-background shadow-sm">
-                <span className="text-[10px] font-semibold uppercase leading-none text-primary">
-                  {group.month}
-                </span>
-                <span className="text-lg font-bold leading-tight">{group.day}</span>
-              </div>
-              <div>
-                <h4 className="text-sm font-semibold">{group.label}</h4>
-                <p className="text-xs text-muted-foreground">{group.sessions.length} session{group.sessions.length !== 1 ? "s" : ""}</p>
-              </div>
+        <>
+          {/* Date tabs for multi-day events */}
+          {isMultiDay && (
+            <div className="flex gap-1 border-b pb-1" role="tablist">
+              {dayGroups.map((group) => (
+                <button
+                  key={group.dateKey}
+                  role="tab"
+                  aria-selected={group.dateKey === activeDayKey}
+                  onClick={() => setSelectedDay(group.dateKey)}
+                  className={`flex flex-col items-center rounded-lg px-4 py-2 text-sm transition-colors ${
+                    group.dateKey === activeDayKey
+                      ? "bg-primary text-primary-foreground font-semibold"
+                      : "hover:bg-accent text-muted-foreground"
+                  }`}
+                >
+                  <span className="text-xs">{group.weekday}</span>
+                  <span className="text-base font-bold">{group.month} {group.day}</span>
+                </button>
+              ))}
             </div>
+          )}
 
-            {/* Timeline with vertical line */}
-            <div className="relative ml-[23px] border-l-2 border-muted pl-6 space-y-2">
-              {group.sessions.map((session) => {
-                const isBreak = session.type === "break";
-                return (
-                  <div key={session.id} className="group relative">
-                    {/* Timeline dot */}
-                    <div
-                      className="absolute -left-[31px] top-4 h-2.5 w-2.5 rounded-full border-2 border-background"
-                      style={{ backgroundColor: session.track?.color ?? (isBreak ? "var(--color-muted-foreground)" : "var(--color-primary)") }}
-                    />
+          {/* Active day content */}
+          {activeGroup && (
+            <div className="space-y-3">
+              {/* Day header */}
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-lg border bg-background shadow-sm">
+                  <span className="text-[10px] font-semibold uppercase leading-none text-primary">
+                    {activeGroup.month}
+                  </span>
+                  <span className="text-lg font-bold leading-tight">{activeGroup.day}</span>
+                </div>
+                <div>
+                  <h4 className="text-sm font-semibold">{activeGroup.label}</h4>
+                  <p className="text-xs text-muted-foreground">{activeGroup.sessions.length} session{activeGroup.sessions.length !== 1 ? "s" : ""}</p>
+                </div>
+              </div>
 
-                    <Card
-                      className={`p-4 transition-all duration-200 hover:shadow-md ${
-                        isBreak ? "border-dashed bg-muted/30" : ""
-                      }`}
-                      style={{
-                        borderLeftWidth: isBreak ? undefined : 4,
-                        borderLeftColor: isBreak ? undefined : (session.track?.color ?? "transparent"),
-                        borderLeftStyle: isBreak ? undefined : "solid",
-                      }}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0 flex-1">
-                          {/* Time label - prominent */}
-                          <div className="mb-1.5 text-xs font-semibold text-primary/80">
-                            {formatTime(session.start_time)} — {formatTime(session.end_time)}
-                          </div>
+              {/* Timeline with vertical line */}
+              <div className="relative ml-[23px] border-l-2 border-muted pl-6 space-y-2">
+                {activeGroup.sessions.map((session) => {
+                  const isBreak = session.type === "break";
+                  return (
+                    <div key={session.id} className="group relative">
+                      {/* Timeline dot */}
+                      <div
+                        className="absolute -left-[31px] top-4 h-2.5 w-2.5 rounded-full border-2 border-background"
+                        style={{ backgroundColor: session.track?.color ?? (isBreak ? "var(--color-muted-foreground)" : "var(--color-primary)") }}
+                      />
 
-                          <div className="flex items-center gap-2">
-                            <Badge variant={typeBadgeVariant[session.type] ?? "default"} className="text-[10px]">
-                              {session.type}
-                            </Badge>
-                            {session.track && (
-                              <span
-                                className="flex items-center gap-1 text-[10px] font-medium"
-                                style={{ color: session.track.color ?? undefined }}
-                              >
+                      <Card
+                        className={`p-4 transition-all duration-200 hover:shadow-md ${
+                          isBreak ? "border-dashed bg-muted/30" : ""
+                        }`}
+                        style={{
+                          borderLeftWidth: isBreak ? undefined : 4,
+                          borderLeftColor: isBreak ? undefined : (session.track?.color ?? "transparent"),
+                          borderLeftStyle: isBreak ? undefined : "solid",
+                        }}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            {/* Time label - prominent */}
+                            <div className="mb-1.5 text-xs font-semibold text-primary/80">
+                              {formatTime(session.start_time)} — {formatTime(session.end_time)}
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <Badge variant={typeBadgeVariant[session.type] ?? "default"} className="text-[10px]">
+                                {session.type}
+                              </Badge>
+                              {session.track && (
                                 <span
-                                  className="inline-block h-1.5 w-1.5 rounded-full"
-                                  style={{ backgroundColor: session.track.color ?? "currentColor" }}
-                                />
-                                {session.track.name}
-                              </span>
-                            )}
-                          </div>
-
-                          <h5 className={`mt-1 font-medium ${isBreak ? "italic text-muted-foreground text-sm" : ""}`}>
-                            {session.title}
-                          </h5>
-
-                          {!isBreak && (
-                            <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                              {session.location && (
-                                <span className="flex items-center gap-1">
-                                  <MapPin className="h-3 w-3" />
-                                  {session.location}
+                                  className="flex items-center gap-1 text-[10px] font-medium"
+                                  style={{ color: session.track.color ?? undefined }}
+                                >
+                                  <span
+                                    className="inline-block h-1.5 w-1.5 rounded-full"
+                                    style={{ backgroundColor: session.track.color ?? "currentColor" }}
+                                  />
+                                  {session.track.name}
                                 </span>
                               )}
                             </div>
-                          )}
 
-                          {session.session_speakers.length > 0 && (
-                            <div className="mt-2 flex flex-wrap gap-1.5">
-                              {session.session_speakers.map(({ speakers: sp }, spIndex) => (
-                                <span
-                                  key={sp.id}
-                                  className="flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-0.5 text-[11px]"
-                                >
-                                  <span
-                                    className={`inline-flex h-4 w-4 items-center justify-center rounded-full text-[8px] font-bold text-white ${
-                                      speakerColors[spIndex % speakerColors.length]
-                                    }`}
-                                  >
-                                    {sp.name.charAt(0).toUpperCase()}
+                            <h5 className={`mt-1 font-medium ${isBreak ? "italic text-muted-foreground text-sm" : ""}`}>
+                              {session.title}
+                            </h5>
+
+                            {!isBreak && (
+                              <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                                {session.location && (
+                                  <span className="flex items-center gap-1">
+                                    <MapPin className="h-3 w-3" />
+                                    {session.location}
                                   </span>
-                                  {sp.name}
-                                </span>
-                              ))}
-                            </div>
-                          )}
-                        </div>
+                                )}
+                              </div>
+                            )}
 
-                        {/* Actions - shown on hover */}
-                        <div className="flex shrink-0 gap-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                          <button
-                            onClick={() => setEditingSession(session)}
-                            className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-                          >
-                            <Pencil className="h-3.5 w-3.5" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(session)}
-                            disabled={isPending}
-                            className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
+                            {session.session_speakers.length > 0 && (
+                              <div className="mt-2 flex flex-wrap gap-1.5">
+                                {session.session_speakers.map(({ speakers: sp }, spIndex) => (
+                                  <span
+                                    key={sp.id}
+                                    className="flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-0.5 text-[11px]"
+                                  >
+                                    <span
+                                      className={`inline-flex h-4 w-4 items-center justify-center rounded-full text-[8px] font-bold text-white ${
+                                        speakerColors[spIndex % speakerColors.length]
+                                      }`}
+                                    >
+                                      {sp.name.charAt(0).toUpperCase()}
+                                    </span>
+                                    {sp.name}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Actions - shown on hover */}
+                          <div className="flex shrink-0 gap-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                            <button
+                              onClick={() => setEditingSession(session)}
+                              className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(session)}
+                              disabled={isPending}
+                              className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    </Card>
-                  </div>
-                );
-              })}
+                      </Card>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        ))
+          )}
+        </>
       )}
 
       {showForm && (
         <SessionForm
+          eventId={eventId}
           tracks={tracks}
           speakers={speakers}
+          rooms={rooms}
+          defaults={nextSessionDefaults}
+          eventDocuments={eventDocuments}
+          eventPolls={eventPolls}
           onSubmit={handleCreate}
           onCancel={() => setShowForm(false)}
         />
@@ -368,22 +448,29 @@ export function SessionTimeline({
 
       {editingSession && (
         <SessionForm
+          eventId={eventId}
           session={{
             id: editingSession.id,
             title: editingSession.title,
             description: editingSession.description ?? "",
             type: editingSession.type,
-            start_time: toLocalInput(editingSession.start_time),
-            end_time: toLocalInput(editingSession.end_time),
+            date: toLocalDate(editingSession.start_time),
+            start_time: toLocalTime(editingSession.start_time),
+            end_time: toLocalTime(editingSession.end_time),
             location: editingSession.location ?? "",
             track_id: editingSession.track?.id ?? "",
             speaker_ids: editingSession.session_speakers.map((ss) => ss.speaker_id),
             enable_check_in: editingSession.enable_check_in,
             rsvp_enabled: editingSession.rsvp_enabled ?? false,
             capacity: editingSession.capacity ?? null,
+            document_ids: editingSession.document_ids ?? [],
+            poll_ids: editingSession.poll_ids ?? [],
           }}
           tracks={tracks}
           speakers={speakers}
+          rooms={rooms}
+          eventDocuments={eventDocuments}
+          eventPolls={eventPolls}
           onSubmit={handleUpdate}
           onCancel={() => setEditingSession(null)}
         />

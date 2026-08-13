@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@attendly/ui/cn";
 import {
   BarChart2, BarChart3, Calendar, CalendarCheck, ClipboardList,
-  DoorOpen, FileText, IdCard, ListChecks, Mail, Megaphone, MessageCircle, MessageSquare,
+  DoorOpen, FileText, IdCard, ListChecks, Mail, Megaphone, Mic, MessageCircle, MessageSquare,
   Globe, QrCode, Settings, Tag, Ticket, Users, Award,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -26,6 +26,7 @@ const iconMap: Record<string, LucideIcon> = {
   "list-checks": ListChecks,
   mail: Mail,
   megaphone: Megaphone,
+  mic: Mic,
   "message-circle": MessageCircle,
   "message-square": MessageSquare,
   "qr-code": QrCode,
@@ -158,7 +159,7 @@ export function EventSubSidebar({
                             transition={{ duration: 0.2, ease: "easeOut" }}
                             className="overflow-hidden"
                           >
-                            <div className="ml-4 border-l border-sidebar-accent/60 pl-2 py-0.5">
+                            <div className="ml-4 border-l border-sidebar-accent/60 pl-2 py-1">
                               {item.children!.map((child) => {
                                 const isChildActive = pathname === child.href;
                                 return (
@@ -166,13 +167,13 @@ export function EventSubSidebar({
                                     key={child.href}
                                     href={child.href}
                                     className={cn(
-                                      "flex items-center gap-2 rounded-md px-3 py-1 text-xs transition-colors",
+                                      "flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-colors",
                                       isChildActive
                                         ? "text-sidebar-accent-foreground font-medium bg-sidebar-accent/50"
                                         : "text-sidebar-foreground/70 hover:bg-sidebar-accent/30 hover:text-sidebar-foreground"
                                     )}
                                   >
-                                    <span className="h-1 w-1 rounded-full bg-current shrink-0" />
+                                    <span className="h-1.5 w-1.5 rounded-full bg-current shrink-0" />
                                     {child.label}
                                   </Link>
                                 );

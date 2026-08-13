@@ -23,11 +23,17 @@ export function ScheduleEditor({
   initialTracks,
   initialSessions,
   initialSpeakers,
+  initialRooms = [],
+  initialDocuments = [],
+  initialPolls = [],
 }: {
   eventId: string;
   initialTracks: Track[];
   initialSessions: any[];
   initialSpeakers: Speaker[];
+  initialRooms?: string[];
+  initialDocuments?: { id: string; title: string }[];
+  initialPolls?: { id: string; question: string }[];
 }) {
   return (
     <div className="space-y-6">
@@ -39,6 +45,9 @@ export function ScheduleEditor({
         initialSessions={initialSessions}
         tracks={initialTracks}
         speakers={initialSpeakers}
+        rooms={initialRooms}
+        eventDocuments={initialDocuments}
+        eventPolls={initialPolls}
       />
     </div>
   );
