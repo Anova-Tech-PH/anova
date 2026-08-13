@@ -26,7 +26,7 @@ export async function createTrack(eventId: string, data: { name: string; color?:
 
   if (error) throw new Error(error.message);
 
-  revalidatePath(`/events/${eventId}/schedule`);
+  revalidatePath(`/events/${eventId}/schedule`, "layout");
   return track;
 }
 
@@ -40,7 +40,7 @@ export async function updateTrack(eventId: string, trackId: string, data: { name
 
   if (error) throw new Error(error.message);
 
-  revalidatePath(`/events/${eventId}/schedule`);
+  revalidatePath(`/events/${eventId}/schedule`, "layout");
 }
 
 export async function deleteTrack(eventId: string, trackId: string) {
@@ -53,7 +53,7 @@ export async function deleteTrack(eventId: string, trackId: string) {
 
   if (error) throw new Error(error.message);
 
-  revalidatePath(`/events/${eventId}/schedule`);
+  revalidatePath(`/events/${eventId}/schedule`, "layout");
 }
 
 // --- Sessions ---
@@ -98,7 +98,7 @@ export async function createSession(eventId: string, data: {
     if (linkError) throw new Error(linkError.message);
   }
 
-  revalidatePath(`/events/${eventId}/schedule`);
+  revalidatePath(`/events/${eventId}/schedule`, "layout");
   return session;
 }
 
@@ -147,7 +147,7 @@ export async function updateSession(eventId: string, sessionId: string, data: {
     }
   }
 
-  revalidatePath(`/events/${eventId}/schedule`);
+  revalidatePath(`/events/${eventId}/schedule`, "layout");
 }
 
 export async function deleteSession(eventId: string, sessionId: string) {
@@ -160,7 +160,7 @@ export async function deleteSession(eventId: string, sessionId: string) {
 
   if (error) throw new Error(error.message);
 
-  revalidatePath(`/events/${eventId}/schedule`);
+  revalidatePath(`/events/${eventId}/schedule`, "layout");
 }
 
 // --- Bulk Import ---
@@ -293,5 +293,5 @@ export async function bulkImportSessions(eventId: string, sessions: BulkImportSe
     }
   }
 
-  revalidatePath(`/events/${eventId}/schedule`);
+  revalidatePath(`/events/${eventId}/schedule`, "layout");
 }
