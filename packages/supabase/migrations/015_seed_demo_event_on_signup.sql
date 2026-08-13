@@ -24,7 +24,7 @@ BEGIN
   INSERT INTO public.events (
     id, organization_id, title, slug, description,
     start_date, end_date, timezone,
-    venue_name, venue_address, is_virtual, status
+    venue_name, venue_address, is_virtual, status, location_data
   ) VALUES (
     gen_random_uuid(), _org_id,
     'Sample Conference 2026',
@@ -37,7 +37,8 @@ BEGIN
     'Convention Center',
     '123 Main St, San Francisco, CA',
     false,
-    'published'
+    'published',
+    '{"place_id":"297845132","formatted_address":"George R Moscone Convention Center, Howard Street, Moscone North + South, South of Market, San Francisco, California, 94105, United States","venue_name":"Convention Center","address_lines":["Howard Street","South of Market"],"city":"San Francisco","state":"California","zip":"94105","country":"United States","lat":37.7843988,"lng":-122.4005843}'::jsonb
   ) RETURNING id INTO _event_id;
 
   -- Create a track
