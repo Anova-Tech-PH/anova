@@ -40,7 +40,7 @@ describe("Schedule Actions", () => {
       const result = await createTrack("evt-1", { name: "Main", color: "#FF0000" });
 
       expect(result).toHaveProperty("id", "track-1");
-      expect(revalidatePath).toHaveBeenCalledWith("/events/evt-1/schedule");
+      expect(revalidatePath).toHaveBeenCalledWith("/events/evt-1/schedule", "layout");
     });
   });
 
@@ -52,7 +52,7 @@ describe("Schedule Actions", () => {
       await updateTrack("evt-1", "track-1", { name: "Updated", color: "#00FF00" });
 
       expect(mockFrom).toHaveBeenCalledWith("tracks");
-      expect(revalidatePath).toHaveBeenCalledWith("/events/evt-1/schedule");
+      expect(revalidatePath).toHaveBeenCalledWith("/events/evt-1/schedule", "layout");
     });
   });
 
@@ -64,7 +64,7 @@ describe("Schedule Actions", () => {
       await deleteTrack("evt-1", "track-1");
 
       expect(mockFrom).toHaveBeenCalledWith("tracks");
-      expect(revalidatePath).toHaveBeenCalledWith("/events/evt-1/schedule");
+      expect(revalidatePath).toHaveBeenCalledWith("/events/evt-1/schedule", "layout");
     });
   });
 
@@ -83,7 +83,7 @@ describe("Schedule Actions", () => {
       });
 
       expect(result).toHaveProperty("id", "sess-1");
-      expect(revalidatePath).toHaveBeenCalledWith("/events/evt-1/schedule");
+      expect(revalidatePath).toHaveBeenCalledWith("/events/evt-1/schedule", "layout");
     });
 
     it("links speakers when provided", async () => {
@@ -131,7 +131,7 @@ describe("Schedule Actions", () => {
       await updateSession("evt-1", "sess-1", { title: "Updated Talk" });
 
       expect(mockFrom).toHaveBeenCalledWith("sessions");
-      expect(revalidatePath).toHaveBeenCalledWith("/events/evt-1/schedule");
+      expect(revalidatePath).toHaveBeenCalledWith("/events/evt-1/schedule", "layout");
     });
 
     it("handles capacity and rsvp_enabled fields", async () => {
@@ -144,7 +144,7 @@ describe("Schedule Actions", () => {
       });
 
       expect(mockFrom).toHaveBeenCalledWith("sessions");
-      expect(revalidatePath).toHaveBeenCalledWith("/events/evt-1/schedule");
+      expect(revalidatePath).toHaveBeenCalledWith("/events/evt-1/schedule", "layout");
     });
   });
 
@@ -156,7 +156,7 @@ describe("Schedule Actions", () => {
       await deleteSession("evt-1", "sess-1");
 
       expect(mockFrom).toHaveBeenCalledWith("sessions");
-      expect(revalidatePath).toHaveBeenCalledWith("/events/evt-1/schedule");
+      expect(revalidatePath).toHaveBeenCalledWith("/events/evt-1/schedule", "layout");
     });
   });
 });
