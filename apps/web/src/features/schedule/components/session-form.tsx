@@ -615,7 +615,7 @@ export function SessionForm({
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium">Description</label>
                   <RichTextEditor
-                    value={form.description}
+                    content={form.description}
                     onChange={(html) => setForm((f) => ({ ...f, description: html }))}
                     placeholder="Session description..."
                   />

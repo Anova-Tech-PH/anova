@@ -4,18 +4,18 @@ import { render, screen, fireEvent } from "@testing-library/react";
 // Mock RichTextEditor since TipTap needs full DOM
 vi.mock("@/shared/components/rich-text-editor", () => ({
   RichTextEditor: ({
-    value,
+    content,
     onChange,
     placeholder,
   }: {
-    value: string;
+    content: string;
     onChange: (html: string) => void;
     placeholder?: string;
   }) => (
     <div data-testid="rich-text-editor" data-placeholder={placeholder}>
       <textarea
         aria-label="rich-text-editor"
-        value={value}
+        value={content}
         onChange={(e) => onChange(e.target.value)}
       />
     </div>

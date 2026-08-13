@@ -285,7 +285,7 @@ function StepBasics({
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Description</label>
           <RichTextEditor
-            value={form.description}
+            content={form.description}
             onChange={(html) => update("description", html)}
             placeholder="Tell attendees about your event... This description is visible to all users, making it a good marketing opportunity!"
           />

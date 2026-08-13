@@ -2,10 +2,13 @@
 
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import Underline from "@tiptap/extension-underline";
 import TextAlign from "@tiptap/extension-text-align";
-import Image from "@tiptap/extension-image";
+import { TextStyle } from "@tiptap/extension-text-style";
+import Color from "@tiptap/extension-color";
+import Highlight from "@tiptap/extension-highlight";
 import Placeholder from "@tiptap/extension-placeholder";
-import { useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   Bold,
   Italic,
@@ -13,18 +16,17 @@ import {
   AlignLeft,
   AlignCenter,
   AlignRight,
-  Link as LinkIcon,
-  Image as ImageIcon,
-  Code,
-  List,
-  ListOrdered,
-  Quote,
+  AlignJustify,
+  Palette,
+  Highlighter,
+  RemoveFormatting,
 } from "lucide-react";
 
 interface RichTextEditorProps {
-  value: string;
+  content: string;
   onChange: (html: string) => void;
   placeholder?: string;
+  readOnly?: boolean;
 }
 
 function ToolbarButton({
@@ -54,18 +56,102 @@ function ToolbarButton({
   );
 }
 
-export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
+const TEXT_COLORS = [
+  { name: "Black", value: "#000000" },
+  { name: "Red", value: "#dc2626" },
+  { name: "Green", value: "#16a34a" },
+  { name: "Blue", value: "#2563eb" },
+  { name: "Orange", value: "#ea580c" },
+  { name: "Purple", value: "#9333ea" },
+];
+
+const HIGHLIGHT_COLORS = [
+  { name: "Yellow", value: "#fef08a" },
+  { name: "Green", value: "#bbf7d0" },
+  { name: "Blue", value: "#bfdbfe" },
+  { name: "Pink", value: "#fbcfe8" },
+  { name: "Purple", value: "#e9d5ff" },
+];
+
+function ColorPickerDropdown({
+  colors,
+  onSelect,
+  triggerIcon,
+  title,
+}: {
+  colors: { name: string; value: string }[];
+  onSelect: (color: string) => void;
+  triggerIcon: React.ReactNode;
+  title: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        title={title}
+        className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        onMouseEnter={() => setOpen(true)}
+        onClick={() => setOpen((prev) => !prev)}
+      >
+        {triggerIcon}
+      </button>
+      {open && (
+        <div
+          className="absolute left-0 top-full z-50 mt-1 flex gap-1 rounded-md border bg-popover p-2 shadow-md"
+          onMouseLeave={() => setOpen(false)}
+        >
+          {colors.map((color) => (
+            <button
+              key={color.value}
+              type="button"
+              title={color.name}
+              className="h-6 w-6 rounded-sm border border-border transition-transform hover:scale-110"
+              style={{ backgroundColor: color.value }}
+              onClick={() => {
+                onSelect(color.value);
+                setOpen(false);
+              }}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function RichTextEditor({
+  content,
+  onChange,
+  placeholder,
+  readOnly = false,
+}: RichTextEditorProps) {
   const editor = useEditor({
     extensions: [
-      StarterKit.configure({
-        heading: { levels: [2, 3] },
-        link: { openOnClick: false },
-      }),
+      StarterKit,
+      Underline,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
-      Image,
-      Placeholder.configure({ placeholder: placeholder ?? "Write something..." }),
+      TextStyle,
+      Color,
+      Highlight.configure({ multicolor: true }),
+      Placeholder.configure({
+        placeholder: placeholder ?? "Write something...",
+      }),
     ],
-    content: value,
+    content,
+    editable: !readOnly,
     immediatelyRender: true,
     onUpdate: ({ editor: e }) => {
       onChange(e.getHTML());
@@ -73,30 +159,31 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
   });
 
   useEffect(() => {
-    if (editor && !editor.isDestroyed && value !== editor.getHTML()) {
-      editor.commands.setContent(value, { emitUpdate: false });
+    if (editor && !editor.isDestroyed && content !== editor.getHTML()) {
+      editor.commands.setContent(content, { emitUpdate: false });
     }
-  }, [value, editor]);
+  }, [content, editor]);
+
+  useEffect(() => {
+    if (editor && !editor.isDestroyed) {
+      editor.setEditable(!readOnly);
+    }
+  }, [readOnly, editor]);
 
   if (!editor) return null;
 
-  function handleLink() {
-    const url = window.prompt("Enter URL:");
-    if (url) {
-      editor!.chain().focus().setLink({ href: url }).run();
-    }
-  }
-
-  function handleImage() {
-    const url = window.prompt("Enter image URL:");
-    if (url) {
-      editor!.chain().focus().setImage({ src: url }).run();
-    }
+  if (readOnly) {
+    return (
+      <div className="prose prose-sm max-w-none">
+        <EditorContent editor={editor} />
+      </div>
+    );
   }
 
   return (
     <div className="rounded-lg border bg-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
       <div className="flex flex-wrap items-center gap-0.5 border-b bg-muted/30 px-2 py-1.5">
+        {/* Bold / Italic / Underline */}
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBold().run()}
           active={editor.isActive("bold")}
@@ -121,6 +208,7 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
 
         <div className="mx-1 h-5 w-px bg-border" />
 
+        {/* Text Alignment */}
         <ToolbarButton
           onClick={() => editor.chain().focus().setTextAlign("left").run()}
           active={editor.isActive({ textAlign: "left" })}
@@ -142,51 +230,52 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
         >
           <AlignRight className="h-4 w-4" />
         </ToolbarButton>
-
-        <div className="mx-1 h-5 w-px bg-border" />
-
-        <ToolbarButton onClick={handleLink} active={editor.isActive("link")} title="Insert link">
-          <LinkIcon className="h-4 w-4" />
-        </ToolbarButton>
-        <ToolbarButton onClick={handleImage} title="Insert image">
-          <ImageIcon className="h-4 w-4" />
-        </ToolbarButton>
         <ToolbarButton
-          onClick={() => editor.chain().focus().toggleCode().run()}
-          active={editor.isActive("code")}
-          title="Code"
+          onClick={() => editor.chain().focus().setTextAlign("justify").run()}
+          active={editor.isActive({ textAlign: "justify" })}
+          title="Justify"
         >
-          <Code className="h-4 w-4" />
+          <AlignJustify className="h-4 w-4" />
         </ToolbarButton>
 
         <div className="mx-1 h-5 w-px bg-border" />
 
+        {/* Text Color */}
+        <ColorPickerDropdown
+          colors={TEXT_COLORS}
+          onSelect={(color) =>
+            editor.chain().focus().setColor(color).run()
+          }
+          triggerIcon={<Palette className="h-4 w-4" />}
+          title="Text color"
+        />
+
+        {/* Highlight Color */}
+        <ColorPickerDropdown
+          colors={HIGHLIGHT_COLORS}
+          onSelect={(color) =>
+            editor.chain().focus().toggleHighlight({ color }).run()
+          }
+          triggerIcon={<Highlighter className="h-4 w-4" />}
+          title="Highlight color"
+        />
+
+        <div className="mx-1 h-5 w-px bg-border" />
+
+        {/* Clear Formatting */}
         <ToolbarButton
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
-          active={editor.isActive("bulletList")}
-          title="Bullet list"
+          onClick={() =>
+            editor.chain().focus().clearNodes().unsetAllMarks().run()
+          }
+          title="Clear formatting"
         >
-          <List className="h-4 w-4" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          active={editor.isActive("orderedList")}
-          title="Ordered list"
-        >
-          <ListOrdered className="h-4 w-4" />
-        </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleBlockquote().run()}
-          active={editor.isActive("blockquote")}
-          title="Blockquote"
-        >
-          <Quote className="h-4 w-4" />
+          <RemoveFormatting className="h-4 w-4" />
         </ToolbarButton>
       </div>
 
       <EditorContent
         editor={editor}
-        className="prose prose-sm max-w-none px-4 py-3 min-h-[150px] max-h-[400px] overflow-y-auto focus:outline-none [&_.ProseMirror]:outline-none [&_.ProseMirror_p.is-editor-empty:first-child::before]:text-muted-foreground [&_.ProseMirror_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)] [&_.ProseMirror_p.is-editor-empty:first-child::before]:float-left [&_.ProseMirror_p.is-editor-empty:first-child::before]:pointer-events-none [&_.ProseMirror_p.is-editor-empty:first-child::before]:h-0"
+        className="prose prose-sm max-w-none px-4 py-3 min-h-[200px] max-h-[400px] overflow-y-auto focus:outline-none [&_.ProseMirror]:outline-none [&_.ProseMirror_p.is-editor-empty:first-child::before]:text-muted-foreground [&_.ProseMirror_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)] [&_.ProseMirror_p.is-editor-empty:first-child::before]:float-left [&_.ProseMirror_p.is-editor-empty:first-child::before]:pointer-events-none [&_.ProseMirror_p.is-editor-empty:first-child::before]:h-0"
       />
     </div>
   );
