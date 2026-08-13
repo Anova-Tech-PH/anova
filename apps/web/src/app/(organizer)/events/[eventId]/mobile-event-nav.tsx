@@ -82,7 +82,7 @@ export function MobileEventNav({
     <div className="lg:hidden space-y-2">
       {/* Top tab bar — always visible */}
       <div className="overflow-x-auto">
-        <div className="flex items-center gap-1 rounded-lg bg-zinc-900 p-1">
+        <div className="flex items-center gap-1 rounded-xl border bg-muted/50 p-1">
           {groups.map((group) => {
             const active = isGroupActive(group, activePathname);
             const Icon = iconMap[group.icon];
@@ -93,10 +93,10 @@ export function MobileEventNav({
                 type="button"
                 onClick={() => navigate(group.firstHref)}
                 className={cn(
-                  "flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-colors cursor-pointer",
+                  "flex items-center gap-2 whitespace-nowrap rounded-lg px-3.5 py-2 text-sm font-medium transition-all duration-200 cursor-pointer",
                   active
-                    ? "bg-white text-zinc-900 shadow-sm"
-                    : "text-zinc-300 hover:bg-white/10 hover:text-white"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:bg-background/80 hover:text-foreground"
                 )}
               >
                 {Icon && <Icon className="h-4 w-4 shrink-0" />}

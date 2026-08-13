@@ -91,22 +91,22 @@ describe("EventTopTabs", () => {
     mockPathname = "/events/evt-1/tickets";
     renderWithProvider(<EventTopTabs groups={groups} />);
     const registrationTab = screen.getByText("Registration").closest("button");
-    expect(hasClass(registrationTab, "bg-white")).toBe(true);
+    expect(hasClass(registrationTab, "bg-primary")).toBe(true);
   });
 
   it("marks active category based on pathname (startsWith for items with children)", () => {
     mockPathname = "/events/evt-1/schedule/tracks";
     renderWithProvider(<EventTopTabs groups={groups} />);
     const contentTab = screen.getByText("Content").closest("button");
-    expect(hasClass(contentTab, "bg-white")).toBe(true);
+    expect(hasClass(contentTab, "bg-primary")).toBe(true);
   });
 
   it("does not mark inactive categories as active", () => {
     mockPathname = "/events/evt-1/schedule";
     renderWithProvider(<EventTopTabs groups={groups} />);
-    expect(hasClass(screen.getByText("Registration").closest("button"), "bg-white")).toBe(false);
-    expect(hasClass(screen.getByText("Engagement").closest("button"), "bg-white")).toBe(false);
-    expect(hasClass(screen.getByText("Outreach").closest("button"), "bg-white")).toBe(false);
-    expect(hasClass(screen.getByText("Insights").closest("button"), "bg-white")).toBe(false);
+    expect(hasClass(screen.getByText("Registration").closest("button"), "bg-primary")).toBe(false);
+    expect(hasClass(screen.getByText("Engagement").closest("button"), "bg-primary")).toBe(false);
+    expect(hasClass(screen.getByText("Outreach").closest("button"), "bg-primary")).toBe(false);
+    expect(hasClass(screen.getByText("Insights").closest("button"), "bg-primary")).toBe(false);
   });
 });

@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { ArrowLeft, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
@@ -47,10 +46,8 @@ export function EventSubSidebar({
   eventTitle: string;
   groups: TopTabGroup[];
 }) {
-  const pathname = usePathname();
-  const { activePathname } = useEventNav();
+  const { activePathname, navigate } = useEventNav();
 
-  // Use optimistic pathname for group detection, real pathname for item highlighting
   const activeGroup =
     groups.find((g) => isGroupActive(g, activePathname)) ?? groups[0];
 
@@ -59,7 +56,7 @@ export function EventSubSidebar({
     const initial: Record<string, boolean> = {};
     if (activeGroup) {
       for (const item of activeGroup.items) {
-        if (item.children && pathname.startsWith(item.href)) {
+        if (item.children && activePathname.startsWith(item.href)) {
           initial[item.href] = true;
         }
       }
@@ -67,17 +64,17 @@ export function EventSubSidebar({
     return initial;
   });
 
-  // Auto-expand items when pathname changes
+  // Auto-expand items when activePathname changes
   useEffect(() => {
     if (!activeGroup) return;
     const newExpanded: Record<string, boolean> = {};
     for (const item of activeGroup.items) {
-      if (item.children && pathname.startsWith(item.href)) {
+      if (item.children && activePathname.startsWith(item.href)) {
         newExpanded[item.href] = true;
       }
     }
     setExpanded((prev) => ({ ...prev, ...newExpanded }));
-  }, [pathname, activeGroup]);
+  }, [activePathname, activeGroup]);
 
   const toggleExpanded = (href: string) => {
     setExpanded((prev) => ({ ...prev, [href]: !prev[href] }));
@@ -110,19 +107,20 @@ export function EventSubSidebar({
           {activeGroup.items.map((item) => {
             const hasChildren = item.children && item.children.length > 0;
             const isActive = hasChildren
-              ? pathname.startsWith(item.href)
-              : pathname === item.href;
-            const isExpanded = expanded[item.href] ?? pathname.startsWith(item.href);
+              ? activePathname.startsWith(item.href)
+              : activePathname === item.href;
+            const isExpanded = expanded[item.href] ?? activePathname.startsWith(item.href);
             const Icon = iconMap[item.icon];
 
             if (hasChildren) {
               return (
                 <div key={item.href}>
                   <div className="relative flex items-center">
-                    <Link
-                      href={item.href}
+                    <button
+                      type="button"
+                      onClick={() => navigate(item.href)}
                       className={cn(
-                        "group relative flex flex-1 items-center gap-2.5 rounded-lg px-3 py-1.5 text-sm transition-all duration-200",
+                        "group relative flex flex-1 items-center gap-2.5 rounded-lg px-3 py-1.5 text-sm transition-all duration-200 cursor-pointer text-left",
                         isActive
                           ? "text-sidebar-accent-foreground font-medium"
                           : "text-sidebar-foreground hover:bg-sidebar-accent/40"
@@ -139,7 +137,7 @@ export function EventSubSidebar({
                         {Icon && <Icon className="h-4 w-4 shrink-0" />}
                         <span>{item.label}</span>
                       </span>
-                    </Link>
+                    </button>
                     <button
                       type="button"
                       onClick={() => toggleExpanded(item.href)}
@@ -164,13 +162,14 @@ export function EventSubSidebar({
                       >
                         <div className="ml-4 border-l border-sidebar-accent/60 pl-2 py-1">
                           {item.children!.map((child) => {
-                            const isChildActive = pathname === child.href;
+                            const isChildActive = activePathname === child.href;
                             return (
-                              <Link
+                              <button
+                                type="button"
                                 key={child.href}
-                                href={child.href}
+                                onClick={() => navigate(child.href)}
                                 className={cn(
-                                  "flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-colors",
+                                  "flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-colors cursor-pointer text-left",
                                   isChildActive
                                     ? "text-sidebar-accent-foreground font-medium bg-sidebar-accent/50"
                                     : "text-sidebar-foreground/70 hover:bg-sidebar-accent/30 hover:text-sidebar-foreground"
@@ -178,7 +177,7 @@ export function EventSubSidebar({
                               >
                                 <span className="h-1.5 w-1.5 rounded-full bg-current shrink-0" />
                                 {child.label}
-                              </Link>
+                              </button>
                             );
                           })}
                         </div>
@@ -190,11 +189,12 @@ export function EventSubSidebar({
             }
 
             return (
-              <Link
+              <button
+                type="button"
                 key={item.href}
-                href={item.href}
+                onClick={() => navigate(item.href)}
                 className={cn(
-                  "group relative flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-sm transition-all duration-200",
+                  "group relative flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-sm transition-all duration-200 cursor-pointer text-left",
                   isActive
                     ? "text-sidebar-accent-foreground font-medium"
                     : "text-sidebar-foreground hover:bg-sidebar-accent/40"
@@ -211,7 +211,7 @@ export function EventSubSidebar({
                   {Icon && <Icon className="h-4 w-4 shrink-0" />}
                   <span>{item.label}</span>
                 </span>
-              </Link>
+              </button>
             );
           })}
         </div>

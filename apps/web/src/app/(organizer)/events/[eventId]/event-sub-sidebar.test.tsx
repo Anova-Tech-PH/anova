@@ -121,14 +121,14 @@ describe("EventSubSidebar", () => {
   it("applies active style to child matching exact pathname", () => {
     mockPathname = "/events/evt-1/schedule/tracks";
     renderWithProvider(<EventSubSidebar eventTitle="My Event" groups={baseGroups} />);
-    const trackLink = screen.getByText("Track Manager").closest("a");
+    const trackLink = screen.getByText("Track Manager").closest("button");
     expect(trackLink?.className).toContain("font-medium");
   });
 
   it("does not apply active style to non-matching children", () => {
     mockPathname = "/events/evt-1/schedule/tracks";
     renderWithProvider(<EventSubSidebar eventTitle="My Event" groups={baseGroups} />);
-    const conflictLink = screen.getByText("Conflict Check").closest("a");
+    const conflictLink = screen.getByText("Conflict Check").closest("button");
     expect(conflictLink?.className).not.toContain("font-medium");
   });
 
@@ -140,8 +140,12 @@ describe("EventSubSidebar", () => {
     // Children should be visible initially (pathname matches)
     expect(screen.getByText("Session Manager")).toBeInTheDocument();
 
-    // Click the chevron toggle button
-    const chevronButton = container.querySelector("button[type='button']");
+    // Click the chevron toggle button (second button in the parent item row)
+    const buttons = container.querySelectorAll("button[type='button']");
+    // Find the chevron button - it's the narrow one next to Agenda Center
+    const chevronButton = Array.from(buttons).find((btn) =>
+      btn.querySelector("svg") && btn.className.includes("h-7 w-7")
+    );
     expect(chevronButton).toBeTruthy();
     fireEvent.click(chevronButton!);
 
@@ -157,14 +161,14 @@ describe("EventSubSidebar", () => {
   it("marks parent as active when pathname starts with parent href", () => {
     mockPathname = "/events/evt-1/schedule/qa";
     renderWithProvider(<EventSubSidebar eventTitle="My Event" groups={baseGroups} />);
-    const agendaLink = screen.getByText("Agenda Center").closest("a");
+    const agendaLink = screen.getByText("Agenda Center").closest("button");
     expect(agendaLink?.className).toContain("font-medium");
   });
 
   it("does not mark non-matching parent as active", () => {
     mockPathname = "/events/evt-1/schedule";
     renderWithProvider(<EventSubSidebar eventTitle="My Event" groups={baseGroups} />);
-    const attendeesLink = screen.getByText("Attendees").closest("a");
+    const attendeesLink = screen.getByText("Attendees").closest("button");
     expect(attendeesLink?.className).not.toContain("font-medium");
   });
 
