@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { Badge } from "@attendly/ui/components";
 import { EventSubSidebar } from "./event-sub-sidebar";
 import { MobileEventNav } from "./mobile-event-nav";
+import { EventTopTabs } from "./event-top-tabs";
 
 export default async function EventLayout({
   children,
@@ -27,6 +28,8 @@ export default async function EventLayout({
   const groups = [
     {
       label: "Content",
+      icon: "layout-grid" as const,
+      firstHref: `/events/${eventId}`,
       items: [
         { href: `/events/${eventId}`, label: "Basics", icon: "settings" },
         {
@@ -78,6 +81,8 @@ export default async function EventLayout({
     },
     {
       label: "Registration",
+      icon: "ticket" as const,
+      firstHref: `/events/${eventId}/tickets`,
       items: [
         { href: `/events/${eventId}/tickets`, label: "Tickets", icon: "ticket" },
         { href: `/events/${eventId}/custom-fields`, label: "Form Fields", icon: "list-checks" },
@@ -89,6 +94,8 @@ export default async function EventLayout({
     },
     {
       label: "Engagement",
+      icon: "megaphone" as const,
+      firstHref: `/events/${eventId}/announcements`,
       items: [
         { href: `/events/${eventId}/announcements`, label: "Announcements", icon: "megaphone" },
         { href: `/events/${eventId}/qa`, label: "Q&A", icon: "message-circle" },
@@ -100,6 +107,8 @@ export default async function EventLayout({
     },
     {
       label: "Outreach",
+      icon: "globe" as const,
+      firstHref: `/events/${eventId}/website`,
       items: [
         { href: `/events/${eventId}/website`, label: "Website", icon: "globe" },
         { href: `/events/${eventId}/emails`, label: "Emails", icon: "mail" },
@@ -109,6 +118,8 @@ export default async function EventLayout({
     },
     {
       label: "Insights",
+      icon: "bar-chart-3" as const,
+      firstHref: `/events/${eventId}/analytics`,
       items: [
         { href: `/events/${eventId}/analytics`, label: "Analytics", icon: "bar-chart-3" },
         { href: `/events/${eventId}/settings`, label: "Settings", icon: "settings" },
@@ -173,6 +184,11 @@ export default async function EventLayout({
             <Calendar className="h-3.5 w-3.5" />
             {dateStr}
           </p>
+        </div>
+
+        {/* Desktop top tabs */}
+        <div className="mb-4 hidden lg:block">
+          <EventTopTabs groups={groups} />
         </div>
 
         {children}
