@@ -29,7 +29,17 @@ export default async function EventLayout({
       label: "Content",
       items: [
         { href: `/events/${eventId}`, label: "Basics", icon: "settings" },
-        { href: `/events/${eventId}/schedule`, label: "Agenda Center", icon: "calendar" },
+        {
+          href: `/events/${eventId}/schedule`,
+          label: "Agenda Center",
+          icon: "calendar",
+          children: [
+            { href: `/events/${eventId}/schedule`, label: "Session Manager" },
+            { href: `/events/${eventId}/schedule/tracks`, label: "Track Manager" },
+            { href: `/events/${eventId}/schedule/conflicts`, label: "Conflict Check" },
+            { href: `/events/${eventId}/schedule/qa`, label: "Session Q&A Manager" },
+          ],
+        },
         { href: `/events/${eventId}/rooms`, label: "Rooms", icon: "door-open" },
         { href: `/events/${eventId}/sponsors`, label: "Sponsor Center", icon: "award" },
         { href: `/events/${eventId}/documents`, label: "Documents & Videos", icon: "file-text" },

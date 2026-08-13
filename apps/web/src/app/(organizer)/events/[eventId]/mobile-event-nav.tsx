@@ -38,6 +38,7 @@ interface TabItem {
   href: string;
   label: string;
   icon: string;
+  children?: { href: string; label: string }[];
 }
 
 interface TabGroup {
@@ -53,8 +54,31 @@ export function MobileEventNav({
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
+  const [expandedMobile, setExpandedMobile] = useState<Record<string, boolean>>(() => {
+    const initial: Record<string, boolean> = {};
+    for (const group of groups) {
+      for (const item of group.items) {
+        if (item.children && pathname.startsWith(item.href)) {
+          initial[item.href] = true;
+        }
+      }
+    }
+    return initial;
+  });
+
+  const toggleExpandedMobile = (href: string) => {
+    setExpandedMobile((prev) => ({ ...prev, [href]: !prev[href] }));
+  };
+
   const allItems = groups.flatMap((g) => g.items);
-  const current = allItems.find((t) => t.href === pathname) ?? allItems[0];
+  // Check children first for exact match, then parents
+  const allChildren = allItems.flatMap((item) =>
+    (item.children ?? []).map((child) => ({ ...child, parentIcon: item.icon }))
+  );
+  const matchedChild = allChildren.find((c) => c.href === pathname);
+  const current = matchedChild
+    ? { ...allItems.find((t) => t.children?.some((c) => c.href === pathname))!, label: matchedChild.label }
+    : allItems.find((t) => t.href === pathname) ?? allItems[0];
   const CurrentIcon = current ? iconMap[current.icon] : null;
 
   return (
@@ -92,8 +116,80 @@ export function MobileEventNav({
                     {group.label}
                   </p>
                   {group.items.map((item) => {
-                    const isActive = item.href === pathname;
+                    const hasChildren = item.children && item.children.length > 0;
+                    const isActive = hasChildren
+                      ? pathname.startsWith(item.href)
+                      : pathname === item.href;
+                    const isExpanded = expandedMobile[item.href] ?? pathname.startsWith(item.href);
                     const Icon = iconMap[item.icon];
+
+                    if (hasChildren) {
+                      return (
+                        <div key={item.href}>
+                          <div className="flex items-center">
+                            <Link
+                              href={item.href}
+                              onClick={() => setOpen(false)}
+                              className={cn(
+                                "flex flex-1 items-center gap-2.5 rounded-md px-3 py-1.5 text-sm transition-colors",
+                                isActive
+                                  ? "bg-primary/10 text-primary font-medium"
+                                  : "text-foreground hover:bg-muted"
+                              )}
+                            >
+                              {Icon && <Icon className="h-4 w-4" />}
+                              {item.label}
+                            </Link>
+                            <button
+                              type="button"
+                              onClick={() => toggleExpandedMobile(item.href)}
+                              className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted transition-colors"
+                            >
+                              <ChevronDown
+                                className={cn(
+                                  "h-3.5 w-3.5 transition-transform duration-200",
+                                  isExpanded && "rotate-180"
+                                )}
+                              />
+                            </button>
+                          </div>
+                          <AnimatePresence initial={false}>
+                            {isExpanded && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: "auto", opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.2, ease: "easeOut" }}
+                                className="overflow-hidden"
+                              >
+                                <div className="ml-5 border-l border-border pl-2 py-0.5">
+                                  {item.children!.map((child) => {
+                                    const isChildActive = pathname === child.href;
+                                    return (
+                                      <Link
+                                        key={child.href}
+                                        href={child.href}
+                                        onClick={() => setOpen(false)}
+                                        className={cn(
+                                          "flex items-center gap-2 rounded-md px-3 py-1 text-xs transition-colors",
+                                          isChildActive
+                                            ? "bg-primary/10 text-primary font-medium"
+                                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                                        )}
+                                      >
+                                        <span className="h-1 w-1 rounded-full bg-current shrink-0" />
+                                        {child.label}
+                                      </Link>
+                                    );
+                                  })}
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      );
+                    }
+
                     return (
                       <Link
                         key={item.href}
