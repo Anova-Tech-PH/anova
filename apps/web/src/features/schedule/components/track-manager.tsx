@@ -25,7 +25,7 @@ export function TrackManager({
 }: {
   eventId: string;
   initialTracks: Track[];
-  onTracksChange: (tracks: Track[]) => void;
+  onTracksChange?: (tracks: Track[]) => void;
 }) {
   const [tracks, setTracks] = useState(initialTracks);
   const [adding, setAdding] = useState(false);
@@ -37,7 +37,7 @@ export function TrackManager({
 
   function updateTracks(newTracks: Track[]) {
     setTracks(newTracks);
-    onTracksChange(newTracks);
+    onTracksChange?.(newTracks);
   }
 
   async function handleAdd() {

@@ -20,7 +20,6 @@ export default async function TrackManagerPage({
       <TrackManager
         eventId={eventId}
         initialTracks={tracks}
-        onTracksChange={() => {}}
       />
     </div>
   );
