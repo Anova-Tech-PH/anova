@@ -27,6 +27,7 @@ export async function createSpeaker(eventId: string, data: {
   if (error) throw new Error(error.message);
 
   revalidatePath(`/events/${eventId}/schedule`);
+  revalidatePath(`/events/${eventId}/speakers`);
   return speaker;
 }
 
@@ -53,6 +54,7 @@ export async function updateSpeaker(eventId: string, speakerId: string, data: {
   if (error) throw new Error(error.message);
 
   revalidatePath(`/events/${eventId}/schedule`);
+  revalidatePath(`/events/${eventId}/speakers`);
 }
 
 export async function deleteSpeaker(eventId: string, speakerId: string) {
@@ -66,6 +68,7 @@ export async function deleteSpeaker(eventId: string, speakerId: string) {
   if (error) throw new Error(error.message);
 
   revalidatePath(`/events/${eventId}/schedule`);
+  revalidatePath(`/events/${eventId}/speakers`);
 }
 
 export async function bulkImportSpeakers(eventId: string, rows: {
@@ -107,5 +110,6 @@ export async function bulkImportSpeakers(eventId: string, rows: {
   if (error) throw new Error(error.message);
 
   revalidatePath(`/events/${eventId}/schedule`);
+  revalidatePath(`/events/${eventId}/speakers`);
   return data;
 }

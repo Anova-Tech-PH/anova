@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@attendly/ui/cn";
 import {
   BarChart2, BarChart3, Calendar, CalendarCheck, ClipboardList,
-  DoorOpen, IdCard, ListChecks, Mail, Megaphone, MessageSquare,
+  DoorOpen, IdCard, ListChecks, Mail, Megaphone, Mic, MessageSquare,
   Globe, QrCode, Settings, Tag, Ticket, Users, Award,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -25,6 +25,7 @@ const iconMap: Record<string, LucideIcon> = {
   "list-checks": ListChecks,
   mail: Mail,
   megaphone: Megaphone,
+  mic: Mic,
   "message-square": MessageSquare,
   "qr-code": QrCode,
   settings: Settings,

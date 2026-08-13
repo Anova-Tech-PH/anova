@@ -10,6 +10,12 @@ export async function createPoll(
     question: string;
     options: PollOption[];
     session_id?: string;
+    is_anonymous?: boolean;
+    prompt_attendee?: boolean;
+    result_visibility?: "everyone" | "after_closed" | "organizers_only";
+    open_time_mode?: "now" | "before_session" | "scheduled";
+    open_before_minutes?: number;
+    scheduled_open_at?: string;
   }
 ) {
   const supabase = await createClient();
@@ -24,6 +30,13 @@ export async function createPoll(
       question: data.question,
       options: data.options as unknown as Record<string, unknown>[],
       session_id: data.session_id ?? null,
+      is_anonymous: data.is_anonymous ?? false,
+      prompt_attendee: data.prompt_attendee ?? true,
+      result_visibility: data.result_visibility ?? "everyone",
+      open_time_mode: data.open_time_mode ?? "now",
+      open_before_minutes: data.open_before_minutes ?? 0,
+      scheduled_open_at: data.scheduled_open_at ?? null,
+      status: data.open_time_mode === "now" ? "open" : "draft",
     })
     .select()
     .single();
