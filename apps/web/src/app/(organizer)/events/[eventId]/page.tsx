@@ -40,9 +40,10 @@ export default async function EventDetailPage({
               About
             </h2>
           </div>
-          <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap">
-            {event.description}
-          </p>
+          <div
+            className="prose prose-sm max-w-none text-muted-foreground"
+            dangerouslySetInnerHTML={{ __html: event.description }}
+          />
         </Card>
       )}
 
