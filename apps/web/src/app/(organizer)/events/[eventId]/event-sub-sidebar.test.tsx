@@ -22,10 +22,13 @@ vi.mock("motion/react", () => ({
 }));
 
 import { EventSubSidebar } from "./event-sub-sidebar";
+import type { TopTabGroup } from "./event-top-tabs";
 
-const baseGroups = [
+const baseGroups: TopTabGroup[] = [
   {
     label: "Event",
+    icon: "layout-grid",
+    firstHref: "/events/evt-1/schedule",
     items: [
       {
         href: "/events/evt-1/schedule",
@@ -47,6 +50,43 @@ const baseGroups = [
   },
 ];
 
+const twoGroupSetup: TopTabGroup[] = [
+  {
+    label: "Event",
+    icon: "layout-grid",
+    firstHref: "/events/evt-1/schedule",
+    items: [
+      {
+        href: "/events/evt-1/schedule",
+        label: "Agenda Center",
+        icon: "calendar",
+      },
+      {
+        href: "/events/evt-1/attendees",
+        label: "Attendees",
+        icon: "users",
+      },
+    ],
+  },
+  {
+    label: "Engagement",
+    icon: "megaphone",
+    firstHref: "/events/evt-1/announcements",
+    items: [
+      {
+        href: "/events/evt-1/announcements",
+        label: "Announcements",
+        icon: "megaphone",
+      },
+      {
+        href: "/events/evt-1/polls",
+        label: "Polls",
+        icon: "bar-chart-3",
+      },
+    ],
+  },
+];
+
 describe("EventSubSidebar", () => {
   beforeEach(() => {
     mockPathname = "/events/evt-1/schedule";
@@ -55,11 +95,6 @@ describe("EventSubSidebar", () => {
   it("renders event title", () => {
     render(<EventSubSidebar eventTitle="My Event" groups={baseGroups} />);
     expect(screen.getByText("My Event")).toBeInTheDocument();
-  });
-
-  it("renders group label", () => {
-    render(<EventSubSidebar eventTitle="My Event" groups={baseGroups} />);
-    expect(screen.getByText("Event")).toBeInTheDocument();
   });
 
   it("renders parent items", () => {
@@ -125,5 +160,18 @@ describe("EventSubSidebar", () => {
     render(<EventSubSidebar eventTitle="My Event" groups={baseGroups} />);
     const attendeesLink = screen.getByText("Attendees").closest("a");
     expect(attendeesLink?.className).not.toContain("font-medium");
+  });
+
+  it("only renders items from the active category", () => {
+    mockPathname = "/events/evt-1/announcements";
+    render(<EventSubSidebar eventTitle="My Event" groups={twoGroupSetup} />);
+
+    // Second group's items should be visible
+    expect(screen.getByText("Announcements")).toBeInTheDocument();
+    expect(screen.getByText("Polls")).toBeInTheDocument();
+
+    // First group's items should NOT be visible
+    expect(screen.queryByText("Agenda Center")).not.toBeInTheDocument();
+    expect(screen.queryByText("Attendees")).not.toBeInTheDocument();
   });
 });
