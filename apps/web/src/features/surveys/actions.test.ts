@@ -37,7 +37,7 @@ describe("Survey Actions", () => {
       const { createOrUpdateSurvey } = await import("./actions");
       await createOrUpdateSurvey("evt-1", {
         title: "Feedback",
-        questions: [{ id: "q1", question: "How was it?", type: "text", required: true }],
+        questions: [{ id: "q1", label: "How was it?", type: "text", required: true }],
       });
 
       expect(mockFrom).toHaveBeenCalledWith("surveys");

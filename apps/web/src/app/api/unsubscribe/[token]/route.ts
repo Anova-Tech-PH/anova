@@ -31,6 +31,14 @@ export async function GET(
         .eq("id", payload.registrationId);
     }
 
+    // Also expire any pending registration intents for this email
+    // so they stop receiving recovery emails
+    await supabase
+      .from("registration_intents")
+      .update({ status: "expired", updated_at: new Date().toISOString() })
+      .eq("email", payload.email)
+      .eq("status", "pending");
+
     return new Response(
       `<!DOCTYPE html>
       <html><head><title>Unsubscribed</title>

@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Check, Ticket, ChevronDown, X, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { registerForEvent } from "@/features/registration/actions";
+import { trackRegistrationIntent } from "@/features/registration/intent-actions";
 import { validatePromoCode } from "@/features/promo-codes/actions";
 import { QrConfirmation } from "./qr-confirmation";
 import { Input, Button, Textarea } from "@attendly/ui/components";
@@ -31,15 +32,42 @@ export function RegistrationFlow({
   eventId,
   tickets,
   customFields = [],
+  initialIntent,
 }: {
   eventId: string;
   tickets: TicketType[];
   customFields?: CustomFieldDef[];
+  initialIntent?: {
+    ticket_type_id: string;
+    email: string;
+    name?: string;
+    custom_fields?: Record<string, string | boolean>;
+  };
 }) {
-  const [selectedTicket, setSelectedTicket] = useState<string | null>(null);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [customValues, setCustomValues] = useState<Record<string, string | boolean>>({});
+  const [selectedTicket, setSelectedTicket] = useState<string | null>(initialIntent?.ticket_type_id ?? null);
+  const [name, setName] = useState(initialIntent?.name ?? "");
+  const [email, setEmail] = useState(initialIntent?.email ?? "");
+  const [customValues, setCustomValues] = useState<Record<string, string | boolean>>(initialIntent?.custom_fields ?? {});
+
+  const intentTracked = useRef<string | null>(null);
+
+  const handleEmailBlur = useCallback(async () => {
+    const trimmedEmail = email.trim().toLowerCase();
+    if (!selectedTicket || !trimmedEmail || !trimmedEmail.includes("@")) return;
+    if (intentTracked.current === trimmedEmail) return;
+    intentTracked.current = trimmedEmail;
+    try {
+      await trackRegistrationIntent({
+        event_id: eventId,
+        ticket_type_id: selectedTicket,
+        email: trimmedEmail,
+        name: name || undefined,
+      });
+    } catch {
+      // Silent fail — intent tracking should never block UX
+    }
+  }, [email, selectedTicket, name, eventId]);
+
   const [loading, setLoading] = useState(false);
   const [confirmation, setConfirmation] = useState<{
     qr_code: string;
@@ -170,7 +198,15 @@ export function RegistrationFlow({
           return (
             <button
               key={ticket.id}
-              onClick={() => !soldOut && setSelectedTicket(ticket.id)}
+              onClick={() => {
+                if (soldOut) return;
+                setSelectedTicket(ticket.id);
+                // Reset intent tracking so it re-tracks with new ticket
+                const trimmedEmail = email.trim().toLowerCase();
+                if (trimmedEmail && trimmedEmail.includes("@")) {
+                  intentTracked.current = null;
+                }
+              }}
               disabled={soldOut}
               className={`w-full rounded-xl border p-4 text-left transition-colors ${
                 selectedTicket === ticket.id
@@ -304,6 +340,7 @@ export function RegistrationFlow({
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              onBlur={handleEmailBlur}
               placeholder="you@example.com"
             />
           </div>

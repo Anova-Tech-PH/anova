@@ -37,6 +37,64 @@ describe("Speaker Actions", () => {
       expect(result).toHaveProperty("name", "Jane");
       expect(revalidatePath).toHaveBeenCalledWith("/events/evt-1/schedule");
     });
+
+    it("creates speaker with social links and featured flag", async () => {
+      mockFrom.mockReturnValue(
+        createQueryMock({
+          data: {
+            id: "spk-2",
+            name: "John",
+            linkedin_url: "https://linkedin.com/in/john",
+            twitter_handle: "@john",
+            website_url: "https://john.dev",
+            is_featured: true,
+            sort_order: 1,
+          },
+          error: null,
+        })
+      );
+
+      const { createSpeaker } = await import("./actions");
+      const result = await createSpeaker("evt-1", {
+        name: "John",
+        linkedin_url: "https://linkedin.com/in/john",
+        twitter_handle: "@john",
+        website_url: "https://john.dev",
+        is_featured: true,
+        sort_order: 1,
+      });
+
+      expect(result).toHaveProperty("linkedin_url", "https://linkedin.com/in/john");
+      expect(result).toHaveProperty("twitter_handle", "@john");
+      expect(result).toHaveProperty("website_url", "https://john.dev");
+      expect(result).toHaveProperty("is_featured", true);
+      expect(result).toHaveProperty("sort_order", 1);
+      expect(mockFrom).toHaveBeenCalledWith("speakers");
+    });
+
+    it("creates speaker with defaults when optional fields omitted", async () => {
+      mockFrom.mockReturnValue(
+        createQueryMock({
+          data: {
+            id: "spk-3",
+            name: "MinimalSpeaker",
+            linkedin_url: null,
+            twitter_handle: null,
+            website_url: null,
+            is_featured: false,
+            sort_order: null,
+          },
+          error: null,
+        })
+      );
+
+      const { createSpeaker } = await import("./actions");
+      const result = await createSpeaker("evt-1", { name: "MinimalSpeaker" });
+
+      expect(result).toHaveProperty("name", "MinimalSpeaker");
+      expect(result).toHaveProperty("is_featured", false);
+      expect(result).toHaveProperty("linkedin_url", null);
+    });
   });
 
   describe("updateSpeaker", () => {
@@ -59,6 +117,37 @@ describe("Speaker Actions", () => {
       await deleteSpeaker("evt-1", "spk-1");
 
       expect(revalidatePath).toHaveBeenCalledWith("/events/evt-1/schedule");
+    });
+  });
+
+  describe("bulkImportSpeakers", () => {
+    it("bulk imports multiple rows", async () => {
+      const importedSpeakers = [
+        { id: "spk-10", name: "Alice", email: "alice@test.com" },
+        { id: "spk-11", name: "Bob", email: "bob@test.com" },
+      ];
+      mockFrom.mockReturnValue(
+        createQueryMock({ data: importedSpeakers, error: null })
+      );
+
+      const { bulkImportSpeakers } = await import("./actions");
+      const result = await bulkImportSpeakers("evt-1", [
+        { name: "Alice", email: "alice@test.com" },
+        { name: "Bob", email: "bob@test.com" },
+      ]);
+
+      expect(result).toHaveLength(2);
+      expect(result![0]).toHaveProperty("name", "Alice");
+      expect(mockFrom).toHaveBeenCalledWith("speakers");
+      expect(revalidatePath).toHaveBeenCalledWith("/events/evt-1/schedule");
+    });
+
+    it("throws on empty array", async () => {
+      const { bulkImportSpeakers } = await import("./actions");
+
+      await expect(bulkImportSpeakers("evt-1", [])).rejects.toThrow(
+        "No speakers to import"
+      );
     });
   });
 });

@@ -1,3 +1,8 @@
+import { RecoverySettings } from "@/features/registration/components/recovery-settings";
+import {
+  getRecoverySettings,
+  getRecoveryStats,
+} from "@/features/registration/recovery-queries";
 import { WidgetConfigurator } from "@/features/widgets/components/widget-configurator";
 
 export default async function MarketingPage({
@@ -7,14 +12,26 @@ export default async function MarketingPage({
 }) {
   const { eventId } = await params;
 
+  const [recoverySettings, recoveryStats] = await Promise.all([
+    getRecoverySettings(eventId),
+    getRecoveryStats(eventId),
+  ]);
+
   return (
     <div className="space-y-8">
       <div>
         <h2 className="text-xl font-semibold">Marketing</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Embed your event content on external websites. Customize the appearance and copy the embed code.
+          Recover abandoned registrations and embed your event content on
+          external websites.
         </p>
       </div>
+
+      <RecoverySettings
+        eventId={eventId}
+        initialSettings={recoverySettings}
+        stats={recoveryStats}
+      />
 
       <WidgetConfigurator
         eventId={eventId}

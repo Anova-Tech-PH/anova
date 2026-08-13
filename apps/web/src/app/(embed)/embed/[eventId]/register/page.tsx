@@ -16,6 +16,7 @@ export default async function RegisterEmbedPage({
   const { eventId } = await params;
   const rawSearchParams = await searchParams;
   const embedParams = parseEmbedParams(rawSearchParams);
+  const intentId = rawSearchParams?.intent as string | undefined;
 
   const showEventInfo = isToggleOn(embedParams, "showEventInfo");
 
@@ -58,6 +59,31 @@ export default async function RegisterEmbedPage({
   }));
 
   const customFields = await getCustomFieldsByEvent(event.id);
+
+  let initialIntent: {
+    ticket_type_id: string;
+    email: string;
+    name?: string;
+    custom_fields?: Record<string, string | boolean>;
+  } | undefined;
+
+  if (intentId) {
+    const { data: intent } = await supabase
+      .from("registration_intents")
+      .select("ticket_type_id, email, name, custom_fields")
+      .eq("id", intentId)
+      .eq("status", "pending")
+      .single();
+
+    if (intent) {
+      initialIntent = {
+        ticket_type_id: intent.ticket_type_id,
+        email: intent.email,
+        name: intent.name ?? undefined,
+        custom_fields: (intent.custom_fields as Record<string, string | boolean>) ?? undefined,
+      };
+    }
+  }
 
   // Build event URL for PoweredByFooter
   const orgSlug = (event as any).organizations?.slug;
@@ -111,6 +137,7 @@ export default async function RegisterEmbedPage({
           eventId={event.id}
           tickets={ticketsWithAvailability}
           customFields={customFields}
+          initialIntent={initialIntent}
         />
       )}
 

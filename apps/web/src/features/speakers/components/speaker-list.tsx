@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus, Pencil, Trash2, User } from "lucide-react";
+import { Plus, Pencil, Trash2, User, Star, Link2, AtSign, Globe, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button, Card, Avatar, EmptyState, useConfirm } from "@attendly/ui/components";
 import { SpeakerForm } from "./speaker-form";
+import { SpeakerCsvImport } from "./speaker-csv-import";
 import { createSpeaker, updateSpeaker, deleteSpeaker } from "../actions";
 
 type Speaker = {
@@ -15,6 +16,10 @@ type Speaker = {
   bio: string | null;
   photo: string | null;
   email: string | null;
+  linkedin_url: string | null;
+  twitter_handle: string | null;
+  website_url: string | null;
+  is_featured: boolean;
 };
 
 export function SpeakerList({
@@ -26,6 +31,7 @@ export function SpeakerList({
 }) {
   const [speakers, setSpeakers] = useState(initialSpeakers);
   const [showForm, setShowForm] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [editingSpeaker, setEditingSpeaker] = useState<Speaker | null>(null);
   const [isPending, startTransition] = useTransition();
   const { confirm, dialog: confirmDialog } = useConfirm();
@@ -37,6 +43,10 @@ export function SpeakerList({
     bio: string;
     photo: string;
     email: string;
+    linkedin_url: string;
+    twitter_handle: string;
+    website_url: string;
+    is_featured: boolean;
   }) {
     try {
       const speaker = await createSpeaker(eventId, {
@@ -46,6 +56,10 @@ export function SpeakerList({
         bio: data.bio || undefined,
         photo: data.photo || undefined,
         email: data.email || undefined,
+        linkedin_url: data.linkedin_url || undefined,
+        twitter_handle: data.twitter_handle || undefined,
+        website_url: data.website_url || undefined,
+        is_featured: data.is_featured,
       });
       setSpeakers((prev) => [...prev, speaker].sort((a, b) => a.name.localeCompare(b.name)));
       setShowForm(false);
@@ -62,6 +76,10 @@ export function SpeakerList({
     bio: string;
     photo: string;
     email: string;
+    linkedin_url: string;
+    twitter_handle: string;
+    website_url: string;
+    is_featured: boolean;
   }) {
     if (!editingSpeaker) return;
     try {
@@ -72,6 +90,10 @@ export function SpeakerList({
         bio: data.bio || undefined,
         photo: data.photo || undefined,
         email: data.email || undefined,
+        linkedin_url: data.linkedin_url || undefined,
+        twitter_handle: data.twitter_handle || undefined,
+        website_url: data.website_url || undefined,
+        is_featured: data.is_featured,
       });
       setSpeakers((prev) =>
         prev
@@ -107,14 +129,25 @@ export function SpeakerList({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="font-semibold">Speakers</h3>
-        <Button
-          onClick={() => setShowForm(true)}
-          size="sm"
-          className="transition-all duration-200 hover:shadow-md"
-        >
-          <Plus className="h-3.5 w-3.5" />
-          Add Speaker
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => setShowImport(true)}
+            size="sm"
+            variant="outline"
+            className="transition-all duration-200 hover:shadow-md"
+          >
+            <Upload className="h-3.5 w-3.5" />
+            Import CSV
+          </Button>
+          <Button
+            onClick={() => setShowForm(true)}
+            size="sm"
+            className="transition-all duration-200 hover:shadow-md"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Add Speaker
+          </Button>
+        </div>
       </div>
 
       {speakers.length === 0 ? (
@@ -140,6 +173,13 @@ export function SpeakerList({
                 }}
               />
 
+              {/* Featured star */}
+              {speaker.is_featured && (
+                <div className="absolute left-2 top-2 z-20">
+                  <Star className="h-4 w-4 fill-amber-500 text-amber-500" />
+                </div>
+              )}
+
               {/* Avatar with ring */}
               <div className="relative z-10 mb-3 rounded-full ring-2 ring-muted ring-offset-2 ring-offset-background">
                 <Avatar src={speaker.photo} name={speaker.name} size="lg" />
@@ -156,6 +196,36 @@ export function SpeakerList({
 
               {/* Actions - visible on hover */}
               <div className="absolute right-2 top-2 flex gap-1 rounded-lg bg-background/80 p-0.5 opacity-0 shadow-sm backdrop-blur-sm transition-opacity duration-200 group-hover:opacity-100">
+                {speaker.linkedin_url && (
+                  <a
+                    href={speaker.linkedin_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                  >
+                    <Link2 className="h-3.5 w-3.5" />
+                  </a>
+                )}
+                {speaker.twitter_handle && (
+                  <a
+                    href={`https://twitter.com/${speaker.twitter_handle.replace(/^@/, "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                  >
+                    <AtSign className="h-3.5 w-3.5" />
+                  </a>
+                )}
+                {speaker.website_url && (
+                  <a
+                    href={speaker.website_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                  >
+                    <Globe className="h-3.5 w-3.5" />
+                  </a>
+                )}
                 <button
                   onClick={() => setEditingSpeaker(speaker)}
                   className="rounded p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
@@ -182,6 +252,29 @@ export function SpeakerList({
         />
       )}
 
+      {showImport && (
+        <SpeakerCsvImport
+          eventId={eventId}
+          onClose={() => setShowImport(false)}
+          onImported={(imported) => {
+            setSpeakers((prev) => [...prev, ...imported.map((s) => ({
+              id: s.id,
+              name: s.name,
+              title: (s.title as string) ?? null,
+              company: (s.company as string) ?? null,
+              bio: (s.bio as string) ?? null,
+              photo: (s.photo as string) ?? null,
+              email: (s.email as string) ?? null,
+              linkedin_url: (s.linkedin_url as string) ?? null,
+              twitter_handle: (s.twitter_handle as string) ?? null,
+              website_url: (s.website_url as string) ?? null,
+              is_featured: (s.is_featured as boolean) ?? false,
+            }))].sort((a, b) => a.name.localeCompare(b.name)));
+            setShowImport(false);
+          }}
+        />
+      )}
+
       {confirmDialog}
 
       {editingSpeaker && (
@@ -194,6 +287,10 @@ export function SpeakerList({
             bio: editingSpeaker.bio ?? "",
             photo: editingSpeaker.photo ?? "",
             email: editingSpeaker.email ?? "",
+            linkedin_url: editingSpeaker.linkedin_url ?? "",
+            twitter_handle: editingSpeaker.twitter_handle ?? "",
+            website_url: editingSpeaker.website_url ?? "",
+            is_featured: editingSpeaker.is_featured ?? false,
           }}
           onSubmit={handleUpdate}
           onCancel={() => setEditingSpeaker(null)}

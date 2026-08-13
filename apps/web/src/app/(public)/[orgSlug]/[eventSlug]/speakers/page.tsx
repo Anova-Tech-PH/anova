@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
-import { User } from "lucide-react";
+import Link from "next/link";
+import { User, Star, Link2, AtSign, Globe } from "lucide-react";
 import { createClient } from "@attendly/ui/supabase/server";
 
 export default async function PublicSpeakersPage({
@@ -32,6 +33,7 @@ export default async function PublicSpeakersPage({
     .from("speakers")
     .select("*")
     .eq("event_id", event.id)
+    .order("sort_order", { ascending: true, nullsFirst: false })
     .order("name");
 
   return (
@@ -45,10 +47,18 @@ export default async function PublicSpeakersPage({
       ) : (
         <div className="mt-8 grid gap-6 sm:grid-cols-2">
           {speakers.map((speaker) => (
-            <div
+            <Link
               key={speaker.id}
-              className="flex gap-4 rounded-xl border bg-card p-5"
+              href={`/${orgSlug}/${eventSlug}/speakers/${speaker.id}`}
+              className="group relative flex gap-4 rounded-xl border bg-card p-5 transition-all duration-200 hover:shadow-md"
             >
+              {/* Featured badge */}
+              {speaker.is_featured && (
+                <div className="absolute right-3 top-3">
+                  <Star className="h-4 w-4 fill-amber-500 text-amber-500" />
+                </div>
+              )}
+
               {speaker.photo ? (
                 <img
                   src={speaker.photo}
@@ -72,8 +82,23 @@ export default async function PublicSpeakersPage({
                     {speaker.bio}
                   </p>
                 )}
+
+                {/* Social icons */}
+                {(speaker.linkedin_url || speaker.twitter_handle || speaker.website_url) && (
+                  <div className="mt-2 flex items-center gap-1.5">
+                    {speaker.linkedin_url && (
+                      <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
+                    )}
+                    {speaker.twitter_handle && (
+                      <AtSign className="h-3.5 w-3.5 text-muted-foreground" />
+                    )}
+                    {speaker.website_url && (
+                      <Globe className="h-3.5 w-3.5 text-muted-foreground" />
+                    )}
+                  </div>
+                )}
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}

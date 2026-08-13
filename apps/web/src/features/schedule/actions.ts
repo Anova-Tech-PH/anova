@@ -162,3 +162,136 @@ export async function deleteSession(eventId: string, sessionId: string) {
 
   revalidatePath(`/events/${eventId}/schedule`);
 }
+
+// --- Bulk Import ---
+
+export interface BulkImportSession {
+  title: string;
+  description: string;
+  type: string;
+  start_time: string;
+  end_time: string;
+  location: string;
+  trackName: string;
+  speakerNames: string[];
+}
+
+const MAX_IMPORT_SESSIONS = 200;
+
+export async function bulkImportSessions(eventId: string, sessions: BulkImportSession[]) {
+  if (sessions.length === 0) {
+    throw new Error("No sessions to import");
+  }
+  if (sessions.length > MAX_IMPORT_SESSIONS) {
+    throw new Error(`Cannot import more than ${MAX_IMPORT_SESSIONS} sessions at once`);
+  }
+
+  const supabase = await createClient();
+
+  // 1. Fetch existing tracks for this event
+  const { data: existingTracks } = await supabase
+    .from("tracks")
+    .select("id, name, sort_order")
+    .eq("event_id", eventId)
+    .order("sort_order", { ascending: false });
+
+  const trackMap = new Map<string, string>();
+  let nextSortOrder = (existingTracks?.[0]?.sort_order ?? -1) + 1;
+
+  for (const t of existingTracks ?? []) {
+    trackMap.set(t.name.toLowerCase(), t.id);
+  }
+
+  // 2. Collect unique track names that need creation
+  const newTrackNames = new Set<string>();
+  for (const s of sessions) {
+    if (s.trackName && !trackMap.has(s.trackName.toLowerCase())) {
+      newTrackNames.add(s.trackName);
+    }
+  }
+
+  // Create missing tracks
+  for (const name of newTrackNames) {
+    const { data: track, error } = await supabase
+      .from("tracks")
+      .insert({ event_id: eventId, name, sort_order: nextSortOrder++ })
+      .select("id")
+      .single();
+
+    if (error) throw new Error(`Failed to create track "${name}": ${error.message}`);
+    trackMap.set(name.toLowerCase(), track.id);
+  }
+
+  // 3. Fetch existing speakers for this event
+  const { data: existingSpeakers } = await supabase
+    .from("speakers")
+    .select("id, name")
+    .eq("event_id", eventId);
+
+  const speakerMap = new Map<string, string>();
+  for (const sp of existingSpeakers ?? []) {
+    speakerMap.set(sp.name.toLowerCase(), sp.id);
+  }
+
+  // 4. Collect unique speaker names that need creation
+  const newSpeakerNames = new Set<string>();
+  for (const s of sessions) {
+    for (const name of s.speakerNames) {
+      if (!speakerMap.has(name.toLowerCase())) {
+        newSpeakerNames.add(name);
+      }
+    }
+  }
+
+  // Create missing speakers
+  for (const name of newSpeakerNames) {
+    const { data: speaker, error } = await supabase
+      .from("speakers")
+      .insert({ event_id: eventId, name })
+      .select("id")
+      .single();
+
+    if (error) throw new Error(`Failed to create speaker "${name}": ${error.message}`);
+    speakerMap.set(name.toLowerCase(), speaker.id);
+  }
+
+  // 5. Insert sessions and link speakers
+  for (const s of sessions) {
+    const trackId = s.trackName ? trackMap.get(s.trackName.toLowerCase()) ?? null : null;
+
+    const { data: session, error } = await supabase
+      .from("sessions")
+      .insert({
+        event_id: eventId,
+        title: s.title,
+        description: s.description || null,
+        type: s.type,
+        start_time: s.start_time,
+        end_time: s.end_time,
+        location: s.location || null,
+        track_id: trackId,
+      })
+      .select("id")
+      .single();
+
+    if (error) throw new Error(`Failed to create session "${s.title}": ${error.message}`);
+
+    // Link speakers
+    if (s.speakerNames.length > 0) {
+      const speakerLinks = s.speakerNames
+        .map((name) => speakerMap.get(name.toLowerCase()))
+        .filter((id): id is string => !!id)
+        .map((speakerId) => ({ session_id: session.id, speaker_id: speakerId }));
+
+      if (speakerLinks.length > 0) {
+        const { error: linkError } = await supabase
+          .from("session_speakers")
+          .insert(speakerLinks);
+
+        if (linkError) throw new Error(`Failed to link speakers: ${linkError.message}`);
+      }
+    }
+  }
+
+  revalidatePath(`/events/${eventId}/schedule`);
+}

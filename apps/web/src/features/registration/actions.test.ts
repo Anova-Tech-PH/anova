@@ -54,6 +54,7 @@ describe("Registration Actions", () => {
         if (callIdx === 3) return createQueryMock({ data: null, error: { code: "PGRST116" } }); // no duplicate
         if (callIdx === 4) return createQueryMock({ data: { require_approval: false }, error: null }); // event check
         if (callIdx === 5) return createQueryMock({ data: null, error: null }); // insert registration
+        if (callIdx === 6) return createQueryMock({ data: null, error: null }); // intent conversion
         return createQueryMock({ data: { name: "General" }, error: null }); // ticket type name for email
       });
 
@@ -86,6 +87,34 @@ describe("Registration Actions", () => {
           email: "jane@test.com",
         })
       ).rejects.toThrow("sold out");
+    });
+
+    it("marks matching registration intent as converted after successful registration", async () => {
+      const fromCalls: string[] = [];
+      let callIdx = 0;
+      mockFrom.mockImplementation((table: string) => {
+        callIdx++;
+        fromCalls.push(table);
+        if (callIdx === 1) return createQueryMock({ data: { id: "tt-1", quantity: 100 }, error: null }); // ticket type
+        if (callIdx === 2) return createQueryMock({ data: null, error: null, count: 5 }); // count registrations
+        if (callIdx === 3) return createQueryMock({ data: null, error: { code: "PGRST116" } }); // no duplicate
+        if (callIdx === 4) return createQueryMock({ data: { require_approval: false }, error: null }); // event check
+        if (callIdx === 5) return createQueryMock({ data: null, error: null }); // insert registration
+        if (callIdx === 6) return createQueryMock({ data: null, error: null }); // intent conversion
+        return createQueryMock({ data: { name: "General" }, error: null }); // ticket type name for email
+      });
+
+      const { registerForEvent } = await import("./actions");
+      await registerForEvent({
+        event_id: "evt-1",
+        ticket_type_id: "tt-1",
+        name: "John Doe",
+        email: "JOHN@test.com",
+      });
+
+      expect(fromCalls).toContain("registration_intents");
+      // The registration_intents call should be the 6th from() call
+      expect(fromCalls[5]).toBe("registration_intents");
     });
 
     it("throws on duplicate email registration", async () => {
