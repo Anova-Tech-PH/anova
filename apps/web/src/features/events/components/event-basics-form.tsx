@@ -264,7 +264,6 @@ function StepBasics({
           <LocationPicker
             value={form.location_data}
             onChange={(data) => update("location_data", data)}
-            onTimezoneDetected={(tz) => update("timezone", tz)}
           />
         </div>
 
