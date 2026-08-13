@@ -6,6 +6,7 @@ vi.mock("../actions", () => ({
   createSession: vi.fn(),
   updateSession: vi.fn(),
   deleteSession: vi.fn(),
+  bulkAssignTracks: vi.fn(),
 }));
 
 // Mock sonner
@@ -39,7 +40,7 @@ const makeSessions = () => [
     enable_check_in: false,
     rsvp_enabled: false,
     capacity: null,
-    track: { id: "t1", name: "Main Stage", color: "#3b82f6" },
+    tracks: [{ id: "t1", name: "Main Stage", color: "#3b82f6" }],
     session_speakers: [],
   },
   {
@@ -53,7 +54,7 @@ const makeSessions = () => [
     enable_check_in: false,
     rsvp_enabled: false,
     capacity: null,
-    track: null,
+    tracks: [],
     session_speakers: [],
   },
   {
@@ -67,7 +68,7 @@ const makeSessions = () => [
     enable_check_in: false,
     rsvp_enabled: false,
     capacity: null,
-    track: null,
+    tracks: [],
     session_speakers: [],
   },
 ];
@@ -137,5 +138,75 @@ describe("SessionTimeline", () => {
       <SessionTimeline {...defaultProps} initialSessions={makeSessions()} />
     );
     expect(screen.getByText(/2 session/)).toBeInTheDocument();
+  });
+
+  it("displays multiple track badges on a session", () => {
+    const sessions = [
+      {
+        id: "s1",
+        title: "Multi-track Session",
+        description: null,
+        type: "talk",
+        start_time: "2026-09-11T09:00:00Z",
+        end_time: "2026-09-11T10:00:00Z",
+        location: null,
+        enable_check_in: false,
+        rsvp_enabled: false,
+        capacity: null,
+        tracks: [
+          { id: "t1", name: "Main Stage", color: "#3b82f6" },
+          { id: "t2", name: "Workshop", color: "#10b981" },
+        ],
+        session_speakers: [],
+      },
+    ];
+    render(
+      <SessionTimeline
+        {...defaultProps}
+        tracks={[
+          { id: "t1", name: "Main Stage", color: "#3b82f6" },
+          { id: "t2", name: "Workshop", color: "#10b981" },
+        ]}
+        initialSessions={sessions}
+      />
+    );
+    expect(screen.getByText("Main Stage")).toBeInTheDocument();
+    expect(screen.getByText("Workshop")).toBeInTheDocument();
+  });
+
+  it("shows select-all checkbox per day group", () => {
+    render(
+      <SessionTimeline {...defaultProps} initialSessions={makeSessions()} />
+    );
+    expect(screen.getByLabelText("Select all")).toBeInTheDocument();
+  });
+
+  it("shows bulk action bar when sessions are selected", () => {
+    render(
+      <SessionTimeline {...defaultProps} initialSessions={makeSessions()} />
+    );
+    // No bulk bar initially
+    expect(screen.queryByText(/selected/)).not.toBeInTheDocument();
+
+    // Select a session via its checkbox
+    const checkboxes = screen.getAllByRole("checkbox");
+    // First checkbox is "select all", second/third are session checkboxes
+    fireEvent.click(checkboxes[1]);
+
+    expect(screen.getByText(/1 session selected/)).toBeInTheDocument();
+    expect(screen.getByText("Assign Tracks")).toBeInTheDocument();
+    expect(screen.getByText("Clear")).toBeInTheDocument();
+  });
+
+  it("clears selection when Clear is clicked", () => {
+    render(
+      <SessionTimeline {...defaultProps} initialSessions={makeSessions()} />
+    );
+    const checkboxes = screen.getAllByRole("checkbox");
+    fireEvent.click(checkboxes[1]);
+    expect(screen.getByText(/1 session selected/)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText("Clear"));
+    expect(screen.queryByText(/selected/)).not.toBeInTheDocument();
   });
 });

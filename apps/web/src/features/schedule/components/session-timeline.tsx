@@ -5,7 +5,7 @@ import { Plus, Pencil, Trash2, Clock, MapPin, User, CalendarDays } from "lucide-
 import { toast } from "sonner";
 import { Button, Badge, Card, EmptyState, useConfirm } from "@attendly/ui/components";
 import { SessionForm } from "./session-form";
-import { createSession, updateSession, deleteSession } from "../actions";
+import { createSession, updateSession, deleteSession, bulkAssignTracks } from "../actions";
 
 type Track = { id: string; name: string; color: string | null };
 type Speaker = { id: string; name: string; title?: string | null; company?: string | null; photo?: string | null };
@@ -23,7 +23,7 @@ type Session = {
   enable_check_in: boolean;
   rsvp_enabled: boolean;
   capacity: number | null;
-  track: Track | null;
+  tracks: Track[];
   session_speakers: SessionSpeaker[];
   document_ids?: string[];
   poll_ids?: string[];
@@ -90,6 +90,54 @@ export function SessionTimeline({
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const { confirm, dialog: confirmDialog } = useConfirm();
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showBulkTracks, setShowBulkTracks] = useState(false);
+  const [bulkTrackIds, setBulkTrackIds] = useState<string[]>([]);
+
+  function toggleSelect(sessionId: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(sessionId)) next.delete(sessionId);
+      else next.add(sessionId);
+      return next;
+    });
+  }
+
+  function toggleSelectAll(daySessions: Session[]) {
+    const allSelected = daySessions.every((s) => selectedIds.has(s.id));
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      for (const s of daySessions) {
+        if (allSelected) next.delete(s.id);
+        else next.add(s.id);
+      }
+      return next;
+    });
+  }
+
+  async function handleBulkAssign() {
+    try {
+      await bulkAssignTracks(eventId, Array.from(selectedIds), bulkTrackIds);
+      // Update local state
+      setSessions((prev) =>
+        prev.map((s) => {
+          if (!selectedIds.has(s.id)) return s;
+          return {
+            ...s,
+            tracks: bulkTrackIds
+              .map((tid) => tracks.find((t) => t.id === tid))
+              .filter((t): t is Track => !!t),
+          };
+        })
+      );
+      setSelectedIds(new Set());
+      setShowBulkTracks(false);
+      setBulkTrackIds([]);
+      toast.success(`Tracks assigned to ${selectedIds.size} sessions`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to assign tracks");
+    }
+  }
 
   const dayGroups = groupByDay(sessions);
   const isMultiDay = dayGroups.length > 1;
@@ -138,7 +186,7 @@ export function SessionTimeline({
     start_time: string;
     end_time: string;
     location: string;
-    track_id: string;
+    track_ids: string[];
     speaker_ids: string[];
     enable_check_in: boolean;
     rsvp_enabled: boolean;
@@ -154,7 +202,7 @@ export function SessionTimeline({
         start_time: new Date(data.start_time).toISOString(),
         end_time: new Date(data.end_time).toISOString(),
         location: data.location || undefined,
-        track_id: data.track_id || undefined,
+        track_ids: data.track_ids,
         speaker_ids: data.speaker_ids,
         enable_check_in: data.enable_check_in,
         rsvp_enabled: data.rsvp_enabled,
@@ -166,7 +214,9 @@ export function SessionTimeline({
       // Refetch to get joined data
       const enriched: Session = {
         ...session,
-        track: tracks.find((t) => t.id === data.track_id) ?? null,
+        tracks: data.track_ids
+          .map((tid) => tracks.find((t) => t.id === tid))
+          .filter((t): t is Track => !!t),
         session_speakers: data.speaker_ids.map((sid) => ({
           speaker_id: sid,
           speakers: speakers.find((s) => s.id === sid)!,
@@ -192,7 +242,7 @@ export function SessionTimeline({
     start_time: string;
     end_time: string;
     location: string;
-    track_id: string;
+    track_ids: string[];
     speaker_ids: string[];
     enable_check_in: boolean;
     rsvp_enabled: boolean;
@@ -209,7 +259,7 @@ export function SessionTimeline({
         start_time: new Date(data.start_time).toISOString(),
         end_time: new Date(data.end_time).toISOString(),
         location: data.location || undefined,
-        track_id: data.track_id || null,
+        track_ids: data.track_ids,
         speaker_ids: data.speaker_ids,
         enable_check_in: data.enable_check_in,
         rsvp_enabled: data.rsvp_enabled,
@@ -227,7 +277,9 @@ export function SessionTimeline({
                   ...data,
                   start_time: new Date(data.start_time).toISOString(),
                   end_time: new Date(data.end_time).toISOString(),
-                  track: tracks.find((t) => t.id === data.track_id) ?? null,
+                  tracks: data.track_ids
+                    .map((tid) => tracks.find((t) => t.id === tid))
+                    .filter((t): t is Track => !!t),
                   session_speakers: data.speaker_ids.map((sid) => ({
                     speaker_id: sid,
                     speakers: speakers.find((sp) => sp.id === sid)!,
@@ -322,16 +374,35 @@ export function SessionTimeline({
                 </div>
               </div>
 
+              <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={activeGroup.sessions.every((s) => selectedIds.has(s.id))}
+                  onChange={() => toggleSelectAll(activeGroup.sessions)}
+                  className="h-3.5 w-3.5 rounded accent-primary"
+                />
+                Select all
+              </label>
+
               {/* Timeline with vertical line */}
               <div className="relative ml-[23px] border-l-2 border-muted pl-6 space-y-2">
                 {activeGroup.sessions.map((session) => {
                   const isBreak = session.type === "break";
                   return (
                     <div key={session.id} className="group relative">
+                      {/* Selection checkbox */}
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(session.id)}
+                        onChange={() => toggleSelect(session.id)}
+                        className="absolute -left-[55px] top-4 h-4 w-4 rounded border-muted-foreground accent-primary"
+                        style={{ opacity: selectedIds.size > 0 ? 1 : undefined }}
+                      />
+
                       {/* Timeline dot */}
                       <div
                         className="absolute -left-[31px] top-4 h-2.5 w-2.5 rounded-full border-2 border-background"
-                        style={{ backgroundColor: session.track?.color ?? (isBreak ? "var(--color-muted-foreground)" : "var(--color-primary)") }}
+                        style={{ backgroundColor: session.tracks[0]?.color ?? (isBreak ? "var(--color-muted-foreground)" : "var(--color-primary)") }}
                       />
 
                       <Card
@@ -340,7 +411,7 @@ export function SessionTimeline({
                         }`}
                         style={{
                           borderLeftWidth: isBreak ? undefined : 4,
-                          borderLeftColor: isBreak ? undefined : (session.track?.color ?? "transparent"),
+                          borderLeftColor: isBreak ? undefined : (session.tracks[0]?.color ?? "transparent"),
                           borderLeftStyle: isBreak ? undefined : "solid",
                         }}
                       >
@@ -355,18 +426,19 @@ export function SessionTimeline({
                               <Badge variant={typeBadgeVariant[session.type] ?? "default"} className="text-[10px]">
                                 {session.type}
                               </Badge>
-                              {session.track && (
+                              {session.tracks.length > 0 && session.tracks.map((track) => (
                                 <span
+                                  key={track.id}
                                   className="flex items-center gap-1 text-[10px] font-medium"
-                                  style={{ color: session.track.color ?? undefined }}
+                                  style={{ color: track.color ?? undefined }}
                                 >
                                   <span
                                     className="inline-block h-1.5 w-1.5 rounded-full"
-                                    style={{ backgroundColor: session.track.color ?? "currentColor" }}
+                                    style={{ backgroundColor: track.color ?? "currentColor" }}
                                   />
-                                  {session.track.name}
+                                  {track.name}
                                 </span>
-                              )}
+                              ))}
                             </div>
 
                             <h5 className={`mt-1 font-medium ${isBreak ? "italic text-muted-foreground text-sm" : ""}`}>
@@ -458,7 +530,7 @@ export function SessionTimeline({
             start_time: toLocalTime(editingSession.start_time),
             end_time: toLocalTime(editingSession.end_time),
             location: editingSession.location ?? "",
-            track_id: editingSession.track?.id ?? "",
+            track_ids: editingSession.tracks.map((t) => t.id),
             speaker_ids: editingSession.session_speakers.map((ss) => ss.speaker_id),
             enable_check_in: editingSession.enable_check_in,
             rsvp_enabled: editingSession.rsvp_enabled ?? false,
@@ -477,6 +549,47 @@ export function SessionTimeline({
       )}
 
       {confirmDialog}
+
+      {selectedIds.size > 0 && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 rounded-xl border bg-card px-4 py-3 shadow-lg">
+          <span className="text-sm font-medium">
+            {selectedIds.size} session{selectedIds.size !== 1 ? "s" : ""} selected
+          </span>
+          <div className="relative">
+            <Button size="sm" variant="outline" onClick={() => setShowBulkTracks(!showBulkTracks)}>
+              Assign Tracks
+            </Button>
+            {showBulkTracks && (
+              <div className="absolute bottom-full mb-2 left-0 rounded-lg border bg-card p-3 shadow-lg min-w-[200px]">
+                <div className="space-y-2">
+                  {tracks.map((track) => (
+                    <label key={track.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={bulkTrackIds.includes(track.id)}
+                        onChange={() => setBulkTrackIds((prev) =>
+                          prev.includes(track.id)
+                            ? prev.filter((id) => id !== track.id)
+                            : [...prev, track.id]
+                        )}
+                        className="h-3.5 w-3.5 rounded accent-primary"
+                      />
+                      <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: track.color ?? "#888" }} />
+                      {track.name}
+                    </label>
+                  ))}
+                  <Button size="sm" className="w-full mt-2" onClick={handleBulkAssign}>
+                    Apply
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+          <Button size="sm" variant="ghost" onClick={() => { setSelectedIds(new Set()); setShowBulkTracks(false); setBulkTrackIds([]); }}>
+            Clear
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

@@ -43,7 +43,8 @@ export function TrackManager({
   async function handleAdd() {
     if (!name.trim()) return;
     try {
-      const track = await createTrack(eventId, { name: name.trim(), color });
+      const validColor = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(color) ? color : TRACK_COLORS[0];
+      const track = await createTrack(eventId, { name: name.trim(), color: validColor });
       updateTracks([...tracks, track]);
       setAdding(false);
       setName("");
@@ -56,8 +57,9 @@ export function TrackManager({
   async function handleUpdate(trackId: string) {
     if (!name.trim()) return;
     try {
-      await updateTrack(eventId, trackId, { name: name.trim(), color });
-      updateTracks(tracks.map((t) => (t.id === trackId ? { ...t, name: name.trim(), color } : t)));
+      const validColor = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(color) ? color : TRACK_COLORS[0];
+      await updateTrack(eventId, trackId, { name: name.trim(), color: validColor });
+      updateTracks(tracks.map((t) => (t.id === trackId ? { ...t, name: name.trim(), color: validColor } : t)));
       setEditingId(null);
       setName("");
       toast.success("Track updated");
@@ -127,6 +129,23 @@ export function TrackManager({
               </div>
               <input
                 type="text"
+                value={color}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (v === "" || v === "#" || /^#[0-9a-fA-F]{0,6}$/.test(v)) {
+                    setColor(v);
+                  }
+                }}
+                placeholder="#hex"
+                className="w-16 rounded border bg-background px-1.5 py-1 text-xs outline-none focus:ring-1 focus:ring-ring font-mono"
+                maxLength={7}
+              />
+              <span
+                className="h-5 w-5 rounded-full border"
+                style={{ backgroundColor: /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(color) ? color : "#ccc" }}
+              />
+              <input
+                type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="w-28 rounded border bg-background px-2 py-1 text-xs outline-none focus:ring-1 focus:ring-ring"
@@ -173,6 +192,23 @@ export function TrackManager({
                 />
               ))}
             </div>
+            <input
+              type="text"
+              value={color}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v === "" || v === "#" || /^#[0-9a-fA-F]{0,6}$/.test(v)) {
+                  setColor(v);
+                }
+              }}
+              placeholder="#hex"
+              className="w-16 rounded border bg-background px-1.5 py-1 text-xs outline-none focus:ring-1 focus:ring-ring font-mono"
+              maxLength={7}
+            />
+            <span
+              className="h-5 w-5 rounded-full border"
+              style={{ backgroundColor: /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(color) ? color : "#ccc" }}
+            />
             <input
               type="text"
               value={name}
