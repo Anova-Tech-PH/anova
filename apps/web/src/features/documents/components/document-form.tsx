@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { Button, Input, Textarea, ModalOverlay } from "@attendly/ui/components";
+import { useEffect, useState, useTransition } from "react";
+import { ChevronDown } from "lucide-react";
+import { Button, Input, ModalOverlay } from "@attendly/ui/components";
 import { createDocument, updateDocument } from "@/features/documents/actions";
 import type { EventDocument } from "@/features/documents/queries";
 import { toast } from "sonner";
@@ -18,15 +19,29 @@ interface DocumentFormProps {
 
 export function DocumentForm({ eventId, sessions, document, open, onClose }: DocumentFormProps) {
   const [isPending, startTransition] = useTransition();
-  const [title, setTitle] = useState(document?.title ?? "");
-  const [type, setType] = useState<"file" | "video">(document?.type ?? "file");
-  const [fileUrl, setFileUrl] = useState(document?.file_url ?? "");
-  const [externalUrl, setExternalUrl] = useState(document?.external_url ?? "");
-  const [fileType, setFileType] = useState(document?.file_type ?? "");
-  const [sessionId, setSessionId] = useState(document?.session_id ?? "");
-  const [sortOrder, setSortOrder] = useState(document?.sort_order ?? 0);
+  const [title, setTitle] = useState("");
+  const [type, setType] = useState<"file" | "video">("file");
+  const [fileUrl, setFileUrl] = useState("");
+  const [externalUrl, setExternalUrl] = useState("");
+  const [fileType, setFileType] = useState("");
+  const [sessionId, setSessionId] = useState("");
+  const [sortOrder, setSortOrder] = useState(0);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const isEditing = !!document;
+
+  useEffect(() => {
+    if (open) {
+      setTitle(document?.title ?? "");
+      setType(document?.type ?? "file");
+      setFileUrl(document?.file_url ?? "");
+      setExternalUrl(document?.external_url ?? "");
+      setFileType(document?.file_type ?? "");
+      setSessionId(document?.session_id ?? "");
+      setSortOrder(document?.sort_order ?? 0);
+      setShowAdvanced(false);
+    }
+  }, [open, document]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -63,7 +78,7 @@ export function DocumentForm({ eventId, sessions, document, open, onClose }: Doc
     <ModalOverlay onClose={onClose}>
       <form onSubmit={handleSubmit} className="w-full max-w-lg space-y-5 rounded-xl bg-card p-6 shadow-xl">
         <h3 className="text-lg font-semibold">
-          {isEditing ? "Edit Document" : "Add Document"}
+          {isEditing ? "Edit Document" : "Upload Document"}
         </h3>
 
         <div>
@@ -105,24 +120,14 @@ export function DocumentForm({ eventId, sessions, document, open, onClose }: Doc
         </div>
 
         {type === "file" ? (
-          <>
-            <div>
-              <label className="mb-1.5 block text-sm font-medium">File URL</label>
-              <Input
-                value={fileUrl}
-                onChange={(e) => setFileUrl(e.target.value)}
-                placeholder="https://example.com/slides.pdf"
-              />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-sm font-medium">File Type</label>
-              <Input
-                value={fileType}
-                onChange={(e) => setFileType(e.target.value)}
-                placeholder="e.g. application/pdf"
-              />
-            </div>
-          </>
+          <div>
+            <label className="mb-1.5 block text-sm font-medium">File URL</label>
+            <Input
+              value={fileUrl}
+              onChange={(e) => setFileUrl(e.target.value)}
+              placeholder="https://example.com/slides.pdf"
+            />
+          </div>
         ) : (
           <div>
             <label className="mb-1.5 block text-sm font-medium">Video URL</label>
@@ -150,15 +155,38 @@ export function DocumentForm({ eventId, sessions, document, open, onClose }: Doc
           </select>
         </div>
 
-        <div>
-          <label className="mb-1.5 block text-sm font-medium">Sort Order</label>
-          <Input
-            type="number"
-            value={sortOrder}
-            onChange={(e) => setSortOrder(Number(e.target.value))}
-            min={0}
-          />
-        </div>
+        <button
+          type="button"
+          onClick={() => setShowAdvanced(!showAdvanced)}
+          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ChevronDown className={`h-4 w-4 transition-transform ${showAdvanced ? "rotate-180" : ""}`} />
+          Advanced options
+        </button>
+
+        {showAdvanced && (
+          <div className="space-y-5">
+            {type === "file" && (
+              <div>
+                <label className="mb-1.5 block text-sm font-medium">File Type</label>
+                <Input
+                  value={fileType}
+                  onChange={(e) => setFileType(e.target.value)}
+                  placeholder="e.g. application/pdf"
+                />
+              </div>
+            )}
+            <div>
+              <label className="mb-1.5 block text-sm font-medium">Sort Order</label>
+              <Input
+                type="number"
+                value={sortOrder}
+                onChange={(e) => setSortOrder(Number(e.target.value))}
+                min={0}
+              />
+            </div>
+          </div>
+        )}
 
         <div className="flex justify-end gap-2 pt-2">
           <Button type="button" variant="outline" onClick={onClose}>

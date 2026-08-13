@@ -63,7 +63,16 @@ export default async function EventLayout({
             { href: `/events/${eventId}/sponsors/leads`, label: "Lead Retrieval" },
           ],
         },
-        { href: `/events/${eventId}/documents`, label: "Documents & Videos", icon: "file-text" },
+        {
+          href: `/events/${eventId}/documents`,
+          label: "Documents & Videos",
+          icon: "file-text",
+          children: [
+            { href: `/events/${eventId}/documents`, label: "Documents" },
+            { href: `/events/${eventId}/documents/video-hosting`, label: "Video Hosting" },
+            { href: `/events/${eventId}/documents/attendee-video-access`, label: "Attendee Video Access" },
+          ],
+        },
         { href: `/events/${eventId}/logistics`, label: "Logistics Center", icon: "clipboard-list" },
       ],
     },
