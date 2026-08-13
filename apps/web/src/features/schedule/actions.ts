@@ -226,7 +226,7 @@ export interface BulkImportSession {
   start_time: string;
   end_time: string;
   location: string;
-  trackName: string;
+  trackNames: string[];
   speakerNames: string[];
 }
 
@@ -259,8 +259,10 @@ export async function bulkImportSessions(eventId: string, sessions: BulkImportSe
   // 2. Collect unique track names that need creation
   const newTrackNames = new Set<string>();
   for (const s of sessions) {
-    if (s.trackName && !trackMap.has(s.trackName.toLowerCase())) {
-      newTrackNames.add(s.trackName);
+    for (const name of s.trackNames) {
+      if (!trackMap.has(name.toLowerCase())) {
+        newTrackNames.add(name);
+      }
     }
   }
 
@@ -309,10 +311,8 @@ export async function bulkImportSessions(eventId: string, sessions: BulkImportSe
     speakerMap.set(name.toLowerCase(), speaker.id);
   }
 
-  // 5. Insert sessions and link speakers
+  // 5. Insert sessions and link tracks + speakers
   for (const s of sessions) {
-    const trackId = s.trackName ? trackMap.get(s.trackName.toLowerCase()) ?? null : null;
-
     const { data: session, error } = await supabase
       .from("sessions")
       .insert({
@@ -323,12 +323,27 @@ export async function bulkImportSessions(eventId: string, sessions: BulkImportSe
         start_time: s.start_time,
         end_time: s.end_time,
         location: s.location || null,
-        track_id: trackId,
       })
       .select("id")
       .single();
 
     if (error) throw new Error(`Failed to create session "${s.title}": ${error.message}`);
+
+    // Link tracks
+    if (s.trackNames.length > 0) {
+      const trackLinks = s.trackNames
+        .map((name) => trackMap.get(name.toLowerCase()))
+        .filter((id): id is string => !!id)
+        .map((trackId) => ({ session_id: session.id, track_id: trackId }));
+
+      if (trackLinks.length > 0) {
+        const { error: linkError } = await supabase
+          .from("session_tracks")
+          .insert(trackLinks);
+
+        if (linkError) throw new Error(`Failed to link tracks: ${linkError.message}`);
+      }
+    }
 
     // Link speakers
     if (s.speakerNames.length > 0) {

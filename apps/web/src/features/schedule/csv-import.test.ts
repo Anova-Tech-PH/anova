@@ -15,7 +15,7 @@ describe("parseSessionsCSV", () => {
       title: "Intro to TS",
       description: "Learn basics",
       type: "talk",
-      trackName: "Frontend",
+      trackNames: ["Frontend"],
       start_time: "2026-09-15T09:00:00Z",
       end_time: "2026-09-15T10:00:00Z",
       location: "Room 101",
@@ -35,7 +35,7 @@ describe("parseSessionsCSV", () => {
     expect(result[0].type).toBe("talk");
     expect(result[0].speakerNames).toEqual([]);
     expect(result[0].description).toBe("");
-    expect(result[0].trackName).toBe("");
+    expect(result[0].trackNames).toEqual([]);
     expect(result[0].location).toBe("");
   });
 
@@ -91,5 +91,35 @@ describe("parseSessionsCSV", () => {
     const result = parseSessionsCSV(csv);
 
     expect(result[0].title).toBe("Advanced, Complex");
+  });
+
+  it("parses semicolon-separated tracks", () => {
+    const csv = [
+      "title,track,start_time,end_time",
+      "Session A,AI;Leadership,2026-01-01T10:00,2026-01-01T11:00",
+    ].join("\n");
+
+    const result = parseSessionsCSV(csv);
+    expect(result[0].trackNames).toEqual(["AI", "Leadership"]);
+  });
+
+  it("handles empty track as empty array", () => {
+    const csv = [
+      "title,track,start_time,end_time",
+      "Session A,,2026-01-01T10:00,2026-01-01T11:00",
+    ].join("\n");
+
+    const result = parseSessionsCSV(csv);
+    expect(result[0].trackNames).toEqual([]);
+  });
+
+  it("trims whitespace around semicolon-separated tracks", () => {
+    const csv = [
+      "title,track,start_time,end_time",
+      "Session A, AI ; Leadership ; DevOps ,2026-01-01T10:00,2026-01-01T11:00",
+    ].join("\n");
+
+    const result = parseSessionsCSV(csv);
+    expect(result[0].trackNames).toEqual(["AI", "Leadership", "DevOps"]);
   });
 });

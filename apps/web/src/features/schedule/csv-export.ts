@@ -9,7 +9,7 @@ export interface SessionForExport {
   start_time: string;
   end_time: string;
   location: string | null;
-  track: { name: string } | null;
+  session_tracks: { tracks: { name: string } }[];
   session_speakers: { speakers: { name: string } }[];
 }
 
@@ -24,12 +24,13 @@ const HEADERS = ["title", "description", "type", "track", "start_time", "end_tim
 
 export function sessionsToCSV(sessions: SessionForExport[]): string {
   const rows = sessions.map((s) => {
+    const tracks = s.session_tracks.map((st) => st.tracks.name).join(";");
     const speakers = s.session_speakers.map((ss) => ss.speakers.name).join(";");
     const fields = [
       s.title,
       s.description ?? "",
       s.type,
-      s.track?.name ?? "",
+      tracks,
       s.start_time,
       s.end_time,
       s.location ?? "",

@@ -169,7 +169,7 @@ export function AgendaImportExport({ eventId, sessions }: AgendaImportExportProp
                     <tr key={i} className="border-b last:border-0">
                       <td className="py-2 pr-4">{s.title}</td>
                       <td className="py-2 pr-4">{s.type}</td>
-                      <td className="py-2 pr-4">{s.trackName || "-"}</td>
+                      <td className="py-2 pr-4">{s.trackNames.join(", ") || "-"}</td>
                       <td className="py-2 pr-4 whitespace-nowrap">
                         {s.start_time ? new Date(s.start_time).toLocaleString() : "-"}
                       </td>

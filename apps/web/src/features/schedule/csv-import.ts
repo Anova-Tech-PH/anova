@@ -9,7 +9,7 @@ export interface ParsedSession {
   start_time: string;
   end_time: string;
   location: string;
-  trackName: string;
+  trackNames: string[];
   speakerNames: string[];
 }
 
@@ -108,7 +108,12 @@ export function parseSessionsCSV(csvText: string): ParsedSession[] {
       start_time: startTime,
       end_time: get(endIdx),
       location: get(locationIdx),
-      trackName: get(trackIdx),
+      trackNames: (() => {
+        const trackRaw = get(trackIdx);
+        return trackRaw
+          ? trackRaw.split(";").map((s) => s.trim()).filter(Boolean)
+          : [];
+      })(),
       speakerNames,
     });
   }
