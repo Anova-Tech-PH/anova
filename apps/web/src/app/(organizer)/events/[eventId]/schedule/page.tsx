@@ -50,9 +50,10 @@ export default async function SchedulePage({
     }
   }
 
-  // Enrich sessions with document_ids and poll_ids
-  const enrichedSessions = scheduleData.sessions.map((s: { id: string }) => ({
+  // Enrich sessions with document_ids, poll_ids, and mapped tracks
+  const enrichedSessions = scheduleData.sessions.map((s: any) => ({
     ...s,
+    tracks: s.session_tracks?.map((st: any) => st.tracks).filter(Boolean) ?? [],
     document_ids: docsBySession.get(s.id) ?? [],
     poll_ids: pollsBySession.get(s.id) ?? [],
   }));
