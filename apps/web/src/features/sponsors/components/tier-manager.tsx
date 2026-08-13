@@ -126,10 +126,10 @@ export function TierManager({
                   </option>
                 ))}
               </select>
-              <button onClick={() => handleUpdate(tier.id)} className="text-primary hover:text-primary/80">
+              <button onClick={() => handleUpdate(tier.id)} title="Save" className="text-primary hover:text-primary/80">
                 <Check className="h-3.5 w-3.5" />
               </button>
-              <button onClick={() => setEditingId(null)} className="text-muted-foreground hover:text-foreground">
+              <button onClick={() => setEditingId(null)} title="Cancel" className="text-muted-foreground hover:text-foreground">
                 <X className="h-3.5 w-3.5" />
               </button>
             </div>
@@ -142,12 +142,13 @@ export function TierManager({
               <Badge variant={logoSizeVariant(tier.logo_size)} className="text-[10px] px-1.5 py-0">
                 {tier.logo_size}
               </Badge>
-              <button onClick={() => startEdit(tier)} className="text-muted-foreground hover:text-foreground">
+              <button onClick={() => startEdit(tier)} title="Edit" className="text-muted-foreground hover:text-foreground">
                 <Pencil className="h-3 w-3" />
               </button>
               <button
                 onClick={() => handleDelete(tier)}
                 disabled={isPending}
+                title="Delete"
                 className="text-muted-foreground hover:text-destructive"
               >
                 <Trash2 className="h-3 w-3" />
@@ -178,10 +179,10 @@ export function TierManager({
                 </option>
               ))}
             </select>
-            <button onClick={handleAdd} className="text-primary hover:text-primary/80">
+            <button onClick={handleAdd} title="Save" className="text-primary hover:text-primary/80">
               <Check className="h-3.5 w-3.5" />
             </button>
-            <button onClick={() => setAdding(false)} className="text-muted-foreground hover:text-foreground">
+            <button onClick={() => setAdding(false)} title="Cancel" className="text-muted-foreground hover:text-foreground">
               <X className="h-3.5 w-3.5" />
             </button>
           </div>

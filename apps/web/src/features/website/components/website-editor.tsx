@@ -162,6 +162,7 @@ export function WebsiteEditor({ eventId, initialConfig, previewUrl }: WebsiteEdi
                     type="button"
                     onClick={() => handleMoveUp(index)}
                     disabled={index === 0}
+                    title="Move up"
                     className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"
                   >
                     <ChevronUp className="h-4 w-4" />
@@ -170,6 +171,7 @@ export function WebsiteEditor({ eventId, initialConfig, previewUrl }: WebsiteEdi
                     type="button"
                     onClick={() => handleMoveDown(index)}
                     disabled={index === config.sections.length - 1}
+                    title="Move down"
                     className="p-1 text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"
                   >
                     <ChevronDown className="h-4 w-4" />

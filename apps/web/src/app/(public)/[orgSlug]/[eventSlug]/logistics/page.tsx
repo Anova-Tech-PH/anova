@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MapPin, Wifi, Car, Bus, Building, Phone, Mail, User } from "lucide-react";
 import { createClient } from "@attendly/ui/supabase/server";
@@ -49,9 +50,17 @@ export default async function PublicLogisticsPage({
       <h1 className="text-2xl font-semibold">{event.title} — Logistics</h1>
 
       {!hasAnything ? (
-        <p className="mt-6 text-muted-foreground">
-          No logistics information has been shared yet.
-        </p>
+        <div className="mt-6">
+          <p className="text-muted-foreground">
+            No logistics information has been shared yet.
+          </p>
+          <Link
+            href={`/${orgSlug}/${eventSlug}`}
+            className="mt-3 inline-block text-sm text-primary hover:underline"
+          >
+            Return to event
+          </Link>
+        </div>
       ) : (
         <div className="mt-8 space-y-10">
           {/* Venue */}
