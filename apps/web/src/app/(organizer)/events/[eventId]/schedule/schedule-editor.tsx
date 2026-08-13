@@ -1,9 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { TrackManager } from "@/features/schedule/components/track-manager";
 import { SessionTimeline } from "@/features/schedule/components/session-timeline";
-import { SpeakerList } from "@/features/speakers/components/speaker-list";
 import { AgendaImportExport } from "@/features/schedule/components/agenda-import-export";
 
 type Track = { id: string; name: string; color: string | null; sort_order: number };
@@ -32,31 +29,17 @@ export function ScheduleEditor({
   initialSessions: any[];
   initialSpeakers: Speaker[];
 }) {
-  const [tracks, setTracks] = useState(initialTracks);
-
   return (
-    <div className="space-y-8">
-      <TrackManager
+    <div className="space-y-6">
+      <div className="flex justify-end">
+        <AgendaImportExport eventId={eventId} sessions={initialSessions} />
+      </div>
+      <SessionTimeline
         eventId={eventId}
-        initialTracks={initialTracks}
-        onTracksChange={setTracks}
+        initialSessions={initialSessions}
+        tracks={initialTracks}
+        speakers={initialSpeakers}
       />
-
-      <div className="border-t pt-6">
-        <SpeakerList eventId={eventId} initialSpeakers={initialSpeakers} />
-      </div>
-
-      <div className="border-t pt-6">
-        <div className="mb-2 flex justify-end">
-          <AgendaImportExport eventId={eventId} sessions={initialSessions} />
-        </div>
-        <SessionTimeline
-          eventId={eventId}
-          initialSessions={initialSessions}
-          tracks={tracks}
-          speakers={initialSpeakers}
-        />
-      </div>
     </div>
   );
 }
