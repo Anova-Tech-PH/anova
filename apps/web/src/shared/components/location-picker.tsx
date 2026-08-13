@@ -23,7 +23,7 @@ interface LocationPickerProps {
   onTimezoneDetected?: (tz: string) => void;
 }
 
-type NominatimResult = {
+export type NominatimResult = {
   place_id: number;
   display_name: string;
   lat: string;
@@ -41,7 +41,7 @@ type NominatimResult = {
   };
 };
 
-function parseNominatimResult(result: NominatimResult): LocationData {
+export function parseNominatimResult(result: NominatimResult): LocationData {
   const addr = result.address;
   const streetNumber = addr.house_number ?? "";
   const route = addr.road ?? "";
