@@ -14,6 +14,11 @@ supabase/.temp/start-secrets/
 /screenshots/
 .vercel
 
+# Generated docs & research
+docs/plans/
+docs/ux-reports/
+docs/whova-research/
+
 # Test artifacts
 coverage/
 test-results/
