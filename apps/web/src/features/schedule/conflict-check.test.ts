@@ -7,7 +7,7 @@ const makeSession = (overrides: Partial<SessionForConflict>): SessionForConflict
   start_time: "2026-09-11T09:00:00Z",
   end_time: "2026-09-11T10:00:00Z",
   location: null,
-  track_id: null,
+  track_ids: [],
   speaker_ids: [],
   ...overrides,
 });
@@ -44,12 +44,32 @@ describe("detectConflicts", () => {
 
   it("detects track conflicts (same track, overlapping times)", () => {
     const sessions = [
-      makeSession({ id: "s1", track_id: "t1", start_time: "2026-09-11T09:00:00Z", end_time: "2026-09-11T10:00:00Z" }),
-      makeSession({ id: "s2", track_id: "t1", start_time: "2026-09-11T09:30:00Z", end_time: "2026-09-11T10:30:00Z", title: "Session 2" }),
+      makeSession({ id: "s1", track_ids: ["t1"], start_time: "2026-09-11T09:00:00Z", end_time: "2026-09-11T10:00:00Z" }),
+      makeSession({ id: "s2", track_ids: ["t1"], start_time: "2026-09-11T09:30:00Z", end_time: "2026-09-11T10:30:00Z", title: "Session 2" }),
     ];
     const conflicts = detectConflicts(sessions);
     expect(conflicts).toHaveLength(1);
     expect(conflicts[0].type).toBe("track");
+    expect(conflicts[0].detail).toBe("1 shared track(s)");
+  });
+
+  it("detects shared tracks across multi-track sessions", () => {
+    const sessions = [
+      makeSession({ id: "s1", track_ids: ["t1", "t2"], start_time: "2026-09-11T09:00:00Z", end_time: "2026-09-11T10:00:00Z" }),
+      makeSession({ id: "s2", track_ids: ["t2", "t3"], start_time: "2026-09-11T09:30:00Z", end_time: "2026-09-11T10:30:00Z", title: "Session 2" }),
+    ];
+    const conflicts = detectConflicts(sessions);
+    expect(conflicts).toHaveLength(1);
+    expect(conflicts[0].type).toBe("track");
+    expect(conflicts[0].detail).toBe("1 shared track(s)");
+  });
+
+  it("does not flag sessions on different tracks", () => {
+    const sessions = [
+      makeSession({ id: "s1", track_ids: ["t1"], start_time: "2026-09-11T09:00:00Z", end_time: "2026-09-11T10:00:00Z" }),
+      makeSession({ id: "s2", track_ids: ["t2"], start_time: "2026-09-11T09:30:00Z", end_time: "2026-09-11T10:30:00Z", title: "Session 2" }),
+    ];
+    expect(detectConflicts(sessions)).toEqual([]);
   });
 
   it("ignores null locations", () => {

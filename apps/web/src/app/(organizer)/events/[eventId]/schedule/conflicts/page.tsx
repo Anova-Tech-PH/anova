@@ -19,7 +19,7 @@ export default async function ConflictCheckPage({
     start_time: s.start_time,
     end_time: s.end_time,
     location: s.location,
-    track_id: s.track?.id ?? null,
+    track_ids: s.session_tracks?.map((st: any) => st.track_id) ?? [],
     speaker_ids: s.session_speakers.map((ss: any) => ss.speaker_id),
   }));
 

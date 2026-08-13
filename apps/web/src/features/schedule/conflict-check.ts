@@ -4,7 +4,7 @@ export type SessionForConflict = {
   start_time: string;
   end_time: string;
   location: string | null;
-  track_id: string | null;
+  track_ids: string[];
   speaker_ids: string[];
 };
 
@@ -54,12 +54,15 @@ export function detectConflicts(sessions: SessionForConflict[]): Conflict[] {
         });
       }
 
-      if (a.track_id && b.track_id && a.track_id === b.track_id) {
+      const sharedTracks = a.track_ids.filter((id) =>
+        b.track_ids.includes(id)
+      );
+      if (sharedTracks.length > 0) {
         conflicts.push({
           type: "track",
           sessionIds: [a.id, b.id],
           sessionTitles: [a.title, b.title],
-          detail: `Both on the same track`,
+          detail: `${sharedTracks.length} shared track(s)`,
         });
       }
     }

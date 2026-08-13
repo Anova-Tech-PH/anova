@@ -20,7 +20,7 @@ export async function getSessionsByEvent(eventId: string) {
     .from("sessions")
     .select(`
       *,
-      track:tracks(id, name, color),
+      session_tracks(track_id, tracks(id, name, color)),
       session_speakers(speaker_id, speakers(id, name, title, company, photo))
     `)
     .eq("event_id", eventId)
@@ -39,7 +39,7 @@ export async function getScheduleData(eventId: string) {
       .from("sessions")
       .select(`
         *,
-        track:tracks(id, name, color),
+        session_tracks(track_id, tracks(id, name, color)),
         session_speakers(speaker_id, speakers(id, name, title, company, photo))
       `)
       .eq("event_id", eventId)

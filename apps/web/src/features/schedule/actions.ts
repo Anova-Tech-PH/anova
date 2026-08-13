@@ -65,7 +65,7 @@ export async function createSession(eventId: string, data: {
   start_time: string;
   end_time: string;
   location?: string;
-  track_id?: string;
+  track_ids?: string[];
   speaker_ids?: string[];
   enable_check_in?: boolean;
   capacity?: number | null;
@@ -75,14 +75,13 @@ export async function createSession(eventId: string, data: {
 }) {
   const supabase = await createClient();
 
-  const { speaker_ids, capacity, rsvp_enabled, document_ids, poll_ids, ...sessionData } = data;
+  const { track_ids, speaker_ids, capacity, rsvp_enabled, document_ids, poll_ids, ...sessionData } = data;
 
   const { data: session, error } = await supabase
     .from("sessions")
     .insert({
       event_id: eventId,
       ...sessionData,
-      track_id: sessionData.track_id || null,
       capacity: capacity ?? null,
       rsvp_enabled: rsvp_enabled ?? false,
     })
@@ -90,6 +89,15 @@ export async function createSession(eventId: string, data: {
     .single();
 
   if (error) throw new Error(error.message);
+
+  // Link tracks
+  if (track_ids && track_ids.length > 0) {
+    const { error: trackError } = await supabase
+      .from("session_tracks")
+      .insert(track_ids.map((tid) => ({ session_id: session.id, track_id: tid })));
+
+    if (trackError) throw new Error(trackError.message);
+  }
 
   // Link speakers
   if (speaker_ids && speaker_ids.length > 0) {
@@ -127,7 +135,7 @@ export async function updateSession(eventId: string, sessionId: string, data: {
   start_time?: string;
   end_time?: string;
   location?: string;
-  track_id?: string | null;
+  track_ids?: string[];
   speaker_ids?: string[];
   enable_check_in?: boolean;
   capacity?: number | null;
@@ -137,7 +145,7 @@ export async function updateSession(eventId: string, sessionId: string, data: {
 }) {
   const supabase = await createClient();
 
-  const { speaker_ids, capacity, rsvp_enabled, document_ids, poll_ids, ...sessionData } = data;
+  const { track_ids, speaker_ids, capacity, rsvp_enabled, document_ids, poll_ids, ...sessionData } = data;
 
   const { error } = await supabase
     .from("sessions")
@@ -150,6 +158,22 @@ export async function updateSession(eventId: string, sessionId: string, data: {
     .eq("id", sessionId);
 
   if (error) throw new Error(error.message);
+
+  // Update track links if provided
+  if (track_ids !== undefined) {
+    await supabase
+      .from("session_tracks")
+      .delete()
+      .eq("session_id", sessionId);
+
+    if (track_ids.length > 0) {
+      const { error: trackError } = await supabase
+        .from("session_tracks")
+        .insert(track_ids.map((tid) => ({ session_id: sessionId, track_id: tid })));
+
+      if (trackError) throw new Error(trackError.message);
+    }
+  }
 
   // Update speaker links if provided
   if (speaker_ids !== undefined) {
@@ -199,6 +223,31 @@ export async function updateSession(eventId: string, sessionId: string, data: {
         .update({ session_id: sessionId })
         .in("id", poll_ids);
     }
+  }
+
+  revalidatePath(`/events/${eventId}/schedule`, "layout");
+}
+
+export async function bulkAssignTracks(
+  eventId: string,
+  sessionIds: string[],
+  trackIds: string[]
+) {
+  if (sessionIds.length === 0) return;
+  const supabase = await createClient();
+
+  // Delete existing track links for these sessions
+  for (const sessionId of sessionIds) {
+    await supabase.from("session_tracks").delete().eq("session_id", sessionId);
+  }
+
+  // Insert new track links
+  if (trackIds.length > 0) {
+    const rows = sessionIds.flatMap((sid) =>
+      trackIds.map((tid) => ({ session_id: sid, track_id: tid }))
+    );
+    const { error } = await supabase.from("session_tracks").insert(rows);
+    if (error) throw new Error(error.message);
   }
 
   revalidatePath(`/events/${eventId}/schedule`, "layout");

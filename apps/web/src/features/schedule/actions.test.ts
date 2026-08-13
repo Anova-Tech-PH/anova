@@ -106,6 +106,26 @@ describe("Schedule Actions", () => {
       expect(mockFrom).toHaveBeenCalledWith("session_speakers");
     });
 
+    it("links tracks via session_tracks when track_ids provided", async () => {
+      let callIdx = 0;
+      mockFrom.mockImplementation(() => {
+        callIdx++;
+        if (callIdx === 1) return createQueryMock({ data: { id: "sess-1" }, error: null });
+        return createQueryMock({ data: null, error: null }); // session_tracks insert
+      });
+
+      const { createSession } = await import("./actions");
+      await createSession("evt-1", {
+        title: "Talk",
+        type: "talk",
+        start_time: "2026-01-01T10:00:00Z",
+        end_time: "2026-01-01T11:00:00Z",
+        track_ids: ["track-1", "track-2"],
+      });
+
+      expect(mockFrom).toHaveBeenCalledWith("session_tracks");
+    });
+
     it("throws on error", async () => {
       mockFrom.mockReturnValue(
         createQueryMock({ data: null, error: { message: "Missing title" } })
@@ -134,6 +154,19 @@ describe("Schedule Actions", () => {
       expect(revalidatePath).toHaveBeenCalledWith("/events/evt-1/schedule", "layout");
     });
 
+    it("replaces track links via session_tracks when track_ids provided", async () => {
+      mockFrom.mockReturnValue(createQueryMock({ data: null, error: null }));
+
+      const { updateSession } = await import("./actions");
+      await updateSession("evt-1", "sess-1", {
+        track_ids: ["track-a", "track-b"],
+      });
+
+      // Should call session_tracks for delete and insert
+      expect(mockFrom).toHaveBeenCalledWith("session_tracks");
+      expect(revalidatePath).toHaveBeenCalledWith("/events/evt-1/schedule", "layout");
+    });
+
     it("handles capacity and rsvp_enabled fields", async () => {
       mockFrom.mockReturnValue(createQueryMock({ data: null, error: null }));
 
@@ -144,6 +177,36 @@ describe("Schedule Actions", () => {
       });
 
       expect(mockFrom).toHaveBeenCalledWith("sessions");
+      expect(revalidatePath).toHaveBeenCalledWith("/events/evt-1/schedule", "layout");
+    });
+  });
+
+  describe("bulkAssignTracks", () => {
+    it("deletes existing and inserts new track links for multiple sessions", async () => {
+      mockFrom.mockReturnValue(createQueryMock({ data: null, error: null }));
+
+      const { bulkAssignTracks } = await import("./actions");
+      await bulkAssignTracks("evt-1", ["sess-1", "sess-2"], ["track-a", "track-b"]);
+
+      expect(mockFrom).toHaveBeenCalledWith("session_tracks");
+      expect(revalidatePath).toHaveBeenCalledWith("/events/evt-1/schedule", "layout");
+    });
+
+    it("skips when sessionIds is empty", async () => {
+      const { bulkAssignTracks } = await import("./actions");
+      await bulkAssignTracks("evt-1", [], ["track-a"]);
+
+      expect(mockFrom).not.toHaveBeenCalled();
+    });
+
+    it("only deletes when trackIds is empty", async () => {
+      mockFrom.mockReturnValue(createQueryMock({ data: null, error: null }));
+
+      const { bulkAssignTracks } = await import("./actions");
+      await bulkAssignTracks("evt-1", ["sess-1"], []);
+
+      // Should call session_tracks for delete only
+      expect(mockFrom).toHaveBeenCalledWith("session_tracks");
       expect(revalidatePath).toHaveBeenCalledWith("/events/evt-1/schedule", "layout");
     });
   });
