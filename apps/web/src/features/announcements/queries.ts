@@ -25,7 +25,7 @@ export async function getAnnouncements(eventId: string): Promise<Announcement[]>
     .eq("event_id", eventId)
     .order("created_at", { ascending: false });
 
-  if (error) throw new Error(error.message);
+  if (error) return [];
   return (data ?? []) as Announcement[];
 }
 
@@ -52,7 +52,7 @@ export async function getAnnouncementsForAttendee(eventId: string): Promise<Anno
     .eq("status", "sent")
     .order("sent_at", { ascending: false });
 
-  if (error) throw new Error(error.message);
+  if (error) return [];
   return (data ?? []) as Announcement[];
 }
 
