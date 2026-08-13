@@ -8,8 +8,6 @@ import { createClient } from "@attendly/ui/supabase/client";
 import { duplicateEvent } from "@/features/events/actions";
 import { saveAsTemplate } from "@/features/templates/actions";
 import { Input, Button, Badge, Card, useConfirm } from "@attendly/ui/components";
-import { EventBasicsForm } from "@/features/events/components/event-basics-form";
-import type { EventFormData } from "@/features/events/components/event-basics-form";
 
 export function EventSettingsForm({
   event,
@@ -23,55 +21,6 @@ export function EventSettingsForm({
   const [templateName, setTemplateName] = useState("");
   const [savingTemplate, setSavingTemplate] = useState(false);
   const { confirm, dialog: confirmDialog } = useConfirm();
-
-  async function handleSave(data: EventFormData) {
-    const supabase = createClient();
-
-    const slug = (data.title || "")
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "");
-
-    const { error } = await supabase
-      .from("events")
-      .update({
-        title: data.title,
-        slug,
-        abbreviation: data.abbreviation || null,
-        description: data.description || null,
-        start_date: new Date(data.start_date).toISOString(),
-        end_date: new Date(data.end_date).toISOString(),
-        timezone: data.timezone,
-        max_attendees: data.max_attendees || null,
-        venue_name: data.location_data?.venue_name || null,
-        venue_address: data.location_data?.formatted_address || null,
-        location_data: data.location_data ?? {},
-        welcome_message: data.welcome_message || null,
-        airport_ride_sharing: data.airport_ride_sharing,
-        event_website_url: data.event_website_url || null,
-        logo: data.logo || null,
-        cover_image: data.cover_image || null,
-        twitter_hashtags: data.twitter_hashtags || null,
-        post_event_summary: data.post_event_summary,
-        generate_interests: data.generate_interests,
-        organization_name: data.organization_name || null,
-        attendee_origin: data.attendee_origin || null,
-        topic_tags: data.topic_tags,
-        organization_type: data.organization_type,
-        event_type: data.event_type || null,
-        event_type_other: data.event_type_other || null,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", event.id);
-
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-
-    toast.success("Event updated");
-    router.refresh();
-  }
 
   async function handleStatusChange(newStatus: string) {
     const supabase = createClient();
@@ -134,7 +83,7 @@ export function EventSettingsForm({
     try {
       const result = await duplicateEvent(event.id);
       toast.success("Event duplicated");
-      router.push(`/events/${result.id}/settings`);
+      router.push(`/events/${result.id}`);
     } catch (err: unknown) {
       toast.error(
         err instanceof Error ? err.message : "Failed to duplicate event"
@@ -144,9 +93,7 @@ export function EventSettingsForm({
   }
 
   return (
-    <div className="space-y-8">
-      <EventBasicsForm mode="edit" event={event} onSubmit={handleSave} />
-
+    <div className="space-y-6">
       {/* Publishing */}
       <Card className="p-6">
         <h2 className="mb-4 text-lg font-semibold">Publishing</h2>
