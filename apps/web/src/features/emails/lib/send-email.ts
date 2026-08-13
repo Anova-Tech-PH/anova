@@ -9,6 +9,8 @@ type SendEmailParams = {
   to: { email: string; name?: string };
   subject: string;
   html: string;
+  senderName?: string;
+  replyTo?: string;
 };
 
 function getServiceClient() {
@@ -19,11 +21,17 @@ function getServiceClient() {
 }
 
 export async function sendEmail(params: SendEmailParams) {
+  const defaultFrom = process.env.EMAIL_FROM || "Evenstry <onboarding@resend.dev>";
+  const fromAddress = params.senderName
+    ? `${params.senderName} <${defaultFrom.match(/<(.+)>/)?.[1] ?? defaultFrom}>`
+    : defaultFrom;
+
   const { data, error: sendError } = await getResend().emails.send({
-    from: process.env.EMAIL_FROM || "Evenstry <onboarding@resend.dev>",
+    from: fromAddress,
     to: params.to.email,
     subject: params.subject,
     html: params.html,
+    ...(params.replyTo ? { reply_to: params.replyTo } : {}),
   });
 
   // Use service role client for logging — this runs server-side
