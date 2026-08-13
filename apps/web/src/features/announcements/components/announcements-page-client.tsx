@@ -47,6 +47,8 @@ export function AnnouncementsPageClient({
   const [editDraft, setEditDraft] = useState<Announcement | null>(null);
   const [templateSubject, setTemplateSubject] = useState<string | undefined>();
   const [templateBody, setTemplateBody] = useState<string | undefined>();
+  const [templateSenderName, setTemplateSenderName] = useState<string | undefined>();
+  const [templateReplyToEmail, setTemplateReplyToEmail] = useState<string | undefined>();
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
   const [templatePickerMode, setTemplatePickerMode] = useState<
     "reuse" | "org_templates"
@@ -57,13 +59,22 @@ export function AnnouncementsPageClient({
     setEditDraft(null);
     setTemplateSubject(undefined);
     setTemplateBody(undefined);
+    setTemplateSenderName(undefined);
+    setTemplateReplyToEmail(undefined);
     setComposerOpen(true);
   }
 
-  function openComposerWithTemplate(subject: string, body: string) {
+  function openComposerWithTemplate(
+    subject: string,
+    body: string,
+    senderName?: string,
+    replyToEmail?: string
+  ) {
     setEditDraft(null);
     setTemplateSubject(subject);
     setTemplateBody(body);
+    setTemplateSenderName(senderName);
+    setTemplateReplyToEmail(replyToEmail);
     setComposerOpen(true);
   }
 
@@ -84,7 +95,12 @@ export function AnnouncementsPageClient({
   }
 
   function handleDuplicate(announcement: Announcement) {
-    openComposerWithTemplate(announcement.subject, announcement.body);
+    openComposerWithTemplate(
+      announcement.subject,
+      announcement.body,
+      announcement.sender_name ?? undefined,
+      announcement.reply_to_email ?? undefined
+    );
   }
 
   function handleTemplateSelect(subject: string, body: string) {
@@ -97,6 +113,8 @@ export function AnnouncementsPageClient({
     setEditDraft(null);
     setTemplateSubject(undefined);
     setTemplateBody(undefined);
+    setTemplateSenderName(undefined);
+    setTemplateReplyToEmail(undefined);
   }
 
   return (
@@ -189,6 +207,8 @@ export function AnnouncementsPageClient({
         draft={editDraft}
         templateSubject={templateSubject}
         templateBody={templateBody}
+        templateSenderName={templateSenderName}
+        templateReplyToEmail={templateReplyToEmail}
         ticketTypes={ticketTypes}
         sessions={sessions}
         categories={categories}

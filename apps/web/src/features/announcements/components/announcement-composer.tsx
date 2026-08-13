@@ -29,6 +29,8 @@ interface AnnouncementComposerProps {
   draft?: Announcement | null;
   templateSubject?: string;
   templateBody?: string;
+  templateSenderName?: string;
+  templateReplyToEmail?: string;
   ticketTypes: { id: string; name: string }[];
   sessions: { id: string; title: string }[];
   categories: string[];
@@ -42,6 +44,8 @@ export function AnnouncementComposer({
   draft,
   templateSubject,
   templateBody,
+  templateSenderName,
+  templateReplyToEmail,
   ticketTypes,
   sessions,
   categories,
@@ -101,14 +105,14 @@ export function AnnouncementComposer({
       setSelectedCategory("");
       setSelectedSessionId("");
       setExcludedCategories([]);
-      setSenderName("");
-      setReplyToEmail("");
+      setSenderName(templateSenderName ?? "");
+      setReplyToEmail(templateReplyToEmail ?? "");
       setSubject(templateSubject ?? "");
       setBody(templateBody ?? "");
       setChannels(["in_app"]);
       setSignature("");
     }
-  }, [open, draft, templateSubject, templateBody]);
+  }, [open, draft, templateSubject, templateBody, templateSenderName, templateReplyToEmail]);
 
   function buildTargetAudience() {
     switch (audienceType) {

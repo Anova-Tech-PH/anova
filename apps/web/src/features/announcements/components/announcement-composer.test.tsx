@@ -254,4 +254,23 @@ describe("AnnouncementComposer", () => {
     render(<AnnouncementComposer {...defaultProps} />);
     expect(screen.getByText("(42)")).toBeInTheDocument();
   });
+
+  it("pre-fills sender_name and reply_to_email from template props (copy/duplicate flow)", () => {
+    render(
+      <AnnouncementComposer
+        {...defaultProps}
+        templateSubject="Copied Subject"
+        templateBody="<p>Copied body</p>"
+        templateSenderName="Org Sender"
+        templateReplyToEmail="reply@org.com"
+      />
+    );
+
+    expect(screen.getByPlaceholderText(/e\.g\. event team/i)).toHaveValue(
+      "Org Sender"
+    );
+    expect(
+      screen.getByPlaceholderText(/e\.g\. hello@example\.com/i)
+    ).toHaveValue("reply@org.com");
+  });
 });
