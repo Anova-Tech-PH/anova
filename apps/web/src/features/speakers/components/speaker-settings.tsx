@@ -308,7 +308,7 @@ export function SpeakerSettings({
             >
               Send reminder email to speakers who haven&apos;t submitted
             </label>
-            <Badge variant="secondary">Coming Soon</Badge>
+            <Badge variant="outline">Coming Soon</Badge>
           </div>
 
           <div className="space-y-2">

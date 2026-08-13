@@ -21,9 +21,18 @@ export async function validateTokenAndGetContext(token: string) {
 
   if (fieldsError) return null;
 
+  const speaker = Array.isArray(tokenData.speakers)
+    ? tokenData.speakers[0]
+    : tokenData.speakers;
+  const event = Array.isArray(tokenData.events)
+    ? tokenData.events[0]
+    : tokenData.events;
+
+  if (!speaker || !event) return null;
+
   return {
-    speaker: tokenData.speakers,
-    event: tokenData.events,
+    speaker,
+    event,
     fields: fields ?? [],
   };
 }

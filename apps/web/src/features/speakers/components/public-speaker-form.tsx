@@ -107,7 +107,7 @@ export function PublicSpeakerForm({
               <div key={field.field_key}>
                 <ImageUpload
                   label={field.required ? `${field.label} *` : field.label}
-                  value={value || null}
+                  value={value || ""}
                   onChange={(url) => handleChange(field.field_key, url)}
                   folder="speakers"
                 />
