@@ -107,6 +107,14 @@ export default async function EventLayout({
       firstHref: `/events/${eventId}/announcements`,
       items: [
         { href: `/events/${eventId}/announcements`, label: "Announcements", icon: "megaphone" },
+        {
+          href: `/events/${eventId}/meetups`,
+          label: "Community",
+          icon: "users",
+          children: [
+            { href: `/events/${eventId}/meetups`, label: "Meet-ups" },
+          ],
+        },
         { href: `/events/${eventId}/qa`, label: "Q&A", icon: "message-circle" },
         { href: `/events/${eventId}/feedback`, label: "Feedback", icon: "message-square" },
         { href: `/events/${eventId}/polls`, label: "Polls", icon: "bar-chart-2" },
