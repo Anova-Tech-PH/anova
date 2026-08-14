@@ -5,6 +5,7 @@ import { Plus, Pencil, Trash2, Ticket } from "lucide-react";
 import { toast } from "sonner";
 import { TicketForm } from "./ticket-form";
 import { createTicketType, updateTicketType, deleteTicketType } from "../actions";
+import { setTicketCategoryMapping } from "@/features/attendee-categories/actions";
 import { Badge, Button, Card, EmptyState, useConfirm } from "@attendly/ui/components";
 
 type TicketType = {
@@ -32,13 +33,18 @@ function toLocalInput(iso: string | null) {
 export function TicketList({
   eventId,
   initialTickets,
+  categories,
+  ticketMappings: initialTicketMappings,
 }: {
   eventId: string;
   initialTickets: TicketType[];
+  categories?: { id: string; name: string; color: string }[];
+  ticketMappings?: { ticket_type_id: string; category_id: string }[];
 }) {
   const [tickets, setTickets] = useState(initialTickets);
   const [showForm, setShowForm] = useState(false);
   const [editingTicket, setEditingTicket] = useState<TicketType | null>(null);
+  const [ticketMappings, setTicketMappings] = useState(initialTicketMappings ?? []);
   const { confirm, dialog: confirmDialog } = useConfirm();
   const [isPending, startTransition] = useTransition();
 
@@ -54,6 +60,10 @@ export function TicketList({
         sales_end: data.sales_end ? new Date(data.sales_end).toISOString() : undefined,
         access_code: data.access_code?.trim() || null,
       });
+      if (data.category_id) {
+        await setTicketCategoryMapping(eventId, ticket.id, data.category_id);
+        setTicketMappings((prev) => [...prev, { ticket_type_id: ticket.id, category_id: data.category_id }]);
+      }
       setTickets((prev) => [...prev, { ...ticket, sold: 0 }]);
       setShowForm(false);
       toast.success("Ticket type created");
@@ -75,6 +85,18 @@ export function TicketList({
         sales_end: data.sales_end ? new Date(data.sales_end).toISOString() : null,
         access_code: data.access_code?.trim() || null,
       });
+      const currentMapping = ticketMappings.find((m) => m.ticket_type_id === editingTicket.id);
+      const currentCategoryId = currentMapping?.category_id ?? "";
+      if (data.category_id !== currentCategoryId) {
+        await setTicketCategoryMapping(eventId, editingTicket.id, data.category_id || null);
+        setTicketMappings((prev) => {
+          const filtered = prev.filter((m) => m.ticket_type_id !== editingTicket.id);
+          if (data.category_id) {
+            return [...filtered, { ticket_type_id: editingTicket.id, category_id: data.category_id }];
+          }
+          return filtered;
+        });
+      }
       setTickets((prev) =>
         prev.map((t) =>
           t.id === editingTicket.id
@@ -229,7 +251,11 @@ export function TicketList({
       )}
 
       {showForm && (
-        <TicketForm onSubmit={handleCreate} onCancel={() => setShowForm(false)} />
+        <TicketForm
+          onSubmit={handleCreate}
+          onCancel={() => setShowForm(false)}
+          categories={categories}
+        />
       )}
 
       {editingTicket && (
@@ -245,9 +271,11 @@ export function TicketList({
             sales_end: toLocalInput(editingTicket.sales_end),
             group_size: editingTicket.group_size?.toString() ?? "",
             access_code: editingTicket.access_code ?? "",
+            category_id: ticketMappings.find((m) => m.ticket_type_id === editingTicket.id)?.category_id ?? "",
           }}
           onSubmit={handleUpdate}
           onCancel={() => setEditingTicket(null)}
+          categories={categories}
         />
       )}
 

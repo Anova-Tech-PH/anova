@@ -15,16 +15,19 @@ type TicketFormData = {
   sales_end: string;
   group_size: string;
   access_code: string;
+  category_id: string;
 };
 
 export function TicketForm({
   ticket,
   onSubmit,
   onCancel,
+  categories,
 }: {
   ticket?: TicketFormData;
   onSubmit: (data: TicketFormData) => Promise<void>;
   onCancel: () => void;
+  categories?: { id: string; name: string; color: string }[];
 }) {
   const [form, setForm] = useState<TicketFormData>({
     name: ticket?.name ?? "",
@@ -36,6 +39,7 @@ export function TicketForm({
     sales_end: ticket?.sales_end ?? "",
     group_size: ticket?.group_size ?? "",
     access_code: ticket?.access_code ?? "",
+    category_id: ticket?.category_id ?? "",
   });
   const [loading, setLoading] = useState(false);
 
@@ -150,6 +154,25 @@ export function TicketForm({
               When set, this ticket is hidden unless the attendee enters this code.
             </p>
           </div>
+
+          {categories && categories.length > 0 && (
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Auto-assign Category</label>
+              <select
+                value={form.category_id}
+                onChange={(e) => setForm((f) => ({ ...f, category_id: e.target.value }))}
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+              >
+                <option value="">None</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                ))}
+              </select>
+              <p className="text-xs text-muted-foreground">
+                Registrants who buy this ticket are automatically assigned this category.
+              </p>
+            </div>
+          )}
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
