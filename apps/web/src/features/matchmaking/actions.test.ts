@@ -1,10 +1,30 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { revalidatePath } from "next/cache";
 
+const mockInsert = vi.fn();
+const mockUpdate = vi.fn();
+const mockDelete = vi.fn();
+
 function createQueryMock(result: { data?: unknown; error?: unknown }) {
   const handler: ProxyHandler<object> = {
     get(_target, prop: string) {
-      if (prop === "then") return (resolve: (v: unknown) => void) => resolve(result);
+      if (prop === "then")
+        return (resolve: (v: unknown) => void) => resolve(result);
+      if (prop === "insert")
+        return (...args: unknown[]) => {
+          mockInsert(...args);
+          return new Proxy({}, handler);
+        };
+      if (prop === "update")
+        return (...args: unknown[]) => {
+          mockUpdate(...args);
+          return new Proxy({}, handler);
+        };
+      if (prop === "delete")
+        return (...args: unknown[]) => {
+          mockDelete(...args);
+          return new Proxy({}, handler);
+        };
       return vi.fn(() => new Proxy({}, handler));
     },
   };
@@ -20,7 +40,9 @@ const mockAuth = {
 };
 
 vi.mock("@attendly/ui/supabase/server", () => ({
-  createClient: vi.fn(() => Promise.resolve({ from: mockFrom, auth: mockAuth })),
+  createClient: vi.fn(() =>
+    Promise.resolve({ from: mockFrom, auth: mockAuth })
+  ),
 }));
 
 vi.mock("next/cache", () => ({
@@ -49,16 +71,22 @@ describe("Matchmaking Actions", () => {
       await createInterest("evt-1", { name: "AI" });
 
       expect(mockFrom).toHaveBeenCalledWith("event_interests");
+      expect(mockInsert).toHaveBeenCalledWith(
+        expect.objectContaining({ event_id: "evt-1", name: "AI" })
+      );
       expect(revalidatePath).toHaveBeenCalledWith("/events/evt-1/matchmaking");
     });
 
     it("throws when not authenticated", async () => {
-      mockAuth.getUser.mockResolvedValue({ data: { user: null }, error: null });
+      mockAuth.getUser.mockResolvedValue({
+        data: { user: null },
+        error: null,
+      });
 
       const { createInterest } = await import("./actions");
-      await expect(
-        createInterest("evt-1", { name: "AI" })
-      ).rejects.toThrow("Not authenticated");
+      await expect(createInterest("evt-1", { name: "AI" })).rejects.toThrow(
+        "Not authenticated"
+      );
     });
   });
 
@@ -67,10 +95,27 @@ describe("Matchmaking Actions", () => {
       mockFrom.mockReturnValue(createQueryMock({ data: null, error: null }));
 
       const { updateInterest } = await import("./actions");
-      await updateInterest("evt-1", "interest-1", { name: "Machine Learning" });
+      await updateInterest("evt-1", "interest-1", {
+        name: "Machine Learning",
+      });
 
       expect(mockFrom).toHaveBeenCalledWith("event_interests");
+      expect(mockUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({ name: "Machine Learning" })
+      );
       expect(revalidatePath).toHaveBeenCalledWith("/events/evt-1/matchmaking");
+    });
+
+    it("throws when not authenticated", async () => {
+      mockAuth.getUser.mockResolvedValue({
+        data: { user: null },
+        error: null,
+      });
+
+      const { updateInterest } = await import("./actions");
+      await expect(
+        updateInterest("evt-1", "interest-1", { name: "AI" })
+      ).rejects.toThrow("Not authenticated");
     });
   });
 
@@ -82,7 +127,20 @@ describe("Matchmaking Actions", () => {
       await deleteInterest("evt-1", "interest-1");
 
       expect(mockFrom).toHaveBeenCalledWith("event_interests");
+      expect(mockDelete).toHaveBeenCalled();
       expect(revalidatePath).toHaveBeenCalledWith("/events/evt-1/matchmaking");
+    });
+
+    it("throws when not authenticated", async () => {
+      mockAuth.getUser.mockResolvedValue({
+        data: { user: null },
+        error: null,
+      });
+
+      const { deleteInterest } = await import("./actions");
+      await expect(deleteInterest("evt-1", "interest-1")).rejects.toThrow(
+        "Not authenticated"
+      );
     });
   });
 });

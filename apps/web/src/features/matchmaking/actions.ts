@@ -32,6 +32,10 @@ export async function updateInterest(
   data: { name?: string }
 ) {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
 
   const { error } = await supabase
     .from("event_interests")
@@ -44,6 +48,10 @@ export async function updateInterest(
 
 export async function deleteInterest(eventId: string, interestId: string) {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
 
   const { error } = await supabase
     .from("event_interests")
@@ -92,7 +100,11 @@ Example output: ["Artificial Intelligence", "Sustainability", "Leadership"]`;
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "x-api-key": process.env.ANTHROPIC_API_KEY ?? "",
+      "x-api-key": (() => {
+        const key = process.env.ANTHROPIC_API_KEY;
+        if (!key) throw new Error("ANTHROPIC_API_KEY is not configured");
+        return key;
+      })(),
       "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
@@ -106,7 +118,12 @@ Example output: ["Artificial Intelligence", "Sustainability", "Leadership"]`;
 
   const result = await response.json();
   const text = result.content?.[0]?.text ?? "[]";
-  const suggestions: string[] = JSON.parse(text);
+  let suggestions: string[];
+  try {
+    suggestions = JSON.parse(text);
+  } catch {
+    throw new Error("Failed to parse AI-generated interests");
+  }
 
   return suggestions
     .filter((s: string) => typeof s === "string" && s.length <= 30)
