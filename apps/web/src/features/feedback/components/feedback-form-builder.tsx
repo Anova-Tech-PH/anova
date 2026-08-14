@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus, Trash2, GripVertical } from "lucide-react";
+import { Plus, Trash2, GripVertical, FileText } from "lucide-react";
 import { toast } from "sonner";
-import { Button, Input, Card } from "@attendly/ui/components";
+import { Button, Input, Card, ModalOverlay } from "@attendly/ui/components";
 import { createFeedbackForm, updateFeedbackForm } from "../actions";
 import type { FeedbackForm, FeedbackQuestion } from "../queries";
+import { feedbackTemplates } from "../feedback-templates";
 
 function generateId() {
   return crypto.randomUUID();
@@ -53,6 +54,21 @@ export function FeedbackFormBuilder({
     initialForm?.questions?.length ? initialForm.questions : defaultQuestions()
   );
   const [isPending, startTransition] = useTransition();
+  const [showTemplates, setShowTemplates] = useState(false);
+
+  function applyTemplate(templateId: string) {
+    const template = feedbackTemplates.find((t) => t.id === templateId);
+    if (!template) return;
+    setName(template.name);
+    setQuestions(
+      template.questions.map((q) => ({
+        ...q,
+        id: generateId(),
+      })) as FeedbackQuestion[]
+    );
+    setShowTemplates(false);
+    toast.success(`Applied "${template.name}" template`);
+  }
 
   function addQuestion() {
     setQuestions((prev) => [
@@ -133,6 +149,56 @@ export function FeedbackFormBuilder({
             placeholder="Session Feedback"
           />
         </div>
+
+        {/* Template Picker */}
+        <div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowTemplates(true)}
+          >
+            <FileText className="mr-1.5 h-4 w-4" />
+            Start from template
+          </Button>
+        </div>
+
+        {showTemplates && (
+          <ModalOverlay onClose={() => setShowTemplates(false)}>
+            <Card className="w-full max-w-lg p-6">
+              <h4 className="mb-4 text-lg font-semibold">
+                Choose a Template
+              </h4>
+              <div className="space-y-3">
+                {feedbackTemplates.map((template) => (
+                  <button
+                    key={template.id}
+                    type="button"
+                    onClick={() => applyTemplate(template.id)}
+                    className="w-full rounded-xl border p-4 text-left transition-colors hover:bg-muted/50"
+                  >
+                    <p className="font-medium">{template.name}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {template.description}
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {template.questions.length} question
+                      {template.questions.length !== 1 ? "s" : ""}
+                    </p>
+                  </button>
+                ))}
+              </div>
+              <div className="mt-4 flex justify-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowTemplates(false)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </Card>
+          </ModalOverlay>
+        )}
 
         {/* Questions */}
         <div className="space-y-4">
