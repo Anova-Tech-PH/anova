@@ -7,6 +7,7 @@ export async function updateProfile(
   eventId: string,
   data: {
     display_name: string;
+    avatar_url?: string;
     title?: string;
     company?: string;
     location?: string;
@@ -24,6 +25,7 @@ export async function updateProfile(
       id: user.id,
       event_id: eventId,
       display_name: data.display_name,
+      avatar_url: data.avatar_url ?? null,
       title: data.title ?? null,
       company: data.company ?? null,
       location: data.location ?? null,
