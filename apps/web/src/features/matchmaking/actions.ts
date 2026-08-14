@@ -17,7 +17,7 @@ export async function createInterest(
     .from("event_interests")
     .insert({
       event_id: eventId,
-      name: data.name,
+      name: data.name.trim(),
     })
     .select()
     .single();
@@ -40,7 +40,8 @@ export async function updateInterest(
   const { error } = await supabase
     .from("event_interests")
     .update({ ...data, updated_at: new Date().toISOString() })
-    .eq("id", interestId);
+    .eq("id", interestId)
+    .eq("event_id", eventId);
 
   if (error) throw new Error(error.message);
   revalidatePath(`/events/${eventId}/matchmaking`);
@@ -56,7 +57,8 @@ export async function deleteInterest(eventId: string, interestId: string) {
   const { error } = await supabase
     .from("event_interests")
     .delete()
-    .eq("id", interestId);
+    .eq("id", interestId)
+    .eq("event_id", eventId);
 
   if (error) throw new Error(error.message);
   revalidatePath(`/events/${eventId}/matchmaking`);
@@ -121,6 +123,7 @@ Example output: ["Artificial Intelligence", "Sustainability", "Leadership"]`;
   let suggestions: string[];
   try {
     suggestions = JSON.parse(text);
+    if (!Array.isArray(suggestions)) throw new Error("not an array");
   } catch {
     throw new Error("Failed to parse AI-generated interests");
   }

@@ -65,7 +65,7 @@ export function MatchmakingPageClient({
         } else {
           await selectInterest(eventId, interest.id, orgSlug, eventSlug);
         }
-      } catch (err) {
+      } catch {
         toast.error("Failed to update interest. Please try again.");
       }
     });
@@ -205,7 +205,7 @@ export function MatchmakingPageClient({
 
                   {/* Message button */}
                   <Link
-                    href="/messages"
+                    href={`/${orgSlug}/${eventSlug}/messages/${match.user_id}`}
                     className="mt-auto"
                   >
                     <Button

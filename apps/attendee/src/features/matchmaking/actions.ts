@@ -19,7 +19,7 @@ export async function selectInterest(
     .from("attendee_interests")
     .insert({ event_id: eventId, user_id: user.id, interest_id: interestId });
 
-  if (error && !error.message.includes("duplicate"))
+  if (error && error.code !== "23505")
     throw new Error(error.message);
   revalidatePath(`/${orgSlug}/${eventSlug}/matchmaking`);
 }

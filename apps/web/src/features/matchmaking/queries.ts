@@ -34,14 +34,18 @@ export async function getEventInterests(eventId: string): Promise<{
   })) as EventInterest[];
 
   // Count distinct attendees participating
-  const { count } = await supabase
+  const { data: participants } = await supabase
     .from("attendee_interests")
-    .select("user_id", { count: "exact", head: true })
+    .select("user_id")
     .eq("event_id", eventId);
+
+  const distinctCount = new Set(
+    (participants ?? []).map((p: { user_id: string }) => p.user_id)
+  ).size;
 
   return {
     interests,
     total: interests.length,
-    attendeesParticipating: count ?? 0,
+    attendeesParticipating: distinctCount,
   };
 }
