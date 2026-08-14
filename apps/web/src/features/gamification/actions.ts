@@ -87,14 +87,14 @@ export async function enableGamification(eventId: string) {
   }));
 
   const { error: rulesError } = await supabase
-    .from("gamification_point_rules")
+    .from("point_rules")
     .upsert(rules, { onConflict: "event_id,activity_type" });
 
   if (rulesError) throw new Error(rulesError.message);
 
   // 3. Seed default badges (check existing first, insert only new ones)
   const { data: existingBadges } = await supabase
-    .from("gamification_badge_definitions")
+    .from("badge_definitions")
     .select("name")
     .eq("event_id", eventId);
 
@@ -114,7 +114,7 @@ export async function enableGamification(eventId: string) {
 
   if (newBadges.length > 0) {
     const { error: badgesError } = await supabase
-      .from("gamification_badge_definitions")
+      .from("badge_definitions")
       .insert(newBadges);
 
     if (badgesError) throw new Error(badgesError.message);
@@ -167,7 +167,7 @@ export async function updatePointRule(
   const supabase = await createClient();
 
   const { error } = await supabase
-    .from("gamification_point_rules")
+    .from("point_rules")
     .update(data)
     .eq("id", ruleId)
     .eq("event_id", eventId);
@@ -189,7 +189,7 @@ export async function createBadge(
   const supabase = await createClient();
 
   const { data: badge, error } = await supabase
-    .from("gamification_badge_definitions")
+    .from("badge_definitions")
     .insert({ event_id: eventId, ...data })
     .select()
     .single();
@@ -213,7 +213,7 @@ export async function updateBadge(
   const supabase = await createClient();
 
   const { error } = await supabase
-    .from("gamification_badge_definitions")
+    .from("badge_definitions")
     .update(data)
     .eq("id", badgeId)
     .eq("event_id", eventId);
@@ -226,7 +226,7 @@ export async function deleteBadge(eventId: string, badgeId: string) {
   const supabase = await createClient();
 
   const { error } = await supabase
-    .from("gamification_badge_definitions")
+    .from("badge_definitions")
     .delete()
     .eq("id", badgeId)
     .eq("event_id", eventId);

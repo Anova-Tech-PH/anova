@@ -76,11 +76,11 @@ describe("gamification actions", () => {
 
     await enableGamification(EVENT_ID);
 
-    // Should have called from() for gamification_configs, gamification_point_rules, gamification_badge_definitions
+    // Should have called from() for gamification_configs, point_rules, badge_definitions
     const tableNames = mockFrom.mock.calls.map((c: unknown[]) => c[0]);
     expect(tableNames).toContain("gamification_configs");
-    expect(tableNames).toContain("gamification_point_rules");
-    expect(tableNames).toContain("gamification_badge_definitions");
+    expect(tableNames).toContain("point_rules");
+    expect(tableNames).toContain("badge_definitions");
   });
 
   // ── disableGamification ────────────────────────────────────────────
@@ -118,7 +118,7 @@ describe("gamification actions", () => {
 
     await updatePointRule(EVENT_ID, RULE_ID, { points: 25, enabled: true });
 
-    expect(mockFrom).toHaveBeenCalledWith("gamification_point_rules");
+    expect(mockFrom).toHaveBeenCalledWith("point_rules");
     const chain = mockFrom.mock.results[0].value;
     expect(chain.update).toHaveBeenCalledWith(
       expect.objectContaining({ points: 25, enabled: true })
@@ -172,7 +172,7 @@ describe("gamification actions", () => {
 
     const result = await createBadge(EVENT_ID, badgeData);
 
-    expect(mockFrom).toHaveBeenCalledWith("gamification_badge_definitions");
+    expect(mockFrom).toHaveBeenCalledWith("badge_definitions");
     expect(result).toEqual(returnedBadge);
   });
 
@@ -189,7 +189,7 @@ describe("gamification actions", () => {
 
     await updateBadge(EVENT_ID, BADGE_ID, { name: "Updated Badge" });
 
-    expect(mockFrom).toHaveBeenCalledWith("gamification_badge_definitions");
+    expect(mockFrom).toHaveBeenCalledWith("badge_definitions");
   });
 
   // ── deleteBadge ────────────────────────────────────────────────────
@@ -205,7 +205,7 @@ describe("gamification actions", () => {
 
     await deleteBadge(EVENT_ID, BADGE_ID);
 
-    expect(mockFrom).toHaveBeenCalledWith("gamification_badge_definitions");
+    expect(mockFrom).toHaveBeenCalledWith("badge_definitions");
   });
 
   // ── recalculateLeaderboard ─────────────────────────────────────────
