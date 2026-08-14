@@ -15,31 +15,147 @@ import {
   Award,
   ClipboardList,
   Handshake,
-  Globe,
   Menu,
   X,
+  ChevronDown,
+  ChevronRight,
+  Users,
+  MessageCircle,
+  Camera,
+  HelpCircle,
+  Trophy,
+  BookMarked,
+  StickyNote,
+  User,
+  Home,
 } from "lucide-react";
 import { Logo } from "@attendly/ui/logo";
 import { createClient } from "@attendly/ui/supabase/client";
 
-const navItems = [
-  { label: "Event", path: "", icon: Calendar },
-  { label: "Schedule", path: "/schedule", icon: Calendar },
-  { label: "Speakers", path: "/speakers", icon: Mic2 },
-  { label: "Rooms", path: "/rooms", icon: DoorOpen },
-  { label: "Resources", path: "/resources", icon: FileText },
-  { label: "Sponsors", path: "/sponsors", icon: Handshake },
-  { label: "Announcements", path: "/announcements", icon: Megaphone },
-  { label: "Certificate", path: "/certificate", icon: Award },
-  { label: "Logistics", path: "/logistics", icon: ClipboardList },
-  { label: "Website", path: "/website", icon: Globe },
-  { label: "Register", path: "/register", icon: Ticket },
-];
+/* ------------------------------------------------------------------ */
+/*  Types                                                              */
+/* ------------------------------------------------------------------ */
+
+export interface SidebarData {
+  /** Whether breakout rooms exist for the event */
+  hasRooms: boolean;
+  /** Whether documents/videos exist */
+  hasResources: boolean;
+  /** Whether logistics data exists */
+  hasLogistics: boolean;
+  /** Whether certificates are enabled */
+  hasCertificates: boolean;
+  /** Badge count for Community nav item */
+  communityCount: number;
+  /** Badge count for Messages nav item */
+  unreadMessageCount: number;
+}
+
+export const defaultSidebarData: SidebarData = {
+  hasRooms: false,
+  hasResources: false,
+  hasLogistics: false,
+  hasCertificates: false,
+  communityCount: 0,
+  unreadMessageCount: 0,
+};
+
+/* ------------------------------------------------------------------ */
+/*  Badge component                                                    */
+/* ------------------------------------------------------------------ */
+
+function Badge({ count }: { count: number }) {
+  if (count <= 0) return null;
+  return (
+    <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-semibold text-destructive-foreground">
+      {count > 99 ? "99+" : count}
+    </span>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Nav link component                                                 */
+/* ------------------------------------------------------------------ */
+
+function NavLink({
+  href,
+  icon: Icon,
+  label,
+  isActive,
+  badge,
+  indent,
+}: {
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  isActive: boolean;
+  badge?: number;
+  indent?: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+        indent ? "pl-9" : ""
+      } ${
+        isActive
+          ? "bg-primary/10 text-primary font-medium"
+          : "text-muted-foreground hover:text-foreground hover:bg-muted"
+      }`}
+    >
+      <Icon className="h-4 w-4 shrink-0" />
+      {label}
+      {badge !== undefined && badge > 0 && <Badge count={badge} />}
+    </Link>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Collapsible section                                                */
+/* ------------------------------------------------------------------ */
+
+function CollapsibleSection({
+  label,
+  icon: Icon,
+  defaultOpen = true,
+  children,
+}: {
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+
+  return (
+    <div>
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+      >
+        <Icon className="h-4 w-4 shrink-0" />
+        <span className="flex-1 text-left">{label}</span>
+        {open ? (
+          <ChevronDown className="h-3.5 w-3.5 shrink-0" />
+        ) : (
+          <ChevronRight className="h-3.5 w-3.5 shrink-0" />
+        )}
+      </button>
+      {open && <div className="space-y-0.5">{children}</div>}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Main sidebar                                                       */
+/* ------------------------------------------------------------------ */
 
 export function EventSidebar({
   params,
+  sidebarData = defaultSidebarData,
 }: {
   params: Promise<{ orgSlug: string; eventSlug: string }>;
+  sidebarData?: SidebarData;
 }) {
   const { orgSlug, eventSlug } = use(params);
   const pathname = usePathname();
@@ -78,6 +194,12 @@ export function EventSidebar({
     window.location.reload();
   }
 
+  /* Helper to check if a path is active */
+  function isActive(path: string) {
+    const href = `${basePath}${path}`;
+    return path === "" ? pathname === basePath : pathname.startsWith(href);
+  }
+
   const sidebarContent = (
     <>
       <div className="p-4 border-b">
@@ -87,26 +209,176 @@ export function EventSidebar({
       </div>
 
       <nav className="flex-1 overflow-y-auto p-2 space-y-0.5">
-        {navItems.map(({ label, path, icon: Icon }) => {
-          const href = `${basePath}${path}`;
-          const isActive =
-            path === "" ? pathname === basePath : pathname.startsWith(href);
+        {/* Home */}
+        <NavLink
+          href={basePath}
+          icon={Home}
+          label="Event"
+          isActive={isActive("")}
+        />
 
-          return (
-            <Link
-              key={path}
-              href={href}
-              className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
-                isActive
-                  ? "bg-primary/10 text-primary font-medium"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
-              }`}
-            >
-              <Icon className="h-4 w-4 shrink-0" />
-              {label}
-            </Link>
-          );
-        })}
+        {/* Agenda (collapsible) */}
+        <CollapsibleSection label="Agenda" icon={Calendar} defaultOpen>
+          <NavLink
+            href={`${basePath}/schedule`}
+            icon={Calendar}
+            label="Sessions"
+            isActive={isActive("/schedule")}
+            indent
+          />
+          <NavLink
+            href={`${basePath}/speakers`}
+            icon={Mic2}
+            label="Speakers"
+            isActive={isActive("/speakers")}
+            indent
+          />
+        </CollapsibleSection>
+
+        {/* Announcements */}
+        <NavLink
+          href={`${basePath}/announcements`}
+          icon={Megaphone}
+          label="Announcements"
+          isActive={isActive("/announcements")}
+        />
+
+        {/* Attendees */}
+        <NavLink
+          href={`${basePath}/attendees`}
+          icon={Users}
+          label="Attendees"
+          isActive={isActive("/attendees")}
+        />
+
+        {/* Community */}
+        <NavLink
+          href={`${basePath}/community`}
+          icon={MessageCircle}
+          label="Community"
+          isActive={isActive("/community")}
+          badge={sidebarData.communityCount}
+        />
+
+        {/* Photos */}
+        <NavLink
+          href={`${basePath}/photos`}
+          icon={Camera}
+          label="Photos"
+          isActive={isActive("/photos")}
+        />
+
+        {/* Session Q&A */}
+        <NavLink
+          href={`${basePath}/qa`}
+          icon={HelpCircle}
+          label="Session Q&A"
+          isActive={isActive("/qa")}
+        />
+
+        {/* Sponsors */}
+        <NavLink
+          href={`${basePath}/sponsors`}
+          icon={Handshake}
+          label="Sponsors"
+          isActive={isActive("/sponsors")}
+        />
+
+        {/* Resources (conditional) */}
+        {sidebarData.hasResources && (
+          <NavLink
+            href={`${basePath}/resources`}
+            icon={FileText}
+            label="Resources"
+            isActive={isActive("/resources")}
+          />
+        )}
+
+        {/* Rooms (conditional) */}
+        {sidebarData.hasRooms && (
+          <NavLink
+            href={`${basePath}/rooms`}
+            icon={DoorOpen}
+            label="Rooms"
+            isActive={isActive("/rooms")}
+          />
+        )}
+
+        {/* Logistics (conditional) */}
+        {sidebarData.hasLogistics && (
+          <NavLink
+            href={`${basePath}/logistics`}
+            icon={ClipboardList}
+            label="Logistics"
+            isActive={isActive("/logistics")}
+          />
+        )}
+
+        {/* Leaderboard */}
+        <NavLink
+          href={`${basePath}/leaderboard`}
+          icon={Trophy}
+          label="Leaderboard"
+          isActive={isActive("/leaderboard")}
+        />
+
+        {/* Register */}
+        <NavLink
+          href={`${basePath}/register`}
+          icon={Ticket}
+          label="Register"
+          isActive={isActive("/register")}
+        />
+
+        {/* Separator before My Stuff */}
+        {user && (
+          <>
+            <div className="my-2 border-t" />
+
+            {/* My Stuff (collapsible, auth-only) */}
+            <CollapsibleSection label="My Stuff" icon={User} defaultOpen>
+              <NavLink
+                href={`${basePath}/my-agenda`}
+                icon={BookMarked}
+                label="My Agenda"
+                isActive={isActive("/my-agenda")}
+                indent
+              />
+              <NavLink
+                href={`${basePath}/my-notes`}
+                icon={StickyNote}
+                label="My Notes"
+                isActive={isActive("/my-notes")}
+                indent
+              />
+              <NavLink
+                href={`${basePath}/messages`}
+                icon={MessageCircle}
+                label="Messages"
+                isActive={isActive("/messages")}
+                badge={sidebarData.unreadMessageCount}
+                indent
+              />
+              <NavLink
+                href={`${basePath}/profile`}
+                icon={User}
+                label="Profile"
+                isActive={isActive("/profile")}
+                indent
+              />
+            </CollapsibleSection>
+
+            {/* Certificate (conditional) */}
+            {sidebarData.hasCertificates && (
+              <NavLink
+                href={`${basePath}/certificate`}
+                icon={Award}
+                label="Certificate"
+                isActive={isActive("/certificate")}
+              />
+            )}
+          </>
+        )}
       </nav>
 
       <div className="border-t p-3">
@@ -185,7 +457,6 @@ export function EventSidebar({
       <aside className="hidden lg:flex w-56 shrink-0 flex-col border-r bg-background sticky top-0 h-screen">
         {sidebarContent}
       </aside>
-
     </>
   );
 }
