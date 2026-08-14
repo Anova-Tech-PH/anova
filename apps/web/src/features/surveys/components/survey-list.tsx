@@ -7,6 +7,7 @@ import { Button, Badge, Card, ConfirmDialog } from "@attendly/ui/components";
 import { deleteSurvey, toggleSurveyStatus } from "../actions";
 import { SurveyBuilder } from "./survey-builder";
 import { SurveyResults } from "./survey-results";
+import { ReuseSurveyDialog } from "./reuse-survey-dialog";
 import type { Survey, SurveyQuestion, SurveyResponse } from "../queries";
 
 type SurveyStatsData = {
@@ -89,10 +90,13 @@ export function SurveyList({
             Create feedback surveys for your attendees. Share the link after your event.
           </p>
         </div>
-        <Button onClick={() => setShowCreate(!showCreate)}>
-          <Plus className="mr-1.5 h-4 w-4" />
-          Create Survey
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button onClick={() => setShowCreate(!showCreate)}>
+            <Plus className="mr-1.5 h-4 w-4" />
+            Create Survey
+          </Button>
+          <ReuseSurveyDialog eventId={eventId} />
+        </div>
       </div>
 
       {showCreate && (

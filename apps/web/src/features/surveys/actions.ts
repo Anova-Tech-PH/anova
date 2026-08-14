@@ -2,7 +2,9 @@
 
 import { createClient } from "@attendly/ui/supabase/server";
 import { revalidatePath } from "next/cache";
+import { randomUUID } from "crypto";
 import type { SurveyQuestion } from "./queries";
+import { getPastSurveys } from "./queries";
 
 export async function createOrUpdateSurvey(
   eventId: string,
@@ -163,4 +165,38 @@ export async function toggleSurveyStatus(
   if (error) throw new Error(error.message);
 
   revalidatePath(`/events/${eventId}/survey`);
+}
+
+/**
+ * Duplicates a survey into the current event with new question IDs.
+ */
+export async function duplicateSurvey(
+  eventId: string,
+  sourceTitle: string,
+  sourceQuestions: SurveyQuestion[]
+) {
+  const supabase = await createClient();
+
+  const newQuestions = sourceQuestions.map((q) => ({
+    ...q,
+    id: randomUUID(),
+  }));
+
+  const { error } = await supabase.from("surveys").insert({
+    event_id: eventId,
+    title: `${sourceTitle} (copy)`,
+    status: "draft",
+    questions: newQuestions as unknown as Record<string, unknown>[],
+  });
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath(`/events/${eventId}/survey`);
+}
+
+/**
+ * Server action wrapper to fetch past surveys for the reuse dialog.
+ */
+export async function fetchPastSurveys(currentEventId: string) {
+  return getPastSurveys(currentEventId);
 }

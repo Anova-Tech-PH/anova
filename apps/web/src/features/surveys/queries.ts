@@ -84,6 +84,61 @@ export async function getSurveyResponses(surveyId: string): Promise<SurveyRespon
   })) as SurveyResponse[];
 }
 
+export type PastSurvey = {
+  id: string;
+  title: string;
+  questions: SurveyQuestion[];
+  event_title: string;
+  event_id: string;
+};
+
+/**
+ * Gets surveys from other events in the same organization.
+ * Used by the "Reuse survey" feature.
+ */
+export async function getPastSurveys(currentEventId: string): Promise<PastSurvey[]> {
+  const supabase = await createClient();
+
+  // 1. Get the current event's organization_id
+  const { data: currentEvent, error: eventError } = await supabase
+    .from("events")
+    .select("organization_id")
+    .eq("id", currentEventId)
+    .single();
+
+  if (eventError || !currentEvent) return [];
+
+  // 2. Find all OTHER events in the same organization
+  const { data: otherEvents, error: eventsError } = await supabase
+    .from("events")
+    .select("id, title")
+    .eq("organization_id", currentEvent.organization_id)
+    .neq("id", currentEventId)
+    .order("created_at", { ascending: false });
+
+  if (eventsError || !otherEvents || otherEvents.length === 0) return [];
+
+  const eventIds = otherEvents.map((e) => e.id);
+  const eventTitleMap = Object.fromEntries(otherEvents.map((e) => [e.id, e.title]));
+
+  // 3. Get all surveys from those events
+  const { data: surveys, error: surveysError } = await supabase
+    .from("surveys")
+    .select("id, title, questions, event_id")
+    .in("event_id", eventIds)
+    .order("created_at", { ascending: false });
+
+  if (surveysError || !surveys) return [];
+
+  return surveys.map((s) => ({
+    id: s.id,
+    title: s.title,
+    questions: (s.questions ?? []) as SurveyQuestion[],
+    event_title: eventTitleMap[s.event_id] ?? "Unknown event",
+    event_id: s.event_id,
+  }));
+}
+
 export async function getSurveyStats(surveyId: string, questions: SurveyQuestion[]) {
   const responses = await getSurveyResponses(surveyId);
 

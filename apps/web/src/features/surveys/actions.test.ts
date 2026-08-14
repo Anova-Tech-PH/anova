@@ -190,4 +190,62 @@ describe("Survey Actions", () => {
       ).rejects.toThrow("Status error");
     });
   });
+
+  describe("duplicateSurvey", () => {
+    it("creates a copy with '(copy)' suffix and draft status", async () => {
+      mockFrom.mockReturnValue(createQueryMock({ data: { id: "survey-dup" }, error: null }));
+
+      const { duplicateSurvey } = await import("./actions");
+      const sourceQuestions = [
+        { id: "q1", label: "Rate us", type: "rating" as const, required: true },
+        { id: "q2", label: "Comments", type: "text" as const, required: false },
+      ];
+
+      await duplicateSurvey("evt-1", "My Survey", sourceQuestions);
+
+      expect(mockFrom).toHaveBeenCalledWith("surveys");
+      expect(revalidatePath).toHaveBeenCalledWith("/events/evt-1/survey");
+    });
+
+    it("generates new UUIDs for each question", async () => {
+      // Track the insert payload
+      let insertPayload: Record<string, unknown> | null = null;
+      mockFrom.mockImplementation(() => ({
+        insert: vi.fn((payload: Record<string, unknown>) => {
+          insertPayload = payload;
+          return Promise.resolve({ data: { id: "survey-dup" }, error: null });
+        }),
+      }));
+
+      const { duplicateSurvey } = await import("./actions");
+      const sourceQuestions = [
+        { id: "original-id-1", label: "Rate us", type: "rating" as const, required: true },
+        { id: "original-id-2", label: "Comments", type: "text" as const, required: false },
+      ];
+
+      await duplicateSurvey("evt-1", "Old Survey", sourceQuestions);
+
+      expect(insertPayload).not.toBeNull();
+      const inserted = insertPayload as Record<string, unknown>;
+      expect(inserted.title).toBe("Old Survey (copy)");
+      expect(inserted.status).toBe("draft");
+
+      const newQuestions = inserted.questions as Array<{ id: string; label: string }>;
+      expect(newQuestions).toHaveLength(2);
+      expect(newQuestions[0].id).not.toBe("original-id-1");
+      expect(newQuestions[1].id).not.toBe("original-id-2");
+      // Labels should be preserved
+      expect(newQuestions[0].label).toBe("Rate us");
+      expect(newQuestions[1].label).toBe("Comments");
+    });
+
+    it("throws on supabase error", async () => {
+      mockFrom.mockReturnValue(createQueryMock({ data: null, error: { message: "Insert failed" } }));
+
+      const { duplicateSurvey } = await import("./actions");
+      await expect(
+        duplicateSurvey("evt-1", "Test", [])
+      ).rejects.toThrow("Insert failed");
+    });
+  });
 });
