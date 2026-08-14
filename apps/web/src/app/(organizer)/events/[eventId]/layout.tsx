@@ -92,13 +92,33 @@ export default async function EventLayout({
           children: [
             { href: `/events/${eventId}/registrations`, label: "Attendees" },
             { href: `/events/${eventId}/attendee-limit`, label: "Attendee Limit Upgrade" },
-            { href: `/events/${eventId}/tickets`, label: "Tickets" },
-            { href: `/events/${eventId}/custom-fields`, label: "Form Fields" },
-            { href: `/events/${eventId}/promo-codes`, label: "Promo Codes" },
           ],
         },
         { href: `/events/${eventId}/check-in`, label: "Check-in", icon: "qr-code" },
         { href: `/events/${eventId}/badges`, label: "Badges", icon: "id-card" },
+      ],
+    },
+    {
+      label: "Tickets",
+      icon: "ticket" as const,
+      firstHref: `/events/${eventId}/tickets`,
+      items: [
+        {
+          href: `/events/${eventId}/tickets`,
+          label: "Ticket Setup",
+          icon: "ticket",
+          children: [
+            { href: `/events/${eventId}/tickets`, label: "Tickets" },
+            { href: `/events/${eventId}/group-tickets`, label: "Group Tickets" },
+            { href: `/events/${eventId}/custom-fields`, label: "Form Fields" },
+            { href: `/events/${eventId}/confirmation-emails`, label: "Confirmation Emails" },
+            { href: `/events/${eventId}/ticket-addons`, label: "Ticket Add-ons" },
+            { href: `/events/${eventId}/promo-codes`, label: "Promo Codes" },
+            { href: `/events/${eventId}/registration-pages`, label: "Registration Pages" },
+            { href: `/events/${eventId}/registration-widgets`, label: "Registration Widgets" },
+            { href: `/events/${eventId}/registration-settings`, label: "Registration Settings" },
+          ],
+        },
       ],
     },
     {
@@ -141,6 +161,14 @@ export default async function EventLayout({
       items: [
         { href: `/events/${eventId}/analytics`, label: "Analytics", icon: "bar-chart-3" },
         { href: `/events/${eventId}/settings`, label: "Settings", icon: "settings" },
+      ],
+    },
+    {
+      label: "Publish",
+      icon: "rocket" as const,
+      firstHref: `/events/${eventId}/publish`,
+      items: [
+        { href: `/events/${eventId}/publish`, label: "Publish", icon: "rocket" },
       ],
     },
   ];
