@@ -281,7 +281,7 @@ export function EmailTemplateManager({
                   <span className="text-sm text-muted-foreground truncate max-w-[300px]">
                     {template.subject}
                   </span>
-                  <Badge variant={template.enabled ? "default" : "secondary"}>
+                  <Badge variant={template.enabled ? "default" : "outline"}>
                     {template.enabled ? "Enabled" : "Disabled"}
                   </Badge>
                 </div>
