@@ -92,6 +92,7 @@ export default async function EventLayout({
           children: [
             { href: `/events/${eventId}/registrations`, label: "Attendees" },
             { href: `/events/${eventId}/attendee-limit`, label: "Attendee Limit Upgrade" },
+            { href: `/events/${eventId}/attendee-categories`, label: "Attendee Categories" },
           ],
         },
         { href: `/events/${eventId}/check-in`, label: "Check-in", icon: "qr-code" },
