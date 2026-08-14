@@ -73,6 +73,7 @@ export async function submitSurveyResponse(
   }
 }
 
+/** @deprecated Use toggleSurveyStatus instead */
 export async function toggleSurveyActive(
   eventId: string,
   surveyId: string,
@@ -83,6 +84,80 @@ export async function toggleSurveyActive(
   const { error } = await supabase
     .from("surveys")
     .update({ active, updated_at: new Date().toISOString() })
+    .eq("id", surveyId);
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath(`/events/${eventId}/survey`);
+}
+
+export async function createSurvey(
+  eventId: string,
+  data: { title: string; description?: string; questions: SurveyQuestion[] }
+) {
+  const supabase = await createClient();
+
+  const { error } = await supabase.from("surveys").insert({
+    event_id: eventId,
+    title: data.title,
+    description: data.description ?? null,
+    status: "draft",
+    questions: data.questions as unknown as Record<string, unknown>[],
+  });
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath(`/events/${eventId}/survey`);
+}
+
+export async function updateSurvey(
+  eventId: string,
+  surveyId: string,
+  data: { title?: string; description?: string; questions?: SurveyQuestion[] }
+) {
+  const supabase = await createClient();
+
+  const updates: Record<string, unknown> = {
+    updated_at: new Date().toISOString(),
+  };
+  if (data.title !== undefined) updates.title = data.title;
+  if (data.description !== undefined) updates.description = data.description;
+  if (data.questions !== undefined)
+    updates.questions = data.questions as unknown as Record<string, unknown>[];
+
+  const { error } = await supabase
+    .from("surveys")
+    .update(updates)
+    .eq("id", surveyId);
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath(`/events/${eventId}/survey`);
+}
+
+export async function deleteSurvey(eventId: string, surveyId: string) {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("surveys")
+    .delete()
+    .eq("id", surveyId);
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath(`/events/${eventId}/survey`);
+}
+
+export async function toggleSurveyStatus(
+  eventId: string,
+  surveyId: string,
+  status: "draft" | "active" | "closed"
+) {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("surveys")
+    .update({ status, updated_at: new Date().toISOString() })
     .eq("id", surveyId);
 
   if (error) throw new Error(error.message);

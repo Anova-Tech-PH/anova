@@ -101,4 +101,93 @@ describe("Survey Actions", () => {
       expect(revalidatePath).toHaveBeenCalledWith("/events/evt-1/survey");
     });
   });
+
+  describe("createSurvey", () => {
+    it("inserts a new survey with status draft", async () => {
+      mockFrom.mockReturnValue(createQueryMock({ data: { id: "survey-new" }, error: null }));
+
+      const { createSurvey } = await import("./actions");
+      await createSurvey("evt-1", {
+        title: "Feedback Survey",
+        description: "Please give feedback",
+        questions: [{ id: "q1", label: "How was it?", type: "rating", required: true }],
+      });
+
+      expect(mockFrom).toHaveBeenCalledWith("surveys");
+      expect(revalidatePath).toHaveBeenCalledWith("/events/evt-1/survey");
+    });
+
+    it("throws on supabase error", async () => {
+      mockFrom.mockReturnValue(createQueryMock({ data: null, error: { message: "DB error" } }));
+
+      const { createSurvey } = await import("./actions");
+      await expect(
+        createSurvey("evt-1", { title: "Test", questions: [] })
+      ).rejects.toThrow("DB error");
+    });
+  });
+
+  describe("updateSurvey", () => {
+    it("updates an existing survey", async () => {
+      mockFrom.mockReturnValue(createQueryMock({ data: {}, error: null }));
+
+      const { updateSurvey } = await import("./actions");
+      await updateSurvey("evt-1", "survey-1", {
+        title: "Updated Title",
+        description: "Updated desc",
+      });
+
+      expect(mockFrom).toHaveBeenCalledWith("surveys");
+      expect(revalidatePath).toHaveBeenCalledWith("/events/evt-1/survey");
+    });
+
+    it("throws on supabase error", async () => {
+      mockFrom.mockReturnValue(createQueryMock({ data: null, error: { message: "Not found" } }));
+
+      const { updateSurvey } = await import("./actions");
+      await expect(
+        updateSurvey("evt-1", "survey-1", { title: "X" })
+      ).rejects.toThrow("Not found");
+    });
+  });
+
+  describe("deleteSurvey", () => {
+    it("deletes a survey by id", async () => {
+      mockFrom.mockReturnValue(createQueryMock({ data: {}, error: null }));
+
+      const { deleteSurvey } = await import("./actions");
+      await deleteSurvey("evt-1", "survey-1");
+
+      expect(mockFrom).toHaveBeenCalledWith("surveys");
+      expect(revalidatePath).toHaveBeenCalledWith("/events/evt-1/survey");
+    });
+
+    it("throws on supabase error", async () => {
+      mockFrom.mockReturnValue(createQueryMock({ data: null, error: { message: "Delete failed" } }));
+
+      const { deleteSurvey } = await import("./actions");
+      await expect(deleteSurvey("evt-1", "survey-1")).rejects.toThrow("Delete failed");
+    });
+  });
+
+  describe("toggleSurveyStatus", () => {
+    it("updates status to the given value", async () => {
+      mockFrom.mockReturnValue(createQueryMock({ data: {}, error: null }));
+
+      const { toggleSurveyStatus } = await import("./actions");
+      await toggleSurveyStatus("evt-1", "survey-1", "closed");
+
+      expect(mockFrom).toHaveBeenCalledWith("surveys");
+      expect(revalidatePath).toHaveBeenCalledWith("/events/evt-1/survey");
+    });
+
+    it("throws on supabase error", async () => {
+      mockFrom.mockReturnValue(createQueryMock({ data: null, error: { message: "Status error" } }));
+
+      const { toggleSurveyStatus } = await import("./actions");
+      await expect(
+        toggleSurveyStatus("evt-1", "survey-1", "active")
+      ).rejects.toThrow("Status error");
+    });
+  });
 });

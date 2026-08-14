@@ -12,8 +12,10 @@ export type Survey = {
   id: string;
   event_id: string;
   title: string;
+  description: string | null;
   questions: SurveyQuestion[];
   active: boolean;
+  status: "draft" | "active" | "closed";
   created_at: string;
   updated_at: string;
 };
@@ -27,6 +29,24 @@ export type SurveyResponse = {
   created_at: string;
 };
 
+export async function getSurveysByEvent(eventId: string): Promise<Survey[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("surveys")
+    .select("*")
+    .eq("event_id", eventId)
+    .order("created_at", { ascending: false });
+
+  if (error || !data) return [];
+
+  return data.map((d) => ({
+    ...d,
+    questions: (d.questions ?? []) as SurveyQuestion[],
+  })) as Survey[];
+}
+
+/** @deprecated Use getSurveysByEvent instead. Returns the first active survey for backward compat. */
 export async function getSurveyByEvent(eventId: string): Promise<Survey | null> {
   const supabase = await createClient();
 
@@ -34,6 +54,9 @@ export async function getSurveyByEvent(eventId: string): Promise<Survey | null> 
     .from("surveys")
     .select("*")
     .eq("event_id", eventId)
+    .eq("status", "active")
+    .order("created_at", { ascending: false })
+    .limit(1)
     .single();
 
   if (error || !data) return null;

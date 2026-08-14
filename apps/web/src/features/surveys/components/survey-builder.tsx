@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Plus, Trash2, GripVertical } from "lucide-react";
 import { toast } from "sonner";
 import { Button, Input, Badge, Card } from "@attendly/ui/components";
-import { createOrUpdateSurvey, toggleSurveyActive } from "../actions";
+import { createOrUpdateSurvey, toggleSurveyActive, createSurvey, updateSurvey } from "../actions";
 import type { Survey, SurveyQuestion } from "../queries";
 
 function generateId() {
@@ -22,11 +22,14 @@ const emptyQuestion: () => SurveyQuestion = () => ({
 export function SurveyBuilder({
   eventId,
   initialSurvey,
+  mode,
 }: {
   eventId: string;
   initialSurvey: Survey | null;
+  mode?: "create" | "edit";
 }) {
   const [title, setTitle] = useState(initialSurvey?.title ?? "Post-Event Feedback");
+  const [description, setDescription] = useState(initialSurvey?.description ?? "");
   const [questions, setQuestions] = useState<SurveyQuestion[]>(
     initialSurvey?.questions?.length ? initialSurvey.questions : [emptyQuestion()]
   );
@@ -56,11 +59,28 @@ export function SurveyBuilder({
     }
     setSaving(true);
     try {
-      await createOrUpdateSurvey(eventId, {
-        title: title.trim() || "Post-Event Feedback",
-        questions: validQuestions,
-      });
-      toast.success(initialSurvey ? "Survey updated" : "Survey created");
+      if (mode === "create") {
+        await createSurvey(eventId, {
+          title: title.trim() || "Post-Event Feedback",
+          description: description.trim() || undefined,
+          questions: validQuestions,
+        });
+        toast.success("Survey created");
+      } else if (mode === "edit" && initialSurvey) {
+        await updateSurvey(eventId, initialSurvey.id, {
+          title: title.trim() || "Post-Event Feedback",
+          description: description.trim() || undefined,
+          questions: validQuestions,
+        });
+        toast.success("Survey updated");
+      } else {
+        // Legacy fallback
+        await createOrUpdateSurvey(eventId, {
+          title: title.trim() || "Post-Event Feedback",
+          questions: validQuestions,
+        });
+        toast.success(initialSurvey ? "Survey updated" : "Survey created");
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to save survey");
     } finally {
@@ -113,6 +133,18 @@ export function SurveyBuilder({
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Post-Event Feedback"
+          />
+        </div>
+
+        {/* Description */}
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium">Description (optional)</label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Describe the purpose of this survey..."
+            rows={2}
+            className="w-full rounded-md border bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
         </div>
 
