@@ -1,5 +1,6 @@
 import { Badge } from "@attendly/ui/components";
 import { FeedbackDownloadButton } from "./feedback-download-button";
+import { ShareFeedbackButton } from "./share-feedback-button";
 
 type SessionSummary = {
   session_id: string;
@@ -77,6 +78,7 @@ export function FeedbackResults({
             <th className="px-4 py-3 text-center font-medium">Responses</th>
             <th className="px-4 py-3 text-left font-medium">Avg Rating</th>
             <th className="px-4 py-3 text-center font-medium">Has Form</th>
+            <th className="px-4 py-3 text-center font-medium">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -99,6 +101,15 @@ export function FeedbackResults({
                 <Badge variant={s.has_form ? "success" : "outline"}>
                   {s.has_form ? "Yes" : "No"}
                 </Badge>
+              </td>
+              <td className="px-4 py-3 text-center">
+                {s.response_count > 0 && (
+                  <ShareFeedbackButton
+                    eventId={eventId}
+                    sessionId={s.session_id}
+                    sessionTitle={s.title}
+                  />
+                )}
               </td>
             </tr>
           ))}

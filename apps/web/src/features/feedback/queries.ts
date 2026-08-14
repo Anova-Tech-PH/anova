@@ -156,6 +156,26 @@ export async function getSessionFeedbackStats(
   return stats;
 }
 
+export async function getSessionSpeakers(
+  sessionId: string
+): Promise<{ name: string; email: string }[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("session_speakers")
+    .select("speakers(name, email)")
+    .eq("session_id", sessionId);
+
+  if (error) throw new Error(error.message);
+
+  return (data ?? [])
+    .map((row) => {
+      const speaker = row.speakers as unknown as { name: string; email: string | null };
+      return speaker?.email ? { name: speaker.name, email: speaker.email } : null;
+    })
+    .filter((s): s is { name: string; email: string } => s !== null);
+}
+
 export async function getEventFeedbackSummary(eventId: string) {
   const supabase = await createClient();
 

@@ -3,7 +3,9 @@
 import { createClient } from "@attendly/ui/supabase/server";
 import { revalidatePath } from "next/cache";
 import type { FeedbackQuestion, SessionFeedbackResponse } from "./queries";
+import { getSessionSpeakers, getSessionFeedbackStats } from "./queries";
 import { tryAwardPoints } from "@/features/gamification/award";
+import { sendEmail } from "@/features/emails/lib/send-email";
 
 export async function createFeedbackForm(
   eventId: string,
@@ -157,4 +159,122 @@ export async function getEventFeedbackForExport(eventId: string): Promise<{
   })) as SessionFeedbackResponse[];
 
   return { questions, responses };
+}
+
+function buildFeedbackEmailHtml(
+  sessionTitle: string,
+  eventTitle: string,
+  stats: Awaited<ReturnType<typeof getSessionFeedbackStats>>
+): string {
+  let html = `<div style="font-family:sans-serif;max-width:600px;margin:0 auto">
+    <h2>Session Feedback Report</h2>
+    <p>Here is the feedback summary for <strong>${sessionTitle}</strong>.</p>
+    <p><strong>Total:</strong> ${stats.totalResponses} responses</p>`;
+
+  for (const [, qs] of Object.entries(stats.questionStats)) {
+    html += `<div style="margin-top:16px;padding:12px;background:#f9f9f9;border-radius:8px">`;
+    html += `<h3 style="margin:0 0 8px">${qs.label}</h3>`;
+
+    if (qs.type === "rating" && qs.averageRating !== undefined) {
+      html += `<p>Average rating: <strong>${qs.averageRating.toFixed(1)}</strong> / 5</p>`;
+      if (qs.ratingDistribution) {
+        html += `<p style="color:#666;font-size:13px">`;
+        for (let i = 5; i >= 1; i--) {
+          html += `${i}★: ${qs.ratingDistribution[i] ?? 0} &nbsp; `;
+        }
+        html += `</p>`;
+      }
+    } else if (qs.type === "text" && qs.textResponses) {
+      if (qs.textResponses.length === 0) {
+        html += `<p style="color:#666">No text responses</p>`;
+      } else {
+        html += `<ul style="padding-left:16px">`;
+        for (const t of qs.textResponses.slice(0, 20)) {
+          html += `<li style="margin-bottom:4px">${t}</li>`;
+        }
+        if (qs.textResponses.length > 20) {
+          html += `<li style="color:#666">...and ${qs.textResponses.length - 20} more</li>`;
+        }
+        html += `</ul>`;
+      }
+    } else if (qs.type === "multiple_choice" && qs.optionDistribution) {
+      html += `<ul style="padding-left:16px">`;
+      for (const [option, count] of Object.entries(qs.optionDistribution)) {
+        html += `<li>${option}: ${count}</li>`;
+      }
+      html += `</ul>`;
+    }
+    html += `</div>`;
+  }
+
+  html += `<hr style="margin-top:24px"/>
+    <p style="color:#666;font-size:12px">Sent from ${eventTitle} via Evenstry</p>
+  </div>`;
+
+  return html;
+}
+
+export async function shareFeedbackWithSpeakers(
+  eventId: string,
+  sessionId: string,
+  sessionTitle: string
+): Promise<{ emailsSent: number }> {
+  const supabase = await createClient();
+
+  // 1. Get speakers with emails
+  const speakers = await getSessionSpeakers(sessionId);
+  if (speakers.length === 0) {
+    return { emailsSent: 0 };
+  }
+
+  // 2. Get event info
+  const { data: event } = await supabase
+    .from("events")
+    .select("title, organization_id")
+    .eq("id", eventId)
+    .single();
+
+  if (!event) throw new Error("Event not found");
+
+  // 3. Get feedback form for this session
+  const { data: session } = await supabase
+    .from("sessions")
+    .select("feedback_form_id")
+    .eq("id", sessionId)
+    .single();
+
+  let questions: FeedbackQuestion[] = [];
+  if (session?.feedback_form_id) {
+    const { data: form } = await supabase
+      .from("feedback_forms")
+      .select("questions")
+      .eq("id", session.feedback_form_id)
+      .single();
+
+    if (form) {
+      questions = (form.questions ?? []) as FeedbackQuestion[];
+    }
+  }
+
+  // 4. Get feedback stats
+  const stats = await getSessionFeedbackStats(sessionId, questions);
+
+  // 5. Build email
+  const subject = `Feedback Report: ${sessionTitle}`;
+  const html = buildFeedbackEmailHtml(sessionTitle, event.title, stats);
+
+  // 6. Send to each speaker
+  let emailsSent = 0;
+  for (const speaker of speakers) {
+    await sendEmail({
+      organizationId: event.organization_id,
+      eventId,
+      to: { email: speaker.email, name: speaker.name },
+      subject,
+      html,
+    });
+    emailsSent++;
+  }
+
+  return { emailsSent };
 }
