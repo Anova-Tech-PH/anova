@@ -113,6 +113,7 @@ export default async function EventLayout({
           icon: "users",
           children: [
             { href: `/events/${eventId}/meetups`, label: "Meet-ups" },
+            { href: `/events/${eventId}/discussion-topics`, label: "Discussion Topics" },
           ],
         },
         { href: `/events/${eventId}/qa`, label: "Q&A", icon: "message-circle" },
