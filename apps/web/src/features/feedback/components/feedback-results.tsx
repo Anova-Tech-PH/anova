@@ -1,4 +1,5 @@
 import { Badge } from "@attendly/ui/components";
+import { FeedbackDownloadButton } from "./feedback-download-button";
 
 type SessionSummary = {
   session_id: string;
@@ -33,8 +34,10 @@ function StarDisplay({ rating }: { rating: number }) {
 
 export function FeedbackResults({
   summaries,
+  eventId,
 }: {
   summaries: SessionSummary[];
+  eventId: string;
 }) {
   const sorted = [...summaries].sort(
     (a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
@@ -61,7 +64,11 @@ export function FeedbackResults({
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border">
+    <div className="overflow-hidden rounded-xl border">
+      <div className="flex items-center justify-end px-4 py-2 border-b bg-muted/10">
+        <FeedbackDownloadButton eventId={eventId} />
+      </div>
+      <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b bg-muted/50">
@@ -97,6 +104,7 @@ export function FeedbackResults({
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

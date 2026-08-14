@@ -28,7 +28,7 @@ export default async function FeedbackPage({
 
         <div className="space-y-4">
           <h3 className="text-lg font-semibold">Results</h3>
-          <FeedbackResults summaries={summaries} />
+          <FeedbackResults summaries={summaries} eventId={eventId} />
         </div>
       </div>
     </div>

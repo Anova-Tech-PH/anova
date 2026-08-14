@@ -2,7 +2,7 @@
 
 import { createClient } from "@attendly/ui/supabase/server";
 import { revalidatePath } from "next/cache";
-import type { FeedbackQuestion } from "./queries";
+import type { FeedbackQuestion, SessionFeedbackResponse } from "./queries";
 import { tryAwardPoints } from "@/features/gamification/award";
 
 export async function createFeedbackForm(
@@ -111,4 +111,50 @@ export async function submitSessionFeedback(
   if (session?.event_id) {
     await tryAwardPoints(session.event_id, user.id, "session_feedback", sessionId, "session");
   }
+}
+
+export async function getEventFeedbackForExport(eventId: string): Promise<{
+  questions: FeedbackQuestion[];
+  responses: SessionFeedbackResponse[];
+}> {
+  const supabase = await createClient();
+
+  // Get the default (or first) feedback form for questions
+  const { data: forms } = await supabase
+    .from("feedback_forms")
+    .select("*")
+    .eq("event_id", eventId)
+    .order("is_default", { ascending: false });
+
+  const form = forms?.[0];
+  const questions: FeedbackQuestion[] = form
+    ? ((form.questions ?? []) as FeedbackQuestion[])
+    : [];
+
+  // Get all sessions for this event
+  const { data: sessions } = await supabase
+    .from("sessions")
+    .select("id")
+    .eq("event_id", eventId);
+
+  if (!sessions || sessions.length === 0) {
+    return { questions, responses: [] };
+  }
+
+  const sessionIds = sessions.map((s) => s.id);
+
+  const { data: feedback, error } = await supabase
+    .from("session_feedback")
+    .select("*")
+    .in("session_id", sessionIds)
+    .order("created_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+
+  const responses: SessionFeedbackResponse[] = (feedback ?? []).map((r) => ({
+    ...r,
+    answers: (r.answers ?? {}) as Record<string, string | number>,
+  })) as SessionFeedbackResponse[];
+
+  return { questions, responses };
 }
