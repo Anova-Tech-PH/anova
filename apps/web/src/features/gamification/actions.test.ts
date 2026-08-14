@@ -67,7 +67,7 @@ describe("gamification actions", () => {
   it("enableGamification upserts config and seeds default rules", async () => {
     // Make the from() calls return chainable mocks with success
     mockFrom.mockImplementation(() => {
-      const chain: Record<string, unknown> = {};
+      const chain: Record<string, any> = {};
       chain.upsert = vi.fn().mockReturnValue({ error: null, select: vi.fn().mockReturnValue({ single: vi.fn().mockResolvedValue({ data: { id: "cfg-1" }, error: null }) }) });
       chain.select = vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ data: [], error: null }) });
       chain.insert = vi.fn().mockResolvedValue({ error: null });
@@ -86,7 +86,7 @@ describe("gamification actions", () => {
   // ── disableGamification ────────────────────────────────────────────
   it("disableGamification updates config.enabled to false", async () => {
     mockFrom.mockImplementation(() => {
-      const chain: Record<string, unknown> = {};
+      const chain: Record<string, any> = {};
       chain.update = vi.fn().mockReturnValue({
         eq: vi.fn().mockResolvedValue({ error: null }),
       });
@@ -108,7 +108,7 @@ describe("gamification actions", () => {
   // ── updatePointRule ────────────────────────────────────────────────
   it("updatePointRule updates the rule", async () => {
     mockFrom.mockImplementation(() => {
-      const chain: Record<string, unknown> = {};
+      const chain: Record<string, any> = {};
       const eqFn = vi.fn().mockReturnValue({
         eq: vi.fn().mockResolvedValue({ error: null }),
       });
@@ -128,7 +128,7 @@ describe("gamification actions", () => {
   // ── updateGamificationConfig ───────────────────────────────────────
   it("updateGamificationConfig updates config fields", async () => {
     mockFrom.mockImplementation(() => {
-      const chain: Record<string, unknown> = {};
+      const chain: Record<string, any> = {};
       chain.update = vi.fn().mockReturnValue({
         eq: vi.fn().mockResolvedValue({ error: null }),
       });
@@ -161,7 +161,7 @@ describe("gamification actions", () => {
     const returnedBadge = { id: BADGE_ID, ...badgeData, event_id: EVENT_ID };
 
     mockFrom.mockImplementation(() => {
-      const chain: Record<string, unknown> = {};
+      const chain: Record<string, any> = {};
       chain.insert = vi.fn().mockReturnValue({
         select: vi.fn().mockReturnValue({
           single: vi.fn().mockResolvedValue({ data: returnedBadge, error: null }),
@@ -179,7 +179,7 @@ describe("gamification actions", () => {
   // ── updateBadge ────────────────────────────────────────────────────
   it("updateBadge updates badge fields", async () => {
     mockFrom.mockImplementation(() => {
-      const chain: Record<string, unknown> = {};
+      const chain: Record<string, any> = {};
       const eqFn = vi.fn().mockReturnValue({
         eq: vi.fn().mockResolvedValue({ error: null }),
       });
@@ -195,7 +195,7 @@ describe("gamification actions", () => {
   // ── deleteBadge ────────────────────────────────────────────────────
   it("deleteBadge deletes the badge", async () => {
     mockFrom.mockImplementation(() => {
-      const chain: Record<string, unknown> = {};
+      const chain: Record<string, any> = {};
       const eqFn = vi.fn().mockReturnValue({
         eq: vi.fn().mockResolvedValue({ error: null }),
       });
