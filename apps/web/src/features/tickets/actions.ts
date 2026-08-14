@@ -11,6 +11,7 @@ export async function createTicketType(eventId: string, data: {
   quantity?: number;
   sales_start?: string;
   sales_end?: string;
+  group_size?: number | null;
 }) {
   const supabase = await createClient();
 
@@ -34,6 +35,7 @@ export async function createTicketType(eventId: string, data: {
       quantity: data.quantity || null,
       sales_start: data.sales_start || null,
       sales_end: data.sales_end || null,
+      group_size: data.group_size ?? 1,
       sort_order: sortOrder,
     })
     .select()
@@ -53,6 +55,7 @@ export async function updateTicketType(eventId: string, ticketId: string, data: 
   quantity?: number | null;
   sales_start?: string | null;
   sales_end?: string | null;
+  group_size?: number | null;
 }) {
   const supabase = await createClient();
 

@@ -13,6 +13,7 @@ type TicketFormData = {
   quantity: string;
   sales_start: string;
   sales_end: string;
+  group_size: string;
 };
 
 export function TicketForm({
@@ -32,6 +33,7 @@ export function TicketForm({
     quantity: ticket?.quantity ?? "",
     sales_start: ticket?.sales_start ?? "",
     sales_end: ticket?.sales_end ?? "",
+    group_size: ticket?.group_size ?? "",
   });
   const [loading, setLoading] = useState(false);
 
@@ -120,6 +122,17 @@ export function TicketForm({
               value={form.quantity}
               onChange={(e) => setForm((f) => ({ ...f, quantity: e.target.value }))}
               placeholder="Unlimited"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">Group Size (min attendees per purchase)</label>
+            <Input
+              type="number"
+              min="1"
+              value={form.group_size}
+              onChange={(e) => setForm((f) => ({ ...f, group_size: e.target.value }))}
+              placeholder="1 (individual ticket)"
             />
           </div>
 
