@@ -1,0 +1,112 @@
+import { notFound } from "next/navigation";
+import { createClient } from "@attendly/ui/supabase/server";
+import { Rocket, CheckCircle2 } from "lucide-react";
+import { getPublishReadiness, getPostPublishRecommendations } from "@/features/publish/queries";
+import { ReadinessChecklist } from "@/features/publish/components/readiness-checklist";
+import { PublishButton, UnpublishButton } from "@/features/publish/components/publish-confirmation-dialog";
+import { RecommendationCards } from "@/features/publish/components/recommendation-cards";
+
+export default async function PublishPage({
+  params,
+}: {
+  params: Promise<{ eventId: string }>;
+}) {
+  const { eventId } = await params;
+  const supabase = await createClient();
+
+  const { data: event } = await supabase
+    .from("events")
+    .select("id, title, status, updated_at")
+    .eq("id", eventId)
+    .single();
+
+  if (!event) notFound();
+
+  const isPublished = event.status === "published" || event.status === "completed";
+
+  if (isPublished) {
+    const cards = await getPostPublishRecommendations(eventId);
+    const notConfiguredCount = cards.filter((c) => !c.configured).length;
+
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10">
+            <Rocket className="h-5 w-5 text-emerald-600" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-semibold">Publish</h1>
+            <p className="text-sm text-muted-foreground">
+              Your event is live. Manage features and recommendations.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+          <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
+          <div>
+            <p className="text-sm font-medium text-emerald-900">
+              Your event is live and available to attendees.
+            </p>
+            {notConfiguredCount > 0 && (
+              <p className="text-xs text-emerald-700 mt-0.5">
+                {notConfiguredCount} feature{notConfiguredCount !== 1 ? "s" : ""} not yet configured.
+                Don&apos;t miss out!
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div>
+          <h2 className="text-lg font-semibold mb-3">Feature Recommendations</h2>
+          <RecommendationCards cards={cards} />
+        </div>
+
+        <div className="pt-4 border-t">
+          <UnpublishButton eventId={eventId} />
+        </div>
+      </div>
+    );
+  }
+
+  const readiness = await getPublishReadiness(eventId);
+  const warnings = readiness.checks.filter(
+    (c) => !c.required && c.status === "warning"
+  );
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[oklch(0.445_0.107_195_/_0.1)]">
+          <Rocket className="h-5 w-5 text-[oklch(0.445_0.107_195)]" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-semibold">Publish</h1>
+          <p className="text-sm text-muted-foreground">
+            Review your event readiness and publish when ready.
+          </p>
+        </div>
+      </div>
+
+      <ReadinessChecklist
+        checks={readiness.checks}
+        requiredPassed={readiness.requiredPassed}
+        requiredTotal={readiness.requiredTotal}
+      />
+
+      <div className="flex items-center gap-4 pt-2">
+        <PublishButton
+          eventId={eventId}
+          eventTitle={event.title}
+          canPublish={readiness.canPublish}
+          warnings={warnings}
+        />
+        {!readiness.canPublish && (
+          <p className="text-xs text-muted-foreground">
+            Complete all required checks before publishing.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
