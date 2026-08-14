@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { DoorOpen, Users, User, Calendar, Settings } from "lucide-react";
+import { DoorOpen, Users, User, Calendar, Settings, Sparkles } from "lucide-react";
 import { PageTransition } from "@attendly/ui/components";
 import { Logo } from "@attendly/ui/logo";
 import { cn } from "@attendly/ui/cn";
@@ -11,6 +11,7 @@ import { NotificationBell } from "./notifications/notification-bell";
 const attendeeNav = [
   { href: "/rooms", label: "Rooms", icon: DoorOpen },
   { href: "/people", label: "People", icon: Users },
+  { href: "/matchmaking", label: "Matchmaking", icon: Sparkles },
   { href: "/my-events", label: "My Events", icon: Calendar },
   { href: "/profile", label: "Profile", icon: User },
 ];
