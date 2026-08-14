@@ -142,25 +142,25 @@ describe("getSegmentedRecipients", () => {
     registrationsChain = createRegistrationsChain(mockData);
 
     const result = await getSegmentedRecipients("event-1", {
-      category: "speaker",
+      category_id: "speaker",
     });
 
-    expect(registrationsChain.eq).toHaveBeenCalledWith("category", "speaker");
+    expect(registrationsChain.eq).toHaveBeenCalledWith("category_id", "speaker");
     expect(result).toHaveLength(1);
   });
 
-  it("filters by excluded_categories", async () => {
+  it("filters by excluded_category_ids", async () => {
     const mockData = [
       { id: "r1", name: "Alice", email: "a@a.com", status: "confirmed", ticket_type_id: "t1", custom_fields: {}, user_id: "u1", ticket_types: { name: "GA" } },
     ];
     registrationsChain = createRegistrationsChain(mockData);
 
     const result = await getSegmentedRecipients("event-1", {
-      excluded_categories: ["staff", "volunteer"],
+      excluded_category_ids: ["staff", "volunteer"],
     });
 
     expect(registrationsChain.not).toHaveBeenCalledWith(
-      "category",
+      "category_id",
       "in",
       "(staff,volunteer)"
     );

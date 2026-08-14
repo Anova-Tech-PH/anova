@@ -33,7 +33,7 @@ interface AnnouncementComposerProps {
   templateReplyToEmail?: string;
   ticketTypes: { id: string; name: string }[];
   sessions: { id: string; title: string }[];
-  categories: string[];
+  categories: { id: string; name: string; color: string }[];
   totalAttendees: number;
 }
 
@@ -79,13 +79,13 @@ export function AnnouncementComposer({
         setSelectedTicketTypes(ta.ticket_type_ids ?? []);
       } else if (ta.type === "category") {
         setAudienceType("category");
-        setSelectedCategory(ta.category ?? "");
+        setSelectedCategory(ta.category_id ?? ta.category ?? "");
       } else if (ta.type === "session") {
         setAudienceType("session");
         setSelectedSessionId(ta.session_id ?? "");
       } else if (ta.type === "exclude_categories") {
         setAudienceType("exclude_categories");
-        setExcludedCategories(ta.excluded_categories ?? []);
+        setExcludedCategories(ta.excluded_category_ids ?? ta.excluded_categories ?? []);
       } else {
         setAudienceType("all");
       }
@@ -119,13 +119,13 @@ export function AnnouncementComposer({
       case "ticket_types":
         return { type: "ticket_types", ticket_type_ids: selectedTicketTypes };
       case "category":
-        return { type: "category", category: selectedCategory };
+        return { type: "category", category_id: selectedCategory };
       case "session":
         return { type: "session", session_id: selectedSessionId };
       case "exclude_categories":
         return {
           type: "exclude_categories",
-          excluded_categories: excludedCategories,
+          excluded_category_ids: excludedCategories,
         };
       default:
         return { type: "all" };
@@ -298,8 +298,8 @@ export function AnnouncementComposer({
                 >
                   <option value="">Select category...</option>
                   {categories.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name}
                     </option>
                   ))}
                 </select>
@@ -379,14 +379,14 @@ export function AnnouncementComposer({
               categories.length > 0 && (
                 <div className="ml-6 space-y-1.5">
                   {categories.map((cat) => (
-                    <label key={cat} className="flex items-center gap-2">
+                    <label key={cat.id} className="flex items-center gap-2">
                       <input
                         type="checkbox"
-                        checked={excludedCategories.includes(cat)}
-                        onChange={() => toggleExcludedCategory(cat)}
+                        checked={excludedCategories.includes(cat.id)}
+                        onChange={() => toggleExcludedCategory(cat.id)}
                         className="accent-foreground"
                       />
-                      {cat}
+                      {cat.name}
                     </label>
                   ))}
                 </div>

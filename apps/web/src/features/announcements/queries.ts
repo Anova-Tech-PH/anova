@@ -9,9 +9,11 @@ export type Announcement = {
   target_audience: {
     type: string;
     ticket_type_ids?: string[];
+    category_id?: string;
     category?: string;
     session_id?: string;
     attendee_ids?: string[];
+    excluded_category_ids?: string[];
     excluded_categories?: string[];
   };
   channels: string[];
@@ -147,9 +149,11 @@ export async function getRecipientCount(
   audience: {
     type: string;
     ticket_type_ids?: string[];
+    category_id?: string;
     category?: string;
     session_id?: string;
     attendee_ids?: string[];
+    excluded_category_ids?: string[];
     excluded_categories?: string[];
   }
 ): Promise<number> {
@@ -183,16 +187,14 @@ export async function getRecipientCount(
     query = query.in("ticket_type_id", audience.ticket_type_ids);
   }
 
-  if (audience.type === "category" && audience.category) {
-    query = query.eq("category", audience.category);
+  if (audience.type === "category" && (audience.category_id ?? audience.category)) {
+    query = query.eq("category_id", audience.category_id ?? audience.category);
   }
 
-  if (
-    audience.excluded_categories &&
-    audience.excluded_categories.length > 0
-  ) {
-    for (const cat of audience.excluded_categories) {
-      query = query.neq("category", cat);
+  const excludeIds = audience.excluded_category_ids ?? audience.excluded_categories;
+  if (excludeIds && excludeIds.length > 0) {
+    for (const cat of excludeIds) {
+      query = query.neq("category_id", cat);
     }
   }
 

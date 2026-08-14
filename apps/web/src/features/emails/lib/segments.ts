@@ -6,8 +6,8 @@ type SegmentFilters = {
   checked_in?: boolean;
   custom_field_filters?: { field_id: string; value: string }[];
   min_check_ins?: number;
-  category?: string;
-  excluded_categories?: string[];
+  category_id?: string;
+  excluded_category_ids?: string[];
   session_id?: string;
   attendee_ids?: string[];
 };
@@ -42,15 +42,15 @@ export async function getSegmentedRecipients(
     query = query.neq("status", "checked_in");
   }
 
-  if (filters?.category) {
-    query = query.eq("category", filters.category);
+  if (filters?.category_id) {
+    query = query.eq("category_id", filters.category_id);
   }
 
-  if (filters?.excluded_categories && filters.excluded_categories.length > 0) {
+  if (filters?.excluded_category_ids && filters.excluded_category_ids.length > 0) {
     query = query.not(
-      "category",
+      "category_id",
       "in",
-      `(${filters.excluded_categories.join(",")})`
+      `(${filters.excluded_category_ids.join(",")})`
     );
   }
 

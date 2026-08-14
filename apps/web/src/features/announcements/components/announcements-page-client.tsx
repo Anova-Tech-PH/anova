@@ -20,7 +20,7 @@ interface AnnouncementsPageClientProps {
   totalSent: number;
   ticketTypes: { id: string; name: string }[];
   sessions: { id: string; title: string }[];
-  categories: string[];
+  categories: { id: string; name: string; color: string }[];
   totalAttendees: number;
   orgTemplates: AnnouncementTemplate[];
   eventName: string;

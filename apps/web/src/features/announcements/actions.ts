@@ -118,10 +118,22 @@ export async function sendAnnouncement(eventId: string, announcementId: string) 
 
   // Send email if channel includes email
   if (channels.includes("email")) {
-    const audience = announcement.target_audience as { type: string; ticket_type_ids?: string[] };
-    const filters = audience.type === "ticket_types"
-      ? { ticket_type_ids: audience.ticket_type_ids }
-      : undefined;
+    const audience = announcement.target_audience as {
+      type: string;
+      ticket_type_ids?: string[];
+      category_id?: string;
+      category?: string;
+      excluded_category_ids?: string[];
+      excluded_categories?: string[];
+    };
+    let filters: Parameters<typeof getSegmentedRecipients>[1] | undefined;
+    if (audience.type === "ticket_types") {
+      filters = { ticket_type_ids: audience.ticket_type_ids };
+    } else if (audience.type === "category") {
+      filters = { category_id: audience.category_id ?? audience.category };
+    } else if (audience.type === "exclude_categories") {
+      filters = { excluded_category_ids: audience.excluded_category_ids ?? audience.excluded_categories };
+    }
 
     const recipients = await getSegmentedRecipients(eventId, filters);
     const senderName = announcement.sender_name || event.title;

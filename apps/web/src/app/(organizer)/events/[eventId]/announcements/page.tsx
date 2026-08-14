@@ -4,6 +4,7 @@ import {
 } from "@/features/announcements/queries";
 import { AnnouncementsPageClient } from "@/features/announcements/components/announcements-page-client";
 import { createClient } from "@attendly/ui/supabase/server";
+import { getCategories } from "@/features/attendee-categories/queries";
 
 export default async function AnnouncementsPage({
   params,
@@ -23,7 +24,7 @@ export default async function AnnouncementsPage({
     announcements,
     ticketTypesResult,
     sessionsResult,
-    categoriesResult,
+    categories,
     attendeeCountResult,
     eventResult,
   ] = await Promise.all([
@@ -38,11 +39,7 @@ export default async function AnnouncementsPage({
       .select("id, title")
       .eq("event_id", eventId)
       .order("title"),
-    supabase
-      .from("registrations")
-      .select("category")
-      .eq("event_id", eventId)
-      .not("category", "is", null),
+    getCategories(eventId),
     supabase
       .from("registrations")
       .select("*", { count: "exact", head: true })
@@ -54,15 +51,6 @@ export default async function AnnouncementsPage({
       .eq("id", eventId)
       .single(),
   ]);
-
-  // Deduplicate categories
-  const uniqueCategories = [
-    ...new Set(
-      (categoriesResult.data ?? [])
-        .map((r) => r.category as string)
-        .filter(Boolean)
-    ),
-  ].sort();
 
   // Fetch org templates (depends on event result)
   const organizationId = eventResult.data?.organization_id;
@@ -79,7 +67,7 @@ export default async function AnnouncementsPage({
       totalSent={announcements.totalSent}
       ticketTypes={ticketTypesResult.data ?? []}
       sessions={(sessionsResult.data ?? []) as { id: string; title: string }[]}
-      categories={uniqueCategories}
+      categories={categories}
       totalAttendees={attendeeCountResult.count ?? 0}
       orgTemplates={orgTemplates}
       eventName={eventResult.data?.title ?? "Your Event"}
