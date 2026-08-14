@@ -5,6 +5,7 @@ import type { PollWithResults } from "@/features/polls/queries";
 import { useConfirm } from "@attendly/ui/components";
 import { openPoll, closePoll, deletePoll, togglePollResults } from "@/features/polls/actions";
 import { PollResultsChart } from "./poll-results-chart";
+import { pollsToCsv, downloadCsv } from "@/features/polls/export";
 
 export function PollList({
   polls,
@@ -47,6 +48,11 @@ export function PollList({
     });
   }
 
+  function handleDownloadCsv() {
+    const csv = pollsToCsv(polls);
+    downloadCsv(csv, "poll-results.csv");
+  }
+
   if (polls.length === 0) {
     return (
       <div className="rounded-xl border border-dashed bg-muted/20 py-12 text-center text-muted-foreground">
@@ -57,6 +63,15 @@ export function PollList({
 
   return (
     <div className="rounded-xl border overflow-hidden">
+      <div className="flex items-center justify-end px-4 py-2 border-b bg-muted/10">
+        <button
+          type="button"
+          onClick={handleDownloadCsv}
+          className="rounded-lg border px-3 py-1.5 text-xs font-medium hover:bg-muted/50"
+        >
+          Download CSV
+        </button>
+      </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
