@@ -6,6 +6,7 @@ import {
   Globe,
   LayoutGrid,
   Megaphone,
+  Rocket,
   Ticket,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -17,6 +18,7 @@ const iconMap: Record<string, LucideIcon> = {
   megaphone: Megaphone,
   globe: Globe,
   "bar-chart-3": BarChart3,
+  rocket: Rocket,
 };
 
 export interface TabItem {
