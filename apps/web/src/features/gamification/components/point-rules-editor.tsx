@@ -86,7 +86,7 @@ export function PointRulesEditor({ eventId, rules }: Props) {
             type="number"
             min={0}
             defaultValue={rule.max_per_event ?? ""}
-            placeholder="\u221E"
+            placeholder="∞"
             onBlur={(e) => {
               const raw = e.target.value.trim();
               const newVal = raw === "" ? null : parseInt(raw, 10);

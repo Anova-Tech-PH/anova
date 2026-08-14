@@ -21,42 +21,49 @@ const DEFAULT_POINT_RULES = [
 const DEFAULT_BADGES = [
   {
     name: "First Steps",
+    description: "Earn your first point",
     criteria_type: "points_threshold",
     criteria_value: { threshold: 1 },
     icon: "footprints",
   },
   {
     name: "Social Butterfly",
+    description: "Create 5 community posts",
     criteria_type: "activity_count",
     criteria_value: { activity: "community_post", count: 5 },
     icon: "butterfly",
   },
   {
     name: "Poll Star",
+    description: "Vote in 5 polls",
     criteria_type: "activity_count",
     criteria_value: { activity: "poll_vote", count: 5 },
     icon: "bar-chart",
   },
   {
     name: "Feedback Champion",
+    description: "Submit feedback for 3 sessions",
     criteria_type: "activity_count",
     criteria_value: { activity: "session_feedback", count: 3 },
     icon: "message-square",
   },
   {
     name: "Networking Pro",
+    description: "RSVP to 5 sessions",
     criteria_type: "activity_count",
     criteria_value: { activity: "session_rsvp", count: 5 },
     icon: "users",
   },
   {
     name: "Rising Star",
+    description: "Earn 100 points",
     criteria_type: "points_threshold",
     criteria_value: { threshold: 100 },
     icon: "trending-up",
   },
   {
     name: "Event MVP",
+    description: "Earn 500 points",
     criteria_type: "points_threshold",
     criteria_value: { threshold: 500 },
     icon: "trophy",
@@ -106,6 +113,7 @@ export async function enableGamification(eventId: string) {
     (b) => ({
       event_id: eventId,
       name: b.name,
+      description: b.description,
       criteria_type: b.criteria_type,
       criteria_value: b.criteria_value as Record<string, unknown>,
       icon: b.icon,
@@ -180,10 +188,10 @@ export async function createBadge(
   eventId: string,
   data: {
     name: string;
+    description: string;
     criteria_type: string;
     criteria_value: Record<string, unknown>;
     icon: string;
-    description?: string;
   }
 ) {
   const supabase = await createClient();
