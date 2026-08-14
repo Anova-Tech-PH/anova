@@ -13,6 +13,7 @@ import { Button, Card, CardContent, useConfirm } from "@attendly/ui/components";
 import type { EventInterest } from "@/features/matchmaking/queries";
 import { deleteInterest } from "@/features/matchmaking/actions";
 import { InterestComposer } from "./interest-composer";
+import { GenerateInterestsDialog } from "./generate-interests-dialog";
 import { toast } from "sonner";
 
 interface MatchmakingPageClientProps {
@@ -29,6 +30,7 @@ export function MatchmakingPageClient({
   attendeesParticipating,
 }: MatchmakingPageClientProps) {
   const [composerOpen, setComposerOpen] = useState(false);
+  const [genOpen, setGenOpen] = useState(false);
   const [editDraft, setEditDraft] = useState<{
     id: string;
     name: string;
@@ -109,7 +111,7 @@ export function MatchmakingPageClient({
       </div>
 
       <div className="flex flex-wrap gap-3">
-        <Button variant="outline" disabled title="Coming soon">
+        <Button variant="outline" onClick={() => setGenOpen(true)}>
           <Sparkles className="mr-2 h-4 w-4" />
           Generate interests
         </Button>
@@ -180,6 +182,12 @@ export function MatchmakingPageClient({
           </div>
         )}
       </div>
+
+      <GenerateInterestsDialog
+        eventId={eventId}
+        open={genOpen}
+        onClose={() => setGenOpen(false)}
+      />
 
       <InterestComposer
         eventId={eventId}
