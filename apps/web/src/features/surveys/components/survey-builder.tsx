@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Trash2, GripVertical } from "lucide-react";
+import { Plus, Trash2, GripVertical, LayoutTemplate, X } from "lucide-react";
 import { toast } from "sonner";
-import { Button, Input, Badge, Card } from "@attendly/ui/components";
+import { Button, Input, Badge, Card, ModalOverlay } from "@attendly/ui/components";
 import { createOrUpdateSurvey, toggleSurveyActive, createSurvey, updateSurvey } from "../actions";
 import type { Survey, SurveyQuestion } from "../queries";
+import { surveyTemplates, type SurveyTemplate } from "../survey-templates";
 
 function generateId() {
   return crypto.randomUUID();
@@ -36,6 +37,19 @@ export function SurveyBuilder({
   const [active, setActive] = useState(initialSurvey?.active ?? true);
   const [saving, setSaving] = useState(false);
   const [toggling, setToggling] = useState(false);
+  const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
+
+  function applyTemplate(template: SurveyTemplate) {
+    const newQuestions: SurveyQuestion[] = template.questions.map((q) => ({
+      ...q,
+      id: crypto.randomUUID(),
+    }));
+    setTitle(template.name);
+    setDescription(template.description);
+    setQuestions(newQuestions);
+    setTemplatePickerOpen(false);
+    toast.success(`Template "${template.name}" applied`);
+  }
 
   function addQuestion() {
     setQuestions((prev) => [...prev, emptyQuestion()]);
@@ -241,10 +255,20 @@ export function SurveyBuilder({
             </Card>
           ))}
 
-          <Button variant="outline" size="sm" onClick={addQuestion}>
-            <Plus className="mr-1.5 h-4 w-4" />
-            Add Question
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={addQuestion}>
+              <Plus className="mr-1.5 h-4 w-4" />
+              Add Question
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setTemplatePickerOpen(true)}
+            >
+              <LayoutTemplate className="mr-1.5 h-4 w-4" />
+              Start from template
+            </Button>
+          </div>
         </div>
 
         {/* Save */}
@@ -254,6 +278,41 @@ export function SurveyBuilder({
           </Button>
         </div>
       </div>
+      {templatePickerOpen && (
+        <ModalOverlay onClose={() => setTemplatePickerOpen(false)}>
+          <div className="w-full max-w-lg rounded-lg border bg-background p-6 shadow-lg max-h-[80vh] flex flex-col">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Choose a Template</h3>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setTemplatePickerOpen(false)}
+                className="h-8 w-8"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="overflow-y-auto space-y-2 flex-1">
+              {surveyTemplates.map((template) => (
+                <button
+                  key={template.id}
+                  type="button"
+                  onClick={() => applyTemplate(template)}
+                  className="w-full rounded-lg border p-4 text-left transition-colors hover:bg-muted"
+                >
+                  <div className="font-medium">{template.name}</div>
+                  <div className="mt-1 text-sm text-muted-foreground">
+                    {template.description}
+                  </div>
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    {template.questions.length} question{template.questions.length !== 1 ? "s" : ""}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </ModalOverlay>
+      )}
     </Card>
   );
 }
