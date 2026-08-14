@@ -123,7 +123,7 @@ export function MeetupCard({ meetup, eventId, onEdit }: MeetupCardProps) {
           aria-label="Delete"
         >
           <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-          Delete
+          {isPending ? "Deleting..." : "Delete"}
         </Button>
       </div>
 

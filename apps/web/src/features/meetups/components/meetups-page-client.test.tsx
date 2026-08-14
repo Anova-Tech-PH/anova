@@ -105,11 +105,11 @@ describe("MeetupsPageClient", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders From other organizers button", () => {
+  it("renders From other organizers button as disabled", () => {
     render(<MeetupsPageClient {...defaultProps} />);
-    expect(
-      screen.getByRole("button", { name: /from other organizers/i })
-    ).toBeInTheDocument();
+    const btn = screen.getByRole("button", { name: /from other organizers/i });
+    expect(btn).toBeInTheDocument();
+    expect(btn).toBeDisabled();
   });
 
   it("renders all meetup cards", () => {

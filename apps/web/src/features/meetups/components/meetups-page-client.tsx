@@ -6,7 +6,6 @@ import { Button, Card, CardContent } from "@attendly/ui/components";
 import type { Meetup } from "@/features/meetups/queries";
 import { MeetupComposer } from "./meetup-composer";
 import { MeetupCard } from "./meetup-card";
-import { toast } from "sonner";
 
 interface MeetupsPageClientProps {
   eventId: string;
@@ -72,7 +71,8 @@ export function MeetupsPageClient({
         </Button>
         <Button
           variant="outline"
-          onClick={() => toast.success("Coming soon")}
+          disabled
+          title="Coming soon"
         >
           <Globe className="mr-2 h-4 w-4" />
           From other organizers
