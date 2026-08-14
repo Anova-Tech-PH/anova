@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { createClient } from "@attendly/ui/supabase/server";
 import { Rocket, CheckCircle2 } from "lucide-react";
@@ -6,23 +7,40 @@ import { ReadinessChecklist } from "@/features/publish/components/readiness-chec
 import { PublishButton, UnpublishButton } from "@/features/publish/components/publish-confirmation-dialog";
 import { RecommendationCards } from "@/features/publish/components/recommendation-cards";
 
+async function getEvent(eventId: string) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("events")
+    .select("id, title, status, updated_at")
+    .eq("id", eventId)
+    .single();
+  return data;
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ eventId: string }>;
+}): Promise<Metadata> {
+  const { eventId } = await params;
+  const event = await getEvent(eventId);
+  return {
+    title: event ? `Publish — ${event.title}` : "Publish",
+  };
+}
+
 export default async function PublishPage({
   params,
 }: {
   params: Promise<{ eventId: string }>;
 }) {
   const { eventId } = await params;
-  const supabase = await createClient();
-
-  const { data: event } = await supabase
-    .from("events")
-    .select("id, title, status, updated_at")
-    .eq("id", eventId)
-    .single();
+  const event = await getEvent(eventId);
 
   if (!event) notFound();
 
   const isPublished = event.status === "published" || event.status === "completed";
+  const isCompleted = event.status === "completed";
 
   if (isPublished) {
     const cards = await getPostPublishRecommendations(eventId);
@@ -37,18 +55,22 @@ export default async function PublishPage({
           <div>
             <h1 className="text-2xl font-semibold">Publish</h1>
             <p className="text-sm text-muted-foreground">
-              Your event is live. Manage features and recommendations.
+              {isCompleted
+                ? "Your event has ended. Review features and recommendations."
+                : "Your event is live. Manage features and recommendations."}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4">
-          <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
+        <div className={`flex items-center gap-3 rounded-lg border p-4 ${isCompleted ? "border-blue-200 bg-blue-50" : "border-emerald-200 bg-emerald-50"}`}>
+          <CheckCircle2 className={`h-5 w-5 shrink-0 ${isCompleted ? "text-blue-600" : "text-emerald-600"}`} />
           <div>
-            <p className="text-sm font-medium text-emerald-900">
-              Your event is live and available to attendees.
+            <p className={`text-sm font-medium ${isCompleted ? "text-blue-900" : "text-emerald-900"}`}>
+              {isCompleted
+                ? "This event has ended."
+                : "Your event is live and available to attendees."}
             </p>
-            {notConfiguredCount > 0 && (
+            {notConfiguredCount > 0 && !isCompleted && (
               <p className="text-xs text-emerald-700 mt-0.5">
                 {notConfiguredCount} feature{notConfiguredCount !== 1 ? "s" : ""}{" "}not yet configured.
                 Don&apos;t miss out!

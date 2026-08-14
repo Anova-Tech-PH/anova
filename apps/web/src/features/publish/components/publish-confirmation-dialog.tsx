@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { Button, useConfirm } from "@attendly/ui/components";
 import { Rocket, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { publishEvent, unpublishEvent } from "../actions";
 import type { ReadinessCheck } from "../queries";
 
@@ -34,18 +35,33 @@ export function PublishButton({
 
     if (ok) {
       startTransition(async () => {
-        await publishEvent(eventId);
+        try {
+          await publishEvent(eventId);
+          toast.success("Event published successfully");
+        } catch (err) {
+          toast.error(err instanceof Error ? err.message : "Failed to publish event");
+        }
       });
     }
   };
 
+  const button = (
+    <Button size="lg" disabled={!canPublish || isPending} className="gap-2" onClick={handleClick}>
+      {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Rocket className="h-4 w-4" />}
+      {isPending ? "Publishing..." : "Publish Event"}
+    </Button>
+  );
+
   return (
     <>
       {dialog}
-      <Button size="lg" disabled={!canPublish || isPending} className="gap-2" onClick={handleClick}>
-        {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Rocket className="h-4 w-4" />}
-        {isPending ? "Publishing..." : "Publish Event"}
-      </Button>
+      {!canPublish ? (
+        <div title="Complete all required checks before publishing">
+          {button}
+        </div>
+      ) : (
+        button
+      )}
     </>
   );
 }
@@ -65,7 +81,12 @@ export function UnpublishButton({ eventId }: { eventId: string }) {
 
     if (ok) {
       startTransition(async () => {
-        await unpublishEvent(eventId);
+        try {
+          await unpublishEvent(eventId);
+          toast.success("Event unpublished");
+        } catch (err) {
+          toast.error(err instanceof Error ? err.message : "Failed to unpublish event");
+        }
       });
     }
   };

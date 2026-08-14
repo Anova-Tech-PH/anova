@@ -37,6 +37,18 @@ export async function getPublishReadiness(eventId: string): Promise<{
   const hasVenue = event.venue_name || (event.is_virtual && event.virtual_url);
   const basicsComplete = !!(event.title && event.start_date && event.end_date && hasVenue);
 
+  const missingBasics: string[] = [];
+  if (!event.title) missingBasics.push("title");
+  if (!event.start_date) missingBasics.push("start date");
+  if (!event.end_date) missingBasics.push("end date");
+  if (!hasVenue) missingBasics.push("venue or virtual URL");
+
+  const basicsDescription = basicsComplete
+    ? "Title, dates, and venue (or virtual URL) are configured."
+    : `Missing: ${missingBasics.join(", ")}.`;
+
+  const eventNotStarted = event.start_date ? new Date(event.start_date) > new Date() : true;
+
   const sessionCount = sessionsResult.count ?? 0;
   const speakerCount = speakersResult.count ?? 0;
   const ticketCount = ticketsResult.count ?? 0;
@@ -47,8 +59,18 @@ export async function getPublishReadiness(eventId: string): Promise<{
     {
       id: "basics",
       name: "Event basics complete",
-      description: "Title, dates, and venue (or virtual URL) are configured.",
+      description: basicsDescription,
       status: basicsComplete ? "pass" : "fail",
+      required: true,
+      fixHref: `/events/${eventId}`,
+    },
+    {
+      id: "not-started",
+      name: "Event has not started",
+      description: eventNotStarted
+        ? "Event start date is in the future."
+        : "This event has already started or ended.",
+      status: eventNotStarted ? "pass" : "fail",
       required: true,
       fixHref: `/events/${eventId}`,
     },
