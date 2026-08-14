@@ -1,7 +1,21 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus, Pencil, Trash2, Award } from "lucide-react";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Award,
+  Footprints,
+  BarChart,
+  MessageSquare,
+  Users,
+  TrendingUp,
+  Trophy,
+  Star,
+  Heart,
+  type LucideIcon,
+} from "lucide-react";
 import { toast } from "sonner";
 import { createBadge, updateBadge, deleteBadge } from "@/features/gamification/actions";
 import type { BadgeDefinition } from "@/features/gamification/queries";
@@ -14,6 +28,27 @@ import {
   ModalOverlay,
   useConfirm,
 } from "@attendly/ui/components";
+
+// ── Icon mapping ─────────────────────────────────────────────────────
+
+const ICON_MAP: Record<string, LucideIcon> = {
+  footprints: Footprints,
+  butterfly: Heart,
+  "bar-chart": BarChart,
+  "message-square": MessageSquare,
+  users: Users,
+  "trending-up": TrendingUp,
+  trophy: Trophy,
+  star: Star,
+  award: Award,
+};
+
+function BadgeIcon({ name, className }: { name: string; className?: string }) {
+  const Icon = ICON_MAP[name];
+  if (Icon) return <Icon className={className} />;
+  // Fallback: render as emoji or text
+  return <span className={className}>{name}</span>;
+}
 
 // ── Activity options ──────────────────────────────────────────────────
 
@@ -339,8 +374,8 @@ export function BadgeManager({
             >
               <div className="flex items-start gap-3">
                 {/* Icon */}
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-2xl">
-                  {badge.icon}
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+                  <BadgeIcon name={badge.icon} className="h-5 w-5 text-muted-foreground" />
                 </div>
 
                 {/* Content */}

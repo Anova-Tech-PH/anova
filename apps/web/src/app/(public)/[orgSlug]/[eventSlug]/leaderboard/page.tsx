@@ -1,18 +1,18 @@
-import { notFound } from "next/navigation";
 import { createClient } from "@attendly/ui/supabase/server";
-import { LeaderboardFull } from "@/features/gamification/components/leaderboard-full";
-import { ChallengesList } from "@/features/gamification/components/challenges-list";
-import { BadgeGrid } from "@/features/gamification/components/badge-grid";
+import { notFound } from "next/navigation";
 import {
   getGamificationConfig,
   getLeaderboard,
-  getUserPointSummary,
-  getUserBadges,
   getBadgeDefinitions,
+  getUserBadges,
   getChallengeProgress,
 } from "@/features/gamification/queries";
+import { LeaderboardFull } from "@/features/gamification/components/leaderboard-full";
+import { ChallengesList } from "@/features/gamification/components/challenges-list";
+import { BadgeGrid } from "@/features/gamification/components/badge-grid";
+import { Trophy } from "lucide-react";
 
-export default async function AttendeeLeaderboardPage({
+export default async function LeaderboardPage({
   params,
 }: {
   params: Promise<{ orgSlug: string; eventSlug: string }>;
@@ -20,62 +20,77 @@ export default async function AttendeeLeaderboardPage({
   const { orgSlug, eventSlug } = await params;
   const supabase = await createClient();
 
+  // Resolve event from slugs
   const { data: org } = await supabase
     .from("organizations")
     .select("id")
     .eq("slug", orgSlug)
     .single();
 
-  if (!org) notFound();
-
   const { data: event } = await supabase
     .from("events")
-    .select("id, title")
-    .eq("organization_id", org.id)
+    .select("id")
     .eq("slug", eventSlug)
-    .eq("status", "published")
+    .eq("organization_id", org?.id ?? "")
     .single();
 
   if (!event) notFound();
 
   const config = await getGamificationConfig(event.id);
-  if (!config?.enabled) notFound();
 
+  // If gamification is not enabled, show coming soon
+  if (!config?.enabled) {
+    return (
+      <div className="mx-auto max-w-2xl px-4 py-16 text-center">
+        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+          <Trophy className="h-8 w-8 text-primary" />
+        </div>
+        <h1 className="text-2xl font-bold">Leaderboard</h1>
+        <p className="mt-2 text-muted-foreground">
+          Coming Soon! Earn points by engaging with sessions, networking with
+          attendees, and participating in event activities.
+        </p>
+      </div>
+    );
+  }
+
+  // Get current user
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const [leaderboard, allBadges] = await Promise.all([
+  // Fetch all data in parallel
+  const [leaderboard, badges, userBadges, challenges] = await Promise.all([
     getLeaderboard(event.id, { limit: 50 }),
     getBadgeDefinitions(event.id),
+    user ? getUserBadges(event.id, user.id) : Promise.resolve([]),
+    user ? getChallengeProgress(event.id, user.id) : Promise.resolve([]),
   ]);
 
-  let userSummary: Awaited<ReturnType<typeof getUserPointSummary>> = null;
-  let userBadges: Awaited<ReturnType<typeof getUserBadges>> = [];
-  let challenges: Awaited<ReturnType<typeof getChallengeProgress>> = [];
-
-  if (user) {
-    [userSummary, userBadges, challenges] = await Promise.all([
-      getUserPointSummary(event.id, user.id),
-      getUserBadges(event.id, user.id),
-      getChallengeProgress(event.id, user.id),
-    ]);
-  }
+  // Find current user's rank and points
+  const userEntry = user
+    ? leaderboard.find((e) => e.user_id === user.id)
+    : null;
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-12 space-y-8">
+    <div className="mx-auto max-w-2xl space-y-8 px-4 py-8">
       <LeaderboardFull
         entries={leaderboard}
         currentUserId={user?.id ?? null}
-        userRank={userSummary?.rank ?? null}
-        userPoints={userSummary?.totalPoints ?? null}
-        title={config.leaderboard_title}
+        userRank={userEntry?.rank ?? null}
+        userPoints={userEntry?.total_points ?? null}
+        title={config.leaderboard_title ?? "Leaderboard"}
       />
-      {user && (
-        <>
-          <ChallengesList challenges={challenges} />
-          <BadgeGrid allBadges={allBadges} earnedBadges={userBadges} />
-        </>
+
+      {user && challenges.length > 0 && (
+        <ChallengesList challenges={challenges} />
+      )}
+
+      {badges.length > 0 && (
+        <BadgeGrid
+          allBadges={badges}
+          earnedBadges={userBadges}
+        />
       )}
     </div>
   );

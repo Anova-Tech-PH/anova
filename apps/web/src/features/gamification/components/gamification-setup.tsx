@@ -32,8 +32,10 @@ export function GamificationSetup({ eventId, config, rules }: Props) {
       try {
         if (next) {
           await enableGamification(eventId);
+          toast.success("Gamification enabled");
         } else {
           await disableGamification(eventId);
+          toast.success("Gamification disabled");
         }
       } catch (err) {
         setEnabled(!next);
