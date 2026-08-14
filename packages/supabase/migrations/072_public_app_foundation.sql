@@ -364,7 +364,13 @@ ALTER TABLE public.photo_likes ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view likes"
   ON public.photo_likes FOR SELECT
-  USING (true);
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.event_photos p
+      JOIN public.events e ON e.id = p.event_id
+      WHERE p.id = photo_id AND e.status = 'published'
+    )
+  );
 
 CREATE POLICY "Users can like photos"
   ON public.photo_likes FOR INSERT
@@ -512,6 +518,7 @@ CREATE POLICY "Authenticated users can upload attendee photos"
   WITH CHECK (
     bucket_id = 'attendee-photos'
     AND auth.role() = 'authenticated'
+    AND (storage.foldername(name))[1] = auth.uid()::text
   );
 
 CREATE POLICY "Users can delete their own attendee photos"
