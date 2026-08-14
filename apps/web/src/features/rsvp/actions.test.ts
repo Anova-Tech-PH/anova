@@ -21,6 +21,10 @@ vi.mock("@attendly/ui/supabase/server", () => ({
   createClient: vi.fn(() => Promise.resolve({ from: mockFrom, rpc: mockRpc, auth: mockAuth })),
 }));
 
+vi.mock("@/features/gamification/award", () => ({
+  tryAwardPoints: vi.fn().mockResolvedValue({ points: 0, newBadges: [] }),
+}));
+
 describe("RSVP Actions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -29,6 +33,7 @@ describe("RSVP Actions", () => {
   describe("rsvpToSession", () => {
     it("calls RPC and returns confirmed", async () => {
       mockRpc.mockResolvedValue({ data: "confirmed", error: null });
+      mockFrom.mockReturnValue(createQueryMock({ data: { event_id: "evt-1" }, error: null }));
 
       const { rsvpToSession } = await import("./actions");
       const result = await rsvpToSession("sess-1");
@@ -41,6 +46,7 @@ describe("RSVP Actions", () => {
 
     it("returns waitlisted when at capacity", async () => {
       mockRpc.mockResolvedValue({ data: "waitlisted", error: null });
+      mockFrom.mockReturnValue(createQueryMock({ data: { event_id: "evt-1" }, error: null }));
 
       const { rsvpToSession } = await import("./actions");
       const result = await rsvpToSession("sess-1");

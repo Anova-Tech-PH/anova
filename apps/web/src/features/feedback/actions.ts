@@ -3,6 +3,7 @@
 import { createClient } from "@attendly/ui/supabase/server";
 import { revalidatePath } from "next/cache";
 import type { FeedbackQuestion } from "./queries";
+import { tryAwardPoints } from "@/features/gamification/award";
 
 export async function createFeedbackForm(
   eventId: string,
@@ -98,5 +99,16 @@ export async function submitSessionFeedback(
       throw new Error("You have already submitted feedback for this session.");
     }
     throw new Error(error.message);
+  }
+
+  // Award gamification points
+  const { data: session } = await supabase
+    .from("sessions")
+    .select("event_id")
+    .eq("id", sessionId)
+    .single();
+
+  if (session?.event_id) {
+    await tryAwardPoints(session.event_id, user.id, "session_feedback", sessionId, "session");
   }
 }

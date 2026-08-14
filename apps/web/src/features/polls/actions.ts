@@ -3,6 +3,7 @@
 import { createClient } from "@attendly/ui/supabase/server";
 import { revalidatePath } from "next/cache";
 import type { PollOption } from "./queries";
+import { tryAwardPoints } from "@/features/gamification/award";
 
 export async function createPoll(
   eventId: string,
@@ -128,4 +129,15 @@ export async function votePoll(pollId: string, optionId: string) {
     );
 
   if (error) throw new Error(error.message);
+
+  // Award gamification points
+  const { data: poll } = await supabase
+    .from("live_polls")
+    .select("event_id")
+    .eq("id", pollId)
+    .single();
+
+  if (poll?.event_id) {
+    await tryAwardPoints(poll.event_id, user.id, "poll_vote", pollId, "poll");
+  }
 }
