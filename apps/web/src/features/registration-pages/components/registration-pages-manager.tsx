@@ -311,7 +311,7 @@ export function RegistrationPagesManager({
                   <div className="flex flex-wrap items-center gap-3">
                     <span className="text-sm font-semibold">{page.name}</span>
                     {page.is_default && (
-                      <Badge variant="secondary">Default</Badge>
+                      <Badge variant="outline">Default</Badge>
                     )}
                   </div>
                   <div className="flex items-center gap-1.5">
