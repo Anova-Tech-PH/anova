@@ -110,4 +110,73 @@ describe("Discussion Topic Actions", () => {
       expect(mockFrom).toHaveBeenCalledWith("discussion_topics");
     });
   });
+
+  describe("importTopics", () => {
+    it("imports multiple topics with correct fields", async () => {
+      mockFrom.mockReturnValue(
+        createQueryMock({
+          data: [
+            { id: "new-1", title: "Topic A", is_built_in: false },
+            { id: "new-2", title: "Topic B", is_built_in: false },
+          ],
+          error: null,
+        })
+      );
+
+      const { importTopics } = await import("./actions");
+      const result = await importTopics("evt-1", [
+        { title: "Topic A", description: "Desc A" },
+        { title: "Topic B", description: null },
+      ]);
+
+      expect(mockFrom).toHaveBeenCalledWith("discussion_topics");
+      expect(result).toHaveLength(2);
+      expect(result[0]).toHaveProperty("is_built_in", false);
+      expect(revalidatePath).toHaveBeenCalledWith("/events/evt-1/discussion-topics");
+    });
+
+    it("sets is_built_in=false, created_by, and event_id", async () => {
+      // Track what gets passed to insert
+      let insertedRows: unknown[] = [];
+      const insertMock = vi.fn((rows: unknown[]) => {
+        insertedRows = rows;
+        return {
+          select: vi.fn(() => ({
+            then: (resolve: (v: unknown) => void) =>
+              resolve({
+                data: rows.map((r: Record<string, unknown>, i: number) => ({
+                  id: `new-${i}`,
+                  ...r,
+                })),
+                error: null,
+              }),
+          })),
+        };
+      });
+      mockFrom.mockReturnValue({ insert: insertMock });
+
+      const { importTopics } = await import("./actions");
+      await importTopics("evt-1", [
+        { title: "Imported Topic", description: "A description" },
+      ]);
+
+      expect(insertedRows).toHaveLength(1);
+      expect(insertedRows[0]).toMatchObject({
+        event_id: "evt-1",
+        created_by: "user-1",
+        is_built_in: false,
+        title: "Imported Topic",
+        description: "A description",
+      });
+    });
+
+    it("throws when not authenticated", async () => {
+      mockAuth.getUser.mockResolvedValue({ data: { user: null }, error: null });
+
+      const { importTopics } = await import("./actions");
+      await expect(
+        importTopics("evt-1", [{ title: "Test", description: null }])
+      ).rejects.toThrow("Authentication required");
+    });
+  });
 });

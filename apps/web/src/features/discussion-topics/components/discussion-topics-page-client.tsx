@@ -11,12 +11,15 @@ import {
   Trash2,
   Eye,
   EyeOff,
+  Loader2,
 } from "lucide-react";
-import { Button, Card, CardContent, useConfirm } from "@attendly/ui/components";
-import type { DiscussionTopic } from "@/features/discussion-topics/queries";
+import { Button, Card, CardContent, ModalOverlay, useConfirm } from "@attendly/ui/components";
+import type { DiscussionTopic, PastEventTopicGroup } from "@/features/discussion-topics/queries";
 import {
   deleteTopic,
   toggleTopicVisibility,
+  fetchPastTopics,
+  importTopics,
 } from "@/features/discussion-topics/actions";
 import { TopicComposer } from "./topic-composer";
 import { toast } from "sonner";
@@ -38,6 +41,13 @@ export function DiscussionTopicsPageClient({
   const [editDraft, setEditDraft] = useState<DiscussionTopic | null>(null);
   const [isPending, startTransition] = useTransition();
   const { confirm, dialog: confirmDialog } = useConfirm();
+
+  // Reuse past topics state
+  const [reuseOpen, setReuseOpen] = useState(false);
+  const [reuseLoading, setReuseLoading] = useState(false);
+  const [pastGroups, setPastGroups] = useState<PastEventTopicGroup[]>([]);
+  const [selectedTopics, setSelectedTopics] = useState<Set<string>>(new Set());
+  const [isImporting, setIsImporting] = useState(false);
 
   function openComposerEmpty() {
     setEditDraft(null);
@@ -70,6 +80,54 @@ export function DiscussionTopicsPageClient({
         toast.error("Failed to delete topic");
       }
     });
+  }
+
+  async function handleOpenReuse() {
+    setReuseOpen(true);
+    setReuseLoading(true);
+    setSelectedTopics(new Set());
+    try {
+      const groups = await fetchPastTopics(eventId);
+      setPastGroups(groups);
+    } catch {
+      toast.error("Failed to load past topics");
+      setReuseOpen(false);
+    } finally {
+      setReuseLoading(false);
+    }
+  }
+
+  function toggleTopicSelection(key: string) {
+    setSelectedTopics((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
+
+  async function handleImportSelected() {
+    const topicsToImport: { title: string; description: string | null }[] = [];
+    for (const group of pastGroups) {
+      for (const topic of group.topics) {
+        const key = `${group.eventId}::${topic.title}`;
+        if (selectedTopics.has(key)) {
+          topicsToImport.push(topic);
+        }
+      }
+    }
+    if (topicsToImport.length === 0) return;
+
+    setIsImporting(true);
+    try {
+      await importTopics(eventId, topicsToImport);
+      toast.success(`Imported ${topicsToImport.length} topic${topicsToImport.length > 1 ? "s" : ""}`);
+      setReuseOpen(false);
+    } catch {
+      toast.error("Failed to import topics");
+    } finally {
+      setIsImporting(false);
+    }
   }
 
   function handleToggleVisibility(topic: DiscussionTopic) {
@@ -117,7 +175,7 @@ export function DiscussionTopicsPageClient({
           <Globe className="mr-2 h-4 w-4" />
           From other organizers
         </Button>
-        <Button variant="outline" disabled title="Coming soon">
+        <Button variant="outline" onClick={handleOpenReuse}>
           <RotateCcw className="mr-2 h-4 w-4" />
           Reuse past topic
         </Button>
@@ -252,6 +310,91 @@ export function DiscussionTopicsPageClient({
       />
 
       {confirmDialog}
+
+      {reuseOpen && (
+        <ModalOverlay onClose={() => setReuseOpen(false)}>
+          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto space-y-4 rounded-xl bg-card p-6 shadow-xl">
+            <h3 className="text-lg font-semibold">Reuse Past Topics</h3>
+            <p className="text-sm text-muted-foreground">
+              Select topics from your past events to import into this event.
+            </p>
+
+            {reuseLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : pastGroups.length === 0 ? (
+              <div className="rounded-xl border border-dashed bg-muted/20 py-8 text-center">
+                <MessageSquare className="mx-auto h-8 w-8 text-muted-foreground/50" />
+                <p className="mt-2 text-sm text-muted-foreground">
+                  No custom topics found from other events in this organization.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {pastGroups.map((group) => (
+                  <div key={group.eventId} className="space-y-2">
+                    <h4 className="text-sm font-semibold text-muted-foreground">
+                      {group.eventTitle}
+                    </h4>
+                    <div className="space-y-1">
+                      {group.topics.map((topic) => {
+                        const key = `${group.eventId}::${topic.title}`;
+                        return (
+                          <label
+                            key={key}
+                            className="flex items-start gap-3 rounded-lg border p-3 cursor-pointer hover:bg-muted/30 transition-colors"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selectedTopics.has(key)}
+                              onChange={() => toggleTopicSelection(key)}
+                              className="mt-0.5 h-4 w-4 rounded border-border"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium">{topic.title}</p>
+                              {topic.description && (
+                                <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                                  {topic.description}
+                                </p>
+                              )}
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="flex items-center justify-between gap-2 pt-2">
+              <Button
+                variant="outline"
+                onClick={() => setReuseOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleImportSelected}
+                disabled={selectedTopics.size === 0 || isImporting || reuseLoading}
+              >
+                {isImporting ? (
+                  <>
+                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                    Importing...
+                  </>
+                ) : (
+                  <>
+                    <Download className="mr-1.5 h-4 w-4" />
+                    Import selected ({selectedTopics.size})
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </ModalOverlay>
+      )}
     </div>
   );
 }

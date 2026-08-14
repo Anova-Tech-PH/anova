@@ -2,6 +2,7 @@
 
 import { createClient } from "@attendly/ui/supabase/server";
 import { revalidatePath } from "next/cache";
+import { getPastEventTopics, type PastEventTopicGroup } from "./queries";
 
 const BUILT_IN_TOPICS = [
   { key: "ask_organizers", title: "Ask Organizers Anything" },
@@ -116,4 +117,38 @@ export async function seedBuiltInTopics(eventId: string) {
   const { error } = await supabase.from("discussion_topics").insert(rows);
 
   if (error) throw new Error(error.message);
+}
+
+export async function importTopics(
+  eventId: string,
+  topics: { title: string; description: string | null }[]
+) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Authentication required");
+
+  const rows = topics.map((t) => ({
+    event_id: eventId,
+    created_by: user.id,
+    title: t.title,
+    description: t.description,
+    is_built_in: false,
+  }));
+
+  const { data, error } = await supabase
+    .from("discussion_topics")
+    .insert(rows)
+    .select();
+
+  if (error) throw new Error(error.message);
+  revalidatePath(`/events/${eventId}/discussion-topics`);
+  return data;
+}
+
+export async function fetchPastTopics(
+  currentEventId: string
+): Promise<PastEventTopicGroup[]> {
+  return getPastEventTopics(currentEventId);
 }

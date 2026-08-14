@@ -9,6 +9,8 @@ vi.mock("@/features/discussion-topics/actions", () => ({
   updateTopic: vi.fn(),
   deleteTopic: vi.fn(),
   toggleTopicVisibility: vi.fn(),
+  fetchPastTopics: vi.fn().mockResolvedValue([]),
+  importTopics: vi.fn().mockResolvedValue([]),
 }));
 
 vi.mock("@attendly/ui/components", async () => {
@@ -141,11 +143,11 @@ describe("DiscussionTopicsPageClient", () => {
     expect(btn).toBeDisabled();
   });
 
-  it("renders Reuse past topic button as disabled", () => {
+  it("renders Reuse past topic button as enabled", () => {
     render(<DiscussionTopicsPageClient {...defaultProps} />);
     const btn = screen.getByRole("button", { name: /reuse past topic/i });
     expect(btn).toBeInTheDocument();
-    expect(btn).toBeDisabled();
+    expect(btn).not.toBeDisabled();
   });
 
   it("renders custom topic titles", () => {
