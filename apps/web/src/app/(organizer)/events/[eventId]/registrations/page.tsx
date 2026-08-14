@@ -6,7 +6,7 @@ export default async function AttendeesPage({
   searchParams,
 }: {
   params: Promise<{ eventId: string }>;
-  searchParams: Promise<{ page?: string; category?: string; search?: string }>;
+  searchParams: Promise<{ page?: string; category_id?: string; search?: string }>;
 }) {
   const { eventId } = await params;
   const sp = await searchParams;
@@ -17,7 +17,7 @@ export default async function AttendeesPage({
     getAttendees(eventId, {
       page,
       pageSize,
-      category: sp.category,
+      category_id: sp.category_id,
       search: sp.search,
     }),
     getAttendeeCategories(eventId),

@@ -55,7 +55,7 @@ describe("addAttendee", () => {
       email: "john@test.com",
       title: "Pastor",
       company: "Church Inc",
-      category: "Speaker",
+      category_id: "cat-1",
     });
 
     expect(fromCalls).toContain("registrations");
@@ -111,6 +111,28 @@ describe("importAttendees", () => {
     const fromCalls: string[] = [];
     mockFrom.mockImplementation((table: string) => {
       fromCalls.push(table);
+      if (table === "attendee_categories") {
+        // First call: select existing categories; subsequent calls: insert new ones
+        const selectResult = createQueryMock({ data: [], error: null });
+        const insertResult = createQueryMock({ data: { id: "new-cat-1" }, error: null });
+        // Return a proxy that handles both select and insert chains
+        const handler: ProxyHandler<object> = {
+          get(_target, prop: string) {
+            if (prop === "then") {
+              return (resolve: (v: unknown) => void) =>
+                resolve({ data: [], error: null });
+            }
+            if (prop === "select") {
+              return vi.fn(() => selectResult);
+            }
+            if (prop === "insert") {
+              return vi.fn(() => insertResult);
+            }
+            return vi.fn(() => new Proxy({}, handler));
+          },
+        };
+        return new Proxy({}, handler);
+      }
       return createQueryMock({ data: null, error: null });
     });
 
@@ -124,6 +146,7 @@ Jane Smith,jane@test.com,,EQUIP 210,Staff`;
     expect(result.imported).toBe(2);
     expect(result.errors).toEqual([]);
     expect(fromCalls.filter((t) => t === "registrations").length).toBe(1);
+    expect(fromCalls).toContain("attendee_categories");
     expect(revalidatePath).toHaveBeenCalledWith("/events/evt-1/registrations");
   });
 

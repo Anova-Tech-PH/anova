@@ -3,25 +3,25 @@ import { createClient } from "@attendly/ui/supabase/server";
 type AttendeesParams = {
   page: number;
   pageSize: number;
-  category?: string;
+  category_id?: string;
   search?: string;
 };
 
 export async function getAttendees(eventId: string, params: AttendeesParams) {
   const supabase = await createClient();
-  const { page, pageSize, category, search } = params;
+  const { page, pageSize, category_id, search } = params;
 
   let query = supabase
     .from("registrations")
     .select(
-      "id, name, email, title, company, category, status, user_id, created_at",
+      "id, name, email, title, company, category, category_id, status, user_id, created_at",
       { count: "exact" }
     )
     .eq("event_id", eventId)
     .not("status", "eq", "cancelled");
 
-  if (category) {
-    query = query.eq("category", category);
+  if (category_id) {
+    query = query.eq("category_id", category_id);
   }
 
   if (search) {
@@ -45,15 +45,12 @@ export async function getAttendeeCategories(eventId: string) {
   const supabase = await createClient();
 
   const { data } = await supabase
-    .from("registrations")
-    .select("category")
-    .eq("event_id", eventId);
+    .from("attendee_categories")
+    .select("id, name, color")
+    .eq("event_id", eventId)
+    .order("sort_order");
 
-  const categories = (data ?? [])
-    .map((r: { category: string | null }) => r.category)
-    .filter((c): c is string => c !== null);
-
-  return [...new Set(categories)];
+  return data ?? [];
 }
 
 export async function getAttendeeStats(eventId: string) {

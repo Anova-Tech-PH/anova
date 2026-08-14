@@ -32,6 +32,7 @@ type Attendee = {
   title: string | null;
   company: string | null;
   category: string | null;
+  category_id: string | null;
   status: string;
   user_id: string | null;
   created_at: string;
@@ -43,11 +44,13 @@ type AttendeeStats = {
   signedIn: number;
 };
 
+type AttendeeCategory = { id: string; name: string; color: string };
+
 type Props = {
   eventId: string;
   attendees: Attendee[];
   total: number;
-  categories: string[];
+  categories: AttendeeCategory[];
   stats: AttendeeStats;
   page: number;
   pageSize: number;
@@ -87,7 +90,7 @@ export function AttendeesTable({
         }
       }
       // Reset to page 1 when filters change
-      if ("search" in params || "category" in params) {
+      if ("search" in params || "category_id" in params) {
         sp.delete("page");
       }
       router.replace(`${pathname}?${sp.toString()}`);
@@ -106,7 +109,7 @@ export function AttendeesTable({
   }, [search, searchParams, updateUrl]);
 
   function handleCategoryChange(value: string) {
-    updateUrl({ category: value || undefined });
+    updateUrl({ category_id: value || undefined });
   }
 
   function handlePageChange(newPage: number) {
@@ -120,7 +123,7 @@ export function AttendeesTable({
       a.email,
       a.title ?? "",
       a.company ?? "",
-      a.category ?? "",
+      categories.find((c) => c.id === a.category_id)?.name ?? a.category ?? "",
       a.user_id ? "Yes" : "No",
     ]);
     const csv = [headers, ...rows]
@@ -180,7 +183,7 @@ export function AttendeesTable({
       {/* Filters */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <select
-          value={searchParams.get("category") ?? ""}
+          value={searchParams.get("category_id") ?? ""}
           onChange={(e) => handleCategoryChange(e.target.value)}
           aria-label="Category"
           role="combobox"
@@ -193,8 +196,8 @@ export function AttendeesTable({
         >
           <option value="">All Attendees</option>
           {categories.map((cat) => (
-            <option key={cat} value={cat}>
-              {cat}
+            <option key={cat.id} value={cat.id}>
+              {cat.name}
             </option>
           ))}
         </select>
@@ -281,7 +284,28 @@ export function AttendeesTable({
                       {attendee.company ?? "—"}
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
-                      {attendee.category ?? "—"}
+                      {(() => {
+                        const cat = categories.find((c) => c.id === attendee.category_id);
+                        if (!cat) return attendee.category ?? "—";
+                        const dotColors: Record<string, string> = {
+                          blue: "bg-blue-500",
+                          green: "bg-green-500",
+                          red: "bg-red-500",
+                          purple: "bg-purple-500",
+                          orange: "bg-orange-500",
+                          pink: "bg-pink-500",
+                          yellow: "bg-yellow-500",
+                          gray: "bg-gray-500",
+                        };
+                        return (
+                          <span className="flex items-center gap-1.5">
+                            <span
+                              className={`h-2 w-2 rounded-full ${dotColors[cat.color] ?? "bg-gray-500"}`}
+                            />
+                            {cat.name}
+                          </span>
+                        );
+                      })()}
                     </td>
                     <td className="px-4 py-3">
                       {attendee.user_id ? (
@@ -403,7 +427,7 @@ function AddAttendeeModal({
   onClose,
 }: {
   eventId: string;
-  categories: string[];
+  categories: AttendeeCategory[];
   onClose: () => void;
 }) {
   const router = useRouter();
@@ -419,7 +443,7 @@ function AddAttendeeModal({
           email: formData.get("email") as string,
           title: (formData.get("title") as string) || undefined,
           company: (formData.get("company") as string) || undefined,
-          category: (formData.get("category") as string) || undefined,
+          category_id: (formData.get("category_id") as string) || undefined,
         });
         toast.success("Attendee added");
         router.refresh();
@@ -471,12 +495,23 @@ function AddAttendeeModal({
             <label htmlFor="add-category" className="mb-1 block text-sm font-medium">
               Category
             </label>
-            <Input id="add-category" name="category" placeholder="e.g. Speaker, Staff (optional)" list="category-options" />
-            <datalist id="category-options">
+            <select
+              id="add-category"
+              name="category_id"
+              className={cn(
+                "w-full h-9 appearance-none rounded-lg border bg-background pl-3 pr-9 text-sm",
+                "outline-none transition-colors",
+                "focus:ring-2 focus:ring-ring focus:ring-offset-1",
+                "hover:border-foreground/30"
+              )}
+            >
+              <option value="">No category</option>
               {categories.map((cat) => (
-                <option key={cat} value={cat} />
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
               ))}
-            </datalist>
+            </select>
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="outline" onClick={onClose}>

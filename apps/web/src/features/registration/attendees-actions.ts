@@ -9,7 +9,7 @@ type AddAttendeeData = {
   email: string;
   title?: string;
   company?: string;
-  category?: string;
+  category_id?: string;
 };
 
 export async function addAttendee(eventId: string, data: AddAttendeeData) {
@@ -26,7 +26,7 @@ export async function addAttendee(eventId: string, data: AddAttendeeData) {
     email: data.email.trim().toLowerCase(),
     title: data.title?.trim() || null,
     company: data.company?.trim() || null,
-    category: data.category?.trim() || null,
+    category_id: data.category_id || null,
     status: "confirmed",
     qr_code: nanoid(16),
     custom_fields: {},
@@ -56,6 +56,35 @@ export async function importAttendees(eventId: string, csvContent: string) {
   const companyIdx = headers.indexOf("company");
   const categoryIdx = headers.indexOf("category");
 
+  // Collect unique category strings from CSV and resolve to category_id
+  const categoryStrings = new Set<string>();
+  for (let i = 1; i < lines.length; i++) {
+    const cols = lines[i].split(",").map((c) => c.trim());
+    const catVal = categoryIdx >= 0 ? cols[categoryIdx] : "";
+    if (catVal) categoryStrings.add(catVal);
+  }
+
+  const categoryMap = new Map<string, string>(); // lowercase name -> id
+  if (categoryStrings.size > 0) {
+    const { data: existingCats } = await supabase
+      .from("attendee_categories")
+      .select("id, name")
+      .eq("event_id", eventId);
+    for (const cat of existingCats ?? []) {
+      categoryMap.set(cat.name.toLowerCase(), cat.id);
+    }
+    for (const catName of categoryStrings) {
+      if (!categoryMap.has(catName.toLowerCase())) {
+        const { data: newCat } = await supabase
+          .from("attendee_categories")
+          .insert({ event_id: eventId, name: catName, color: "blue", sort_order: 0 })
+          .select("id")
+          .single();
+        if (newCat) categoryMap.set(catName.toLowerCase(), newCat.id);
+      }
+    }
+  }
+
   const rows: Record<string, unknown>[] = [];
   const errors: string[] = [];
 
@@ -75,7 +104,10 @@ export async function importAttendees(eventId: string, csvContent: string) {
       email: email.toLowerCase(),
       title: titleIdx >= 0 ? cols[titleIdx] || null : null,
       company: companyIdx >= 0 ? cols[companyIdx] || null : null,
-      category: categoryIdx >= 0 ? cols[categoryIdx] || null : null,
+      category_id:
+        categoryIdx >= 0 && cols[categoryIdx]
+          ? categoryMap.get(cols[categoryIdx].toLowerCase()) ?? null
+          : null,
       status: "confirmed",
       qr_code: nanoid(16),
       custom_fields: {},

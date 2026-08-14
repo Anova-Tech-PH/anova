@@ -68,7 +68,7 @@ describe("getAttendees", () => {
     expect(result.total).toBe(50);
     expect(builder.from).toHaveBeenCalledWith("registrations");
     expect(builder.select).toHaveBeenCalledWith(
-      "id, name, email, title, company, category, status, user_id, created_at",
+      "id, name, email, title, company, category, category_id, status, user_id, created_at",
       { count: "exact" }
     );
     expect(builder.eq).toHaveBeenCalledWith("event_id", "evt-1");
@@ -80,9 +80,9 @@ describe("getAttendees", () => {
     mockCreateClient.mockResolvedValue({ from: builder.from });
 
     const { getAttendees } = await import("./attendees-queries");
-    await getAttendees("evt-1", { page: 1, pageSize: 10, category: "Speaker" });
+    await getAttendees("evt-1", { page: 1, pageSize: 10, category_id: "cat-1" });
 
-    expect(builder.eq).toHaveBeenCalledWith("category", "Speaker");
+    expect(builder.eq).toHaveBeenCalledWith("category_id", "cat-1");
   });
 
   it("applies search filter across name, email, title, company", async () => {
@@ -131,12 +131,11 @@ describe("getAttendeeCategories", () => {
     vi.clearAllMocks();
   });
 
-  it("returns unique non-null categories", async () => {
+  it("returns categories from attendee_categories table", async () => {
     const rows = [
-      { category: "Speaker" },
-      { category: "Organizer" },
-      { category: "Staff" },
-      { category: null },
+      { id: "cat-1", name: "Speaker", color: "blue" },
+      { id: "cat-2", name: "Organizer", color: "green" },
+      { id: "cat-3", name: "Staff", color: "red" },
     ];
     const builder = createQueryBuilder({ data: rows, error: null });
     mockCreateClient.mockResolvedValue({ from: builder.from });
@@ -144,9 +143,10 @@ describe("getAttendeeCategories", () => {
     const { getAttendeeCategories } = await import("./attendees-queries");
     const result = await getAttendeeCategories("evt-1");
 
-    expect(result).toEqual(["Speaker", "Organizer", "Staff"]);
-    expect(builder.from).toHaveBeenCalledWith("registrations");
+    expect(result).toEqual(rows);
+    expect(builder.from).toHaveBeenCalledWith("attendee_categories");
     expect(builder.eq).toHaveBeenCalledWith("event_id", "evt-1");
+    expect(builder.order).toHaveBeenCalledWith("sort_order");
   });
 });
 

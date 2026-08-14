@@ -19,6 +19,7 @@ const mockAttendees = [
     title: "Pastor",
     company: "Church Inc",
     category: "Speaker",
+    category_id: "cat-1",
     status: "confirmed",
     user_id: "user-1",
     created_at: "2025-01-01T00:00:00Z",
@@ -30,6 +31,7 @@ const mockAttendees = [
     title: null,
     company: null,
     category: null,
+    category_id: null,
     status: "confirmed",
     user_id: null,
     created_at: "2025-01-02T00:00:00Z",
@@ -40,7 +42,11 @@ const defaultProps = {
   eventId: "evt-1",
   attendees: mockAttendees,
   total: 50,
-  categories: ["Speaker", "Organizer", "Staff"],
+  categories: [
+    { id: "cat-1", name: "Speaker", color: "blue" },
+    { id: "cat-2", name: "Organizer", color: "green" },
+    { id: "cat-3", name: "Staff", color: "red" },
+  ],
   stats: { total: 50, withEmail: 45, signedIn: 30 },
   page: 1,
   pageSize: 10,
@@ -195,10 +201,10 @@ describe("AttendeesTable", () => {
     render(<AttendeesTable {...defaultProps} />);
 
     const select = screen.getByRole("combobox", { name: /category/i });
-    await userEvent.selectOptions(select, "Speaker");
+    await userEvent.selectOptions(select, "cat-1");
 
     expect(mockReplace).toHaveBeenCalledWith(
-      expect.stringContaining("category=Speaker")
+      expect.stringContaining("category_id=cat-1")
     );
   });
 
