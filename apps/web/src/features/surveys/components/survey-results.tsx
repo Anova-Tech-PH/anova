@@ -1,7 +1,9 @@
 "use client";
 
-import { Card } from "@attendly/ui/components";
-import type { SurveyQuestion } from "../queries";
+import { Download } from "lucide-react";
+import { Button, Card } from "@attendly/ui/components";
+import type { SurveyQuestion, SurveyResponse } from "../queries";
+import { surveyResponsesToCsv, downloadCsv } from "../export";
 
 type QuestionStat = {
   type: SurveyQuestion["type"];
@@ -90,10 +92,19 @@ function OptionBar({
 export function SurveyResults({
   stats,
   questions,
+  responses = [],
+  surveyTitle = "survey",
 }: {
   stats: SurveyStatsData;
   questions: SurveyQuestion[];
+  responses?: SurveyResponse[];
+  surveyTitle?: string;
 }) {
+  function handleDownloadCsv() {
+    const csv = surveyResponsesToCsv(questions, responses);
+    const safeTitle = surveyTitle.replace(/[^a-zA-Z0-9_-]/g, "_").toLowerCase();
+    downloadCsv(csv, `${safeTitle}_responses.csv`);
+  }
   if (stats.totalResponses === 0) {
     return (
       <Card className="flex flex-col items-center justify-center py-12 text-center">
@@ -108,11 +119,19 @@ export function SurveyResults({
   return (
     <div className="space-y-4">
       <Card className="p-5">
-        <div className="text-center">
-          <p className="text-3xl font-bold">{stats.totalResponses}</p>
-          <p className="text-sm text-muted-foreground">
-            Total Response{stats.totalResponses !== 1 ? "s" : ""}
-          </p>
+        <div className="flex items-center justify-between">
+          <div className="text-center flex-1">
+            <p className="text-3xl font-bold">{stats.totalResponses}</p>
+            <p className="text-sm text-muted-foreground">
+              Total Response{stats.totalResponses !== 1 ? "s" : ""}
+            </p>
+          </div>
+          {responses.length > 0 && (
+            <Button variant="outline" size="sm" onClick={handleDownloadCsv}>
+              <Download className="mr-1.5 h-4 w-4" />
+              Download CSV
+            </Button>
+          )}
         </div>
       </Card>
 

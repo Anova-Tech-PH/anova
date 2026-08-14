@@ -7,11 +7,12 @@ import { Button, Badge, Card, ConfirmDialog } from "@attendly/ui/components";
 import { deleteSurvey, toggleSurveyStatus } from "../actions";
 import { SurveyBuilder } from "./survey-builder";
 import { SurveyResults } from "./survey-results";
-import type { Survey, SurveyQuestion } from "../queries";
+import type { Survey, SurveyQuestion, SurveyResponse } from "../queries";
 
 type SurveyStatsData = {
   totalResponses: number;
   questionStats: Record<string, unknown>;
+  responses?: SurveyResponse[];
 };
 
 const statusVariant: Record<string, "success" | "outline" | "warning"> = {
@@ -178,6 +179,8 @@ export function SurveyList({
                       <SurveyResults
                         stats={stats as Parameters<typeof SurveyResults>[0]["stats"]}
                         questions={survey.questions}
+                        responses={stats.responses ?? []}
+                        surveyTitle={survey.title}
                       />
                     ) : (
                       <div className="rounded-xl border border-dashed bg-muted/20 py-12 text-center text-muted-foreground">
