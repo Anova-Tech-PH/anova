@@ -50,7 +50,7 @@ export default async function PublishPage({
             </p>
             {notConfiguredCount > 0 && (
               <p className="text-xs text-emerald-700 mt-0.5">
-                {notConfiguredCount} feature{notConfiguredCount !== 1 ? "s" : ""} not yet configured.
+                {notConfiguredCount} feature{notConfiguredCount !== 1 ? "s" : ""}{" "}not yet configured.
                 Don&apos;t miss out!
               </p>
             )}
