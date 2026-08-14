@@ -1,6 +1,4 @@
-import Link from "next/link";
-import { Logo } from "@attendly/ui/logo";
-import { EventNav } from "./event-nav";
+import { EventSidebar } from "./event-sidebar";
 
 export default function PublicEventLayout({
   children,
@@ -10,16 +8,9 @@ export default function PublicEventLayout({
   params: Promise<{ orgSlug: string; eventSlug: string }>;
 }) {
   return (
-    <div className="min-h-screen">
-      <header className="border-b px-4 py-3">
-        <div className="mx-auto flex max-w-5xl items-center justify-between">
-          <Link href="/">
-            <Logo size="sm" />
-          </Link>
-          <EventNav params={params} />
-        </div>
-      </header>
-      {children}
+    <div className="min-h-screen lg:flex">
+      <EventSidebar params={params} />
+      <main className="flex-1 min-w-0 pt-[57px] lg:pt-0">{children}</main>
     </div>
   );
 }
