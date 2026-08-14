@@ -26,12 +26,16 @@ export async function getEventInterests(eventId: string): Promise<{
 
   if (error) throw new Error(error.message);
 
-  const interests = (data ?? []).map((row: Record<string, unknown>) => ({
-    ...row,
+  const interests = (data ?? []).map((row) => ({
+    id: row.id as string,
+    event_id: row.event_id as string,
+    name: row.name as string,
+    sort_order: row.sort_order as number,
+    created_at: row.created_at as string,
+    updated_at: row.updated_at as string,
     attendee_count:
       (row.attendee_interests as { count: number }[])?.[0]?.count ?? 0,
-    attendee_interests: undefined,
-  })) as EventInterest[];
+  })) satisfies EventInterest[];
 
   // Count distinct attendees participating
   const { data: participants } = await supabase
