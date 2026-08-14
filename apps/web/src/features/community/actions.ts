@@ -108,6 +108,33 @@ export async function toggleFollow(topicId: string) {
   revalidatePath("/");
 }
 
+export async function saveIcebreakerConfig(
+  eventId: string,
+  data: {
+    question: string;
+    options: string[];
+    enabled: boolean;
+  }
+) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const { error } = await supabase.from("event_icebreakers").upsert(
+    {
+      event_id: eventId,
+      question: data.question,
+      options: data.options,
+      enabled: data.enabled,
+    },
+    { onConflict: "event_id" }
+  );
+  if (error) throw error;
+  revalidatePath("/");
+}
+
 export async function submitIcebreaker(
   eventId: string,
   data: {
