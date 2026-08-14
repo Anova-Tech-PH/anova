@@ -13,6 +13,8 @@ import {
 import { createClient } from "@attendly/ui/supabase/server";
 import { buttonVariants } from "@attendly/ui/components";
 import { Badge, Avatar } from "@attendly/ui/components";
+import { getActivityFeed } from "@/features/activity-feed/queries";
+import { ActivityFeed } from "@/features/activity-feed/components/activity-feed";
 
 function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString("en-US", {
@@ -100,6 +102,24 @@ export default async function PublicEventPage({
     .from("registrations")
     .select("id", { count: "exact", head: true })
     .eq("event_id", event.id);
+
+  // Check if user is authenticated
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // Fetch activity feed for authenticated users
+  let feedData: { items: Awaited<ReturnType<typeof getActivityFeed>>["items"]; total: number } = {
+    items: [],
+    total: 0,
+  };
+  if (user) {
+    try {
+      feedData = await getActivityFeed(event.id);
+    } catch {
+      // Feed table may not exist yet; gracefully degrade
+    }
+  }
 
   // Group sessions by day
   const dayGroups: Record<string, typeof sessions> = {};
@@ -205,6 +225,64 @@ export default async function PublicEventPage({
           </div>
         </div>
       </div>
+
+      {/* ── Activity Feed (authenticated users with feed items) ── */}
+      {user && feedData.items.length > 0 && (
+        <div className="mx-auto max-w-5xl px-4 py-12">
+          <div className="grid gap-8 lg:grid-cols-3">
+            <div className="lg:col-span-2">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="h-6 w-1 rounded-full bg-primary" />
+                <h2 className="text-xl font-semibold">Activity</h2>
+              </div>
+              <ActivityFeed
+                eventId={event.id}
+                initialItems={feedData.items}
+                total={feedData.total}
+              />
+            </div>
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="h-6 w-1 rounded-full bg-primary" />
+                <h2 className="text-xl font-semibold">Event Stats</h2>
+              </div>
+              <div className="rounded-lg border bg-card p-5 space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+                    <Users className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">{regCount ?? 0}</p>
+                    <p className="text-xs text-muted-foreground">Attendees</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-info/10">
+                    <Calendar className="h-4 w-4 text-info" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">
+                      {sessions?.filter((s) => s.type !== "break").length ?? 0}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Sessions</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-success/10">
+                    <Mic2 className="h-4 w-4 text-success" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">
+                      {speakers?.length ?? 0}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Speakers</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="mx-auto max-w-4xl px-4 py-12 space-y-16">
         {/* ── About ── */}
