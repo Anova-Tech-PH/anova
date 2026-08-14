@@ -137,6 +137,139 @@ describe("Registration Actions", () => {
     });
   });
 
+  describe("registerForEvent - auto account creation", () => {
+    const mockAdminCreateUser = vi.fn();
+    const mockAdminListUsers = vi.fn();
+    const mockAdminGenerateLink = vi.fn();
+    const mockAdminFrom = vi.fn();
+
+    beforeEach(() => {
+      mockAdminCreateUser.mockReset();
+      mockAdminListUsers.mockReset();
+      mockAdminGenerateLink.mockReset();
+      mockAdminFrom.mockReset();
+
+      // Mock dynamic import of @supabase/supabase-js
+      vi.doMock("@supabase/supabase-js", () => ({
+        createClient: vi.fn(() => ({
+          auth: {
+            admin: {
+              createUser: mockAdminCreateUser,
+              listUsers: mockAdminListUsers,
+              generateLink: mockAdminGenerateLink,
+            },
+          },
+          from: mockAdminFrom,
+        })),
+      }));
+    });
+
+    function setupSuccessfulRegistration() {
+      let callIdx = 0;
+      mockFrom.mockImplementation(() => {
+        callIdx++;
+        if (callIdx === 1) return createQueryMock({ data: { id: "tt-1", quantity: 100 }, error: null });
+        if (callIdx === 2) return createQueryMock({ data: null, error: null, count: 5 });
+        if (callIdx === 3) return createQueryMock({ data: null, error: { code: "PGRST116" } });
+        if (callIdx === 4) return createQueryMock({ data: { require_approval: false }, error: null });
+        if (callIdx === 5) return createQueryMock({ data: null, error: null });
+        if (callIdx === 6) return createQueryMock({ data: null, error: null });
+        return createQueryMock({ data: { name: "General" }, error: null });
+      });
+    }
+
+    it("creates auth user and attendee profile on successful registration", async () => {
+      setupSuccessfulRegistration();
+
+      mockAdminCreateUser.mockResolvedValue({
+        data: { user: { id: "new-user-123" } },
+        error: null,
+      });
+      mockAdminFrom.mockReturnValue(createQueryMock({ data: null, error: null }));
+      mockAdminGenerateLink.mockResolvedValue({ data: {}, error: null });
+
+      // Reset module cache so fresh import picks up new mocks
+      vi.resetModules();
+      const { registerForEvent } = await import("./actions");
+      const result = await registerForEvent({
+        event_id: "evt-1",
+        ticket_type_id: "tt-1",
+        name: "John Doe",
+        email: "john@test.com",
+        custom_fields: { company: "Acme Corp", title: "Engineer" },
+      });
+
+      expect(result).toHaveProperty("status", "confirmed");
+
+      // Wait for async auto-account creation to settle
+      await new Promise((r) => setTimeout(r, 50));
+
+      expect(mockAdminCreateUser).toHaveBeenCalledWith({
+        email: "john@test.com",
+        email_confirm: true,
+        user_metadata: { display_name: "John Doe" },
+      });
+
+      // Should upsert attendee_profiles
+      expect(mockAdminFrom).toHaveBeenCalledWith("attendee_profiles");
+
+      // Should update registration user_id
+      expect(mockAdminFrom).toHaveBeenCalledWith("registrations");
+    });
+
+    it("links existing user if email already has account", async () => {
+      setupSuccessfulRegistration();
+
+      mockAdminCreateUser.mockResolvedValue({
+        data: { user: null },
+        error: { message: "User already been registered" },
+      });
+      mockAdminListUsers.mockResolvedValue({
+        data: { users: [{ id: "existing-user-456" }] },
+        error: null,
+      });
+      mockAdminFrom.mockReturnValue(createQueryMock({ data: null, error: null }));
+      mockAdminGenerateLink.mockResolvedValue({ data: {}, error: null });
+
+      vi.resetModules();
+      const { registerForEvent } = await import("./actions");
+      const result = await registerForEvent({
+        event_id: "evt-1",
+        ticket_type_id: "tt-1",
+        name: "Jane Doe",
+        email: "jane@test.com",
+      });
+
+      expect(result).toHaveProperty("status", "confirmed");
+
+      await new Promise((r) => setTimeout(r, 50));
+
+      expect(mockAdminListUsers).toHaveBeenCalled();
+      expect(mockAdminFrom).toHaveBeenCalledWith("registrations");
+    });
+
+    it("completes registration even if account creation fails", async () => {
+      setupSuccessfulRegistration();
+
+      mockAdminCreateUser.mockRejectedValue(new Error("Service unavailable"));
+
+      vi.resetModules();
+      const { registerForEvent } = await import("./actions");
+      const result = await registerForEvent({
+        event_id: "evt-1",
+        ticket_type_id: "tt-1",
+        name: "Bob",
+        email: "bob@test.com",
+      });
+
+      // Registration should still succeed
+      expect(result).toHaveProperty("status", "confirmed");
+      expect(result).toHaveProperty("qr_code");
+
+      await new Promise((r) => setTimeout(r, 50));
+    });
+  });
+
   describe("checkInByQrCode", () => {
     it("checks in successfully", async () => {
       let callIdx = 0;

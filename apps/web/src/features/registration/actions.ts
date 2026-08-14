@@ -122,6 +122,65 @@ export async function registerForEvent(data: {
 
   if (error) throw new Error(error.message);
 
+  // Auto-create auth account and attendee profile (best-effort, non-blocking)
+  (async () => {
+    try {
+      const { createClient: createAdminClient } = await import("@supabase/supabase-js");
+      const adminSupabase = createAdminClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+
+      let userId: string | null = null;
+
+      // Try to create a new auth user
+      const { data: newUser, error: createError } = await adminSupabase.auth.admin.createUser({
+        email: data.email,
+        email_confirm: true,
+        user_metadata: { display_name: data.name },
+      });
+
+      if (newUser?.user) {
+        userId = newUser.user.id;
+      } else if (createError) {
+        // User likely already exists — look them up
+        const { data: listData } = await adminSupabase.auth.admin.listUsers({ filter: data.email });
+        if (listData?.users?.length) {
+          userId = listData.users[0].id;
+        }
+      }
+
+      if (userId) {
+        // Update registration with user_id
+        await adminSupabase
+          .from("registrations")
+          .update({ user_id: userId, updated_at: new Date().toISOString() })
+          .eq("event_id", data.event_id)
+          .eq("email", data.email)
+          .eq("qr_code", qrCode);
+
+        // Upsert attendee profile
+        await adminSupabase
+          .from("attendee_profiles")
+          .upsert(
+            {
+              id: userId,
+              event_id: data.event_id,
+              display_name: data.name,
+              company: (data.custom_fields?.company as string) ?? null,
+              title: (data.custom_fields?.title as string) ?? null,
+            },
+            { onConflict: "id,event_id" }
+          );
+
+        // Generate password reset link so user can set their password
+        await adminSupabase.auth.admin.generateLink({ type: "recovery", email: data.email });
+      }
+    } catch (err) {
+      console.error("[Auto-account creation]", err);
+    }
+  })();
+
   // Mark any matching registration intent as converted (fire-and-forget)
   supabase
     .from("registration_intents")
