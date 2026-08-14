@@ -12,6 +12,7 @@ export async function createTicketType(eventId: string, data: {
   sales_start?: string;
   sales_end?: string;
   group_size?: number | null;
+  access_code?: string | null;
 }) {
   const supabase = await createClient();
 
@@ -37,6 +38,7 @@ export async function createTicketType(eventId: string, data: {
       sales_end: data.sales_end || null,
       group_size: data.group_size ?? 1,
       sort_order: sortOrder,
+      access_code: data.access_code ? data.access_code.toUpperCase().trim() : null,
     })
     .select()
     .single();
@@ -56,12 +58,21 @@ export async function updateTicketType(eventId: string, ticketId: string, data: 
   sales_start?: string | null;
   sales_end?: string | null;
   group_size?: number | null;
+  access_code?: string | null;
 }) {
   const supabase = await createClient();
 
+  const updateData = {
+    ...data,
+    updated_at: new Date().toISOString(),
+    ...(data.access_code !== undefined
+      ? { access_code: data.access_code ? data.access_code.toUpperCase().trim() : null }
+      : {}),
+  };
+
   const { error } = await supabase
     .from("ticket_types")
-    .update({ ...data, updated_at: new Date().toISOString() })
+    .update(updateData)
     .eq("id", ticketId);
 
   if (error) throw new Error(error.message);

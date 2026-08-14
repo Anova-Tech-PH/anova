@@ -18,6 +18,8 @@ type TicketType = {
   sales_end: string | null;
   sort_order: number;
   sold: number;
+  group_size?: number | null;
+  access_code?: string | null;
 };
 
 function toLocalInput(iso: string | null) {
@@ -50,6 +52,7 @@ export function TicketList({
         quantity: data.quantity ? parseInt(data.quantity) : undefined,
         sales_start: data.sales_start ? new Date(data.sales_start).toISOString() : undefined,
         sales_end: data.sales_end ? new Date(data.sales_end).toISOString() : undefined,
+        access_code: data.access_code?.trim() || null,
       });
       setTickets((prev) => [...prev, { ...ticket, sold: 0 }]);
       setShowForm(false);
@@ -70,6 +73,7 @@ export function TicketList({
         quantity: data.quantity ? parseInt(data.quantity) : null,
         sales_start: data.sales_start ? new Date(data.sales_start).toISOString() : null,
         sales_end: data.sales_end ? new Date(data.sales_end).toISOString() : null,
+        access_code: data.access_code?.trim() || null,
       });
       setTickets((prev) =>
         prev.map((t) =>
@@ -153,6 +157,11 @@ export function TicketList({
                       >
                         {ticket.type === "free" ? "Free" : `$${ticket.price}`}
                       </Badge>
+                      {ticket.access_code && (
+                        <Badge variant="outline" className="text-xs px-2.5">
+                          Access Code: {ticket.access_code}
+                        </Badge>
+                      )}
                     </div>
                     {ticket.description && (
                       <p className="mt-0.5 text-sm text-muted-foreground truncate">
@@ -234,6 +243,8 @@ export function TicketList({
             quantity: editingTicket.quantity?.toString() ?? "",
             sales_start: toLocalInput(editingTicket.sales_start),
             sales_end: toLocalInput(editingTicket.sales_end),
+            group_size: editingTicket.group_size?.toString() ?? "",
+            access_code: editingTicket.access_code ?? "",
           }}
           onSubmit={handleUpdate}
           onCancel={() => setEditingTicket(null)}

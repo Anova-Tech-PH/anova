@@ -14,6 +14,7 @@ type TicketFormData = {
   sales_start: string;
   sales_end: string;
   group_size: string;
+  access_code: string;
 };
 
 export function TicketForm({
@@ -34,6 +35,7 @@ export function TicketForm({
     sales_start: ticket?.sales_start ?? "",
     sales_end: ticket?.sales_end ?? "",
     group_size: ticket?.group_size ?? "",
+    access_code: ticket?.access_code ?? "",
   });
   const [loading, setLoading] = useState(false);
 
@@ -134,6 +136,19 @@ export function TicketForm({
               onChange={(e) => setForm((f) => ({ ...f, group_size: e.target.value }))}
               placeholder="1 (individual ticket)"
             />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">Access Code (Invite-Only)</label>
+            <Input
+              type="text"
+              value={form.access_code}
+              onChange={(e) => setForm((f) => ({ ...f, access_code: e.target.value.toUpperCase() }))}
+              placeholder="e.g. VIP2026"
+            />
+            <p className="text-xs text-muted-foreground">
+              When set, this ticket is hidden unless the attendee enters this code.
+            </p>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
