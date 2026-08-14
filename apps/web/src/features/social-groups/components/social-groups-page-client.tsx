@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import {
   Plus,
   Globe,
@@ -9,6 +10,7 @@ import {
   Users,
   Pencil,
   Trash2,
+  Eye,
 } from "lucide-react";
 import { Button, Card, CardContent, useConfirm } from "@attendly/ui/components";
 import type { SocialGroup } from "@/features/social-groups/queries";
@@ -124,6 +126,8 @@ export function SocialGroupsPageClient({
               <thead>
                 <tr className="border-b text-left text-sm text-muted-foreground">
                   <th className="px-4 py-3 font-medium">Group</th>
+                  <th className="px-4 py-3 font-medium">Members</th>
+                  <th className="px-4 py-3 font-medium">Posts</th>
                   <th className="px-4 py-3 text-right font-medium">
                     Actions
                   </th>
@@ -135,8 +139,22 @@ export function SocialGroupsPageClient({
                     <td className="px-4 py-3 text-sm font-medium">
                       {group.title}
                     </td>
+                    <td className="px-4 py-3 text-sm text-muted-foreground">
+                      {group.member_count} members
+                    </td>
+                    <td className="px-4 py-3 text-sm text-muted-foreground">
+                      {group.post_count} posts
+                    </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-2">
+                        <Link
+                          href={`/events/${eventId}/social-groups/${group.id}`}
+                          aria-label="View"
+                          className="inline-flex items-center justify-center rounded-lg text-sm font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground shadow-sm h-8 px-3"
+                        >
+                          <Eye className="mr-1.5 h-3.5 w-3.5" />
+                          View
+                        </Link>
                         <Button
                           variant="outline"
                           size="sm"

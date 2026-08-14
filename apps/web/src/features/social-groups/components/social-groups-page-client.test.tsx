@@ -47,8 +47,11 @@ const groups = [
     created_by: "user-1",
     title: "Parents with Kids",
     description: "A group for parents attending with children",
+    prompt: null,
     is_visible: true,
     sort_order: 0,
+    member_count: 5,
+    post_count: 12,
     created_at: "2025-10-01T00:00:00Z",
     updated_at: "2025-10-01T00:00:00Z",
   },
@@ -58,8 +61,11 @@ const groups = [
     created_by: "user-1",
     title: "Remote Workers",
     description: null,
+    prompt: null,
     is_visible: true,
     sort_order: 1,
+    member_count: 0,
+    post_count: 0,
     created_at: "2025-10-02T00:00:00Z",
     updated_at: "2025-10-02T00:00:00Z",
   },
@@ -160,5 +166,23 @@ describe("SocialGroupsPageClient", () => {
     const btn = screen.getByRole("button", { name: /download all posts/i });
     expect(btn).toBeInTheDocument();
     expect(btn).toBeDisabled();
+  });
+
+  it("shows member and post counts in table", () => {
+    render(<SocialGroupsPageClient {...defaultProps} />);
+    expect(screen.getByText("5 members")).toBeInTheDocument();
+    expect(screen.getByText("12 posts")).toBeInTheDocument();
+    expect(screen.getByText("0 members")).toBeInTheDocument();
+    expect(screen.getByText("0 posts")).toBeInTheDocument();
+  });
+
+  it("renders View links to group detail pages", () => {
+    render(<SocialGroupsPageClient {...defaultProps} />);
+    const viewLinks = screen.getAllByRole("link", { name: /view/i });
+    expect(viewLinks.length).toBe(2);
+    expect(viewLinks[0]).toHaveAttribute(
+      "href",
+      "/events/evt-1/social-groups/group-1"
+    );
   });
 });

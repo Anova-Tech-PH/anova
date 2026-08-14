@@ -69,6 +69,13 @@ describe("GroupComposer", () => {
     ).toBeInTheDocument();
   });
 
+  it("renders prompt textarea", () => {
+    render(<GroupComposer {...defaultProps} />);
+    expect(
+      screen.getByPlaceholderText(/ask a question/i)
+    ).toBeInTheDocument();
+  });
+
   it("Create button is disabled when title is empty", () => {
     render(<GroupComposer {...defaultProps} />);
     const createBtn = screen.getByRole("button", { name: /create/i });
@@ -101,6 +108,7 @@ describe("GroupComposer", () => {
       created_by: "user-1",
       title: "Existing Group",
       description: "Some description",
+      prompt: "What's your experience?",
       is_visible: true,
       sort_order: 0,
       created_at: "2025-01-01T00:00:00Z",
@@ -115,5 +123,8 @@ describe("GroupComposer", () => {
     expect(
       screen.getByPlaceholderText(/describe the group/i)
     ).toHaveValue("Some description");
+    expect(
+      screen.getByPlaceholderText(/ask a question/i)
+    ).toHaveValue("What's your experience?");
   });
 });

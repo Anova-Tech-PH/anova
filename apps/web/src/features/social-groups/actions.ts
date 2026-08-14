@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 
 export async function createGroup(
   eventId: string,
-  data: { title: string; description?: string }
+  data: { title: string; description?: string; prompt?: string }
 ) {
   const supabase = await createClient();
   const {
@@ -20,6 +20,7 @@ export async function createGroup(
       created_by: user.id,
       title: data.title,
       description: data.description ?? null,
+      prompt: data.prompt ?? null,
     })
     .select()
     .single();
@@ -32,7 +33,7 @@ export async function createGroup(
 export async function updateGroup(
   eventId: string,
   groupId: string,
-  data: { title?: string; description?: string }
+  data: { title?: string; description?: string; prompt?: string }
 ) {
   const supabase = await createClient();
 
@@ -55,4 +56,20 @@ export async function deleteGroup(eventId: string, groupId: string) {
 
   if (error) throw new Error(error.message);
   revalidatePath(`/events/${eventId}/social-groups`);
+}
+
+export async function deleteGroupPost(
+  eventId: string,
+  groupId: string,
+  postId: string
+) {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("social_group_posts")
+    .delete()
+    .eq("id", postId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath(`/events/${eventId}/social-groups/${groupId}`);
 }

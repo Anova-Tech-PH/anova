@@ -25,6 +25,7 @@ export function GroupComposer({
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [prompt, setPrompt] = useState("");
 
   useEffect(() => {
     if (!open) return;
@@ -32,9 +33,11 @@ export function GroupComposer({
     if (draft) {
       setTitle(draft.title);
       setDescription(draft.description ?? "");
+      setPrompt(draft.prompt ?? "");
     } else {
       setTitle("");
       setDescription("");
+      setPrompt("");
     }
   }, [open, draft]);
 
@@ -45,6 +48,7 @@ export function GroupComposer({
         const payload = {
           title: title.trim(),
           description: description.trim() || undefined,
+          prompt: prompt.trim() || undefined,
         };
 
         if (isEditing) {
@@ -95,6 +99,19 @@ export function GroupComposer({
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Describe the group"
             rows={3}
+            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+          />
+        </div>
+
+        <div>
+          <label className="mb-1.5 block text-sm font-medium">
+            Prompt
+          </label>
+          <textarea
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            placeholder="Ask a question to kick off the discussion"
+            rows={2}
             className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
           />
         </div>
