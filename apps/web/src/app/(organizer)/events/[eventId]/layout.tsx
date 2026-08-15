@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, Calendar } from "lucide-react";
+import { ArrowLeft, Calendar, ExternalLink } from "lucide-react";
 import { createClient } from "@attendly/ui/supabase/server";
 import { notFound } from "next/navigation";
 import { Badge } from "@attendly/ui/components";
@@ -20,7 +20,7 @@ export default async function EventLayout({
 
   const { data: event } = await supabase
     .from("events")
-    .select("title, start_date, end_date, status")
+    .select("title, slug, start_date, end_date, status, organization:organizations(slug)")
     .eq("id", eventId)
     .single();
 
@@ -181,6 +181,9 @@ export default async function EventLayout({
     },
   ];
 
+  const orgSlug = (event.organization as unknown as { slug: string })?.slug;
+  const portalUrl = orgSlug && event.slug ? `/${orgSlug}/${event.slug}` : null;
+
   const statusVariant = event.status === "published"
     ? "success"
     : event.status === "draft"
@@ -218,6 +221,16 @@ export default async function EventLayout({
               <Badge variant={statusVariant} className="shrink-0 px-3 py-1">
                 {event.status}
               </Badge>
+              {portalUrl && event.status === "published" && (
+                <Link
+                  href={portalUrl}
+                  target="_blank"
+                  className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  View Web Portal
+                </Link>
+              )}
             </div>
             <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
               <Calendar className="h-3.5 w-3.5" />
@@ -234,6 +247,16 @@ export default async function EventLayout({
             <Badge variant={statusVariant} className="shrink-0 px-3 py-1">
               {event.status}
             </Badge>
+            {portalUrl && event.status === "published" && (
+              <Link
+                href={portalUrl}
+                target="_blank"
+                className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              >
+                <ExternalLink className="h-3 w-3" />
+                View Web Portal
+              </Link>
+            )}
           </div>
           <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
             <Calendar className="h-3.5 w-3.5" />
