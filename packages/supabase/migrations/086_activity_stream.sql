@@ -1,5 +1,5 @@
 -- =============================================================================
--- Migration 085: Activity Stream
+-- Migration 086: Activity Stream
 -- Add activity_stream_enabled flag to announcement_wall_config
 -- =============================================================================
 

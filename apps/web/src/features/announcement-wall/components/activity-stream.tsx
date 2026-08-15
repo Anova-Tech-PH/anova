@@ -68,7 +68,7 @@ export default function ActivityStream({
 
       {/* Feed cards */}
       <div className={`flex-1 overflow-y-auto ${isEmbed ? "px-3 py-2" : "px-6 py-4"}`}>
-        <div className={`space-y-${isEmbed ? "2" : "3"}`}>
+        <div className={isEmbed ? "space-y-2" : "space-y-3"}>
           {items.map((item) => {
             const Icon = FEED_ICONS[item.type];
             const label = TYPE_LABELS[item.type];

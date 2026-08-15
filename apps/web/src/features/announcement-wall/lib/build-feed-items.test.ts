@@ -1,9 +1,8 @@
 import { describe, test, expect } from "vitest";
-import { buildFeedItems, type FeedItem } from "./build-feed-items";
+import { buildFeedItems } from "./build-feed-items";
 
 const baseInput = {
   config: {
-    show_event_overview: true,
     show_announcements: true,
     show_upcoming_sessions: true,
     show_sponsors: true,
