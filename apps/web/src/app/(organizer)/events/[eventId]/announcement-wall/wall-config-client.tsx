@@ -345,6 +345,7 @@ export function WallConfigClient({
                     size="icon"
                     onClick={() => openEditModal(slide)}
                     disabled={isSlideAction}
+                    aria-label={`Edit ${slide.title}`}
                   >
                     <Pencil className="h-4 w-4" />
                   </Button>
@@ -353,6 +354,7 @@ export function WallConfigClient({
                     size="icon"
                     onClick={() => handleDeleteSlide(slide)}
                     disabled={isSlideAction}
+                    aria-label={`Delete ${slide.title}`}
                   >
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
