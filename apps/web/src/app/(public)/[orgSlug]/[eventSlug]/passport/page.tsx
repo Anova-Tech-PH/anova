@@ -59,12 +59,16 @@ export default async function PassportPage({
   const [sponsorsResult, collectedIds] = await Promise.all([
     supabase
       .from("sponsors")
-      .select("id, name, logo_url")
+      .select("id, name, logo")
       .eq("event_id", event.id),
     getPassportStamps(event.id, user.id),
   ]);
 
-  const sponsors = sponsorsResult.data ?? [];
+  const sponsors = (sponsorsResult.data ?? []).map((s: Record<string, unknown>) => ({
+    id: s.id as string,
+    name: s.name as string,
+    logo_url: (s.logo as string | null),
+  }));
 
   if (sponsors.length === 0) {
     return (

@@ -35,11 +35,15 @@ export default async function GamificationPage({
     getBadgeDefinitions(eventId),
     getContests(eventId),
     getTriviaGames(eventId),
-    supabase.from("sponsors").select("id, name, logo_url").eq("event_id", eventId),
+    supabase.from("sponsors").select("id, name, logo").eq("event_id", eventId),
     getReferralStats(eventId),
   ]);
 
-  const sponsors = (sponsorsResult.data ?? []) as { id: string; name: string; logo_url: string | null }[];
+  const sponsors = (sponsorsResult.data ?? []).map((s: Record<string, unknown>) => ({
+    id: s.id as string,
+    name: s.name as string,
+    logo_url: (s.logo as string | null),
+  }));
 
   // Map referral stats to expected shape
   const referralStats = (referralStatsRaw ?? []).map((row: Record<string, unknown>) => {
