@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
-import { User, Star, Link2, AtSign, Globe } from "lucide-react";
 import { createClient } from "@attendly/ui/supabase/server";
+import {
+  SpeakersClientPage,
+  type SpeakerWithSessions,
+} from "@/features/speakers/components/speakers-client-page";
 
 export default async function PublicSpeakersPage({
   params,
@@ -29,79 +31,95 @@ export default async function PublicSpeakersPage({
 
   if (!event) notFound();
 
-  const { data: speakers } = await supabase
-    .from("speakers")
-    .select("*")
-    .eq("event_id", event.id)
-    .order("sort_order", { ascending: true, nullsFirst: false })
-    .order("name");
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const [speakersResult, bookmarksResult, notesResult] = await Promise.all([
+    supabase
+      .from("speakers")
+      .select(
+        `*, session_speakers(sessions(id, title, start_time, end_time, session_tracks(tracks(name, color))))`
+      )
+      .eq("event_id", event.id)
+      .order("sort_order", { ascending: true, nullsFirst: false })
+      .order("name"),
+    user
+      ? supabase
+          .from("speaker_bookmarks")
+          .select("speaker_id")
+          .eq("user_id", user.id)
+          .eq("event_id", event.id)
+      : Promise.resolve({ data: [] }),
+    user
+      ? supabase
+          .from("speaker_notes")
+          .select("speaker_id, content")
+          .eq("user_id", user.id)
+      : Promise.resolve({ data: [] }),
+  ]);
+
+  const basePath = `/${orgSlug}/${eventSlug}`;
+
+  const speakers: SpeakerWithSessions[] = (speakersResult.data ?? []).map(
+    (s: Record<string, unknown>) => ({
+      id: s.id as string,
+      name: s.name as string,
+      title: s.title as string | null,
+      company: s.company as string | null,
+      bio: s.bio as string | null,
+      photo: s.photo as string | null,
+      user_id: s.user_id as string | null,
+      is_featured: (s.is_featured as boolean) ?? false,
+      sessions: (
+        (s.session_speakers as { sessions: Record<string, unknown> }[]) ?? []
+      )
+        .map((ss) => ss.sessions)
+        .filter(Boolean)
+        .map((sess: Record<string, unknown>) => ({
+          id: sess.id as string,
+          title: sess.title as string,
+          start_time: sess.start_time as string | null,
+          end_time: sess.end_time as string | null,
+          tracks: (
+            (
+              sess.session_tracks as {
+                tracks: { name: string; color: string };
+              }[]
+            ) ?? []
+          ).map((st) => st.tracks),
+        }))
+        .sort(
+          (
+            a: { start_time: string | null },
+            b: { start_time: string | null }
+          ) => (a.start_time ?? "").localeCompare(b.start_time ?? "")
+        ),
+    })
+  );
+
+  const bookmarkedSpeakerIds = (
+    bookmarksResult.data as { speaker_id: string }[] | null ?? []
+  ).map((b) => b.speaker_id);
+
+  const speakerNotes: Record<string, string> = {};
+  (
+    notesResult.data as { speaker_id: string; content: string }[] | null ?? []
+  ).forEach((n) => {
+    speakerNotes[n.speaker_id] = n.content;
+  });
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-12">
-      <h1 className="text-2xl font-semibold">{event.title} — Speakers</h1>
-
-      {!speakers || speakers.length === 0 ? (
-        <p className="mt-6 text-muted-foreground">
-          Speakers haven&apos;t been announced yet.
-        </p>
-      ) : (
-        <div className="mt-8 grid gap-6 sm:grid-cols-2">
-          {speakers.map((speaker) => (
-            <Link
-              key={speaker.id}
-              href={`/${orgSlug}/${eventSlug}/speakers/${speaker.id}`}
-              className="group relative flex gap-4 rounded-xl border bg-card p-5 transition-all duration-200 hover:shadow-md"
-            >
-              {/* Featured badge */}
-              {speaker.is_featured && (
-                <div className="absolute right-3 top-3">
-                  <Star className="h-4 w-4 fill-amber-500 text-amber-500" />
-                </div>
-              )}
-
-              {speaker.photo ? (
-                <img
-                  src={speaker.photo}
-                  alt={speaker.name}
-                  className="h-16 w-16 shrink-0 rounded-full object-cover"
-                />
-              ) : (
-                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-muted">
-                  <User className="h-7 w-7 text-muted-foreground" />
-                </div>
-              )}
-              <div className="min-w-0">
-                <h3 className="font-semibold">{speaker.name}</h3>
-                {(speaker.title || speaker.company) && (
-                  <p className="text-sm text-muted-foreground">
-                    {[speaker.title, speaker.company].filter(Boolean).join(" at ")}
-                  </p>
-                )}
-                {speaker.bio && (
-                  <p className="mt-2 text-sm text-muted-foreground line-clamp-3">
-                    {speaker.bio}
-                  </p>
-                )}
-
-                {/* Social icons */}
-                {(speaker.linkedin_url || speaker.twitter_handle || speaker.website_url) && (
-                  <div className="mt-2 flex items-center gap-1.5">
-                    {speaker.linkedin_url && (
-                      <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
-                    )}
-                    {speaker.twitter_handle && (
-                      <AtSign className="h-3.5 w-3.5 text-muted-foreground" />
-                    )}
-                    {speaker.website_url && (
-                      <Globe className="h-3.5 w-3.5 text-muted-foreground" />
-                    )}
-                  </div>
-                )}
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
+    <div className="mx-auto max-w-5xl px-4 py-8">
+      <SpeakersClientPage
+        speakers={speakers}
+        eventTitle={event.title}
+        eventId={event.id}
+        basePath={basePath}
+        isLoggedIn={!!user}
+        bookmarkedSpeakerIds={bookmarkedSpeakerIds}
+        speakerNotes={speakerNotes}
+      />
     </div>
   );
 }
