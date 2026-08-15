@@ -147,7 +147,7 @@ export default async function EventLayout({
         { href: `/events/${eventId}/feedback`, label: "Session Feedback", icon: "message-square" },
         { href: `/events/${eventId}/survey`, label: "Surveys", icon: "clipboard-list" },
         { href: `/events/${eventId}/floormap`, label: "Floormap", icon: "map" },
-        { href: "#", label: "Announcement Wall", icon: "monitor", disabled: true },
+        { href: `/events/${eventId}/announcement-wall`, label: "Announcement Wall", icon: "monitor" },
         { href: `/events/${eventId}/polls`, label: "Live Polling", icon: "bar-chart-2" },
         { href: "#", label: "Photos", icon: "camera", disabled: true },
       ],
