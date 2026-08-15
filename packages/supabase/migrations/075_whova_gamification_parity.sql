@@ -34,6 +34,11 @@ CREATE POLICY "Users can remove own congratulations"
 GRANT SELECT, INSERT, DELETE ON leaderboard_congratulations TO authenticated;
 GRANT SELECT ON leaderboard_congratulations TO anon;
 
+-- FK from leaderboard_scores.user_id to profiles.id (enables PostgREST join)
+ALTER TABLE leaderboard_scores
+  ADD CONSTRAINT leaderboard_scores_user_id_profiles_fkey
+  FOREIGN KEY (user_id) REFERENCES profiles(id);
+
 -- Prize Columns on Contests
 ALTER TABLE contests ADD COLUMN IF NOT EXISTS prize_description text;
 ALTER TABLE contests ADD COLUMN IF NOT EXISTS winner_criteria text;

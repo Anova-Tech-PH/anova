@@ -255,19 +255,20 @@ export async function getChallengeProgress(
 
   if (rulesError || !rules) return [];
 
-  // Get user's transaction counts grouped by activity_type
-  const { data: txnCounts, error: txnError } = await supabase
+  // Get user's transactions and count by activity_type client-side
+  const { data: txns, error: txnError } = await supabase
     .from("point_transactions")
-    .select("activity_type, count:activity_type.count()")
+    .select("activity_type")
     .eq("event_id", eventId)
     .eq("user_id", userId);
 
   if (txnError) return [];
 
   const countMap = new Map<string, number>();
-  for (const row of txnCounts ?? []) {
+  for (const row of txns ?? []) {
     const r = row as Record<string, unknown>;
-    countMap.set(r.activity_type as string, Number(r.count ?? 0));
+    const type = r.activity_type as string;
+    countMap.set(type, (countMap.get(type) ?? 0) + 1);
   }
 
   return (rules as Record<string, unknown>[]).map((rule) => ({
