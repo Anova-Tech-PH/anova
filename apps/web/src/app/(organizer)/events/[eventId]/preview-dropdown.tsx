@@ -4,12 +4,17 @@ import { useState, useRef, useEffect } from "react";
 import { Eye, ChevronDown, Globe, Smartphone, FileText } from "lucide-react";
 import Link from "next/link";
 
+type RegistrationPageItem = {
+  name: string;
+  slug: string;
+};
+
 export function PreviewDropdown({
   portalUrl,
-  registerUrl,
+  registrationPages = [],
 }: {
   portalUrl: string;
-  registerUrl: string;
+  registrationPages?: RegistrationPageItem[];
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -37,7 +42,7 @@ export function PreviewDropdown({
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full z-50 mt-1 w-48 rounded-md border bg-popover shadow-md">
+        <div className="absolute left-0 top-full z-50 mt-1 w-56 rounded-md border bg-popover shadow-md">
           <div className="py-1">
             <Link
               href={portalUrl}
@@ -53,15 +58,30 @@ export function PreviewDropdown({
               Mobile App
               <span className="ml-auto text-[10px] uppercase tracking-wide">Soon</span>
             </div>
-            <Link
-              href={registerUrl}
-              target="_blank"
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted transition-colors"
-            >
-              <FileText className="h-4 w-4 text-muted-foreground" />
-              Registration Page
-            </Link>
+            {registrationPages.length > 0 ? (
+              registrationPages.map((page) => (
+                <Link
+                  key={page.slug}
+                  href={`${portalUrl}/register/${page.slug}`}
+                  target="_blank"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted transition-colors"
+                >
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                  {page.name}
+                </Link>
+              ))
+            ) : (
+              <Link
+                href={`${portalUrl}/register`}
+                target="_blank"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted transition-colors"
+              >
+                <FileText className="h-4 w-4 text-muted-foreground" />
+                Registration Page
+              </Link>
+            )}
           </div>
         </div>
       )}

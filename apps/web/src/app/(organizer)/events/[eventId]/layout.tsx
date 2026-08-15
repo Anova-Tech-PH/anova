@@ -185,6 +185,15 @@ export default async function EventLayout({
   const orgSlug = (event.organization as unknown as { slug: string })?.slug;
   const portalUrl = orgSlug && event.slug ? `/${orgSlug}/${event.slug}` : null;
 
+  // Fetch registration pages for Preview dropdown
+  const { data: regPages } = await supabase
+    .from("registration_pages")
+    .select("name, slug")
+    .eq("event_id", eventId)
+    .order("created_at");
+
+  const registrationPages = (regPages ?? []).map((p) => ({ name: p.name, slug: p.slug }));
+
   const statusVariant = event.status === "published"
     ? "success"
     : event.status === "draft"
@@ -225,7 +234,7 @@ export default async function EventLayout({
               {portalUrl && event.status === "published" && (
                 <PreviewDropdown
                   portalUrl={portalUrl}
-                  registerUrl={`${portalUrl}/register`}
+                  registrationPages={registrationPages}
                 />
               )}
             </div>
@@ -247,7 +256,7 @@ export default async function EventLayout({
             {portalUrl && event.status === "published" && (
               <PreviewDropdown
                 portalUrl={portalUrl}
-                registerUrl={`${portalUrl}/register`}
+                registrationPages={registrationPages}
               />
             )}
           </div>
