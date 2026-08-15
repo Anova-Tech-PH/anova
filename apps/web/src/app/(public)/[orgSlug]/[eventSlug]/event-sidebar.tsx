@@ -31,6 +31,7 @@ import {
   Home,
   Brain,
   Stamp,
+  Gift,
 } from "lucide-react";
 import { Logo } from "@attendly/ui/logo";
 import { createClient } from "@attendly/ui/supabase/client";
@@ -364,7 +365,7 @@ export function EventSidebar({
           />
         )}
 
-        {/* Leaderboard (conditional) */}
+        {/* Leaderboard (standalone) */}
         {sidebarData.hasLeaderboard && (
           <NavLink
             href={`${basePath}/leaderboard`}
@@ -374,43 +375,44 @@ export function EventSidebar({
           />
         )}
 
-        {/* Contests (conditional) */}
-        {sidebarData.hasContests && (
-          <NavLink
-            href={`${basePath}/contests`}
-            icon={Camera}
-            label="Contests"
-            isActive={isActive("/contests")}
-          />
+        {/* Win a Prize (collapsible — groups Contests, Trivia, Passport) */}
+        {(sidebarData.hasContests || sidebarData.hasTrivia || sidebarData.hasPassport) && (
+          <CollapsibleSection
+            label="Win a Prize"
+            icon={Gift}
+            defaultOpen={
+              isActive("/contests") || isActive("/trivia") || isActive("/passport")
+            }
+          >
+            {sidebarData.hasContests && (
+              <NavLink
+                href={`${basePath}/contests`}
+                icon={Camera}
+                label="Contests"
+                isActive={isActive("/contests")}
+                indent
+              />
+            )}
+            {sidebarData.hasTrivia && (
+              <NavLink
+                href={`${basePath}/trivia`}
+                icon={Brain}
+                label="Trivia"
+                isActive={isActive("/trivia")}
+                indent
+              />
+            )}
+            {sidebarData.hasPassport && (
+              <NavLink
+                href={`${basePath}/passport`}
+                icon={Stamp}
+                label="Passport"
+                isActive={isActive("/passport")}
+                indent
+              />
+            )}
+          </CollapsibleSection>
         )}
-
-        {/* Trivia (conditional) */}
-        {sidebarData.hasTrivia && (
-          <NavLink
-            href={`${basePath}/trivia`}
-            icon={Brain}
-            label="Trivia"
-            isActive={isActive("/trivia")}
-          />
-        )}
-
-        {/* Passport (conditional) */}
-        {sidebarData.hasPassport && (
-          <NavLink
-            href={`${basePath}/passport`}
-            icon={Stamp}
-            label="Passport"
-            isActive={isActive("/passport")}
-          />
-        )}
-
-        {/* Register / My Ticket */}
-        <NavLink
-          href={`${basePath}/register`}
-          icon={Ticket}
-          label={sidebarData.isRegistered ? "My Ticket" : "Register"}
-          isActive={isActive("/register")}
-        />
 
         {/* Separator before My Stuff */}
         {user && (
