@@ -5,13 +5,13 @@
 INSERT INTO public.announcement_wall_config (
   id, event_id, enabled, rotation_speed, theme,
   show_event_overview, show_announcements, show_upcoming_sessions, show_sponsors, show_polls, show_custom_slides,
-  session_lookahead_minutes
+  session_lookahead_minutes, activity_stream_enabled
 ) VALUES (
   '00000000-0000-0000-0000-000000000901',
   '76276299-9a72-4df5-9360-0c30909ee0cf',
   true, 15, 'dark',
   true, true, true, true, false, true,
-  120
+  120, true
 ) ON CONFLICT (event_id) DO NOTHING;
 
 -- Custom slides
