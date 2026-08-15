@@ -398,7 +398,12 @@ export default async function PublicSchedulePage({
                         </span>
                       )}
                     </div>
-                    <h3 className="mt-1.5 font-medium">{session.title}</h3>
+                    <Link
+                      href={`${basePath}/schedule/${session.id}`}
+                      className="mt-1.5 block font-medium hover:text-primary transition-colors"
+                    >
+                      {session.title}
+                    </Link>
                     {session.description && (
                       <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
                         {session.description}
