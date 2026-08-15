@@ -206,6 +206,48 @@ export function ContestGallery({
         )}
       </div>
 
+      {/* ── Prize Info ──────────────────────────────────────── */}
+      {(contest.prize_description || contest.theme || contest.winner_criteria) && (
+        <div className="rounded-xl border bg-amber-50/50 p-4 space-y-3">
+          {contest.prize_description && (
+            <div>
+              <h3 className="text-sm font-semibold text-amber-900">
+                Prize Information
+              </h3>
+              <p className="mt-0.5 text-sm text-amber-800">
+                {contest.prize_description}
+              </p>
+            </div>
+          )}
+          {contest.theme && (
+            <div>
+              <h3 className="text-sm font-semibold">Contest theme</h3>
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                {contest.theme}
+              </p>
+            </div>
+          )}
+          {contest.winner_criteria && (
+            <div>
+              <h3 className="text-sm font-semibold">How winners are chosen</h3>
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                {contest.winner_criteria}
+              </p>
+            </div>
+          )}
+          <div>
+            <h3 className="text-sm font-semibold">How to participate</h3>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              {contest.type === "photo"
+                ? "Post photos and get as many people as you can to like them."
+                : contest.type === "caption"
+                  ? "Submit your best caption for the image above."
+                  : "Share your answer to the icebreaker prompt."}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* ── Photo Contest ─────────────────────────────────── */}
       {contest.type === "photo" && (
         <>
