@@ -86,36 +86,45 @@ export function UploadFloormapDialog({
           </div>
 
           <div>
-            <label className="text-sm font-medium">Map Image</label>
-            <div
-              onClick={() => !isPending && fileRef.current?.click()}
-              className="mt-1 flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed px-4 py-8 transition-colors border-muted-foreground/20 hover:border-primary/40 hover:bg-accent/50"
-            >
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/png,image/jpeg,image/jpg"
-                className="hidden"
-                onChange={handleFileSelect}
-              />
-              {preview ? (
+            <span className="text-sm font-medium">Map Image</span>
+            {preview ? (
+              <div
+                onClick={() => !isPending && fileRef.current?.click()}
+                className="mt-1 flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed px-4 py-8 transition-colors border-muted-foreground/20 hover:border-primary/40 hover:bg-accent/50"
+              >
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/jpg"
+                  className="hidden"
+                  onChange={handleFileSelect}
+                />
                 <img
                   src={preview}
                   alt="Preview"
                   className="max-h-48 rounded-md object-contain"
                 />
-              ) : (
-                <>
-                  <Upload className="h-8 w-8 text-muted-foreground" />
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    Click to upload floor plan image
-                  </p>
-                  <p className="text-xs text-muted-foreground/60">
-                    PNG or JPG, max 10MB
-                  </p>
-                </>
-              )}
-            </div>
+              </div>
+            ) : (
+              <label
+                className="mt-1 flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed px-4 py-8 transition-colors border-muted-foreground/20 hover:border-primary/40 hover:bg-accent/50"
+              >
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/jpg"
+                  className="hidden"
+                  onChange={handleFileSelect}
+                />
+                <Upload className="h-8 w-8 text-muted-foreground" />
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Click to upload floor plan image
+                </p>
+                <p className="text-xs text-muted-foreground/60">
+                  PNG or JPG, max 10MB
+                </p>
+              </label>
+            )}
           </div>
         </div>
 
