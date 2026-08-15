@@ -13,6 +13,7 @@ import {
   LogIn,
   LogOut,
   Award,
+  ClipboardCheck,
   ClipboardList,
   Handshake,
   Menu,
@@ -45,10 +46,18 @@ export interface SidebarData {
   hasLogistics: boolean;
   /** Whether certificates are enabled */
   hasCertificates: boolean;
+  /** Badge count for Attendees nav item */
+  attendeeCount: number;
   /** Badge count for Community nav item */
   communityCount: number;
   /** Badge count for Messages nav item */
   unreadMessageCount: number;
+  /** Whether gamification/leaderboard is enabled */
+  hasLeaderboard: boolean;
+  /** Whether the current user is already registered */
+  isRegistered: boolean;
+  /** Whether an active feedback survey exists */
+  hasFeedback: boolean;
 }
 
 export const defaultSidebarData: SidebarData = {
@@ -56,8 +65,12 @@ export const defaultSidebarData: SidebarData = {
   hasResources: false,
   hasLogistics: false,
   hasCertificates: false,
+  attendeeCount: 0,
   communityCount: 0,
   unreadMessageCount: 0,
+  hasLeaderboard: false,
+  isRegistered: false,
+  hasFeedback: false,
 };
 
 /* ------------------------------------------------------------------ */
@@ -73,6 +86,15 @@ function Badge({ count }: { count: number }) {
   );
 }
 
+function CountBadge({ count }: { count: number }) {
+  if (count <= 0) return null;
+  return (
+    <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-muted px-1.5 text-[10px] font-semibold text-muted-foreground">
+      {count > 99 ? "99+" : count}
+    </span>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /*  Nav link component                                                 */
 /* ------------------------------------------------------------------ */
@@ -83,6 +105,7 @@ function NavLink({
   label,
   isActive,
   badge,
+  badgeVariant = "alert",
   indent,
 }: {
   href: string;
@@ -90,6 +113,7 @@ function NavLink({
   label: string;
   isActive: boolean;
   badge?: number;
+  badgeVariant?: "alert" | "count";
   indent?: boolean;
 }) {
   return (
@@ -105,7 +129,9 @@ function NavLink({
     >
       <Icon className="h-4 w-4 shrink-0" />
       {label}
-      {badge !== undefined && badge > 0 && <Badge count={badge} />}
+      {badge !== undefined && badge > 0 && (
+        badgeVariant === "count" ? <CountBadge count={badge} /> : <Badge count={badge} />
+      )}
     </Link>
   );
 }
@@ -213,7 +239,7 @@ export function EventSidebar({
         <NavLink
           href={basePath}
           icon={Home}
-          label="Event"
+          label="Home"
           isActive={isActive("")}
         />
 
@@ -235,20 +261,14 @@ export function EventSidebar({
           />
         </CollapsibleSection>
 
-        {/* Announcements */}
-        <NavLink
-          href={`${basePath}/announcements`}
-          icon={Megaphone}
-          label="Announcements"
-          isActive={isActive("/announcements")}
-        />
-
         {/* Attendees */}
         <NavLink
           href={`${basePath}/attendees`}
           icon={Users}
           label="Attendees"
           isActive={isActive("/attendees")}
+          badge={sidebarData.attendeeCount}
+          badgeVariant="count"
         />
 
         {/* Community */}
@@ -258,6 +278,7 @@ export function EventSidebar({
           label="Community"
           isActive={isActive("/community")}
           badge={sidebarData.communityCount}
+          badgeVariant="count"
         />
 
         {/* Photos */}
@@ -294,6 +315,24 @@ export function EventSidebar({
           />
         )}
 
+        {/* Announcements */}
+        <NavLink
+          href={`${basePath}/announcements`}
+          icon={Megaphone}
+          label="Announcements"
+          isActive={isActive("/announcements")}
+        />
+
+        {/* Feedback (conditional) */}
+        {sidebarData.hasFeedback && (
+          <NavLink
+            href={`${basePath}/feedback`}
+            icon={ClipboardCheck}
+            label="Feedback"
+            isActive={isActive("/feedback")}
+          />
+        )}
+
         {/* Rooms (conditional) */}
         {sidebarData.hasRooms && (
           <NavLink
@@ -314,19 +353,21 @@ export function EventSidebar({
           />
         )}
 
-        {/* Leaderboard */}
-        <NavLink
-          href={`${basePath}/leaderboard`}
-          icon={Trophy}
-          label="Leaderboard"
-          isActive={isActive("/leaderboard")}
-        />
+        {/* Leaderboard (conditional) */}
+        {sidebarData.hasLeaderboard && (
+          <NavLink
+            href={`${basePath}/leaderboard`}
+            icon={Trophy}
+            label="Leaderboard"
+            isActive={isActive("/leaderboard")}
+          />
+        )}
 
-        {/* Register */}
+        {/* Register / My Ticket */}
         <NavLink
           href={`${basePath}/register`}
           icon={Ticket}
-          label="Register"
+          label={sidebarData.isRegistered ? "My Ticket" : "Register"}
           isActive={isActive("/register")}
         />
 

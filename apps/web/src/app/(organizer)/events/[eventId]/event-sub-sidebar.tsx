@@ -6,9 +6,9 @@ import { ArrowLeft, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@attendly/ui/cn";
 import {
-  BarChart2, BarChart3, Calendar, CalendarCheck, ClipboardList,
-  DoorOpen, FileText, IdCard, ListChecks, Mail, Megaphone, Mic, MessageCircle, MessageSquare,
-  Globe, QrCode, Rocket, Settings, Tag, Ticket, Users, Award,
+  BarChart2, BarChart3, Calendar, CalendarCheck, CalendarClock, Camera, CircleDot, ClipboardList,
+  DoorOpen, FileText, IdCard, ListChecks, Mail, Map, Megaphone, Mic, MessageCircle, MessageSquare, Monitor,
+  Globe, QrCode, Rocket, Settings, Tag, Ticket, Trophy, Users, Award, Zap,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { TopTabGroup, TabItem } from "./event-top-tabs";
@@ -38,6 +38,13 @@ const iconMap: Record<string, LucideIcon> = {
   ticket: Ticket,
   users: Users,
   award: Award,
+  camera: Camera,
+  "calendar-clock": CalendarClock,
+  "circle-dot": CircleDot,
+  map: Map,
+  monitor: Monitor,
+  trophy: Trophy,
+  zap: Zap,
 };
 
 export function EventSubSidebar({
@@ -186,6 +193,23 @@ export function EventSubSidebar({
                       </motion.div>
                     )}
                   </AnimatePresence>
+                </div>
+              );
+            }
+
+            if (item.disabled) {
+              return (
+                <div
+                  key={item.label}
+                  className="group relative flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-sm text-sidebar-foreground/40 cursor-default"
+                >
+                  <span className="relative flex items-center gap-2.5">
+                    {Icon && <Icon className="h-4 w-4 shrink-0" />}
+                    <span>{item.label}</span>
+                  </span>
+                  <span className="ml-auto text-[10px] font-medium uppercase tracking-wider text-muted-foreground/60 bg-muted/50 px-1.5 py-0.5 rounded">
+                    Soon
+                  </span>
                 </div>
               );
             }

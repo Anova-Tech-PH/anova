@@ -22,7 +22,7 @@ export async function getPhotos(
   let query = supabase
     .from("event_photos")
     .select(
-      "id, event_id, user_id, image_url, media_type, caption, likes_count, created_at, attendee_profiles!inner(display_name, avatar_url)",
+      "id, event_id, user_id, image_url, media_type, caption, likes_count, created_at",
       { count: "exact" }
     )
     .eq("event_id", eventId)
@@ -34,6 +34,20 @@ export async function getPhotos(
 
   const { data, count, error } = await query;
   if (error) throw error;
+
+  // Fetch author profiles for the photos
+  const userIds = [...new Set((data ?? []).map((p) => p.user_id))];
+  let profileMap = new Map<string, { display_name: string | null; avatar_url: string | null }>();
+  if (userIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from("attendee_profiles")
+      .select("id, display_name, avatar_url")
+      .eq("event_id", eventId)
+      .in("id", userIds);
+    for (const p of profiles ?? []) {
+      profileMap.set(p.id, { display_name: p.display_name, avatar_url: p.avatar_url });
+    }
+  }
 
   // Check which photos user has liked
   let likedPhotoIds: Set<string> = new Set();
@@ -49,7 +63,7 @@ export async function getPhotos(
     photos: (data ?? []).map((p) => ({
       ...p,
       is_liked: likedPhotoIds.has(p.id),
-      author: (p as Record<string, unknown>).attendee_profiles,
+      author: profileMap.get(p.user_id) ?? { display_name: null, avatar_url: null },
     })),
     total: count ?? 0,
   };

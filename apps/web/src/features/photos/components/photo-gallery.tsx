@@ -95,7 +95,7 @@ export function PhotoGallery({
         <div>
           <h1 className="text-xl font-semibold">Photos</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            {counts.total} {counts.total === 1 ? "post" : "posts"}
+            {counts.total} {counts.total === 1 ? "photo" : "photos"}
           </p>
         </div>
         <Button onClick={() => setShowUpload(true)}>

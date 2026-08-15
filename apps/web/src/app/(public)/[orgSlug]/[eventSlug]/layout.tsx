@@ -22,7 +22,7 @@ export default async function PublicEventLayout({
 
   const { data: event } = await supabase
     .from("events")
-    .select("id, title, start_date, end_date, venue_name, timezone, is_virtual, settings")
+    .select("id, title, start_date, end_date, venue_name, timezone, is_virtual, settings, logistics")
     .eq("slug", eventSlug)
     .eq("organization_id", org?.id ?? "")
     .single();
@@ -33,13 +33,19 @@ export default async function PublicEventLayout({
     hasResources: false,
     hasLogistics: false,
     hasCertificates: false,
+    attendeeCount: 0,
     communityCount: 0,
     unreadMessageCount: 0,
+    hasLeaderboard: false,
+    isRegistered: false,
+    hasFeedback: false,
   };
+
+  const { data: { user } } = await supabase.auth.getUser();
 
   if (event) {
     // Run visibility queries in parallel
-    const [roomsResult, resourcesResult] = await Promise.all([
+    const [roomsResult, resourcesResult, attendeesResult, communityResult, messagesResult, gamificationResult, registrationResult, surveyResult] = await Promise.all([
       supabase
         .from("breakout_rooms")
         .select("id", { count: "exact", head: true })
@@ -48,6 +54,39 @@ export default async function PublicEventLayout({
         .from("event_documents")
         .select("id", { count: "exact", head: true })
         .eq("event_id", event.id),
+      supabase
+        .from("attendee_profiles")
+        .select("id", { count: "exact", head: true })
+        .eq("event_id", event.id)
+        .eq("is_visible_in_directory", true),
+      supabase
+        .from("community_topics")
+        .select("id", { count: "exact", head: true })
+        .eq("event_id", event.id),
+      user
+        ? supabase
+            .from("messages")
+            .select("id", { count: "exact", head: true })
+            .eq("recipient_id", user.id)
+            .eq("read", false)
+        : Promise.resolve({ count: 0 }),
+      supabase
+        .from("gamification_configs")
+        .select("enabled")
+        .eq("event_id", event.id)
+        .single(),
+      user
+        ? supabase
+            .from("registrations")
+            .select("id", { count: "exact", head: true })
+            .eq("event_id", event.id)
+            .eq("user_id", user.id)
+        : Promise.resolve({ count: 0 }),
+      supabase
+        .from("surveys")
+        .select("id", { count: "exact", head: true })
+        .eq("event_id", event.id)
+        .eq("status", "active"),
     ]);
 
     const settings = (event.settings ?? {}) as Record<string, unknown>;
@@ -55,10 +94,14 @@ export default async function PublicEventLayout({
     sidebarData = {
       hasRooms: (roomsResult.count ?? 0) > 0,
       hasResources: (resourcesResult.count ?? 0) > 0,
-      hasLogistics: false, // No logistics table yet
+      hasLogistics: event.logistics != null && typeof event.logistics === "object" && Object.keys(event.logistics as Record<string, unknown>).length > 0,
       hasCertificates: settings.certificates_enabled === true,
-      communityCount: 0, // Placeholder — will be implemented with community feature
-      unreadMessageCount: 0, // Placeholder — will be implemented with messaging feature
+      attendeeCount: attendeesResult.count ?? 0,
+      communityCount: communityResult.count ?? 0,
+      unreadMessageCount: messagesResult.count ?? 0,
+      hasLeaderboard: gamificationResult.data?.enabled === true,
+      isRegistered: (registrationResult.count ?? 0) > 0,
+      hasFeedback: (surveyResult.count ?? 0) > 0,
     };
   }
 

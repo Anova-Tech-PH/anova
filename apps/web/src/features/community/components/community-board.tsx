@@ -76,6 +76,10 @@ export function CommunityBoard({
             {totalCount} topic{totalCount !== 1 ? "s" : ""}
           </p>
         </div>
+        <Button onClick={() => setShowCreate(true)} size="sm" className="gap-1.5">
+          <Plus className="h-4 w-4" />
+          New topic
+        </Button>
       </div>
 
       {/* Tabs */}
@@ -126,16 +130,19 @@ export function CommunityBoard({
               ? "No topics match your search."
               : "No topics yet. Be the first to start a conversation!"}
           </p>
+          {!currentSearch && (
+            <Button
+              onClick={() => setShowCreate(true)}
+              variant="outline"
+              size="sm"
+              className="mt-4 gap-1.5"
+            >
+              <Plus className="h-4 w-4" />
+              Start a topic
+            </Button>
+          )}
         </div>
       )}
-
-      {/* Add topic button */}
-      <div className="flex justify-center pt-2">
-        <Button onClick={() => setShowCreate(true)} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Add new topic
-        </Button>
-      </div>
 
       {/* Create topic dialog */}
       <CreateTopicDialog

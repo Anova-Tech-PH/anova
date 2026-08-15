@@ -108,6 +108,17 @@ export default async function PublicEventPage({
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Check if user is already registered
+  let isRegistered = false;
+  if (user) {
+    const { count } = await supabase
+      .from("registrations")
+      .select("id", { count: "exact", head: true })
+      .eq("event_id", event.id)
+      .eq("user_id", user.id);
+    isRegistered = (count ?? 0) > 0;
+  }
+
   // Fetch activity feed for authenticated users
   let feedData: { items: Awaited<ReturnType<typeof getActivityFeed>>["items"]; total: number } = {
     items: [],
@@ -193,10 +204,10 @@ export default async function PublicEventPage({
                 className: "gap-2 px-8 shadow-lg shadow-primary/20",
               })}
             >
-              Register Now
+              {isRegistered ? "View My Ticket" : "Register Now"}
               <ArrowRight className="h-4 w-4" />
             </Link>
-            {startingPrice != null && (
+            {!isRegistered && startingPrice != null && (
               <span className={`text-sm ${event.cover_image ? "text-white/70" : "text-muted-foreground"}`}>
                 Starting from <span className={`font-semibold ${event.cover_image ? "text-white" : "text-foreground"}`}>${Number(startingPrice).toFixed(0)}</span>
               </span>
@@ -436,29 +447,31 @@ export default async function PublicEventPage({
         )}
 
         {/* ── Register CTA ── */}
-        <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-info/5 border p-10 text-center">
-          <div className="absolute top-0 right-0 h-32 w-32 rounded-full bg-primary/5 blur-2xl" />
-          <div className="absolute bottom-0 left-0 h-24 w-24 rounded-full bg-info/5 blur-2xl" />
-          <div className="relative">
-            <h2 className="text-2xl font-bold">Ready to join?</h2>
-            <p className="mt-3 text-sm text-muted-foreground max-w-md mx-auto">
-              Secure your spot at {event.title}.{" "}
-              {ticketTypes && ticketTypes.length > 1
-                ? `${ticketTypes.length} ticket options available.`
-                : ""}
-            </p>
-            <Link
-              href={`/${orgSlug}/${eventSlug}/register`}
-              className={buttonVariants({
-                size: "lg",
-                className: "mt-8 gap-2 px-8 shadow-lg shadow-primary/20",
-              })}
-            >
-              Register Now
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-        </section>
+        {!isRegistered && (
+          <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-info/5 border p-10 text-center">
+            <div className="absolute top-0 right-0 h-32 w-32 rounded-full bg-primary/5 blur-2xl" />
+            <div className="absolute bottom-0 left-0 h-24 w-24 rounded-full bg-info/5 blur-2xl" />
+            <div className="relative">
+              <h2 className="text-2xl font-bold">Ready to join?</h2>
+              <p className="mt-3 text-sm text-muted-foreground max-w-md mx-auto">
+                Secure your spot at {event.title}.{" "}
+                {ticketTypes && ticketTypes.length > 1
+                  ? `${ticketTypes.length} ticket options available.`
+                  : ""}
+              </p>
+              <Link
+                href={`/${orgSlug}/${eventSlug}/register`}
+                className={buttonVariants({
+                  size: "lg",
+                  className: "mt-8 gap-2 px-8 shadow-lg shadow-primary/20",
+                })}
+              >
+                Register Now
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </section>
+        )}
       </div>
     </div>
   );

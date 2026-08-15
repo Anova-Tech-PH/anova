@@ -7,9 +7,9 @@ import { ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@attendly/ui/cn";
 import {
-  BarChart2, BarChart3, Calendar, CalendarCheck, ClipboardList,
-  DoorOpen, IdCard, LayoutGrid, ListChecks, Mail, Megaphone, Mic,
-  MessageSquare, Globe, QrCode, Rocket, Settings, Tag, Ticket, Users, Award,
+  BarChart2, BarChart3, Calendar, CalendarCheck, CalendarClock, Camera, CircleDot, ClipboardList,
+  DoorOpen, IdCard, LayoutGrid, ListChecks, Mail, Map, Megaphone, Mic, Monitor,
+  MessageSquare, Globe, QrCode, Rocket, Settings, Tag, Ticket, Trophy, Users, Award, Zap,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { isGroupActive, type TopTabGroup, type TabItem } from "./event-top-tabs";
@@ -37,6 +37,13 @@ const iconMap: Record<string, LucideIcon> = {
   ticket: Ticket,
   users: Users,
   award: Award,
+  camera: Camera,
+  "calendar-clock": CalendarClock,
+  "circle-dot": CircleDot,
+  map: Map,
+  monitor: Monitor,
+  trophy: Trophy,
+  zap: Zap,
 };
 
 export function MobileEventNav({
@@ -207,6 +214,21 @@ export function MobileEventNav({
                           </motion.div>
                         )}
                       </AnimatePresence>
+                    </div>
+                  );
+                }
+
+                if (item.disabled) {
+                  return (
+                    <div
+                      key={item.label}
+                      className="flex items-center gap-2.5 rounded-md px-3 py-1.5 text-sm text-muted-foreground/40 cursor-default"
+                    >
+                      {Icon && <Icon className="h-4 w-4" />}
+                      {item.label}
+                      <span className="ml-auto text-[10px] font-medium uppercase tracking-wider text-muted-foreground/60 bg-muted/50 px-1.5 py-0.5 rounded">
+                        Soon
+                      </span>
                     </div>
                   );
                 }

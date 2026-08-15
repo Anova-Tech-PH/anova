@@ -26,6 +26,7 @@ export interface TabItem {
   label: string;
   icon: string;
   children?: { href: string; label: string }[];
+  disabled?: boolean;
 }
 
 export interface TopTabGroup {

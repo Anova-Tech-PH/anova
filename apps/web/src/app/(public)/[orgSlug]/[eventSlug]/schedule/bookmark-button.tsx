@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Bookmark } from "lucide-react";
+import { CalendarPlus, CalendarCheck } from "lucide-react";
 import { toast } from "sonner";
 import { toggleSessionBookmark } from "@/features/attendee/actions";
 
@@ -20,7 +20,9 @@ export function BookmarkButton({
     try {
       const result = await toggleSessionBookmark(sessionId);
       setBookmarked(result.bookmarked);
-      toast.success(result.bookmarked ? "Session saved" : "Session removed");
+      toast.success(
+        result.bookmarked ? "Added to My Agenda" : "Removed from My Agenda"
+      );
     } catch {
       toast.error("Sign in to save sessions");
     } finally {
@@ -32,14 +34,24 @@ export function BookmarkButton({
     <button
       onClick={handleToggle}
       disabled={loading}
-      className={`rounded-md p-1.5 transition-colors ${
+      className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
         bookmarked
-          ? "text-primary bg-primary/10"
-          : "text-muted-foreground hover:text-foreground hover:bg-muted"
+          ? "bg-primary text-primary-foreground hover:bg-primary/90"
+          : "border border-primary text-primary hover:bg-primary/10"
       }`}
-      title={bookmarked ? "Remove from schedule" : "Save to schedule"}
+      title={bookmarked ? "Remove from My Agenda" : "Add to My Agenda"}
     >
-      <Bookmark className={`h-4 w-4 ${bookmarked ? "fill-current" : ""}`} />
+      {bookmarked ? (
+        <>
+          <CalendarCheck className="h-3.5 w-3.5" />
+          In My Agenda
+        </>
+      ) : (
+        <>
+          <CalendarPlus className="h-3.5 w-3.5" />
+          Add to My Agenda
+        </>
+      )}
     </button>
   );
 }

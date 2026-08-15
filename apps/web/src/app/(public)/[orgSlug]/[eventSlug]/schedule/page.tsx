@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { Clock, MapPin, Search, Calendar, ArrowRight } from "lucide-react";
+import { Clock, MapPin, Search, Calendar, CalendarPlus } from "lucide-react";
 import { createClient } from "@attendly/ui/supabase/server";
 import { Badge, Avatar } from "@attendly/ui/components";
 import Link from "next/link";
@@ -40,7 +40,7 @@ export default async function PublicSchedulePage({
   searchParams,
 }: {
   params: Promise<{ orgSlug: string; eventSlug: string }>;
-  searchParams: Promise<{ search?: string; day?: string }>;
+  searchParams: Promise<{ search?: string; day?: string; tab?: string }>;
 }) {
   const { orgSlug, eventSlug } = await params;
   const query = await searchParams;
@@ -238,46 +238,59 @@ export default async function PublicSchedulePage({
     });
   }
 
-  // Determine active day
-  const dayKeys = dayGroupsOrdered.map((d) => d.dateKey);
-  const activeDay = query.day && dayKeys.includes(query.day) ? query.day : dayKeys[0] ?? null;
-  const activeDayGroup = dayGroupsOrdered.find((d) => d.dateKey === activeDay);
-  const displaySessions = activeDayGroup?.sessions ?? [];
+  // Determine active tab and day
+  const activeTab = query.tab === "my-agenda" && user ? "my-agenda" : "full";
 
-  // Also filter by speaker name (search applies to speaker names too)
-  // The Supabase query already filtered by title/location/description.
-  // We need to also include sessions where a speaker name matches (client-side post-filter).
-  let filteredSessions = displaySessions;
-  if (query.search) {
-    const term = query.search.toLowerCase();
-    // Get all sessions for this day (without search filter) to also match by speaker
-    // Since we already filtered at DB level, any sessions already in displaySessions passed.
-    // We just need to mark that speaker-name-matching sessions from the unfiltered set are included.
-    // For simplicity, we do an additional query for speaker-matched sessions if needed.
-    // Actually, since the main query already filters, sessions matching speaker names won't appear.
-    // Let's do the speaker filtering differently: fetch ALL sessions for the day, then filter client-side.
-    // But that would require a second query. Instead, let's keep it simple:
-    // The search covers title, location, description at DB level. Speaker name search
-    // would require a join filter which Supabase doesn't support well with .or().
-    // We'll note this limitation and the search covers the three main fields.
-    filteredSessions = displaySessions;
-  }
+  // When "My Agenda" tab is active, filter to only bookmarked sessions
+  const agendaFilteredGroups = activeTab === "my-agenda"
+    ? dayGroupsOrdered.map((g) => ({
+        ...g,
+        sessions: g.sessions!.filter((s) => bookmarkedIds.has(s.id)),
+      })).filter((g) => g.sessions.length > 0)
+    : dayGroupsOrdered;
+
+  const dayKeys = agendaFilteredGroups.map((d) => d.dateKey);
+  const activeDay = query.day && dayKeys.includes(query.day) ? query.day : dayKeys[0] ?? null;
+  const activeDayGroup = agendaFilteredGroups.find((d) => d.dateKey === activeDay);
+  const filteredSessions = activeDayGroup?.sessions ?? [];
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-12">
-      {/* Header with agenda toggle */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">{event.title} — Schedule</h1>
-        {user && (
+      {/* Header */}
+      <h1 className="text-2xl font-semibold">{event.title} — Schedule</h1>
+
+      {/* Full Agenda / My Agenda tabs */}
+      {user && (
+        <div className="mt-4 flex border-b">
           <Link
-            href={`${basePath}/my-agenda`}
-            className="flex items-center gap-1 text-sm text-primary hover:underline"
+            href={`?${new URLSearchParams({
+              ...(query.search ? { search: query.search } : {}),
+              ...(query.day ? { day: query.day } : {}),
+            }).toString()}`}
+            className={`px-5 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === "full"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Full Agenda
+          </Link>
+          <Link
+            href={`?${new URLSearchParams({
+              tab: "my-agenda",
+              ...(query.search ? { search: query.search } : {}),
+              ...(query.day ? { day: query.day } : {}),
+            }).toString()}`}
+            className={`px-5 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === "my-agenda"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
           >
             My Agenda
-            <ArrowRight className="h-3.5 w-3.5" />
           </Link>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Search bar */}
       <form className="mt-6 relative">
@@ -289,11 +302,27 @@ export default async function PublicSchedulePage({
           defaultValue={query.search ?? ""}
           className="w-full rounded-lg border bg-background pl-10 pr-4 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
         />
-        {/* Preserve day param when searching */}
         {query.day && <input type="hidden" name="day" value={query.day} />}
+        {activeTab === "my-agenda" && <input type="hidden" name="tab" value="my-agenda" />}
       </form>
 
-      {!sessions || sessions.length === 0 ? (
+      {activeTab === "my-agenda" && agendaFilteredGroups.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+            <CalendarPlus className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <h3 className="mt-4 text-lg font-medium">No sessions in your agenda</h3>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Browse the full agenda and tap &ldquo;Add to My Agenda&rdquo; on sessions you want to attend.
+          </p>
+          <Link
+            href={`${basePath}/schedule`}
+            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
+            Browse full agenda
+          </Link>
+        </div>
+      ) : !sessions || sessions.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
             <Calendar className="h-8 w-8 text-muted-foreground" />
@@ -313,12 +342,13 @@ export default async function PublicSchedulePage({
       ) : (
         <>
           {/* Day tabs */}
-          {dayGroupsOrdered.length > 1 && (
+          {agendaFilteredGroups.length > 1 && (
             <div className="mt-6 flex gap-1 overflow-x-auto border-b">
-              {dayGroupsOrdered.map((dayGroup) => (
+              {agendaFilteredGroups.map((dayGroup) => (
                 <Link
                   key={dayGroup.dateKey}
                   href={`?${new URLSearchParams({
+                    ...(activeTab === "my-agenda" ? { tab: "my-agenda" } : {}),
                     ...(query.search ? { search: query.search } : {}),
                     day: dayGroup.dateKey,
                   }).toString()}`}
@@ -358,22 +388,14 @@ export default async function PublicSchedulePage({
                       borderLeftColor: session.track?.color ?? "transparent",
                     }}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Badge variant={typeBadgeVariant[session.type] ?? "default"}>
-                          {session.type}
-                        </Badge>
-                        {session.track && (
-                          <span className="text-[10px] text-muted-foreground">
-                            {session.track.name}
-                          </span>
-                        )}
-                      </div>
-                      {user && (
-                        <BookmarkButton
-                          sessionId={session.id}
-                          initialBookmarked={bookmarkedIds.has(session.id)}
-                        />
+                    <div className="flex items-center gap-2">
+                      <Badge variant={typeBadgeVariant[session.type] ?? "default"}>
+                        {session.type}
+                      </Badge>
+                      {session.track && (
+                        <span className="text-[10px] text-muted-foreground">
+                          {session.track.name}
+                        </span>
                       )}
                     </div>
                     <h3 className="mt-1.5 font-medium">{session.title}</h3>
@@ -448,13 +470,19 @@ export default async function PublicSchedulePage({
                       </div>
                     )}
 
-                    {/* Notes Button */}
-                    {user && session.type !== "break" && (
-                      <div className="mt-3 border-t pt-3">
-                        <NoteButton
+                    {/* Actions: Add to My Agenda + Notes */}
+                    {user && (
+                      <div className="mt-3 border-t pt-3 flex items-center gap-2 flex-wrap">
+                        <BookmarkButton
                           sessionId={session.id}
-                          initialContent={sessionNote}
+                          initialBookmarked={bookmarkedIds.has(session.id)}
                         />
+                        {session.type !== "break" && (
+                          <NoteButton
+                            sessionId={session.id}
+                            initialContent={sessionNote}
+                          />
+                        )}
                       </div>
                     )}
                   </div>

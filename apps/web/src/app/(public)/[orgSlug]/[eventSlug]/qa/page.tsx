@@ -71,6 +71,7 @@ export default async function QAListPage({
           <QASessionList
             myAgenda={[]}
             other={other}
+            orgSlug={orgSlug}
             eventSlug={eventSlug}
           />
         </div>
@@ -89,6 +90,7 @@ export default async function QAListPage({
         <QASessionList
           myAgenda={myAgenda}
           other={other}
+          orgSlug={orgSlug}
           eventSlug={eventSlug}
         />
       </div>

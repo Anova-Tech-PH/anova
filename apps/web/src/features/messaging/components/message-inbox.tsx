@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { MessageSquare } from "lucide-react";
 import { Avatar, Badge } from "@attendly/ui/components";
 import { getConversations } from "@/features/messaging/queries";
@@ -11,6 +12,7 @@ interface MessageInboxProps {
   eventId: string;
   conversations: Conversation[];
   onSelectConversation: (otherUserId: string) => void;
+  attendeesHref?: string;
 }
 
 function formatTimestamp(dateStr: string) {
@@ -32,6 +34,7 @@ export function MessageInbox({
   eventId,
   conversations: initialConversations,
   onSelectConversation,
+  attendeesHref,
 }: MessageInboxProps) {
   const [conversations, setConversations] =
     useState<Conversation[]>(initialConversations);
@@ -48,7 +51,14 @@ export function MessageInbox({
           No messages yet
         </p>
         <p className="mt-1 text-xs text-muted-foreground/70">
-          Visit attendee profiles and say hi to start a conversation.
+          {attendeesHref ? (
+            <Link href={attendeesHref} className="text-primary hover:underline">
+              Visit attendee profiles
+            </Link>
+          ) : (
+            "Visit attendee profiles"
+          )}{" "}
+          and say hi to start a conversation.
         </p>
       </div>
     );

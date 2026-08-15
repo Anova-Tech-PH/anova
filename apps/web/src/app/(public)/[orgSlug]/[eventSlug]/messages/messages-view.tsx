@@ -61,6 +61,7 @@ export function MessagesView(props: MessagesViewProps) {
       onSelectConversation={(otherUserId) =>
         router.push(`${props.basePath}/messages?userId=${otherUserId}`)
       }
+      attendeesHref={`${props.basePath}/attendees`}
     />
   );
 }

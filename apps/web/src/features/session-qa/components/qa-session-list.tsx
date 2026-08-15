@@ -14,10 +14,12 @@ type SessionWithCount = {
 export function QASessionList({
   myAgenda,
   other,
+  orgSlug,
   eventSlug,
 }: {
   myAgenda: SessionWithCount[];
   other: SessionWithCount[];
+  orgSlug: string;
   eventSlug: string;
 }) {
   const [search, setSearch] = useState("");
@@ -50,6 +52,7 @@ export function QASessionList({
               <SessionCard
                 key={session.id}
                 session={session}
+                orgSlug={orgSlug}
                 eventSlug={eventSlug}
               />
             ))}
@@ -67,6 +70,7 @@ export function QASessionList({
               <SessionCard
                 key={session.id}
                 session={session}
+                orgSlug={orgSlug}
                 eventSlug={eventSlug}
               />
             ))}
@@ -85,9 +89,11 @@ export function QASessionList({
 
 function SessionCard({
   session,
+  orgSlug,
   eventSlug,
 }: {
   session: SessionWithCount;
+  orgSlug: string;
   eventSlug: string;
 }) {
   const startDate = new Date(session.start_time);
@@ -106,7 +112,7 @@ function SessionCard({
 
   return (
     <Link
-      href={`/events/${eventSlug}/qa/${session.id}`}
+      href={`/${orgSlug}/${eventSlug}/qa/${session.id}`}
       className="block rounded-lg border border-border bg-card p-4 transition-colors hover:border-primary/30 hover:bg-muted/50"
     >
       <div className="flex items-center justify-between">
