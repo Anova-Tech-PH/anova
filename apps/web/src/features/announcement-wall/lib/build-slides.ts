@@ -72,8 +72,11 @@ export function stripHtml(html: string): string {
 }
 
 function formatDateRange(startDate: string, endDate: string): string {
-  const start = new Date(startDate + "T00:00:00");
-  const end = new Date(endDate + "T00:00:00");
+  if (!startDate || !endDate) return "";
+  // Handle both date-only ("2026-09-04") and ISO timestamp ("2026-09-04T17:00:00Z") formats
+  const start = new Date(startDate.includes("T") ? startDate : startDate + "T00:00:00");
+  const end = new Date(endDate.includes("T") ? endDate : endDate + "T00:00:00");
+  if (isNaN(start.getTime()) || isNaN(end.getTime())) return "";
 
   const opts: Intl.DateTimeFormatOptions = {
     month: "short",

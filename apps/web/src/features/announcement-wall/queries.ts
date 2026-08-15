@@ -177,7 +177,7 @@ export async function getWallData(eventId: string) {
     supabase
       .from("events")
       .select(
-        "id, title, slug, start_date, end_date, banner_url, location_name, organization_id, organizations(slug)"
+        "id, title, slug, start_date, end_date, location_data, organization_id, organizations(slug)"
       )
       .eq("id", eventId)
       .single(),

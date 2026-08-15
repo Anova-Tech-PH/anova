@@ -59,8 +59,10 @@ export default async function PublicWallPage({
       slug: wallEvent?.slug ?? eventSlug,
       start_date: wallEvent?.start_date ?? "",
       end_date: wallEvent?.end_date ?? "",
-      banner_url: wallEvent?.banner_url ?? null,
-      location_name: wallEvent?.location_name ?? null,
+      banner_url: null,
+      location_name: wallEvent?.location_data
+        ? ((wallEvent.location_data as Record<string, unknown>)?.venue_name as string ?? null)
+        : null,
       organization: wallEvent?.organizations
         ? { slug: (wallEvent.organizations as unknown as { slug: string }).slug }
         : { slug: orgSlug },
