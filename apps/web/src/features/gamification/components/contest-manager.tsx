@@ -55,6 +55,9 @@ function ContestFormModal({
     starts_at?: string;
     ends_at?: string;
     points_per_action?: number;
+    prize_description?: string;
+    winner_criteria?: string;
+    theme?: string;
   }) => void;
   onCancel: () => void;
   isPending: boolean;
@@ -70,6 +73,9 @@ function ContestFormModal({
   const [pointsPerAction, setPointsPerAction] = useState<number>(
     contest?.points_per_action ?? 10
   );
+  const [prizeDescription, setPrizeDescription] = useState(contest?.prize_description ?? "");
+  const [winnerCriteria, setWinnerCriteria] = useState(contest?.winner_criteria ?? "");
+  const [theme, setTheme] = useState(contest?.theme ?? "");
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -81,6 +87,9 @@ function ContestFormModal({
       starts_at: startsAt || undefined,
       ends_at: endsAt || undefined,
       points_per_action: pointsPerAction,
+      prize_description: prizeDescription || undefined,
+      winner_criteria: winnerCriteria || undefined,
+      theme: theme || undefined,
     });
   }
 
@@ -185,6 +194,45 @@ function ContestFormModal({
             />
           </div>
 
+          {/* Prize Info */}
+          <div className="border-t pt-4">
+            <p className="mb-3 text-sm font-medium text-muted-foreground">
+              Prize Information (optional)
+            </p>
+            <div className="space-y-3">
+              <div>
+                <label className="mb-1 block text-sm font-medium">Theme</label>
+                <Textarea
+                  value={theme}
+                  onChange={(e) => setTheme(e.target.value)}
+                  placeholder="What should participants focus on?"
+                  rows={2}
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium">
+                  Prize Description
+                </label>
+                <Input
+                  value={prizeDescription}
+                  onChange={(e) => setPrizeDescription(e.target.value)}
+                  placeholder="e.g., Surprise Gifts, Gift Card"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium">
+                  How Winners Are Chosen
+                </label>
+                <Textarea
+                  value={winnerCriteria}
+                  onChange={(e) => setWinnerCriteria(e.target.value)}
+                  placeholder="e.g., Most likes wins the prize"
+                  rows={2}
+                />
+              </div>
+            </div>
+          </div>
+
           {/* Actions */}
           <div className="flex justify-end gap-3 pt-2">
             <Button type="button" variant="outline" onClick={onCancel}>
@@ -228,6 +276,9 @@ export function ContestManager({
     starts_at?: string;
     ends_at?: string;
     points_per_action?: number;
+    prize_description?: string;
+    winner_criteria?: string;
+    theme?: string;
   }) {
     startTransition(async () => {
       try {
