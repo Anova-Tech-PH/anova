@@ -16,6 +16,7 @@ export async function upsertWallConfig(
     show_polls?: boolean;
     show_custom_slides?: boolean;
     session_lookahead_minutes?: number;
+    activity_stream_enabled?: boolean;
   }
 ) {
   const supabase = await createClient();

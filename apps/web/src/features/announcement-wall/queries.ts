@@ -13,6 +13,7 @@ export type WallConfig = {
   show_polls: boolean;
   show_custom_slides: boolean;
   session_lookahead_minutes: number;
+  activity_stream_enabled: boolean;
   created_at: string;
   updated_at: string;
 };
@@ -62,6 +63,7 @@ export function getDefaultConfig(): Omit<WallConfig, "id" | "event_id" | "create
     show_polls: true,
     show_custom_slides: true,
     session_lookahead_minutes: 120,
+    activity_stream_enabled: false,
   };
 }
 
