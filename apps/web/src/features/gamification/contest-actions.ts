@@ -22,6 +22,9 @@ export async function createContest(
     ends_at?: string;
     points_per_action?: number;
     status?: "draft" | "active" | "ended";
+    prize_description?: string;
+    winner_criteria?: string;
+    theme?: string;
   }
 ) {
   const supabase = await createClient();
@@ -50,6 +53,9 @@ export async function updateContest(
     ends_at?: string;
     points_per_action?: number;
     status?: "draft" | "active" | "ended";
+    prize_description?: string;
+    winner_criteria?: string;
+    theme?: string;
   }
 ) {
   const supabase = await createClient();

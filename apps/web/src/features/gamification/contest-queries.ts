@@ -16,6 +16,9 @@ export type Contest = {
   status: "draft" | "active" | "ended";
   points_per_action: number;
   created_at: string;
+  prize_description: string | null;
+  winner_criteria: string | null;
+  theme: string | null;
 };
 
 export type ContestEntry = {
