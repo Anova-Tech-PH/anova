@@ -26,6 +26,7 @@ export function LikeButton({
 
     try {
       await toggleSessionLike(sessionId);
+      toast.success(liked ? "Like removed" : "Session liked");
     } catch {
       // Revert on error
       setLiked(liked);

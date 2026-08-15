@@ -13,16 +13,20 @@ export async function rsvpToSession(sessionId: string) {
 
   if (error) throw new Error(error.message);
 
-  // Award gamification points
-  const { data: { user } } = await supabase.auth.getUser();
-  const { data: session } = await supabase
-    .from("sessions")
-    .select("event_id")
-    .eq("id", sessionId)
-    .single();
+  // Award gamification points (non-blocking — RSVP should succeed even if gamification fails)
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data: session } = await supabase
+      .from("sessions")
+      .select("event_id")
+      .eq("id", sessionId)
+      .single();
 
-  if (user && session?.event_id) {
-    await tryAwardPoints(session.event_id, user.id, "session_rsvp", sessionId, "session");
+    if (user && session?.event_id) {
+      await tryAwardPoints(session.event_id, user.id, "session_rsvp", sessionId, "session");
+    }
+  } catch {
+    // Gamification not configured — ignore
   }
 
   return data as string; // returns 'confirmed' or 'waitlisted'
