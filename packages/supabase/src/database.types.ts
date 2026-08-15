@@ -1,7 +1,5 @@
-npm warn Unknown project config "public-hoist-pattern". This will stop working in the next major version of npm.
-npm warn Unknown project config "onlyBuiltDependencies". This will stop working in the next major version of npm.
-npm warn Unknown project config "only-built-dependencies". This will stop working in the next major version of npm.
-Connecting to db 5432
+WARN: config section [inbucket] is deprecated. Please use [local_smtp] instead.
+Connecting to localhost 54332
 export type Json =
   | string
   | number
@@ -121,6 +119,109 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      announcement_wall_config: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          event_id: string
+          id: string
+          rotation_speed: number
+          session_lookahead_minutes: number
+          show_announcements: boolean
+          show_custom_slides: boolean
+          show_event_overview: boolean
+          show_polls: boolean
+          show_sponsors: boolean
+          show_upcoming_sessions: boolean
+          theme: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          event_id: string
+          id?: string
+          rotation_speed?: number
+          session_lookahead_minutes?: number
+          show_announcements?: boolean
+          show_custom_slides?: boolean
+          show_event_overview?: boolean
+          show_polls?: boolean
+          show_sponsors?: boolean
+          show_upcoming_sessions?: boolean
+          theme?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          event_id?: string
+          id?: string
+          rotation_speed?: number
+          session_lookahead_minutes?: number
+          show_announcements?: boolean
+          show_custom_slides?: boolean
+          show_event_overview?: boolean
+          show_polls?: boolean
+          show_sponsors?: boolean
+          show_upcoming_sessions?: boolean
+          theme?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "announcement_wall_config_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: true
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      announcement_wall_slides: {
+        Row: {
+          bg_color: string
+          body: string | null
+          created_at: string
+          display_order: number
+          enabled: boolean
+          event_id: string
+          id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          bg_color?: string
+          body?: string | null
+          created_at?: string
+          display_order?: number
+          enabled?: boolean
+          event_id: string
+          id?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          bg_color?: string
+          body?: string | null
+          created_at?: string
+          display_order?: number
+          enabled?: boolean
+          event_id?: string
+          id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "announcement_wall_slides_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
             referencedColumns: ["id"]
           },
         ]
@@ -919,6 +1020,123 @@ export type Database = {
           },
         ]
       }
+      contest_entries: {
+        Row: {
+          content: string | null
+          contest_id: string
+          created_at: string
+          id: string
+          image_url: string | null
+          likes_count: number
+          user_id: string
+        }
+        Insert: {
+          content?: string | null
+          contest_id: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          likes_count?: number
+          user_id: string
+        }
+        Update: {
+          content?: string | null
+          contest_id?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          likes_count?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contest_entries_contest_id_fkey"
+            columns: ["contest_id"]
+            isOneToOne: false
+            referencedRelation: "contests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contest_likes: {
+        Row: {
+          created_at: string
+          entry_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          entry_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          entry_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contest_likes_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "contest_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contests: {
+        Row: {
+          created_at: string
+          description: string | null
+          ends_at: string
+          event_id: string
+          id: string
+          image_url: string | null
+          points_per_action: number
+          starts_at: string
+          status: string
+          title: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          ends_at: string
+          event_id: string
+          id?: string
+          image_url?: string | null
+          points_per_action?: number
+          starts_at: string
+          status?: string
+          title: string
+          type: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          ends_at?: string
+          event_id?: string
+          id?: string
+          image_url?: string | null
+          points_per_action?: number
+          starts_at?: string
+          status?: string
+          title?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contests_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversation_members: {
         Row: {
           conversation_id: string
@@ -1622,6 +1840,45 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exhibitor_passport_stamps: {
+        Row: {
+          checked_in_at: string
+          event_id: string
+          exhibitor_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          checked_in_at?: string
+          event_id: string
+          exhibitor_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          checked_in_at?: string
+          event_id?: string
+          exhibitor_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exhibitor_passport_stamps_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exhibitor_passport_stamps_exhibitor_id_fkey"
+            columns: ["exhibitor_id"]
+            isOneToOne: false
+            referencedRelation: "sponsors"
             referencedColumns: ["id"]
           },
         ]
@@ -2460,6 +2717,70 @@ export type Database = {
           },
         ]
       }
+      referral_codes: {
+        Row: {
+          code: string
+          created_at: string
+          event_id: string
+          id: string
+          registrations_count: number
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          event_id: string
+          id?: string
+          registrations_count?: number
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          event_id?: string
+          id?: string
+          registrations_count?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_codes_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referral_registrations: {
+        Row: {
+          created_at: string
+          id: string
+          referral_code_id: string
+          registered_user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          referral_code_id: string
+          registered_user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          referral_code_id?: string
+          registered_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_registrations_referral_code_id_fkey"
+            columns: ["referral_code_id"]
+            isOneToOne: false
+            referencedRelation: "referral_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       registration_addons: {
         Row: {
           addon_id: string
@@ -2767,6 +3088,45 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "session_chat_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      session_checkins: {
+        Row: {
+          checked_in_at: string
+          event_id: string
+          id: string
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          checked_in_at?: string
+          event_id: string
+          id?: string
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          checked_in_at?: string
+          event_id?: string
+          id?: string
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_checkins_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_checkins_session_id_fkey"
             columns: ["session_id"]
             isOneToOne: false
             referencedRelation: "sessions"
@@ -3902,6 +4262,129 @@ export type Database = {
           },
         ]
       }
+      trivia_attempts: {
+        Row: {
+          answers: Json
+          completed_at: string | null
+          created_at: string
+          game_id: string
+          id: string
+          score: number
+          total_time_ms: number
+          user_id: string
+        }
+        Insert: {
+          answers?: Json
+          completed_at?: string | null
+          created_at?: string
+          game_id: string
+          id?: string
+          score?: number
+          total_time_ms?: number
+          user_id: string
+        }
+        Update: {
+          answers?: Json
+          completed_at?: string | null
+          created_at?: string
+          game_id?: string
+          id?: string
+          score?: number
+          total_time_ms?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trivia_attempts_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "trivia_games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trivia_games: {
+        Row: {
+          created_at: string
+          description: string | null
+          ends_at: string
+          event_id: string
+          id: string
+          points_per_correct: number
+          starts_at: string
+          status: string
+          time_limit_seconds: number | null
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          ends_at: string
+          event_id: string
+          id?: string
+          points_per_correct?: number
+          starts_at: string
+          status?: string
+          time_limit_seconds?: number | null
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          ends_at?: string
+          event_id?: string
+          id?: string
+          points_per_correct?: number
+          starts_at?: string
+          status?: string
+          time_limit_seconds?: number | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trivia_games_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trivia_questions: {
+        Row: {
+          correct_index: number
+          game_id: string
+          id: string
+          options: Json
+          question_text: string
+          sort_order: number
+        }
+        Insert: {
+          correct_index: number
+          game_id: string
+          id?: string
+          options: Json
+          question_text: string
+          sort_order?: number
+        }
+        Update: {
+          correct_index?: number
+          game_id?: string
+          id?: string
+          options?: Json
+          question_text?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trivia_questions_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "trivia_games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_badges: {
         Row: {
           badge_id: string
@@ -4008,6 +4491,10 @@ export type Database = {
         Args: { _name: string; _slug: string }
         Returns: string
       }
+      get_trivia_question: {
+        Args: { _game_id: string; _question_index: number }
+        Returns: Json
+      }
       is_conversation_member: {
         Args: { p_conversation_id: string }
         Returns: boolean
@@ -4030,6 +4517,16 @@ export type Database = {
       rsvp_to_meetup: { Args: { _meetup_id: string }; Returns: string }
       rsvp_to_session: { Args: { _session_id: string }; Returns: string }
       seed_demo_event_for_org: { Args: { _org_id: string }; Returns: undefined }
+      submit_trivia_answer: {
+        Args: {
+          _game_id: string
+          _question_id: string
+          _selected_index: number
+          _time_ms: number
+          _user_id: string
+        }
+        Returns: Json
+      }
       user_event_ids: { Args: { uid: string }; Returns: string[] }
     }
     Enums: {
