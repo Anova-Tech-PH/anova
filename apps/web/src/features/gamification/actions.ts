@@ -16,6 +16,13 @@ const DEFAULT_POINT_RULES = [
   { activity_type: "photo_upload", points: 5 },
   { activity_type: "message_sent", points: 2, max_per_event: 20 },
   { activity_type: "survey_complete", points: 20 },
+  { activity_type: "photo_upload", points: 10 },
+  { activity_type: "caption_submit", points: 10 },
+  { activity_type: "icebreaker_answer", points: 5 },
+  { activity_type: "trivia_complete", points: 15 },
+  { activity_type: "exhibitor_visit", points: 10 },
+  { activity_type: "session_checkin", points: 5 },
+  { activity_type: "referral_registration", points: 25 },
 ] as const;
 
 const DEFAULT_BADGES = [
@@ -69,6 +76,25 @@ const DEFAULT_BADGES = [
     icon: "trophy",
   },
 ] as const;
+
+export const ACTIVITY_LABELS: Record<string, string> = {
+  poll_vote: "Poll Vote",
+  session_feedback: "Session Feedback",
+  session_rsvp: "Session RSVP",
+  community_post: "Community Post",
+  community_comment: "Community Comment",
+  profile_update: "Profile Update",
+  meetup_join: "Meetup Join",
+  photo_upload: "Photo Upload",
+  message_sent: "Message Sent",
+  survey_complete: "Survey Complete",
+  caption_submit: "Caption Submit",
+  icebreaker_answer: "Icebreaker Answer",
+  trivia_complete: "Trivia Complete",
+  exhibitor_visit: "Exhibitor Visit",
+  session_checkin: "Session Check-in",
+  referral_registration: "Referral Registration",
+};
 
 // ── Actions ──────────────────────────────────────────────────────────
 

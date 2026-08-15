@@ -1,7 +1,9 @@
+import { redirect } from "next/navigation";
 import { EventSidebar } from "./event-sidebar";
 import type { SidebarData } from "./event-sidebar";
 import { EventHeaderBar } from "./event-header-bar";
 import { createClient } from "@attendly/ui/supabase/server";
+import { getPortalLoginUrl } from "@/features/portal-auth/get-login-redirect";
 
 export default async function PublicEventLayout({
   children,
@@ -39,9 +41,16 @@ export default async function PublicEventLayout({
     hasLeaderboard: false,
     isRegistered: false,
     hasFeedback: false,
+    hasContests: false,
+    hasTrivia: false,
+    hasPassport: false,
   };
 
   const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect(getPortalLoginUrl(`/${orgSlug}/${eventSlug}`));
+  }
 
   if (event) {
     // Run visibility queries in parallel
@@ -103,6 +112,30 @@ export default async function PublicEventLayout({
       isRegistered: (registrationResult.count ?? 0) > 0,
       hasFeedback: (surveyResult.count ?? 0) > 0,
     };
+
+    // If gamification is enabled, check for contests, trivia, and sponsors
+    if (sidebarData.hasLeaderboard) {
+      const [contestResult, triviaResult, sponsorResult] = await Promise.all([
+        supabase
+          .from("contests")
+          .select("id", { count: "exact", head: true })
+          .eq("event_id", event.id)
+          .eq("status", "active"),
+        supabase
+          .from("trivia_games")
+          .select("id", { count: "exact", head: true })
+          .eq("event_id", event.id)
+          .eq("status", "active"),
+        supabase
+          .from("sponsors")
+          .select("id", { count: "exact", head: true })
+          .eq("event_id", event.id),
+      ]);
+
+      sidebarData.hasContests = (contestResult.count ?? 0) > 0;
+      sidebarData.hasTrivia = (triviaResult.count ?? 0) > 0;
+      sidebarData.hasPassport = (sponsorResult.count ?? 0) > 0;
+    }
   }
 
   return (

@@ -11,6 +11,7 @@ import { LeaderboardFull } from "@/features/gamification/components/leaderboard-
 import { ChallengesList } from "@/features/gamification/components/challenges-list";
 import { BadgeGrid } from "@/features/gamification/components/badge-grid";
 import { Trophy } from "lucide-react";
+import { ReferralShare } from "@/features/gamification/components/referral-share";
 
 export default async function LeaderboardPage({
   params,
@@ -80,6 +81,7 @@ export default async function LeaderboardPage({
         userRank={userEntry?.rank ?? null}
         userPoints={userEntry?.total_points ?? null}
         title={config.leaderboard_title ?? "Leaderboard"}
+        eventId={event.id}
       />
 
       {user && challenges.length > 0 && (
@@ -90,6 +92,14 @@ export default async function LeaderboardPage({
         <BadgeGrid
           allBadges={badges}
           earnedBadges={userBadges}
+        />
+      )}
+
+      {user && (
+        <ReferralShare
+          eventId={event.id}
+          userId={user.id}
+          baseUrl={`/${orgSlug}/${eventSlug}`}
         />
       )}
     </div>

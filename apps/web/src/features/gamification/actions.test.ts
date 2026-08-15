@@ -42,6 +42,7 @@ import {
   updateBadge,
   deleteBadge,
   recalculateLeaderboard,
+  ACTIVITY_LABELS,
 } from "./actions";
 
 // ── Helpers ──────────────────────────────────────────────────────────
@@ -81,6 +82,38 @@ describe("gamification actions", () => {
     expect(tableNames).toContain("gamification_configs");
     expect(tableNames).toContain("point_rules");
     expect(tableNames).toContain("badge_definitions");
+  });
+
+  it("enableGamification seeds 17 point rules", async () => {
+    let capturedRules: unknown[] = [];
+    mockFrom.mockImplementation((table: string) => {
+      const chain: Record<string, any> = {};
+      if (table === "point_rules") {
+        chain.upsert = vi.fn((rules: unknown[]) => {
+          capturedRules = rules;
+          return { error: null };
+        });
+      } else if (table === "gamification_configs") {
+        chain.upsert = vi.fn().mockReturnValue({ error: null });
+      } else if (table === "badge_definitions") {
+        chain.select = vi.fn().mockReturnValue({
+          eq: vi.fn().mockResolvedValue({ data: [], error: null }),
+        });
+        chain.insert = vi.fn().mockResolvedValue({ error: null });
+      }
+      return chain;
+    });
+
+    await enableGamification(EVENT_ID);
+
+    expect(capturedRules).toHaveLength(17);
+  });
+
+  it("ACTIVITY_LABELS has 16 entries covering all activity types", () => {
+    expect(Object.keys(ACTIVITY_LABELS)).toHaveLength(16);
+    expect(ACTIVITY_LABELS.photo_upload).toBe("Photo Upload");
+    expect(ACTIVITY_LABELS.caption_submit).toBe("Caption Submit");
+    expect(ACTIVITY_LABELS.referral_registration).toBe("Referral Registration");
   });
 
   // ── disableGamification ────────────────────────────────────────────

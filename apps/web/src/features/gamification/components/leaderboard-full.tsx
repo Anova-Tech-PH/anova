@@ -1,22 +1,89 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Trophy } from "lucide-react";
+import { createClient } from "@attendly/ui/supabase/client";
 import type { LeaderboardEntry } from "@/features/gamification/queries";
 
 export function LeaderboardFull({
-  entries, currentUserId, userRank, userPoints, title,
+  entries: initialEntries,
+  currentUserId,
+  userRank,
+  userPoints,
+  title,
+  eventId,
 }: {
   entries: LeaderboardEntry[];
   currentUserId: string | null;
   userRank: number | null;
   userPoints: number | null;
   title: string;
+  eventId: string;
 }) {
+  const [entries, setEntries] = useState(initialEntries);
+
+  useEffect(() => {
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`leaderboard:${eventId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "leaderboard_scores",
+          filter: `event_id=eq.${eventId}`,
+        },
+        (payload) => {
+          if (
+            payload.eventType === "INSERT" ||
+            payload.eventType === "UPDATE"
+          ) {
+            const row = payload.new as {
+              user_id: string;
+              total_points: number;
+            };
+            setEntries((prev) => {
+              const idx = prev.findIndex((e) => e.user_id === row.user_id);
+              let updated = [...prev];
+              if (idx >= 0) {
+                updated[idx] = {
+                  ...updated[idx],
+                  total_points: row.total_points,
+                };
+              } else {
+                updated.push({
+                  user_id: row.user_id,
+                  total_points: row.total_points,
+                  challenges_completed: 0,
+                  last_activity_at: null,
+                  rank: prev.length + 1,
+                  full_name: null,
+                  avatar_url: null,
+                });
+              }
+              updated.sort((a, b) => b.total_points - a.total_points);
+              return updated.map((e, i) => ({ ...e, rank: i + 1 }));
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [eventId]);
+
   return (
     <div className="space-y-4">
       <h2 className="text-lg font-semibold flex items-center gap-2">
         <Trophy className="h-5 w-5 text-[oklch(0.445_0.107_195)]" />
         {title}
+        <span className="ml-2 inline-flex items-center gap-1.5 text-xs text-green-600">
+          <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+          Live
+        </span>
       </h2>
 
       {currentUserId && userRank && (
@@ -54,7 +121,7 @@ export function LeaderboardFull({
                   {entry.full_name ?? "Anonymous"}
                   {isMe && <span className="ml-1 text-xs text-muted-foreground">(You)</span>}
                 </span>
-                <span className="text-sm font-semibold">{entry.total_points} pts</span>
+                <span className="text-sm font-semibold transition-all duration-300">{entry.total_points} pts</span>
               </div>
             );
           })}

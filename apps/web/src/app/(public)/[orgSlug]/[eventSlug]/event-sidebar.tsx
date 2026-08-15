@@ -29,6 +29,8 @@ import {
   StickyNote,
   User,
   Home,
+  Brain,
+  Stamp,
 } from "lucide-react";
 import { Logo } from "@attendly/ui/logo";
 import { createClient } from "@attendly/ui/supabase/client";
@@ -58,6 +60,12 @@ export interface SidebarData {
   isRegistered: boolean;
   /** Whether an active feedback survey exists */
   hasFeedback: boolean;
+  /** Whether there are active contests */
+  hasContests?: boolean;
+  /** Whether there are active trivia games */
+  hasTrivia?: boolean;
+  /** Whether passport is available (gamification enabled + sponsors exist) */
+  hasPassport?: boolean;
 }
 
 export const defaultSidebarData: SidebarData = {
@@ -71,6 +79,9 @@ export const defaultSidebarData: SidebarData = {
   hasLeaderboard: false,
   isRegistered: false,
   hasFeedback: false,
+  hasContests: false,
+  hasTrivia: false,
+  hasPassport: false,
 };
 
 /* ------------------------------------------------------------------ */
@@ -360,6 +371,36 @@ export function EventSidebar({
             icon={Trophy}
             label="Leaderboard"
             isActive={isActive("/leaderboard")}
+          />
+        )}
+
+        {/* Contests (conditional) */}
+        {sidebarData.hasContests && (
+          <NavLink
+            href={`${basePath}/contests`}
+            icon={Camera}
+            label="Contests"
+            isActive={isActive("/contests")}
+          />
+        )}
+
+        {/* Trivia (conditional) */}
+        {sidebarData.hasTrivia && (
+          <NavLink
+            href={`${basePath}/trivia`}
+            icon={Brain}
+            label="Trivia"
+            isActive={isActive("/trivia")}
+          />
+        )}
+
+        {/* Passport (conditional) */}
+        {sidebarData.hasPassport && (
+          <NavLink
+            href={`${basePath}/passport`}
+            icon={Stamp}
+            label="Passport"
+            isActive={isActive("/passport")}
           />
         )}
 
