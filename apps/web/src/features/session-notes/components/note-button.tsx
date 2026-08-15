@@ -3,6 +3,7 @@
 import { useState, useRef, useTransition } from "react";
 import { Pencil, Check, Loader2, StickyNote } from "lucide-react";
 import { saveNote } from "../actions";
+import { RichTextEditor } from "@/shared/components/rich-text-editor";
 
 const MAX_LENGTH = 2000;
 
@@ -88,6 +89,7 @@ export function NoteButton({
 
 /**
  * Whova-style card for session detail view — always-visible personal notes section.
+ * Uses Tiptap RichTextEditor for rich text formatting (bold, italic, lists, etc.).
  */
 export function NoteCard({
   sessionId,
@@ -101,11 +103,9 @@ export function NoteCard({
   const [savedContent, setSavedContent] = useState(initialContent ?? "");
   const [isPending, startTransition] = useTransition();
   const [saved, setSaved] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   function handleEdit() {
     setEditing(true);
-    setTimeout(() => textareaRef.current?.focus(), 50);
   }
 
   function handleCancel() {
@@ -122,6 +122,9 @@ export function NoteCard({
       setTimeout(() => setSaved(false), 2000);
     });
   }
+
+  // Check if content is empty HTML (just <p></p> or empty string)
+  const hasContent = savedContent && savedContent !== "<p></p>" && savedContent.replace(/<[^>]*>/g, "").trim().length > 0;
 
   return (
     <div className="rounded-xl border bg-card">
@@ -143,51 +146,40 @@ export function NoteCard({
       <div className="p-4">
         {editing ? (
           <>
-            <textarea
-              ref={textareaRef}
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
+            <RichTextEditor
+              content={content}
+              onChange={setContent}
               placeholder="Take notes on the session, such as key takeaways, insights, memorable quotes, and more"
-              rows={5}
-              maxLength={MAX_LENGTH}
-              className="w-full rounded-lg border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-y"
             />
-            <div className="mt-2 flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">
-                {content.length}/{MAX_LENGTH}
-              </span>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={handleCancel}
-                  disabled={isPending}
-                  className="rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSave}
-                  disabled={isPending}
-                  className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
-                >
-                  {isPending ? (
-                    <>
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    "Save"
-                  )}
-                </button>
-              </div>
+            <div className="mt-2 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={handleCancel}
+                disabled={isPending}
+                className="rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={isPending}
+                className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+              >
+                {isPending ? (
+                  <>
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  "Save"
+                )}
+              </button>
             </div>
           </>
-        ) : savedContent ? (
+        ) : hasContent ? (
           <>
-            <div className="rounded-lg border bg-muted/30 px-3 py-2 text-sm whitespace-pre-wrap">
-              {savedContent}
-            </div>
+            <div className="rounded-lg border bg-muted/30 px-3 py-2 text-sm prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: savedContent }} />
             <button
               type="button"
               onClick={handleEdit}
