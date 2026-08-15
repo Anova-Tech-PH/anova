@@ -11,7 +11,7 @@ import { createClient } from "@attendly/ui/supabase/server";
 import { Badge, Avatar } from "@attendly/ui/components";
 import { BookmarkButton } from "../bookmark-button";
 import { LikeButton } from "@/features/session-likes/components/like-button";
-import { NoteButton } from "@/features/session-notes/components/note-button";
+import { NoteCard } from "@/features/session-notes/components/note-button";
 import { RsvpButton } from "@/features/rsvp/components/rsvp-button";
 import { SessionFeedbackForm } from "@/features/feedback/components/session-feedback-form";
 import { SessionPollCard } from "@/features/polls/components/session-poll-card";
@@ -407,7 +407,13 @@ export default async function SessionDetailPage({
                   rsvpEnabled={session.rsvp_enabled}
                 />
               )}
-              <NoteButton
+            </div>
+          )}
+
+          {/* Personal Notes (Whova-style card) */}
+          {user && (
+            <div className="mt-6">
+              <NoteCard
                 sessionId={sessionId}
                 initialContent={noteContent}
               />
