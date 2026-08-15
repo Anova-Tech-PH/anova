@@ -475,21 +475,29 @@ export default async function PublicSchedulePage({
                       </div>
                     )}
 
-                    {/* Actions: Add to My Agenda + Notes */}
-                    {user && (
-                      <div className="mt-3 border-t pt-3 flex items-center gap-2 flex-wrap">
-                        <BookmarkButton
-                          sessionId={session.id}
-                          initialBookmarked={bookmarkedIds.has(session.id)}
-                        />
-                        {session.type !== "break" && (
-                          <NoteButton
+                    {/* Actions: Add to My Agenda + Notes + View Details */}
+                    <div className="mt-3 border-t pt-3 flex items-center gap-2 flex-wrap">
+                      {user && (
+                        <>
+                          <BookmarkButton
                             sessionId={session.id}
-                            initialContent={sessionNote}
+                            initialBookmarked={bookmarkedIds.has(session.id)}
                           />
-                        )}
-                      </div>
-                    )}
+                          {session.type !== "break" && (
+                            <NoteButton
+                              sessionId={session.id}
+                              initialContent={sessionNote}
+                            />
+                          )}
+                        </>
+                      )}
+                      <Link
+                        href={`${basePath}/schedule/${session.id}`}
+                        className="ml-auto text-xs font-medium text-primary hover:underline"
+                      >
+                        View Details →
+                      </Link>
+                    </div>
                   </div>
                 );
               })
