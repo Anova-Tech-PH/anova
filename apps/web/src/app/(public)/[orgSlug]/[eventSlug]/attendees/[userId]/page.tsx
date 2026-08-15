@@ -2,6 +2,7 @@ import { createClient } from "@attendly/ui/supabase/server";
 import {
   getAttendeeProfile,
   getBookmarkedAttendeeIds,
+  getAttendeeNotes,
 } from "@/features/attendee-profile/queries";
 import { AttendeeProfileView } from "@/features/attendee-profile/components/attendee-profile-view";
 
@@ -71,7 +72,10 @@ export default async function AttendeeProfilePage({
     );
   }
 
-  const bookmarkedIds = await getBookmarkedAttendeeIds(event.id);
+  const [bookmarkedIds, attendeeNotes] = await Promise.all([
+    getBookmarkedAttendeeIds(event.id),
+    getAttendeeNotes(event.id),
+  ]);
   const basePath = `/${orgSlug}/${eventSlug}/attendees`;
 
   return (
@@ -91,6 +95,7 @@ export default async function AttendeeProfilePage({
       eventId={event.id}
       basePath={basePath}
       isBookmarked={bookmarkedIds.includes(userId)}
+      noteContent={attendeeNotes[userId] ?? ""}
     />
   );
 }

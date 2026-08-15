@@ -2,6 +2,8 @@ import { createClient } from "@attendly/ui/supabase/server";
 import {
   getAttendeeDirectory,
   getBookmarkedAttendeeIds,
+  getAttendeeCategoryMap,
+  getAttendeeNotes,
 } from "@/features/attendee-profile/queries";
 import { AttendeeDirectory } from "@/features/attendee-profile/components/attendee-directory";
 
@@ -60,9 +62,11 @@ export default async function AttendeesPage({
     (query.tab as "all" | "recommended" | "bookmarked" | "categories") || "all";
   const page = parseInt(query.page || "1", 10);
 
-  const [directoryData, bookmarkedIds] = await Promise.all([
+  const [directoryData, bookmarkedIds, categoryMap, attendeeNotes] = await Promise.all([
     getAttendeeDirectory(event.id, { tab, search: query.search, page }),
     getBookmarkedAttendeeIds(event.id),
+    getAttendeeCategoryMap(event.id),
+    getAttendeeNotes(event.id),
   ]);
 
   return (
@@ -71,6 +75,8 @@ export default async function AttendeesPage({
       profiles={directoryData.profiles}
       total={directoryData.total}
       bookmarkedIds={bookmarkedIds}
+      categoryMap={categoryMap}
+      attendeeNotes={attendeeNotes}
       currentTab={tab}
       currentSearch={query.search || ""}
       currentPage={page}

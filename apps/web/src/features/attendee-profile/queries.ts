@@ -88,6 +88,42 @@ export async function getMyProfile(eventId: string) {
   return profile;
 }
 
+export async function getAttendeeCategoryMap(eventId: string) {
+  const supabase = await createClient();
+
+  const { data: registrations } = await supabase
+    .from("registrations")
+    .select("user_id, category_id, attendee_categories(name, color)")
+    .eq("event_id", eventId)
+    .not("category_id", "is", null);
+
+  const map: Record<string, { name: string; color: string }> = {};
+  for (const r of registrations ?? []) {
+    const cat = r.attendee_categories as { name: string; color: string } | null;
+    if (r.user_id && cat) {
+      map[r.user_id] = { name: cat.name, color: cat.color };
+    }
+  }
+  return map;
+}
+
+export async function getAttendeeNotes(eventId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return {};
+
+  const { data } = await supabase
+    .from("attendee_notes")
+    .select("target_user_id, content")
+    .eq("user_id", user.id);
+
+  const map: Record<string, string> = {};
+  for (const n of data ?? []) {
+    map[n.target_user_id] = n.content;
+  }
+  return map;
+}
+
 export async function getBookmarkedAttendeeIds(eventId: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

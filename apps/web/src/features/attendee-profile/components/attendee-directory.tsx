@@ -11,6 +11,8 @@ interface AttendeeDirectoryProps {
   profiles: AttendeeCardProfile[];
   total: number;
   bookmarkedIds: string[];
+  categoryMap: Record<string, { name: string; color: string }>;
+  attendeeNotes: Record<string, string>;
   currentTab: "all" | "recommended" | "bookmarked" | "categories";
   currentSearch: string;
   currentPage: number;
@@ -42,6 +44,8 @@ export function AttendeeDirectory({
   profiles,
   total,
   bookmarkedIds,
+  categoryMap,
+  attendeeNotes,
   currentTab,
   currentSearch,
   currentPage,
@@ -160,6 +164,9 @@ export function AttendeeDirectory({
                       eventId={eventId}
                       basePath={basePath}
                       isBookmarked={bookmarkedSet.has(profile.id)}
+                      categoryName={categoryMap[profile.id]?.name}
+                      categoryColor={categoryMap[profile.id]?.color}
+                      noteContent={attendeeNotes[profile.id] ?? ""}
                     />
                   ))}
                 </div>

@@ -107,6 +107,27 @@ describe("Attendee Profile Actions", () => {
     });
   });
 
+  describe("saveAttendeeNote", () => {
+    it("upserts note and revalidates", async () => {
+      mockFrom.mockReturnValue(createQueryMock({ data: null, error: null }));
+
+      const { saveAttendeeNote } = await import("./actions");
+      await saveAttendeeNote("target-user-1", "Great talk about AI");
+
+      expect(mockFrom).toHaveBeenCalledWith("attendee_notes");
+      expect(revalidatePath).toHaveBeenCalledWith("/", "layout");
+    });
+
+    it("throws when not authenticated", async () => {
+      mockAuth.getUser.mockResolvedValue({ data: { user: null }, error: null });
+
+      const { saveAttendeeNote } = await import("./actions");
+      await expect(
+        saveAttendeeNote("target-user-1", "note")
+      ).rejects.toThrow("Not authenticated");
+    });
+  });
+
   describe("updateProfileInterests", () => {
     it("deletes existing interests and inserts new ones", async () => {
       mockFrom.mockReturnValue(createQueryMock({ data: null, error: null }));
