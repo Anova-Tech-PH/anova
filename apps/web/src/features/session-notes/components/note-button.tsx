@@ -98,7 +98,7 @@ export function NoteCard({
   sessionId: string;
   initialContent?: string | null;
 }) {
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(true);
   const [content, setContent] = useState(initialContent ?? "");
   const [savedContent, setSavedContent] = useState(initialContent ?? "");
   const [isPending, startTransition] = useTransition();

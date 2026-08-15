@@ -15,9 +15,9 @@ import { NoteCard } from "@/features/session-notes/components/note-button";
 import { RsvpButton } from "@/features/rsvp/components/rsvp-button";
 import { SessionFeedbackForm } from "@/features/feedback/components/session-feedback-form";
 import { SessionPollCard } from "@/features/polls/components/session-poll-card";
+import { AddPollDialog } from "@/features/polls/components/add-poll-dialog";
 import { SessionChat } from "@/features/session-chat/components/session-chat";
-import { QAQuestionList } from "@/features/session-qa/components/qa-question-list";
-import { AskQuestionForm } from "@/features/session-qa/components/ask-question-form";
+import { SessionCommunityPreview } from "@/features/community/components/session-community-preview";
 import { SessionDetailTabs } from "./session-detail-tabs";
 import type { FeedbackQuestion } from "@/features/feedback/queries";
 import type { PollWithResults } from "@/features/polls/queries";
@@ -74,7 +74,7 @@ export default async function SessionDetailPage({
   // Verify this session belongs to a published event at this slug
   const { data: event } = await supabase
     .from("events")
-    .select("id, title")
+    .select("id, title, organization_id")
     .eq("id", session.event_id)
     .eq("status", "published")
     .single();
@@ -95,10 +95,12 @@ export default async function SessionDetailPage({
     noteResult,
     pollsResult,
     feedbackFormResult,
-    questionsResult,
+    communityResult,
+    communityCountResult,
     chatResult,
     attendingResult,
     profileResult,
+    orgMemberResult,
   ] = await Promise.all([
     // Bookmark state
     user
@@ -162,17 +164,19 @@ export default async function SessionDetailPage({
           .eq("id", session.feedback_form_id)
           .single()
       : Promise.resolve({ data: null }),
-    // Q&A questions
-    session.qa_enabled
-      ? supabase
-          .from("session_questions")
-          .select(
-            "id, session_id, event_id, user_id, question_text, status, is_anonymous, upvote_count, answer_text, created_at"
-          )
-          .eq("session_id", sessionId)
-          .in("status", ["approved", "answered"])
-          .order("upvote_count", { ascending: false })
-      : Promise.resolve({ data: null }),
+    // Community topics (latest 5 for sidebar preview)
+    supabase
+      .from("community_topics")
+      .select("id, title, type, description, pinned, community_posts(count)")
+      .eq("event_id", event.id)
+      .order("pinned", { ascending: false })
+      .order("created_at", { ascending: false })
+      .limit(5),
+    // Community total count
+    supabase
+      .from("community_topics")
+      .select("id", { count: "exact", head: true })
+      .eq("event_id", event.id),
     // Chat messages
     supabase
       .from("session_chat_messages")
@@ -193,6 +197,15 @@ export default async function SessionDetailPage({
           .eq("event_id", event.id)
           .single()
       : Promise.resolve({ data: null }),
+    // Org membership check (for poll creation)
+    user
+      ? supabase
+          .from("organization_members")
+          .select("user_id")
+          .eq("organization_id", event.organization_id)
+          .eq("user_id", user.id)
+          .single()
+      : Promise.resolve({ data: null }),
   ]);
 
   const isBookmarked = !!bookmarkResult.data;
@@ -202,6 +215,7 @@ export default async function SessionDetailPage({
   const userRsvpStatus = userRsvpResult.data?.status ?? null;
   const noteContent = noteResult.data?.content ?? null;
   const attendingCount = attendingResult.count ?? 0;
+  const canCreatePoll = !!orgMemberResult.data;
 
   // Process polls with vote counts
   const pollsWithResults: { poll: PollWithResults; userVote: string | null }[] =
@@ -239,34 +253,17 @@ export default async function SessionDetailPage({
     });
   }
 
-  // Process Q&A questions with upvote state
-  let questions: {
-    id: string;
-    session_id: string;
-    event_id: string;
-    user_id: string | null;
-    question_text: string;
-    status: string;
-    is_anonymous: boolean;
-    upvote_count: number;
-    answer_text: string | null;
-    created_at: string;
-    is_upvoted: boolean;
-  }[] = [];
-  if (questionsResult.data) {
-    let upvotedIds = new Set<string>();
-    if (user) {
-      const { data: upvotes } = await supabase
-        .from("question_upvotes")
-        .select("question_id")
-        .eq("user_id", user.id);
-      upvotedIds = new Set(upvotes?.map((u) => u.question_id) ?? []);
-    }
-    questions = (questionsResult.data ?? []).map((q) => ({
-      ...q,
-      is_upvoted: upvotedIds.has(q.id),
-    }));
-  }
+  // Process community topics for sidebar preview
+  const communityTopics = (communityResult.data ?? []).map((t) => ({
+    id: t.id as string,
+    title: t.title as string,
+    type: t.type as "discussion" | "announcement" | "meetup" | "ask_organizer",
+    description: t.description as string | null,
+    post_count:
+      (t.community_posts as unknown as { count: number }[])?.[0]?.count ?? 0,
+    pinned: t.pinned as boolean,
+  }));
+  const communityTotalCount = communityCountResult.count ?? 0;
 
   // Process chat messages with author profiles
   const chatUserIds = [
@@ -443,7 +440,7 @@ export default async function SessionDetailPage({
                 {speakers.length === 1 ? "Speaker" : "Speakers"}
               </h2>
               <div className="mt-3 space-y-4">
-                {speakers.map((speaker) => (
+                {speakers.map((speaker: { id: string; name: string; title: string | null; company: string | null; photo: string | null; bio: string | null }) => (
                   <div key={speaker.id} className="flex gap-3">
                     <Avatar
                       src={speaker.photo}
@@ -490,6 +487,14 @@ export default async function SessionDetailPage({
             <SessionDetailTabs
               pollsContent={
                 <div className="space-y-4 p-4">
+                  {canCreatePoll && (
+                    <div className="flex justify-end">
+                      <AddPollDialog
+                        eventId={event.id}
+                        sessionId={sessionId}
+                      />
+                    </div>
+                  )}
                   {pollsWithResults.length === 0 ? (
                     <p className="py-8 text-center text-sm text-muted-foreground">
                       No polls for this session yet.
@@ -514,28 +519,14 @@ export default async function SessionDetailPage({
                   currentUserAvatar={profileResult.data?.avatar_url}
                 />
               }
-              qaContent={
-                session.qa_enabled ? (
-                  <div className="p-4 space-y-4">
-                    {user && (
-                      <AskQuestionForm
-                        sessionId={sessionId}
-                        eventId={event.id}
-                      />
-                    )}
-                    <QAQuestionList
-                      questions={questions as Parameters<typeof QAQuestionList>[0]["questions"]}
-                      sessionTitle={session.title}
-                    />
-                  </div>
-                ) : (
-                  <p className="p-4 py-8 text-center text-sm text-muted-foreground">
-                    Q&A is not enabled for this session.
-                  </p>
-                )
+              communityContent={
+                <SessionCommunityPreview
+                  topics={communityTopics}
+                  communityUrl={`${basePath}/community`}
+                  totalCount={communityTotalCount}
+                />
               }
               hasPolls={pollsWithResults.length > 0}
-              hasQA={session.qa_enabled === true}
             />
           </div>
         </div>

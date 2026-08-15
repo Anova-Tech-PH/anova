@@ -44,6 +44,9 @@ export async function createPoll(
 
   if (error) throw new Error(error.message);
   revalidatePath(`/events/${eventId}/polls`);
+  if (data.session_id) {
+    revalidatePath("/", "layout");
+  }
   return poll;
 }
 

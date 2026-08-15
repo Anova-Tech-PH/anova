@@ -1,22 +1,20 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { BarChart3, MessageCircle, HelpCircle } from "lucide-react";
+import { BarChart3, MessageCircle, Users } from "lucide-react";
 
-type TabKey = "polls" | "chat" | "qa";
+type TabKey = "polls" | "chat" | "community";
 
 export function SessionDetailTabs({
   pollsContent,
   chatContent,
-  qaContent,
+  communityContent,
   hasPolls,
-  hasQA,
 }: {
   pollsContent: ReactNode;
   chatContent: ReactNode;
-  qaContent: ReactNode;
+  communityContent: ReactNode;
   hasPolls: boolean;
-  hasQA: boolean;
 }) {
   const tabs: { key: TabKey; label: string; icon: ReactNode }[] = [
     {
@@ -30,9 +28,9 @@ export function SessionDetailTabs({
       icon: <MessageCircle className="h-4 w-4" />,
     },
     {
-      key: "qa",
-      label: "Q&A",
-      icon: <HelpCircle className="h-4 w-4" />,
+      key: "community",
+      label: "Community",
+      icon: <Users className="h-4 w-4" />,
     },
   ];
 
@@ -65,7 +63,7 @@ export function SessionDetailTabs({
       <div className="flex-1 overflow-y-auto">
         {activeTab === "polls" && pollsContent}
         {activeTab === "chat" && chatContent}
-        {activeTab === "qa" && qaContent}
+        {activeTab === "community" && communityContent}
       </div>
     </div>
   );
