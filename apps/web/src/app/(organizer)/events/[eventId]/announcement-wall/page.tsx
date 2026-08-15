@@ -26,6 +26,8 @@ export default async function AnnouncementWallPage({
   const eventSlug = event?.slug;
   const wallUrl =
     orgSlug && eventSlug ? `/${orgSlug}/${eventSlug}/wall` : null;
+  const streamUrl =
+    orgSlug && eventSlug ? `/${orgSlug}/${eventSlug}/stream` : null;
 
   const [config, customSlides] = await Promise.all([
     getWallConfig(eventId),
@@ -41,6 +43,7 @@ export default async function AnnouncementWallPage({
       defaults={defaults}
       customSlides={customSlides}
       wallUrl={wallUrl}
+      streamUrl={streamUrl}
     />
   );
 }

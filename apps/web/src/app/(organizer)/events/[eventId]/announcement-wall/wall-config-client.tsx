@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { ExternalLink, Plus, Trash2, Loader2, Pencil } from "lucide-react";
+import { ExternalLink, Plus, Trash2, Loader2, Pencil, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 import {
   Button,
@@ -26,6 +26,7 @@ interface Props {
   defaults: Defaults;
   customSlides: CustomSlide[];
   wallUrl: string | null;
+  streamUrl: string | null;
 }
 
 const SLIDE_TYPES = [
@@ -67,6 +68,7 @@ export function WallConfigClient({
   defaults,
   customSlides: initialSlides,
   wallUrl,
+  streamUrl,
 }: Props) {
   // Merge defaults with saved config
   const merged = { ...defaults, ...config };
@@ -80,6 +82,10 @@ export function WallConfigClient({
     }
     return toggles;
   });
+
+  const [activityStreamEnabled, setActivityStreamEnabled] = useState(
+    merged.activity_stream_enabled ?? false
+  );
 
   const [slides, setSlides] = useState<CustomSlide[]>(initialSlides);
   const [isSaving, startSaveTransition] = useTransition();
@@ -122,6 +128,7 @@ export function WallConfigClient({
           rotation_speed: rotationSpeed,
           theme,
           ...slideToggles,
+          activity_stream_enabled: activityStreamEnabled,
         });
         toast.success("Wall settings saved");
       } catch (err) {
@@ -365,6 +372,53 @@ export function WallConfigClient({
         )}
       </section>
 
+      {/* Activity Stream */}
+      <section className="space-y-4 rounded-lg border p-6">
+        <div>
+          <h3 className="text-lg font-medium">Activity Stream</h3>
+          <p className="text-sm text-muted-foreground">
+            Embeddable real-time feed for your event website
+          </p>
+        </div>
+
+        <label className="flex cursor-pointer items-start gap-3">
+          <input
+            type="checkbox"
+            checked={activityStreamEnabled}
+            onChange={(e) => setActivityStreamEnabled(e.target.checked)}
+            className="mt-0.5 h-4 w-4 rounded border-input"
+          />
+          <div>
+            <span className="text-sm font-medium">Enable Activity Stream</span>
+            <p className="text-xs text-muted-foreground">
+              Show a scrollable feed of event activity that can be embedded on
+              external websites
+            </p>
+          </div>
+        </label>
+
+        {activityStreamEnabled && streamUrl && (
+          <div className="space-y-4 pt-2">
+            <div className="flex items-center gap-2">
+              <Button variant="outline" asChild>
+                <a href={streamUrl} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="mr-2 h-4 w-4" />
+                  Preview Stream
+                </a>
+              </Button>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Embed Code</label>
+              <p className="mb-2 text-xs text-muted-foreground">
+                Paste this into your event website HTML
+              </p>
+              <EmbedCodeSnippet streamUrl={streamUrl} />
+            </div>
+          </div>
+        )}
+      </section>
+
       {/* Slide Form Modal */}
       {modalOpen && (
         <ModalOverlay onClose={closeModal}>
@@ -443,6 +497,43 @@ export function WallConfigClient({
       )}
 
       {confirmDialog}
+    </div>
+  );
+}
+
+function EmbedCodeSnippet({ streamUrl }: { streamUrl: string }) {
+  const [copied, setCopied] = useState(false);
+  const embedCode = `<iframe src="${typeof window !== "undefined" ? window.location.origin : ""}${streamUrl}/embed" width="400" height="600" frameborder="0" style="border:none;border-radius:8px;"></iframe>`;
+
+  function handleCopy() {
+    navigator.clipboard.writeText(embedCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  return (
+    <div className="relative">
+      <pre className="rounded-lg border bg-muted/50 p-3 text-xs overflow-x-auto">
+        {embedCode}
+      </pre>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleCopy}
+        className="absolute right-2 top-2"
+      >
+        {copied ? (
+          <>
+            <Check className="mr-1 h-3 w-3" />
+            Copied
+          </>
+        ) : (
+          <>
+            <Copy className="mr-1 h-3 w-3" />
+            Copy
+          </>
+        )}
+      </Button>
     </div>
   );
 }
