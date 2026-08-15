@@ -1,6 +1,40 @@
 "use client";
 
 import type { BadgeDefinition, UserBadge } from "@/features/gamification/queries";
+import {
+  Footprints,
+  Bird,
+  BarChart,
+  MessageSquare,
+  Users,
+  TrendingUp,
+  Trophy,
+  Award,
+  Star,
+  Camera,
+  Heart,
+  Zap,
+  Target,
+  Flame,
+  type LucideIcon,
+} from "lucide-react";
+
+const BADGE_ICONS: Record<string, LucideIcon> = {
+  footprints: Footprints,
+  butterfly: Bird,
+  "bar-chart": BarChart,
+  "message-square": MessageSquare,
+  users: Users,
+  "trending-up": TrendingUp,
+  trophy: Trophy,
+  award: Award,
+  star: Star,
+  camera: Camera,
+  heart: Heart,
+  zap: Zap,
+  target: Target,
+  flame: Flame,
+};
 
 export function BadgeGrid({
   allBadges,
@@ -26,7 +60,14 @@ export function BadgeGrid({
                 earned ? "bg-card" : "bg-muted/30 opacity-50"
               }`}
             >
-              <span className="text-2xl">{badge.icon}</span>
+              {(() => {
+                const Icon = BADGE_ICONS[badge.icon];
+                return Icon ? (
+                  <Icon className="h-7 w-7" />
+                ) : (
+                  <Award className="h-7 w-7" />
+                );
+              })()}
               <span className="text-xs font-medium">{badge.name}</span>
               <span className="text-[10px] text-muted-foreground">
                 {earned ? "Earned!" : badge.description}

@@ -45,7 +45,7 @@ export function MyPointsPanel({
             {userName.charAt(0).toUpperCase()}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="font-medium truncate">{userName}</p>
+            <p className="text-sm font-medium leading-tight">{userName}</p>
             <p className="text-sm text-muted-foreground">{totalPoints} points</p>
           </div>
           <div className="text-right text-sm">
