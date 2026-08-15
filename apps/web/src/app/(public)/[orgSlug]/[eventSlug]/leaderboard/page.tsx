@@ -6,12 +6,17 @@ import {
   getBadgeDefinitions,
   getUserBadges,
   getChallengeProgress,
+  getUserPointSummary,
 } from "@/features/gamification/queries";
+import {
+  getCongratulationCounts,
+  getUserCongratulations,
+} from "@/features/gamification/congratulation-queries";
 import { LeaderboardFull } from "@/features/gamification/components/leaderboard-full";
-import { ChallengesList } from "@/features/gamification/components/challenges-list";
 import { BadgeGrid } from "@/features/gamification/components/badge-grid";
-import { Trophy } from "lucide-react";
+import { MyPointsPanel } from "@/features/gamification/components/my-points-panel";
 import { ReferralShare } from "@/features/gamification/components/referral-share";
+import { Trophy, Gift } from "lucide-react";
 
 export default async function LeaderboardPage({
   params,
@@ -21,7 +26,6 @@ export default async function LeaderboardPage({
   const { orgSlug, eventSlug } = await params;
   const supabase = await createClient();
 
-  // Resolve event from slugs
   const { data: org } = await supabase
     .from("organizations")
     .select("id")
@@ -39,7 +43,6 @@ export default async function LeaderboardPage({
 
   const config = await getGamificationConfig(event.id);
 
-  // If gamification is not enabled, show coming soon
   if (!config?.enabled) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-16 text-center">
@@ -55,52 +58,122 @@ export default async function LeaderboardPage({
     );
   }
 
-  // Get current user
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Fetch all data in parallel
-  const [leaderboard, badges, userBadges, challenges] = await Promise.all([
+  const [
+    leaderboard,
+    badges,
+    userBadges,
+    challenges,
+    congCounts,
+    userCongs,
+    pointSummary,
+    profileResult,
+  ] = await Promise.all([
     getLeaderboard(event.id, { limit: 50 }),
     getBadgeDefinitions(event.id),
     user ? getUserBadges(event.id, user.id) : Promise.resolve([]),
     user ? getChallengeProgress(event.id, user.id) : Promise.resolve([]),
+    getCongratulationCounts(event.id),
+    user
+      ? getUserCongratulations(event.id, user.id)
+      : Promise.resolve(new Set<string>()),
+    user ? getUserPointSummary(event.id, user.id) : Promise.resolve(null),
+    user
+      ? supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("id", user.id)
+          .single()
+      : Promise.resolve({ data: null }),
   ]);
 
-  // Find current user's rank and points
+  // Convert Map/Set to serializable formats for client components
+  const congratulationCounts: Record<string, number> = {};
+  for (const [k, v] of congCounts) {
+    congratulationCounts[k] = v;
+  }
+  const userCongratulations = Array.from(userCongs);
+
+  // Calculate completion percentage
+  const enabledChallenges = challenges.filter((c) => c.enabled);
+  const completedChallenges = enabledChallenges.filter((c) => c.count > 0);
+  const completionPercent =
+    enabledChallenges.length > 0
+      ? Math.round(
+          (completedChallenges.length / enabledChallenges.length) * 100
+        )
+      : 0;
+
+  const userName =
+    (profileResult.data as { full_name: string | null } | null)?.full_name ??
+    user?.email ??
+    "Anonymous";
+
   const userEntry = user
     ? leaderboard.find((e) => e.user_id === user.id)
     : null;
 
   return (
-    <div className="mx-auto max-w-2xl space-y-8 px-4 py-8">
-      <LeaderboardFull
-        entries={leaderboard}
-        currentUserId={user?.id ?? null}
-        userRank={userEntry?.rank ?? null}
-        userPoints={userEntry?.total_points ?? null}
-        title={config.leaderboard_title ?? "Leaderboard"}
-        eventId={event.id}
-      />
-
-      {user && challenges.length > 0 && (
-        <ChallengesList challenges={challenges} />
+    <div className="mx-auto max-w-5xl px-4 py-8">
+      {/* Prize banner */}
+      {config.prizes_description && (
+        <div className="mb-6 flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+          <Gift className="h-5 w-5 shrink-0 text-amber-600" />
+          <p className="text-sm font-medium text-amber-900">
+            {config.prizes_description}
+          </p>
+        </div>
       )}
 
-      {badges.length > 0 && (
-        <BadgeGrid
-          allBadges={badges}
-          earnedBadges={userBadges}
-        />
-      )}
+      <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
+        {/* Left column — Rankings */}
+        <div className="space-y-8">
+          <LeaderboardFull
+            entries={leaderboard}
+            currentUserId={user?.id ?? null}
+            userRank={userEntry?.rank ?? null}
+            userPoints={userEntry?.total_points ?? null}
+            title={config.leaderboard_title ?? "Leaderboard"}
+            eventId={event.id}
+            congratulationCounts={congratulationCounts}
+            userCongratulations={userCongratulations}
+          />
 
-      {user && (
-        <ReferralShare
-          eventId={event.id}
-          userId={user.id}
-          baseUrl={`/${orgSlug}/${eventSlug}`}
-        />
+          {badges.length > 0 && (
+            <BadgeGrid allBadges={badges} earnedBadges={userBadges} />
+          )}
+        </div>
+
+        {/* Right column — My Points (logged-in users only) */}
+        {user && challenges.length > 0 && (
+          <div className="space-y-6">
+            <MyPointsPanel
+              userName={userName}
+              totalPoints={pointSummary?.totalPoints ?? 0}
+              rank={pointSummary?.rank ?? null}
+              completionPercent={completionPercent}
+              challenges={challenges}
+              basePath={`/${orgSlug}/${eventSlug}`}
+            />
+
+            <ReferralShare
+              eventId={event.id}
+              userId={user.id}
+              baseUrl={`/${orgSlug}/${eventSlug}`}
+            />
+          </div>
+        )}
+      </div>
+
+      {!user && (
+        <div className="mt-8 text-center">
+          <p className="text-sm text-muted-foreground">
+            Sign in to track your progress and earn points!
+          </p>
+        </div>
       )}
     </div>
   );
