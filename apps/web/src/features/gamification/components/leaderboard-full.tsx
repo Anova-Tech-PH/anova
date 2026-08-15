@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Trophy } from "lucide-react";
+import { Trophy, PartyPopper } from "lucide-react";
 import { createClient } from "@attendly/ui/supabase/client";
 import type { LeaderboardEntry } from "@/features/gamification/queries";
+import { toggleCongratulation } from "../congratulation-actions";
 
 export function LeaderboardFull({
   entries: initialEntries,
@@ -12,6 +13,8 @@ export function LeaderboardFull({
   userPoints,
   title,
   eventId,
+  congratulationCounts: initialCounts,
+  userCongratulations: initialUserCongs,
 }: {
   entries: LeaderboardEntry[];
   currentUserId: string | null;
@@ -19,8 +22,16 @@ export function LeaderboardFull({
   userPoints: number | null;
   title: string;
   eventId: string;
+  congratulationCounts?: Record<string, number>;
+  userCongratulations?: string[];
 }) {
   const [entries, setEntries] = useState(initialEntries);
+  const [congratsCounts, setCongratsCounts] = useState<Record<string, number>>(
+    initialCounts ?? {}
+  );
+  const [congratulatedSet, setCongratulatedSet] = useState(
+    new Set(initialUserCongs ?? [])
+  );
 
   useEffect(() => {
     const supabase = createClient();
@@ -75,6 +86,38 @@ export function LeaderboardFull({
     };
   }, [eventId]);
 
+  async function handleCongratulate(toUserId: string) {
+    const wasCongratulated = congratulatedSet.has(toUserId);
+
+    // Optimistic update
+    setCongratulatedSet((prev) => {
+      const next = new Set(prev);
+      if (wasCongratulated) next.delete(toUserId);
+      else next.add(toUserId);
+      return next;
+    });
+    setCongratsCounts((prev) => ({
+      ...prev,
+      [toUserId]: (prev[toUserId] ?? 0) + (wasCongratulated ? -1 : 1),
+    }));
+
+    try {
+      await toggleCongratulation(eventId, toUserId);
+    } catch {
+      // Revert on error
+      setCongratulatedSet((prev) => {
+        const next = new Set(prev);
+        if (wasCongratulated) next.add(toUserId);
+        else next.delete(toUserId);
+        return next;
+      });
+      setCongratsCounts((prev) => ({
+        ...prev,
+        [toUserId]: (prev[toUserId] ?? 0) + (wasCongratulated ? 1 : -1),
+      }));
+    }
+  }
+
   return (
     <div className="space-y-4">
       <h2 className="text-lg font-semibold flex items-center gap-2">
@@ -122,6 +165,23 @@ export function LeaderboardFull({
                   {isMe && <span className="ml-1 text-xs text-muted-foreground">(You)</span>}
                 </span>
                 <span className="text-sm font-semibold transition-all duration-300">{entry.total_points} pts</span>
+                {currentUserId && !isMe && (
+                  <button
+                    onClick={() => handleCongratulate(entry.user_id)}
+                    className={`ml-2 flex items-center gap-1 text-xs transition-colors ${
+                      congratulatedSet.has(entry.user_id)
+                        ? "text-[oklch(0.445_0.107_195)]"
+                        : "text-muted-foreground hover:text-[oklch(0.445_0.107_195)]"
+                    }`}
+                  >
+                    <PartyPopper className="h-3.5 w-3.5" />
+                    <span>
+                      {congratulatedSet.has(entry.user_id) ? "Congratulated" : "Congratulate"}
+                      {(congratsCounts[entry.user_id] ?? 0) > 0 &&
+                        ` (${congratsCounts[entry.user_id]})`}
+                    </span>
+                  </button>
+                )}
               </div>
             );
           })}
