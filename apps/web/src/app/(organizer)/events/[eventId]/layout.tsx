@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, Calendar, ExternalLink } from "lucide-react";
+import { ArrowLeft, Calendar } from "lucide-react";
 import { createClient } from "@attendly/ui/supabase/server";
 import { notFound } from "next/navigation";
 import { Badge } from "@attendly/ui/components";
@@ -7,6 +7,7 @@ import { EventSubSidebar } from "./event-sub-sidebar";
 import { MobileEventNav } from "./mobile-event-nav";
 import { EventTopTabs } from "./event-top-tabs";
 import { EventNavProvider } from "./event-nav-context";
+import { PreviewDropdown } from "./preview-dropdown";
 
 export default async function EventLayout({
   children,
@@ -222,14 +223,10 @@ export default async function EventLayout({
                 {event.status}
               </Badge>
               {portalUrl && event.status === "published" && (
-                <Link
-                  href={portalUrl}
-                  target="_blank"
-                  className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                >
-                  <ExternalLink className="h-3 w-3" />
-                  View Web Portal
-                </Link>
+                <PreviewDropdown
+                  portalUrl={portalUrl}
+                  registerUrl={`${portalUrl}/register`}
+                />
               )}
             </div>
             <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
@@ -248,14 +245,10 @@ export default async function EventLayout({
               {event.status}
             </Badge>
             {portalUrl && event.status === "published" && (
-              <Link
-                href={portalUrl}
-                target="_blank"
-                className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-              >
-                <ExternalLink className="h-3 w-3" />
-                View Web Portal
-              </Link>
+              <PreviewDropdown
+                portalUrl={portalUrl}
+                registerUrl={`${portalUrl}/register`}
+              />
             )}
           </div>
           <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
