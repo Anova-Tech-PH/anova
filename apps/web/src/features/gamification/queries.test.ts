@@ -335,11 +335,12 @@ describe("Gamification Queries", () => {
             error: null,
           });
         }
-        // point_transactions count by activity_type
+        // point_transactions — individual rows (counted client-side)
         return createQueryMock({
           data: [
-            { activity_type: "session_attend", count: 2 },
-            { activity_type: "poll_vote", count: 1 },
+            { activity_type: "session_attend" },
+            { activity_type: "session_attend" },
+            { activity_type: "poll_vote" },
           ],
           error: null,
         });
