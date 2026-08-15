@@ -175,6 +175,12 @@ export default async function PublicSpeakerDetailPage({
                           <span className="flex items-center gap-1">
                             <MapPin className="h-3.5 w-3.5" />
                             {session.location}
+                            <Link
+                              href={`/${orgSlug}/${eventSlug}/floormap?highlight=${encodeURIComponent(session.location)}`}
+                              className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                            >
+                              View Map
+                            </Link>
                           </span>
                         )}
                       </div>

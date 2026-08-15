@@ -435,6 +435,14 @@ export default async function PublicEventPage({
                                 {session.location}
                               </div>
                             )}
+                            {session.location && (
+                              <Link
+                                href={`/${orgSlug}/${eventSlug}/floormap?highlight=${encodeURIComponent(session.location)}`}
+                                className="mt-0.5 inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                              >
+                                View Map
+                              </Link>
+                            )}
                           </div>
                         </div>
                       </div>

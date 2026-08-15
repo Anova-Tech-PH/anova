@@ -363,6 +363,12 @@ export default async function SessionDetailPage({
               <span className="inline-flex items-center gap-1.5">
                 <MapPin className="h-4 w-4" />
                 {session.location}
+                <Link
+                  href={`/${orgSlug}/${eventSlug}/floormap?highlight=${encodeURIComponent(session.location)}`}
+                  className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                >
+                  View Map
+                </Link>
               </span>
             )}
             <span className="inline-flex items-center gap-1.5">
