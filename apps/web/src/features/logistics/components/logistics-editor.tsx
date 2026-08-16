@@ -1,354 +1,235 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2 } from "lucide-react";
-import { Button, Input, Textarea, Card, CardContent } from "@attendly/ui/components";
-import { updateLogistics } from "../actions";
-import type { EventLogistics, Hotel, Contact, CustomSection } from "../queries";
+import {
+  Plus,
+  Trash2,
+  GripVertical,
+  Save,
+  MapPin,
+  Car,
+  Building,
+  Plane,
+  Map,
+  PartyPopper,
+  FileText,
+  ChevronDown,
+} from "lucide-react";
+import { Button, Card, CardContent, Input, ConfirmDialog } from "@attendly/ui/components";
+import { MarkdownTextarea } from "./markdown-toolbar";
+import {
+  createLogisticsItem,
+  updateLogisticsItem,
+  deleteLogisticsItem,
+} from "../actions";
+import type { LogisticsItem } from "../queries";
+import { TEMPLATES } from "../queries";
 
-export function LogisticsEditor({
-  eventId,
-  initialData,
+const TEMPLATE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  welcome: PartyPopper,
+  venue: MapPin,
+  parking: Car,
+  hotel: Building,
+  travel_info: Plane,
+  floor_map: Map,
+  custom: FileText,
+};
+
+const TEMPLATE_COLORS: Record<string, string> = {
+  welcome: "bg-amber-100 text-amber-800",
+  venue: "bg-blue-100 text-blue-800",
+  parking: "bg-green-100 text-green-800",
+  hotel: "bg-purple-100 text-purple-800",
+  travel_info: "bg-cyan-100 text-cyan-800",
+  floor_map: "bg-rose-100 text-rose-800",
+  custom: "bg-gray-100 text-gray-800",
+};
+
+function ItemCard({
+  item,
+  onUpdate,
+  onDelete,
 }: {
-  eventId: string;
-  initialData: EventLogistics;
+  item: LogisticsItem;
+  onUpdate: (id: string, updates: { title?: string; content?: string }) => void;
+  onDelete: (id: string) => void;
 }) {
+  const [title, setTitle] = useState(item.title);
+  const [content, setContent] = useState(item.content);
   const [saving, setSaving] = useState(false);
-  const [venueDescription, setVenueDescription] = useState(initialData.venue_description);
-  const [venueMapUrl, setVenueMapUrl] = useState(initialData.venue_map_url);
-  const [parking, setParking] = useState(initialData.logistics.parking ?? { title: "", body: "" });
-  const [transportation, setTransportation] = useState(initialData.logistics.transportation ?? { title: "", body: "" });
-  const [wifi, setWifi] = useState(initialData.logistics.wifi ?? { network: "", password: "" });
-  const [hotels, setHotels] = useState<Hotel[]>(initialData.logistics.hotels ?? []);
-  const [contacts, setContacts] = useState<Contact[]>(initialData.logistics.contacts ?? []);
-  const [custom_sections, setCustomSections] = useState<CustomSection[]>(initialData.logistics.custom_sections ?? []);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const dirty = title !== item.title || content !== item.content;
+  const Icon = TEMPLATE_ICONS[item.template] ?? FileText;
 
   async function handleSave() {
     setSaving(true);
     try {
-      await updateLogistics(eventId, {
-        venue_description: venueDescription,
-        venue_map_url: venueMapUrl,
-        logistics: {
-          parking,
-          transportation,
-          wifi,
-          hotels,
-          contacts,
-          custom_sections,
-        },
-      });
-      toast.success("Logistics saved");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to save");
+      await onUpdate(item.id, { title, content });
+      toast.success("Item saved");
+    } catch {
+      toast.error("Failed to save item");
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <div className="space-y-6">
+    <>
+      <Card>
+        <CardContent className="space-y-3 pt-4">
+          <div className="flex items-center gap-2">
+            <GripVertical className="h-4 w-4 shrink-0 cursor-grab text-muted-foreground" />
+            <span
+              className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${TEMPLATE_COLORS[item.template] ?? TEMPLATE_COLORS.custom}`}
+            >
+              <Icon className="h-3 w-3" />
+              {TEMPLATES.find((t) => t.value === item.template)?.label ?? "Custom"}
+            </span>
+            <div className="ml-auto flex items-center gap-1">
+              {dirty && (
+                <Button size="sm" onClick={handleSave} disabled={saving}>
+                  <Save className="mr-1 h-3.5 w-3.5" />
+                  {saving ? "Saving..." : "Save"}
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setConfirmDelete(true)}
+              >
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            </div>
+          </div>
+          <Input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Item title"
+            className="font-medium"
+          />
+          <MarkdownTextarea
+            value={content}
+            onChange={setContent}
+            placeholder="Write content using Markdown..."
+          />
+        </CardContent>
+      </Card>
+      <ConfirmDialog
+        open={confirmDelete}
+        title="Delete logistics item?"
+        description={`This will permanently delete "${item.title}".`}
+        confirmLabel="Delete"
+        variant="destructive"
+        onConfirm={() => {
+          setConfirmDelete(false);
+          onDelete(item.id);
+        }}
+        onCancel={() => setConfirmDelete(false)}
+      />
+    </>
+  );
+}
+
+export function LogisticsEditor({
+  eventId,
+  items: initialItems,
+}: {
+  eventId: string;
+  items: LogisticsItem[];
+}) {
+  const [items, setItems] = useState<LogisticsItem[]>(initialItems);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const handleCreate = useCallback(
+    async (template: string) => {
+      setMenuOpen(false);
+      const label = TEMPLATES.find((t) => t.value === template)?.label ?? "Custom";
+      try {
+        const newItem = await createLogisticsItem(eventId, template, label, "");
+        setItems((prev) => [...prev, newItem]);
+        toast.success(`${label} item added`);
+      } catch {
+        toast.error("Failed to add item");
+      }
+    },
+    [eventId]
+  );
+
+  const handleUpdate = useCallback(
+    async (id: string, updates: { title?: string; content?: string }) => {
+      await updateLogisticsItem(id, updates);
+      setItems((prev) =>
+        prev.map((item) => (item.id === id ? { ...item, ...updates } : item))
+      );
+    },
+    []
+  );
+
+  const handleDelete = useCallback(
+    async (id: string) => {
+      try {
+        await deleteLogisticsItem(id);
+        setItems((prev) => prev.filter((item) => item.id !== id));
+        toast.success("Item deleted");
+      } catch {
+        toast.error("Failed to delete item");
+      }
+    },
+    []
+  );
+
+  return (
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">Logistics</h2>
-        <Button onClick={handleSave} disabled={saving}>
-          {saving ? "Saving..." : "Save Changes"}
-        </Button>
+        <div className="relative">
+          <Button onClick={() => setMenuOpen(!menuOpen)}>
+            <Plus className="mr-1 h-4 w-4" /> Add Item
+            <ChevronDown className="ml-1 h-3.5 w-3.5" />
+          </Button>
+          {menuOpen && (
+            <div className="absolute right-0 top-full z-10 mt-1 w-48 rounded-lg border bg-card p-1 shadow-lg">
+              {TEMPLATES.map((t) => {
+                const TIcon = TEMPLATE_ICONS[t.value] ?? FileText;
+                return (
+                  <button
+                    key={t.value}
+                    type="button"
+                    onClick={() => handleCreate(t.value)}
+                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-muted"
+                  >
+                    <TIcon className="h-4 w-4" />
+                    {t.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Venue */}
-      <Card>
-        <CardContent className="space-y-4 pt-6">
-          <h3 className="font-semibold">Venue Information</h3>
-          <div>
-            <label className="text-sm font-medium">Venue Description</label>
-            <Textarea
-              value={venueDescription}
-              onChange={(e) => setVenueDescription(e.target.value)}
-              placeholder="Describe the venue, location, how to get there..."
-              rows={4}
+      {items.length === 0 ? (
+        <div className="rounded-xl border border-dashed py-12 text-center">
+          <FileText className="mx-auto h-10 w-10 text-muted-foreground/40" />
+          <p className="mt-3 text-sm text-muted-foreground">
+            No logistics items yet. Add information like parking, hotels, or
+            directions for your attendees.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {items.map((item) => (
+            <ItemCard
+              key={item.id}
+              item={item}
+              onUpdate={handleUpdate}
+              onDelete={handleDelete}
             />
-          </div>
-          <div>
-            <label className="text-sm font-medium">Map URL</label>
-            <Input
-              value={venueMapUrl}
-              onChange={(e) => setVenueMapUrl(e.target.value)}
-              placeholder="Google Maps embed URL or link"
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Parking */}
-      <Card>
-        <CardContent className="space-y-4 pt-6">
-          <h3 className="font-semibold">Parking</h3>
-          <div>
-            <label className="text-sm font-medium">Title</label>
-            <Input
-              value={parking.title}
-              onChange={(e) => setParking({ ...parking, title: e.target.value })}
-              placeholder="e.g. On-site Parking"
-            />
-          </div>
-          <div>
-            <label className="text-sm font-medium">Details</label>
-            <Textarea
-              value={parking.body}
-              onChange={(e) => setParking({ ...parking, body: e.target.value })}
-              placeholder="Parking instructions, rates, etc."
-              rows={3}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Transportation */}
-      <Card>
-        <CardContent className="space-y-4 pt-6">
-          <h3 className="font-semibold">Transportation</h3>
-          <div>
-            <label className="text-sm font-medium">Title</label>
-            <Input
-              value={transportation.title}
-              onChange={(e) => setTransportation({ ...transportation, title: e.target.value })}
-              placeholder="e.g. Getting There"
-            />
-          </div>
-          <div>
-            <label className="text-sm font-medium">Details</label>
-            <Textarea
-              value={transportation.body}
-              onChange={(e) => setTransportation({ ...transportation, body: e.target.value })}
-              placeholder="Public transit, shuttle info, etc."
-              rows={3}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* WiFi */}
-      <Card>
-        <CardContent className="space-y-4 pt-6">
-          <h3 className="font-semibold">WiFi</h3>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <label className="text-sm font-medium">Network Name</label>
-              <Input
-                value={wifi.network}
-                onChange={(e) => setWifi({ ...wifi, network: e.target.value })}
-                placeholder="WiFi network name"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium">Password</label>
-              <Input
-                value={wifi.password}
-                onChange={(e) => setWifi({ ...wifi, password: e.target.value })}
-                placeholder="WiFi password"
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Hotels */}
-      <Card>
-        <CardContent className="space-y-4 pt-6">
-          <div className="flex items-center justify-between">
-            <h3 className="font-semibold">Hotels</h3>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setHotels([...hotels, { name: "", url: "", distance: "", rate: "" }])}
-            >
-              <Plus className="mr-1 h-4 w-4" /> Add Hotel
-            </Button>
-          </div>
-          {hotels.map((hotel, i) => (
-            <div key={i} className="grid grid-cols-1 gap-3 rounded-lg border p-3 sm:grid-cols-4">
-              <div>
-                <label className="text-xs font-medium">Name</label>
-                <Input
-                  value={hotel.name}
-                  onChange={(e) => {
-                    const updated = [...hotels];
-                    updated[i] = { ...hotel, name: e.target.value };
-                    setHotels(updated);
-                  }}
-                  placeholder="Hotel name"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-medium">URL</label>
-                <Input
-                  value={hotel.url ?? ""}
-                  onChange={(e) => {
-                    const updated = [...hotels];
-                    updated[i] = { ...hotel, url: e.target.value };
-                    setHotels(updated);
-                  }}
-                  placeholder="https://..."
-                />
-              </div>
-              <div>
-                <label className="text-xs font-medium">Distance</label>
-                <Input
-                  value={hotel.distance ?? ""}
-                  onChange={(e) => {
-                    const updated = [...hotels];
-                    updated[i] = { ...hotel, distance: e.target.value };
-                    setHotels(updated);
-                  }}
-                  placeholder="e.g. 0.5 miles"
-                />
-              </div>
-              <div className="flex items-end gap-2">
-                <div className="flex-1">
-                  <label className="text-xs font-medium">Rate</label>
-                  <Input
-                    value={hotel.rate ?? ""}
-                    onChange={(e) => {
-                      const updated = [...hotels];
-                      updated[i] = { ...hotel, rate: e.target.value };
-                      setHotels(updated);
-                    }}
-                    placeholder="e.g. $150/night"
-                  />
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setHotels(hotels.filter((_, j) => j !== i))}
-                >
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
-              </div>
-            </div>
           ))}
-        </CardContent>
-      </Card>
-
-      {/* Contacts */}
-      <Card>
-        <CardContent className="space-y-4 pt-6">
-          <div className="flex items-center justify-between">
-            <h3 className="font-semibold">Contacts</h3>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setContacts([...contacts, { name: "", phone: "", email: "" }])}
-            >
-              <Plus className="mr-1 h-4 w-4" /> Add Contact
-            </Button>
-          </div>
-          {contacts.map((contact, i) => (
-            <div key={i} className="grid grid-cols-1 gap-3 rounded-lg border p-3 sm:grid-cols-3">
-              <div>
-                <label className="text-xs font-medium">Name</label>
-                <Input
-                  value={contact.name}
-                  onChange={(e) => {
-                    const updated = [...contacts];
-                    updated[i] = { ...contact, name: e.target.value };
-                    setContacts(updated);
-                  }}
-                  placeholder="Contact name"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-medium">Phone</label>
-                <Input
-                  value={contact.phone ?? ""}
-                  onChange={(e) => {
-                    const updated = [...contacts];
-                    updated[i] = { ...contact, phone: e.target.value };
-                    setContacts(updated);
-                  }}
-                  placeholder="Phone number"
-                />
-              </div>
-              <div className="flex items-end gap-2">
-                <div className="flex-1">
-                  <label className="text-xs font-medium">Email</label>
-                  <Input
-                    value={contact.email ?? ""}
-                    onChange={(e) => {
-                      const updated = [...contacts];
-                      updated[i] = { ...contact, email: e.target.value };
-                      setContacts(updated);
-                    }}
-                    placeholder="Email address"
-                  />
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setContacts(contacts.filter((_, j) => j !== i))}
-                >
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
-              </div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-
-      {/* Custom Sections */}
-      <Card>
-        <CardContent className="space-y-4 pt-6">
-          <div className="flex items-center justify-between">
-            <h3 className="font-semibold">Custom Sections</h3>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCustomSections([...custom_sections, { title: "", body: "" }])}
-            >
-              <Plus className="mr-1 h-4 w-4" /> Add Section
-            </Button>
-          </div>
-          {custom_sections.map((section, i) => (
-            <div key={i} className="space-y-3 rounded-lg border p-3">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1">
-                  <label className="text-xs font-medium">Title</label>
-                  <Input
-                    value={section.title}
-                    onChange={(e) => {
-                      const updated = [...custom_sections];
-                      updated[i] = { ...section, title: e.target.value };
-                      setCustomSections(updated);
-                    }}
-                    placeholder="Section title"
-                  />
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="mt-5"
-                  onClick={() => setCustomSections(custom_sections.filter((_, j) => j !== i))}
-                >
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
-              </div>
-              <div>
-                <label className="text-xs font-medium">Body</label>
-                <Textarea
-                  value={section.body}
-                  onChange={(e) => {
-                    const updated = [...custom_sections];
-                    updated[i] = { ...section, body: e.target.value };
-                    setCustomSections(updated);
-                  }}
-                  placeholder="Section content..."
-                  rows={3}
-                />
-              </div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
+        </div>
+      )}
     </div>
   );
 }
