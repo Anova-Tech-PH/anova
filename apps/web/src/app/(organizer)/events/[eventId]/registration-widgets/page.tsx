@@ -23,7 +23,7 @@ export default async function RegistrationWidgetsPage({
   const eventSlug = event.slug ?? eventId;
   const baseUrl =
     process.env.NEXT_PUBLIC_APP_URL || "https://app.evenstry.com";
-  const registrationUrl = `${baseUrl}/${orgSlug}/${eventSlug}/register`;
+  const registrationUrl = `${baseUrl}/register/${orgSlug}/${eventSlug}`;
 
   return (
     <div className="space-y-8">

@@ -198,7 +198,7 @@ export default async function PublicEventPage({
           </div>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
             <Link
-              href={`/${orgSlug}/${eventSlug}/register`}
+              href={`/register/${orgSlug}/${eventSlug}`}
               className={buttonVariants({
                 size: "lg",
                 className: "gap-2 px-8 shadow-lg shadow-primary/20",
@@ -468,7 +468,7 @@ export default async function PublicEventPage({
                   : ""}
               </p>
               <Link
-                href={`/${orgSlug}/${eventSlug}/register`}
+                href={`/register/${orgSlug}/${eventSlug}`}
                 className={buttonVariants({
                   size: "lg",
                   className: "mt-8 gap-2 px-8 shadow-lg shadow-primary/20",

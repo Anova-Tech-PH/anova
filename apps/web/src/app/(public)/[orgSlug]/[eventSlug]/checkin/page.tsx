@@ -1,9 +1,7 @@
 import { createClient } from "@attendly/ui/supabase/server";
 import { notFound, redirect } from "next/navigation";
-import {
-  validateCheckinToken,
-  performCheckin,
-} from "@/features/gamification/checkin-actions";
+import { validateCheckinToken } from "@/features/gamification/checkin-tokens";
+import { performCheckin } from "@/features/gamification/checkin-actions";
 import { CheckinHandler } from "@/features/gamification/components/checkin-handler";
 
 export default async function CheckinPage({

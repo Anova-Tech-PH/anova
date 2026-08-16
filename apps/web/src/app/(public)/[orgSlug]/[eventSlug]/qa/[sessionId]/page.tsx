@@ -97,7 +97,7 @@ export default async function QADetailPage({
             Sign in to ask questions and upvote.
           </p>
           <a
-            href={`/${orgSlug}/${eventSlug}/register`}
+            href={`/register/${orgSlug}/${eventSlug}`}
             className="mt-4 inline-block rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
           >
             Sign In

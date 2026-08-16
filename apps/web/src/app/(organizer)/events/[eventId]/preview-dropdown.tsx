@@ -62,7 +62,7 @@ export function PreviewDropdown({
               registrationPages.map((page) => (
                 <Link
                   key={page.slug}
-                  href={`${portalUrl}/register/${page.slug}`}
+                  href={`/register${portalUrl}/${page.slug}`}
                   target="_blank"
                   onClick={() => setOpen(false)}
                   className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted transition-colors"
@@ -73,7 +73,7 @@ export function PreviewDropdown({
               ))
             ) : (
               <Link
-                href={`${portalUrl}/register`}
+                href={`/register${portalUrl}`}
                 target="_blank"
                 onClick={() => setOpen(false)}
                 className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted transition-colors"

@@ -45,9 +45,9 @@ describe("PreviewDropdown", () => {
     render(<PreviewDropdown {...defaultProps} />);
     await user.click(screen.getByText("Preview"));
     const attendeeLink = screen.getByText("Attendee Registration").closest("a");
-    expect(attendeeLink).toHaveAttribute("href", "/test-org/test-event/register/attendee-registration");
+    expect(attendeeLink).toHaveAttribute("href", "/register/test-org/test-event/attendee-registration");
     const vipLink = screen.getByText("VIP Registration").closest("a");
-    expect(vipLink).toHaveAttribute("href", "/test-org/test-event/register/vip-registration");
+    expect(vipLink).toHaveAttribute("href", "/register/test-org/test-event/vip-registration");
   });
 
   it("shows single Registration Page link when no pages provided", async () => {
@@ -55,6 +55,6 @@ describe("PreviewDropdown", () => {
     render(<PreviewDropdown portalUrl="/test-org/test-event" registrationPages={[]} />);
     await user.click(screen.getByText("Preview"));
     const regLink = screen.getByText("Registration Page").closest("a");
-    expect(regLink).toHaveAttribute("href", "/test-org/test-event/register");
+    expect(regLink).toHaveAttribute("href", "/register/test-org/test-event");
   });
 });

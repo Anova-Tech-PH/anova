@@ -106,15 +106,15 @@ export default async function ContestsPage({
                       <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
                         {contest.starts_at && (
                           <span>
-                            {new Date(contest.starts_at).toLocaleDateString()}
+                            {new Date(contest.starts_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                           </span>
                         )}
                         {contest.starts_at && contest.ends_at && (
-                          <span>-</span>
+                          <span>&mdash;</span>
                         )}
                         {contest.ends_at && (
                           <span>
-                            {new Date(contest.ends_at).toLocaleDateString()}
+                            {new Date(contest.ends_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                           </span>
                         )}
                       </div>

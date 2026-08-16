@@ -3,7 +3,7 @@ import { Calendar, MapPin, Wifi } from "lucide-react";
 import { createClient } from "@attendly/ui/supabase/server";
 import { parseEmbedParams, isToggleOn } from "../parse-embed-params";
 import { PoweredByFooter } from "../powered-by-footer";
-import { RegistrationFlow } from "@/app/(public)/[orgSlug]/[eventSlug]/register/registration-flow";
+import { RegistrationFlow } from "@/app/register/[orgSlug]/[eventSlug]/registration-flow";
 import { getCustomFieldsByEvent } from "@/features/custom-fields/queries";
 
 export default async function RegisterEmbedPage({
@@ -88,7 +88,7 @@ export default async function RegisterEmbedPage({
   // Build event URL for PoweredByFooter
   const orgSlug = (event as any).organizations?.slug;
   const eventUrl =
-    orgSlug && event.slug ? `/${orgSlug}/${event.slug}/register` : undefined;
+    orgSlug && event.slug ? `/register/${orgSlug}/${event.slug}` : undefined;
 
   // Format date range
   const startDate = new Date(event.start_date);
