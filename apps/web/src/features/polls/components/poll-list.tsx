@@ -10,9 +10,13 @@ import { pollsToCsv, downloadCsv } from "@/features/polls/export";
 export function PollList({
   polls,
   eventId,
+  orgSlug,
+  eventSlug,
 }: {
   polls: PollWithResults[];
   eventId: string;
+  orgSlug: string;
+  eventSlug: string;
 }) {
   const [isPending, startTransition] = useTransition();
   const { confirm, dialog: confirmDialog } = useConfirm();
@@ -161,6 +165,16 @@ export function PollList({
                               ? "Hide Results"
                               : "Show Results"}
                           </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const url = `${window.location.origin}/${orgSlug}/${eventSlug}/polls/${poll.id}/present`;
+                              window.open(url, "_blank");
+                            }}
+                            className="rounded-lg border px-3 py-1.5 text-xs font-medium hover:bg-muted/50"
+                          >
+                            Present
+                          </button>
                         </>
                       )}
                       {poll.status === "closed" && (
@@ -172,6 +186,16 @@ export function PollList({
                             className="rounded-lg border px-3 py-1.5 text-xs font-medium hover:bg-muted/50 disabled:opacity-50"
                           >
                             Reopen
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const url = `${window.location.origin}/${orgSlug}/${eventSlug}/polls/${poll.id}/present`;
+                              window.open(url, "_blank");
+                            }}
+                            className="rounded-lg border px-3 py-1.5 text-xs font-medium hover:bg-muted/50"
+                          >
+                            Present
                           </button>
                           <button
                             type="button"

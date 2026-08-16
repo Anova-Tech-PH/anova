@@ -12,6 +12,16 @@ export default async function PollsPage({
   const polls = await getPolls(eventId);
 
   const supabase = await createClient();
+
+  const { data: eventData } = await supabase
+    .from("events")
+    .select("slug, organizations(slug)")
+    .eq("id", eventId)
+    .single();
+
+  const orgSlug = (eventData?.organizations as any)?.slug ?? "";
+  const eventSlug = eventData?.slug ?? "";
+
   const { data: sessions } = await supabase
     .from("sessions")
     .select("id, title")
@@ -34,7 +44,7 @@ export default async function PollsPage({
 
       <div className="space-y-4">
         <h3 className="text-lg font-semibold">All Polls</h3>
-        <PollList polls={polls} eventId={eventId} />
+        <PollList polls={polls} eventId={eventId} orgSlug={orgSlug} eventSlug={eventSlug} />
       </div>
     </div>
   );
