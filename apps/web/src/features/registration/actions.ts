@@ -144,9 +144,10 @@ export async function registerForEvent(data: {
         userId = newUser.user.id;
       } else if (createError) {
         // User likely already exists — look them up
-        const { data: listData } = await adminSupabase.auth.admin.listUsers({ filter: data.email });
-        if (listData?.users?.length) {
-          userId = listData.users[0].id;
+        const { data: existingUsers } = await adminSupabase.auth.admin.listUsers();
+        const found = existingUsers?.users?.find((u) => u.email === data.email);
+        if (found) {
+          userId = found.id;
         }
       }
 

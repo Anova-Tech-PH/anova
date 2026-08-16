@@ -225,7 +225,7 @@ describe("Registration Actions", () => {
         error: { message: "User already been registered" },
       });
       mockAdminListUsers.mockResolvedValue({
-        data: { users: [{ id: "existing-user-456" }] },
+        data: { users: [{ id: "existing-user-456", email: "jane@test.com" }] },
         error: null,
       });
       mockAdminFrom.mockReturnValue(createQueryMock({ data: null, error: null }));

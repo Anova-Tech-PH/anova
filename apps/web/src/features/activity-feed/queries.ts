@@ -38,5 +38,5 @@ export async function getActivityFeed(
     .range(from, to);
 
   if (error) throw error;
-  return { items: (data ?? []) as ActivityFeedItem[], total: count ?? 0 };
+  return { items: (data ?? []) as unknown as ActivityFeedItem[], total: count ?? 0 };
 }

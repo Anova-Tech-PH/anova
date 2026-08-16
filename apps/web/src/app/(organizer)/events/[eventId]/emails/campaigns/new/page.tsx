@@ -47,7 +47,7 @@ export default async function NewCampaignPage({
         day: "numeric",
       })}
       eventLocation={event.venue_name}
-      eventUrl={`/${orgSlug}/${event.slug}/register`}
+      eventUrl={`/register/${orgSlug}/${event.slug}`}
       contactLists={contactLists}
       ticketTypes={ticketTypes}
       pastCampaigns={pastCampaigns.filter((c: any) => c.status === "sent")}

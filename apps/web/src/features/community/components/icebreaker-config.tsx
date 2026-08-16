@@ -115,7 +115,7 @@ export function IcebreakerConfig({ eventId, icebreaker }: IcebreakerConfigProps)
           {options.length > 0 && (
             <div className="flex flex-wrap gap-2 pt-2">
               {options.map((option) => (
-                <Badge key={option} variant="secondary" className="gap-1 pr-1">
+                <Badge key={option} variant="outline" className="gap-1 pr-1">
                   {option}
                   <button
                     type="button"

@@ -93,7 +93,7 @@ export async function GET(request: Request) {
         }
 
         // Build URLs
-        const registrationUrl = `${baseUrl}/${orgSlug}/${event.slug}/register?intent=${intent.id}`;
+        const registrationUrl = `${baseUrl}/register/${orgSlug}/${event.slug}?intent=${intent.id}`;
         const unsubToken = await generateUnsubscribeToken({ email: intent.email });
         const unsubscribeUrl = `${baseUrl}/api/unsubscribe?token=${unsubToken}`;
 
