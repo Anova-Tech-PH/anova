@@ -1,6 +1,6 @@
 import { createClient } from "@attendly/ui/supabase/server";
 import { AuthGuard } from "../auth-guard";
-import { getMyProfile } from "@/features/attendee-profile/queries";
+import { getMyProfile, getAttendeeAffiliations, getAttendeeEducation } from "@/features/attendee-profile/queries";
 import { getEventInterests } from "@/features/matchmaking/queries";
 import { ProfileEditor } from "@/features/attendee-profile/components/profile-editor";
 
@@ -46,15 +46,16 @@ export default async function ProfilePage({
 async function ProfilePageContent({ eventId }: { eventId: string }) {
   const supabase = await createClient();
 
-  const [profile, interestsData] = await Promise.all([
-    getMyProfile(eventId),
-    getEventInterests(eventId),
-  ]);
-
-  // Get user's selected interest IDs
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  const [profile, interestsData, affiliations, education] = await Promise.all([
+    getMyProfile(eventId),
+    getEventInterests(eventId),
+    user ? getAttendeeAffiliations(eventId, user.id) : Promise.resolve([]),
+    user ? getAttendeeEducation(eventId, user.id) : Promise.resolve([]),
+  ]);
 
   let selectedInterestIds: string[] = [];
   if (user) {
@@ -75,6 +76,8 @@ async function ProfilePageContent({ eventId }: { eventId: string }) {
         name: i.name,
       }))}
       selectedInterestIds={selectedInterestIds}
+      affiliations={affiliations}
+      education={education}
     />
   );
 }

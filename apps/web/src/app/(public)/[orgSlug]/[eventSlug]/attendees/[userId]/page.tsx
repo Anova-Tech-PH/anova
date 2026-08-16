@@ -3,6 +3,8 @@ import {
   getAttendeeProfile,
   getBookmarkedAttendeeIds,
   getAttendeeNotes,
+  getAttendeeAffiliations,
+  getAttendeeEducation,
 } from "@/features/attendee-profile/queries";
 import { AttendeeProfileView } from "@/features/attendee-profile/components/attendee-profile-view";
 
@@ -72,9 +74,11 @@ export default async function AttendeeProfilePage({
     );
   }
 
-  const [bookmarkedIds, attendeeNotes] = await Promise.all([
+  const [bookmarkedIds, attendeeNotes, affiliations, education] = await Promise.all([
     getBookmarkedAttendeeIds(event.id),
     getAttendeeNotes(event.id),
+    getAttendeeAffiliations(event.id, userId),
+    getAttendeeEducation(event.id, userId),
   ]);
   const basePath = `/${orgSlug}/${eventSlug}/attendees`;
 
@@ -91,6 +95,9 @@ export default async function AttendeeProfilePage({
         interests: (
           profile.interests as ({ id: string; name: string } | null)[]
         ).filter((i): i is { id: string; name: string } => i !== null),
+        affiliations,
+        education,
+        links: (profile.links as { type: string; url: string; label?: string }[] | null) ?? [],
       }}
       eventId={event.id}
       basePath={basePath}
