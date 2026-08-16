@@ -16,6 +16,7 @@ export function LeaderboardFull({
   eventId,
   congratulationCounts: initialCounts,
   userCongratulations: initialUserCongs,
+  hideOrganizers,
 }: {
   entries: LeaderboardEntry[];
   currentUserId: string | null;
@@ -25,6 +26,7 @@ export function LeaderboardFull({
   eventId: string;
   congratulationCounts?: Record<string, number>;
   userCongratulations?: string[];
+  hideOrganizers?: boolean;
 }) {
   const [entries, setEntries] = useState(initialEntries);
   const [congratsCounts, setCongratsCounts] = useState<Record<string, number>>(
@@ -129,6 +131,12 @@ export function LeaderboardFull({
           Live
         </span>
       </h2>
+
+      {hideOrganizers && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-center text-sm text-amber-800">
+          Organizers will not show up on the leaderboard
+        </div>
+      )}
 
       {currentUserId && userRank && (
         <div className="rounded-xl border border-[oklch(0.445_0.107_195)]/30 bg-[oklch(0.445_0.107_195)]/5 p-3 flex items-center justify-between">

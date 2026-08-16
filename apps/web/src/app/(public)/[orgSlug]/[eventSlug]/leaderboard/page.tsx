@@ -140,6 +140,7 @@ export default async function LeaderboardPage({
             eventId={event.id}
             congratulationCounts={congratulationCounts}
             userCongratulations={userCongratulations}
+            hideOrganizers={config.hide_organizers}
           />
 
           {badges.length > 0 && (

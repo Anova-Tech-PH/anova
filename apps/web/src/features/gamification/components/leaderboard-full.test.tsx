@@ -151,3 +151,52 @@ describe("LeaderboardFull social prompt", () => {
     expect(screen.queryByText(/Congratulate the most active members/)).toBeNull();
   });
 });
+
+describe("LeaderboardFull organizer exclusion banner", () => {
+  it("renders organizer exclusion banner when hideOrganizers is true", () => {
+    render(
+      <LeaderboardFull
+        entries={[baseEntry]}
+        currentUserId={null}
+        userRank={null}
+        userPoints={null}
+        title="Leaderboard"
+        eventId="e1"
+        hideOrganizers={true}
+      />
+    );
+
+    expect(screen.getByText(/Organizers will not show up on the leaderboard/)).toBeDefined();
+  });
+
+  it("does not render organizer exclusion banner when hideOrganizers is false", () => {
+    render(
+      <LeaderboardFull
+        entries={[baseEntry]}
+        currentUserId={null}
+        userRank={null}
+        userPoints={null}
+        title="Leaderboard"
+        eventId="e1"
+        hideOrganizers={false}
+      />
+    );
+
+    expect(screen.queryByText(/Organizers will not show up on the leaderboard/)).toBeNull();
+  });
+
+  it("does not render organizer exclusion banner when hideOrganizers is omitted", () => {
+    render(
+      <LeaderboardFull
+        entries={[baseEntry]}
+        currentUserId={null}
+        userRank={null}
+        userPoints={null}
+        title="Leaderboard"
+        eventId="e1"
+      />
+    );
+
+    expect(screen.queryByText(/Organizers will not show up on the leaderboard/)).toBeNull();
+  });
+});
