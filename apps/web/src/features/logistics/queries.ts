@@ -1,59 +1,35 @@
 import { createClient } from "@attendly/ui/supabase/server";
 
-export interface Hotel {
-  name: string;
-  url?: string;
-  distance?: string;
-  rate?: string;
-}
-
-export interface Contact {
-  name: string;
-  phone?: string;
-  email?: string;
-}
-
-export interface CustomSection {
+export interface LogisticsItem {
+  id: string;
+  event_id: string;
+  template: "welcome" | "venue" | "parking" | "hotel" | "travel_info" | "floor_map" | "custom";
   title: string;
-  body: string;
+  content: string;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
 }
 
-export interface LogisticsData {
-  parking?: { title: string; body: string };
-  transportation?: { title: string; body: string };
-  wifi?: { network: string; password: string };
-  hotels?: Hotel[];
-  contacts?: Contact[];
-  custom_sections?: CustomSection[];
-}
+export const TEMPLATES = [
+  { value: "welcome", label: "Welcome" },
+  { value: "venue", label: "Venue" },
+  { value: "floor_map", label: "Floor Map" },
+  { value: "travel_info", label: "Travel Info" },
+  { value: "parking", label: "Parking" },
+  { value: "hotel", label: "Hotel" },
+  { value: "custom", label: "Custom" },
+] as const;
 
-export interface EventLogistics {
-  venue_description: string;
-  venue_map_url: string;
-  logistics: LogisticsData;
-}
-
-export async function getEventLogistics(eventId: string): Promise<EventLogistics> {
+export async function getLogisticsItems(eventId: string): Promise<LogisticsItem[]> {
   const supabase = await createClient();
 
   const { data, error } = await supabase
-    .from("events")
-    .select("venue_description, venue_map_url, logistics")
-    .eq("id", eventId)
-    .single();
+    .from("logistics_items")
+    .select("*")
+    .eq("event_id", eventId)
+    .order("sort_order", { ascending: true });
 
   if (error) throw new Error(error.message);
-
-  return {
-    venue_description: data.venue_description ?? "",
-    venue_map_url: data.venue_map_url ?? "",
-    logistics: {
-      parking: data.logistics?.parking ?? { title: "", body: "" },
-      transportation: data.logistics?.transportation ?? { title: "", body: "" },
-      wifi: data.logistics?.wifi ?? { network: "", password: "" },
-      hotels: data.logistics?.hotels ?? [],
-      contacts: data.logistics?.contacts ?? [],
-      custom_sections: data.logistics?.custom_sections ?? [],
-    },
-  };
+  return data ?? [];
 }
