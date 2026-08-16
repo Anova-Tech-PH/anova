@@ -5,6 +5,7 @@ import { Plus, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button, Input, Card, ModalOverlay } from "@attendly/ui/components";
 import { createPoll } from "../actions";
+import type { AnswerType } from "../queries";
 
 function generateId() {
   return crypto.randomUUID();
@@ -24,6 +25,7 @@ export function AddPollDialog({
     { id: generateId(), text: "" },
   ]);
   const [promptAttendee, setPromptAttendee] = useState(true);
+  const [answerType, setAnswerType] = useState<AnswerType>("multiple_choice");
   const [loading, setLoading] = useState(false);
 
   function addOption() {
@@ -46,6 +48,7 @@ export function AddPollDialog({
       { id: generateId(), text: "" },
     ]);
     setPromptAttendee(true);
+    setAnswerType("multiple_choice");
   }
 
   async function handleSubmit() {
@@ -54,8 +57,9 @@ export function AddPollDialog({
       return;
     }
 
+    const needsOptions = answerType === "multiple_choice" || answerType === "checkbox";
     const validOptions = options.filter((o) => o.text.trim());
-    if (validOptions.length < 2) {
+    if (needsOptions && validOptions.length < 2) {
       toast.error("Please add at least 2 options");
       return;
     }
@@ -64,10 +68,11 @@ export function AddPollDialog({
     try {
       await createPoll(eventId, {
         question: question.trim(),
-        options: validOptions.map((o) => ({ id: o.id, text: o.text.trim() })),
+        options: needsOptions ? validOptions.map((o) => ({ id: o.id, text: o.text.trim() })) : [],
         session_id: sessionId,
         prompt_attendee: promptAttendee,
         open_time_mode: "now",
+        answer_type: answerType,
       });
       toast.success("Poll created!");
       resetForm();
@@ -117,6 +122,25 @@ export function AddPollDialog({
               />
             </div>
 
+            <div className="space-y-1.5">
+              <label htmlFor="dialog-poll-answer-type" className="text-sm font-medium">
+                Answer type
+              </label>
+              <select
+                id="dialog-poll-answer-type"
+                value={answerType}
+                onChange={(e) => setAnswerType(e.target.value as AnswerType)}
+                className="w-full rounded-lg border bg-transparent px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+              >
+                <option value="multiple_choice">Multiple choice</option>
+                <option value="checkbox">Checkbox (multi-select)</option>
+                <option value="short_answer">Short answer</option>
+                <option value="star_rating">Star rating</option>
+                <option value="word_cloud">Word cloud</option>
+              </select>
+            </div>
+
+            {(answerType === "multiple_choice" || answerType === "checkbox") && (
             <div className="space-y-2">
               <label className="text-sm font-medium">Options</label>
               {options.map((option, i) => (
@@ -149,6 +173,7 @@ export function AddPollDialog({
                 Add option
               </Button>
             </div>
+            )}
 
             <div className="flex items-center gap-2">
               <input

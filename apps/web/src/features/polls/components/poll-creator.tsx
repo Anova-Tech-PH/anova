@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { createPoll } from "@/features/polls/actions";
+import type { AnswerType } from "@/features/polls/queries";
 
 export function PollCreator({
   eventId,
@@ -13,6 +14,7 @@ export function PollCreator({
   const [question, setQuestion] = useState("");
   const [options, setOptions] = useState<string[]>(["", ""]);
   const [sessionId, setSessionId] = useState("");
+  const [answerType, setAnswerType] = useState<AnswerType>("multiple_choice");
   const [isPending, startTransition] = useTransition();
 
   function addOption() {
@@ -32,21 +34,25 @@ export function PollCreator({
     setQuestion("");
     setOptions(["", ""]);
     setSessionId("");
+    setAnswerType("multiple_choice");
   }
 
   function handleCreate() {
     const trimmedQuestion = question.trim();
+    if (!trimmedQuestion) return;
+
+    const needsOptions = answerType === "multiple_choice" || answerType === "checkbox";
     const trimmedOptions = options.map((o) => o.trim()).filter(Boolean);
-    if (!trimmedQuestion || trimmedOptions.length < 2) return;
+    if (needsOptions && trimmedOptions.length < 2) return;
 
     startTransition(async () => {
       await createPoll(eventId, {
         question: trimmedQuestion,
-        options: trimmedOptions.map((text, i) => ({
-          id: String.fromCharCode(97 + i), // a, b, c, ...
-          text,
-        })),
+        options: needsOptions
+          ? trimmedOptions.map((text, i) => ({ id: String.fromCharCode(97 + i), text }))
+          : [],
         session_id: sessionId || undefined,
+        answer_type: answerType,
       });
       resetForm();
     });
@@ -71,40 +77,60 @@ export function PollCreator({
       </div>
 
       <div className="space-y-1.5">
-        <span className="text-sm font-medium">Options (min 2)</span>
-        <div className="space-y-2">
-          {options.map((opt, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <span className="w-6 text-center text-sm text-muted-foreground font-medium">
-                {String.fromCharCode(65 + i)}.
-              </span>
-              <input
-                type="text"
-                value={opt}
-                onChange={(e) => updateOption(i, e.target.value)}
-                placeholder={`Option ${String.fromCharCode(65 + i)}`}
-                className="flex-1 rounded-lg border bg-transparent px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-              />
-              {options.length > 2 && (
-                <button
-                  type="button"
-                  onClick={() => removeOption(i)}
-                  className="rounded-lg border px-2 py-1.5 text-xs text-red-600 hover:bg-red-50"
-                >
-                  Remove
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
-        <button
-          type="button"
-          onClick={addOption}
-          className="mt-1 text-sm text-muted-foreground hover:text-foreground"
+        <label htmlFor="poll-answer-type" className="text-sm font-medium">
+          Answer type
+        </label>
+        <select
+          id="poll-answer-type"
+          value={answerType}
+          onChange={(e) => setAnswerType(e.target.value as AnswerType)}
+          className="w-full rounded-lg border bg-transparent px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
         >
-          + Add option
-        </button>
+          <option value="multiple_choice">Multiple choice</option>
+          <option value="checkbox">Checkbox (multi-select)</option>
+          <option value="short_answer">Short answer</option>
+          <option value="star_rating">Star rating</option>
+          <option value="word_cloud">Word cloud</option>
+        </select>
       </div>
+
+      {(answerType === "multiple_choice" || answerType === "checkbox") && (
+        <div className="space-y-1.5">
+          <span className="text-sm font-medium">Options (min 2)</span>
+          <div className="space-y-2">
+            {options.map((opt, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <span className="w-6 text-center text-sm text-muted-foreground font-medium">
+                  {String.fromCharCode(65 + i)}.
+                </span>
+                <input
+                  type="text"
+                  value={opt}
+                  onChange={(e) => updateOption(i, e.target.value)}
+                  placeholder={`Option ${String.fromCharCode(65 + i)}`}
+                  className="flex-1 rounded-lg border bg-transparent px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+                />
+                {options.length > 2 && (
+                  <button
+                    type="button"
+                    onClick={() => removeOption(i)}
+                    className="rounded-lg border px-2 py-1.5 text-xs text-red-600 hover:bg-red-50"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={addOption}
+            className="mt-1 text-sm text-muted-foreground hover:text-foreground"
+          >
+            + Add option
+          </button>
+        </div>
+      )}
 
       <div className="space-y-1.5">
         <label htmlFor="poll-session" className="text-sm font-medium">
@@ -129,7 +155,7 @@ export function PollCreator({
         <button
           type="button"
           onClick={handleCreate}
-          disabled={isPending || !question.trim() || options.filter((o) => o.trim()).length < 2}
+          disabled={isPending || !question.trim() || ((answerType === "multiple_choice" || answerType === "checkbox") && options.filter((o) => o.trim()).length < 2)}
           className="rounded-lg bg-foreground text-background px-4 py-2 text-sm font-medium hover:opacity-90 disabled:opacity-50"
         >
           {isPending ? "Creating..." : "Create Poll"}
