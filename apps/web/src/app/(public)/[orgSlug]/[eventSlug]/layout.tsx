@@ -1,9 +1,7 @@
-import { redirect } from "next/navigation";
 import { EventSidebar } from "./event-sidebar";
 import type { SidebarData } from "./event-sidebar";
 import { EventHeaderBar } from "./event-header-bar";
 import { createClient } from "@attendly/ui/supabase/server";
-import { getPortalLoginUrl } from "@/features/portal-auth/get-login-redirect";
 
 export default async function PublicEventLayout({
   children,
@@ -24,7 +22,7 @@ export default async function PublicEventLayout({
 
   const { data: event } = await supabase
     .from("events")
-    .select("id, title, start_date, end_date, venue_name, timezone, is_virtual, settings, logistics")
+    .select("id, title, start_date, end_date, venue_name, timezone, is_virtual, settings")
     .eq("slug", eventSlug)
     .eq("organization_id", org?.id ?? "")
     .single();
@@ -48,13 +46,9 @@ export default async function PublicEventLayout({
 
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect(getPortalLoginUrl(`/${orgSlug}/${eventSlug}`));
-  }
-
   if (event) {
     // Run visibility queries in parallel
-    const [roomsResult, resourcesResult, attendeesResult, communityResult, messagesResult, gamificationResult, registrationResult, surveyResult] = await Promise.all([
+    const [roomsResult, resourcesResult, attendeesResult, communityResult, messagesResult, gamificationResult, registrationResult, surveyResult, logisticsResult] = await Promise.all([
       supabase
         .from("breakout_rooms")
         .select("id", { count: "exact", head: true })
@@ -96,6 +90,10 @@ export default async function PublicEventLayout({
         .select("id", { count: "exact", head: true })
         .eq("event_id", event.id)
         .eq("status", "active"),
+      supabase
+        .from("logistics_items")
+        .select("id", { count: "exact", head: true })
+        .eq("event_id", event.id),
     ]);
 
     const settings = (event.settings ?? {}) as Record<string, unknown>;
@@ -103,7 +101,7 @@ export default async function PublicEventLayout({
     sidebarData = {
       hasRooms: (roomsResult.count ?? 0) > 0,
       hasResources: (resourcesResult.count ?? 0) > 0,
-      hasLogistics: event.logistics != null && typeof event.logistics === "object" && Object.keys(event.logistics as Record<string, unknown>).length > 0,
+      hasLogistics: (logisticsResult.count ?? 0) > 0,
       hasCertificates: settings.certificates_enabled === true,
       attendeeCount: attendeesResult.count ?? 0,
       communityCount: communityResult.count ?? 0,
