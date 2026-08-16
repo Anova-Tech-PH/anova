@@ -15,10 +15,10 @@ describe("MyPointsPanel", () => {
     rank: 3,
     completionPercent: 25,
     challenges: [
-      { activityType: "poll_vote", count: 2, pointsPerAction: 5, enabled: true },
-      { activityType: "photo_upload", count: 0, pointsPerAction: 10, enabled: true },
-      { activityType: "session_rsvp", count: 1, pointsPerAction: 5, enabled: true },
-      { activityType: "meetup_join", count: 0, pointsPerAction: 15, enabled: true },
+      { activityType: "poll_vote", count: 2, pointsPerAction: 5, maxPerEvent: null, enabled: true },
+      { activityType: "photo_upload", count: 0, pointsPerAction: 10, maxPerEvent: null, enabled: true },
+      { activityType: "session_rsvp", count: 1, pointsPerAction: 5, maxPerEvent: null, enabled: true },
+      { activityType: "meetup_join", count: 0, pointsPerAction: 15, maxPerEvent: null, enabled: true },
     ],
     basePath: "/org/event",
   };
@@ -56,5 +56,75 @@ describe("MyPointsPanel", () => {
     render(<MyPointsPanel {...defaultProps} />);
     const pollLink = screen.getByText("Poll Vote").closest("a");
     expect(pollLink?.getAttribute("href")).toBe("/org/event/community");
+  });
+
+  it("renders Max column header instead of Per action", () => {
+    render(
+      <MyPointsPanel
+        userName="Test User"
+        totalPoints={100}
+        rank={1}
+        completionPercent={50}
+        challenges={[
+          { activityType: "poll_vote", count: 2, pointsPerAction: 50, maxPerEvent: 5, enabled: true },
+        ]}
+        basePath="/org/event"
+      />
+    );
+
+    expect(screen.getByText("Max")).toBeDefined();
+    expect(screen.queryByText("Per action")).toBeNull();
+  });
+
+  it("shows max points as pointsPerAction * maxPerEvent", () => {
+    render(
+      <MyPointsPanel
+        userName="Test User"
+        totalPoints={100}
+        rank={1}
+        completionPercent={50}
+        challenges={[
+          { activityType: "poll_vote", count: 2, pointsPerAction: 50, maxPerEvent: 5, enabled: true },
+        ]}
+        basePath="/org/event"
+      />
+    );
+
+    expect(screen.getByText("250")).toBeDefined();
+  });
+
+  it("shows pointsPerAction with + suffix when maxPerEvent is null", () => {
+    render(
+      <MyPointsPanel
+        userName="Test User"
+        totalPoints={100}
+        rank={1}
+        completionPercent={50}
+        challenges={[
+          { activityType: "community_post", count: 1, pointsPerAction: 100, maxPerEvent: null, enabled: true },
+        ]}
+        basePath="/org/event"
+      />
+    );
+
+    expect(screen.getByText("100+")).toBeDefined();
+  });
+
+  it("renders social proof CTA with Join in link", () => {
+    render(
+      <MyPointsPanel
+        userName="Test User"
+        totalPoints={100}
+        rank={1}
+        completionPercent={50}
+        challenges={[
+          { activityType: "poll_vote", count: 0, pointsPerAction: 50, maxPerEvent: 5, enabled: true },
+        ]}
+        basePath="/org/event"
+      />
+    );
+
+    expect(screen.getByText("Join in")).toBeDefined();
+    expect(screen.getByText(/connecting, sharing, and learning/)).toBeDefined();
   });
 });

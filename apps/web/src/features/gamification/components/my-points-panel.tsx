@@ -11,6 +11,7 @@ type Challenge = {
   activityType: string;
   count: number;
   pointsPerAction: number;
+  maxPerEvent: number | null;
   enabled: boolean;
 };
 
@@ -80,7 +81,7 @@ export function MyPointsPanel({
                 <div className="flex text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
                   <span className="flex-1">Challenges</span>
                   <span className="w-20 text-right">Earned</span>
-                  <span className="w-16 text-right">Per action</span>
+                  <span className="w-16 text-right">Max</span>
                 </div>
                 {categoryActivities.map((activityType) => {
                   const challenge = challengeMap.get(activityType)!;
@@ -105,7 +106,9 @@ export function MyPointsPanel({
                         {challenge.count * challenge.pointsPerAction}
                       </span>
                       <span className="w-16 text-right text-muted-foreground">
-                        {challenge.pointsPerAction}
+                        {challenge.maxPerEvent != null
+                          ? challenge.pointsPerAction * challenge.maxPerEvent
+                          : `${challenge.pointsPerAction}+`}
                       </span>
                     </div>
                   );
@@ -114,6 +117,19 @@ export function MyPointsPanel({
             </div>
           );
         })}
+      </div>
+
+      {/* Social proof CTA */}
+      <div className="border-t px-4 py-3 text-center">
+        <p className="text-sm text-muted-foreground">
+          Attendees are connecting, sharing, and learning — join in!
+        </p>
+        <Link
+          href={`${basePath}/community`}
+          className="mt-2 inline-flex items-center gap-1.5 rounded-md bg-[oklch(0.445_0.107_195)] px-4 py-1.5 text-sm font-medium text-white hover:bg-[oklch(0.445_0.107_195)]/90 transition-colors"
+        >
+          Join in
+        </Link>
       </div>
     </div>
   );
