@@ -1,4 +1,4 @@
-import { getEventLogistics } from "@/features/logistics/queries";
+import { getLogisticsItems } from "@/features/logistics/queries";
 import { LogisticsEditor } from "@/features/logistics/components/logistics-editor";
 
 export default async function LogisticsPage({
@@ -7,6 +7,6 @@ export default async function LogisticsPage({
   params: Promise<{ eventId: string }>;
 }) {
   const { eventId } = await params;
-  const logistics = await getEventLogistics(eventId);
-  return <LogisticsEditor eventId={eventId} initialData={logistics} />;
+  const items = await getLogisticsItems(eventId);
+  return <LogisticsEditor eventId={eventId} items={items} />;
 }
