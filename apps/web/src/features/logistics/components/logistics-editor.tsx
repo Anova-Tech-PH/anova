@@ -23,8 +23,8 @@ import {
   updateLogisticsItem,
   deleteLogisticsItem,
 } from "../actions";
-import type { LogisticsItem } from "../queries";
-import { TEMPLATES } from "../queries";
+import type { LogisticsItem } from "../constants";
+import { TEMPLATES } from "../constants";
 
 const TEMPLATE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   welcome: PartyPopper,
