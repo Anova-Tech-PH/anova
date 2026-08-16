@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, Search } from "lucide-react";
 import { Avatar, Badge } from "@attendly/ui/components";
 import { getConversations } from "@/features/messaging/queries";
 
@@ -38,6 +38,7 @@ export function MessageInbox({
 }: MessageInboxProps) {
   const [conversations, setConversations] =
     useState<Conversation[]>(initialConversations);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     setConversations(initialConversations);
@@ -64,9 +65,33 @@ export function MessageInbox({
     );
   }
 
+  const filtered = searchQuery.trim()
+    ? conversations.filter((conv) =>
+        (conv.profile?.display_name ?? "")
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase())
+      )
+    : conversations;
+
   return (
-    <div className="divide-y divide-border">
-      {conversations.map((conv) => {
+    <div>
+      <div className="relative px-4 py-3">
+        <Search className="absolute left-7 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search conversations..."
+          className="w-full rounded-lg border bg-background pl-9 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/50"
+        />
+      </div>
+      {filtered.length === 0 ? (
+        <div className="py-8 text-center text-sm text-muted-foreground">
+          No conversations match your search.
+        </div>
+      ) : (
+      <div className="divide-y divide-border">
+      {filtered.map((conv) => {
         const name = conv.profile?.display_name ?? "Unknown";
         const subtitle = [conv.profile?.title, conv.profile?.company]
           .filter(Boolean)
@@ -107,6 +132,8 @@ export function MessageInbox({
           </button>
         );
       })}
+      </div>
+      )}
     </div>
   );
 }
