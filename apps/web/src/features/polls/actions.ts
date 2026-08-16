@@ -2,7 +2,7 @@
 
 import { createClient } from "@attendly/ui/supabase/server";
 import { revalidatePath } from "next/cache";
-import type { PollOption } from "./queries";
+import type { PollOption, AnswerType } from "./queries";
 import { tryAwardPoints } from "@/features/gamification/award";
 
 export async function createPoll(
@@ -17,6 +17,7 @@ export async function createPoll(
     open_time_mode?: "now" | "before_session" | "scheduled";
     open_before_minutes?: number;
     scheduled_open_at?: string;
+    answer_type?: AnswerType;
   }
 ) {
   const supabase = await createClient();
@@ -37,6 +38,7 @@ export async function createPoll(
       open_time_mode: data.open_time_mode ?? "now",
       open_before_minutes: data.open_before_minutes ?? 0,
       scheduled_open_at: data.scheduled_open_at ?? null,
+      answer_type: data.answer_type ?? "multiple_choice",
       status: data.open_time_mode === "now" ? "open" : "draft",
     })
     .select()
@@ -143,4 +145,52 @@ export async function votePoll(pollId: string, optionId: string) {
   if (poll?.event_id) {
     await tryAwardPoints(poll.event_id, user.id, "poll_vote", pollId, "poll");
   }
+}
+
+export async function voteRating(pollId: string, rating: number) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Authentication required");
+
+  // Delete existing then insert (partial unique index doesn't work with Supabase upsert)
+  await supabase.from("live_poll_votes").delete().eq("poll_id", pollId).eq("user_id", user.id);
+  const { error } = await supabase.from("live_poll_votes").insert({
+    poll_id: pollId, user_id: user.id, rating_value: rating,
+  });
+  if (error) throw new Error(error.message);
+
+  const { data: poll } = await supabase.from("live_polls").select("event_id").eq("id", pollId).single();
+  if (poll?.event_id) await tryAwardPoints(poll.event_id, user.id, "poll_vote", pollId, "poll");
+}
+
+export async function voteText(pollId: string, text: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Authentication required");
+
+  await supabase.from("live_poll_votes").delete().eq("poll_id", pollId).eq("user_id", user.id);
+  const { error } = await supabase.from("live_poll_votes").insert({
+    poll_id: pollId, user_id: user.id, response_text: text.trim(),
+  });
+  if (error) throw new Error(error.message);
+
+  const { data: poll } = await supabase.from("live_polls").select("event_id").eq("id", pollId).single();
+  if (poll?.event_id) await tryAwardPoints(poll.event_id, user.id, "poll_vote", pollId, "poll");
+}
+
+export async function voteCheckbox(pollId: string, optionIds: string[]) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Authentication required");
+
+  // Delete all existing votes for this poll+user, then insert new ones
+  await supabase.from("live_poll_votes").delete().eq("poll_id", pollId).eq("user_id", user.id);
+  const rows = optionIds.map((optionId) => ({
+    poll_id: pollId, user_id: user.id, option_id: optionId,
+  }));
+  const { error } = await supabase.from("live_poll_votes").insert(rows);
+  if (error) throw new Error(error.message);
+
+  const { data: poll } = await supabase.from("live_polls").select("event_id").eq("id", pollId).single();
+  if (poll?.event_id) await tryAwardPoints(poll.event_id, user.id, "poll_vote", pollId, "poll");
 }

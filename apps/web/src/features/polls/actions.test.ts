@@ -115,4 +115,57 @@ describe("Poll Actions", () => {
       expect(revalidatePath).toHaveBeenCalledWith("/events/evt-1/polls");
     });
   });
+
+  describe("createPoll with answer_type", () => {
+    it("creates star_rating poll with no options", async () => {
+      mockFrom.mockReturnValue(
+        createQueryMock({
+          data: { id: "poll-2", question: "Rate this session", status: "draft", answer_type: "star_rating" },
+          error: null,
+        })
+      );
+
+      const { createPoll } = await import("./actions");
+      const result = await createPoll("evt-1", {
+        question: "Rate this session",
+        options: [],
+        answer_type: "star_rating",
+      });
+
+      expect(result).toHaveProperty("answer_type", "star_rating");
+    });
+  });
+
+  describe("voteRating", () => {
+    it("records star rating vote", async () => {
+      mockFrom.mockReturnValue(createQueryMock({ data: null, error: null }));
+
+      const { voteRating } = await import("./actions");
+      await voteRating("poll-1", 4);
+
+      expect(mockFrom).toHaveBeenCalledWith("live_poll_votes");
+    });
+  });
+
+  describe("voteText", () => {
+    it("records text response vote", async () => {
+      mockFrom.mockReturnValue(createQueryMock({ data: null, error: null }));
+
+      const { voteText } = await import("./actions");
+      await voteText("poll-1", "Great session!");
+
+      expect(mockFrom).toHaveBeenCalledWith("live_poll_votes");
+    });
+  });
+
+  describe("voteCheckbox", () => {
+    it("records checkbox votes (multiple options)", async () => {
+      mockFrom.mockReturnValue(createQueryMock({ data: null, error: null }));
+
+      const { voteCheckbox } = await import("./actions");
+      await voteCheckbox("poll-1", ["opt-a", "opt-c"]);
+
+      expect(mockFrom).toHaveBeenCalledWith("live_poll_votes");
+    });
+  });
 });
