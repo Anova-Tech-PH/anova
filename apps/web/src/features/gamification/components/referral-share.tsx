@@ -26,7 +26,7 @@ export function ReferralShare({
   }, [eventId, userId]);
 
   const referralUrl = code
-    ? `${typeof window !== "undefined" ? window.location.origin : ""}${baseUrl}/register?ref=${code}`
+    ? `${typeof window !== "undefined" ? window.location.origin : ""}/register${baseUrl}?ref=${code}`
     : "";
 
   function handleCopy() {
@@ -52,11 +52,17 @@ export function ReferralShare({
           value={referralUrl}
           className="flex-1 rounded-md border bg-muted px-3 py-2 text-sm truncate"
         />
-        <Button variant="outline" size="icon" onClick={handleCopy}>
+        <Button variant="outline" onClick={handleCopy} className="shrink-0 gap-1.5">
           {copied ? (
-            <Check className="h-4 w-4 text-green-600" />
+            <>
+              <Check className="h-4 w-4 text-green-600" />
+              Copied
+            </>
           ) : (
-            <Copy className="h-4 w-4" />
+            <>
+              <Copy className="h-4 w-4" />
+              Copy
+            </>
           )}
         </Button>
       </div>

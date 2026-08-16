@@ -21,14 +21,14 @@ vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
 describe("generateCheckinToken", () => {
   it("produces deterministic tokens for the same inputs", async () => {
-    const { generateCheckinToken } = await import("./checkin-actions");
+    const { generateCheckinToken } = await import("./checkin-tokens");
     const token1 = generateCheckinToken("session", "s1", "e1");
     const token2 = generateCheckinToken("session", "s1", "e1");
     expect(token1).toBe(token2);
   });
 
   it("produces different tokens for different inputs", async () => {
-    const { generateCheckinToken } = await import("./checkin-actions");
+    const { generateCheckinToken } = await import("./checkin-tokens");
     const tokenA = generateCheckinToken("session", "s1", "e1");
     const tokenB = generateCheckinToken("session", "s2", "e1");
     const tokenC = generateCheckinToken("exhibitor", "s1", "e1");
@@ -39,13 +39,13 @@ describe("generateCheckinToken", () => {
 
 describe("validateCheckinToken", () => {
   it("returns true for a valid token", async () => {
-    const { generateCheckinToken, validateCheckinToken } = await import("./checkin-actions");
+    const { generateCheckinToken, validateCheckinToken } = await import("./checkin-tokens");
     const token = generateCheckinToken("session", "s1", "e1");
     expect(validateCheckinToken("session", "s1", "e1", token)).toBe(true);
   });
 
   it("returns false for an invalid token", async () => {
-    const { validateCheckinToken } = await import("./checkin-actions");
+    const { validateCheckinToken } = await import("./checkin-tokens");
     expect(validateCheckinToken("session", "s1", "e1", "bad-token")).toBe(false);
   });
 });

@@ -42,8 +42,8 @@ import {
   updateBadge,
   deleteBadge,
   recalculateLeaderboard,
-  ACTIVITY_LABELS,
 } from "./actions";
+import { ACTIVITY_LABELS } from "./constants";
 
 // ── Helpers ──────────────────────────────────────────────────────────
 const EVENT_ID = "evt-001";
@@ -84,7 +84,7 @@ describe("gamification actions", () => {
     expect(tableNames).toContain("badge_definitions");
   });
 
-  it("enableGamification seeds 17 point rules", async () => {
+  it("enableGamification seeds 16 point rules", async () => {
     let capturedRules: unknown[] = [];
     mockFrom.mockImplementation((table: string) => {
       const chain: Record<string, any> = {};
@@ -106,7 +106,7 @@ describe("gamification actions", () => {
 
     await enableGamification(EVENT_ID);
 
-    expect(capturedRules).toHaveLength(17);
+    expect(capturedRules).toHaveLength(16);
   });
 
   it("ACTIVITY_LABELS has 16 entries covering all activity types", () => {

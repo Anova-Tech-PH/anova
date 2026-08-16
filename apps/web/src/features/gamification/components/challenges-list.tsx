@@ -13,6 +13,12 @@ const ACTIVITY_LABELS: Record<string, string> = {
   photo_upload: "Upload a photo",
   message_sent: "Send a message",
   survey_complete: "Complete a survey",
+  caption_submit: "Submit a caption",
+  icebreaker_answer: "Answer an icebreaker",
+  trivia_complete: "Complete trivia",
+  exhibitor_visit: "Visit an exhibitor",
+  session_checkin: "Check in to a session",
+  referral_registration: "Referral registration",
 };
 
 export function ChallengesList({

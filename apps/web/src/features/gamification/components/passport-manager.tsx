@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { QrCode, Building2 } from "lucide-react";
 import { Card, EmptyState } from "@attendly/ui/components";
-import { generateCheckinToken } from "../checkin-actions";
+import { generateCheckinToken } from "../checkin-tokens";
 import { generateQRCodeDataURL } from "../lib/qr";
 
 type Sponsor = {

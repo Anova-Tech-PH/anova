@@ -14,6 +14,12 @@ const ACTIVITY_LABELS: Record<string, string> = {
   photo_upload: "Photo Upload",
   message_sent: "Message Sent",
   survey_complete: "Survey Complete",
+  caption_submit: "Caption Submit",
+  icebreaker_answer: "Icebreaker Answer",
+  trivia_complete: "Trivia Complete",
+  exhibitor_visit: "Exhibitor Visit",
+  session_checkin: "Session Check-in",
+  referral_registration: "Referral Registration",
 };
 
 export function AttendeePointHistory({
