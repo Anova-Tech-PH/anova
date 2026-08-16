@@ -13,6 +13,9 @@ import {
   Send,
   Loader2,
   Check,
+  Linkedin,
+  Github,
+  Globe,
 } from "lucide-react";
 import { Avatar, Badge, Button } from "@attendly/ui/components";
 import { toggleAttendeeBookmark, saveAttendeeNote } from "@/features/attendee-profile/actions";
@@ -33,11 +36,23 @@ interface AttendeeProfileViewProps {
     location: string | null;
     bio: string | null;
     interests: Interest[];
+    affiliations: { id: string; organization: string; role: string | null; start_date: string | null; end_date: string | null }[];
+    education: { id: string; school: string; degree: string | null; field_of_study: string | null; start_year: number | null; end_year: number | null }[];
+    links: { type: string; url: string; label?: string }[];
   };
   eventId: string;
   basePath: string;
   isBookmarked: boolean;
   noteContent?: string;
+}
+
+function LinkIcon({ type }: { type: string }) {
+  switch (type) {
+    case "linkedin": return <Linkedin className="h-4 w-4" />;
+    case "twitter": return <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>;
+    case "github": return <Github className="h-4 w-4" />;
+    default: return <Globe className="h-4 w-4" />;
+  }
 }
 
 export function AttendeeProfileView({
@@ -241,6 +256,45 @@ export function AttendeeProfileView({
           </div>
         )}
 
+        {/* Affiliations */}
+        {profile.affiliations.length > 0 && (
+          <div className="mt-6">
+            <h2 className="text-sm font-semibold text-foreground">Affiliations</h2>
+            <div className="mt-2 space-y-2">
+              {profile.affiliations.map((aff) => (
+                <div key={aff.id}>
+                  <p className="text-sm font-medium">{aff.organization}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {[aff.role, aff.start_date && `${aff.start_date} — ${aff.end_date ?? "Present"}`]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Education */}
+        {profile.education.length > 0 && (
+          <div className="mt-6">
+            <h2 className="text-sm font-semibold text-foreground">Education</h2>
+            <div className="mt-2 space-y-2">
+              {profile.education.map((edu) => (
+                <div key={edu.id}>
+                  <p className="text-sm font-medium">{edu.school}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {[
+                      edu.degree && edu.field_of_study ? `${edu.degree} in ${edu.field_of_study}` : edu.degree || edu.field_of_study,
+                      edu.start_year && `${edu.start_year} — ${edu.end_year ?? "Present"}`,
+                    ].filter(Boolean).join(" · ")}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Bio */}
         {profile.bio && (
           <div className="mt-6">
@@ -261,6 +315,31 @@ export function AttendeeProfileView({
                   {interest.name}
                 </Badge>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* Links */}
+        {profile.links.length > 0 && (
+          <div className="mt-6">
+            <h2 className="text-sm font-semibold text-foreground">Links</h2>
+            <div className="mt-2 space-y-1.5">
+              {profile.links.map((link, i) => {
+                let hostname = link.url;
+                try { hostname = new URL(link.url).hostname; } catch {}
+                return (
+                  <a
+                    key={i}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-sm text-primary hover:underline"
+                  >
+                    <LinkIcon type={link.type} />
+                    {link.label || hostname}
+                  </a>
+                );
+              })}
             </div>
           </div>
         )}
