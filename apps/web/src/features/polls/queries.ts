@@ -5,6 +5,13 @@ export type PollOption = {
   text: string;
 };
 
+export type AnswerType =
+  | "multiple_choice"
+  | "checkbox"
+  | "short_answer"
+  | "star_rating"
+  | "word_cloud";
+
 export type LivePoll = {
   id: string;
   event_id: string;
@@ -23,12 +30,17 @@ export type LivePoll = {
   sort_order: number;
   created_at: string;
   updated_at: string;
+  answer_type: AnswerType;
 };
 
 export type PollWithResults = LivePoll & {
   vote_counts: Record<string, number>;
   total_votes: number;
   session_title?: string;
+  average_rating?: number;
+  rating_distribution?: Record<number, number>;
+  text_responses?: string[];
+  word_frequencies?: Record<string, number>;
 };
 
 export async function getPolls(eventId: string): Promise<PollWithResults[]> {
@@ -57,12 +69,61 @@ export async function getPolls(eventId: string): Promise<PollWithResults[]> {
     const sessions = poll.sessions as unknown as { title: string }[] | { title: string } | null;
     const sessionTitle = Array.isArray(sessions) ? sessions[0]?.title : sessions?.title;
 
+    let average_rating: number | undefined;
+    let rating_distribution: Record<number, number> | undefined;
+    let text_responses: string[] | undefined;
+    let word_frequencies: Record<string, number> | undefined;
+
+    const answerType = (poll.answer_type as AnswerType) ?? "multiple_choice";
+
+    if (answerType === "star_rating") {
+      const { data: ratingVotes } = await supabase
+        .from("live_poll_votes")
+        .select("rating_value")
+        .eq("poll_id", poll.id)
+        .not("rating_value", "is", null);
+
+      const ratings = (ratingVotes ?? []).map((v) => v.rating_value as number);
+      if (ratings.length > 0) {
+        average_rating = ratings.reduce((a, b) => a + b, 0) / ratings.length;
+        rating_distribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+        for (const r of ratings) {
+          rating_distribution[r] = (rating_distribution[r] ?? 0) + 1;
+        }
+      }
+    } else if (answerType === "short_answer") {
+      const { data: textVotes } = await supabase
+        .from("live_poll_votes")
+        .select("response_text")
+        .eq("poll_id", poll.id)
+        .not("response_text", "is", null);
+
+      text_responses = (textVotes ?? []).map((v) => v.response_text as string);
+    } else if (answerType === "word_cloud") {
+      const { data: wordVotes } = await supabase
+        .from("live_poll_votes")
+        .select("response_text")
+        .eq("poll_id", poll.id)
+        .not("response_text", "is", null);
+
+      word_frequencies = {};
+      for (const v of wordVotes ?? []) {
+        const word = (v.response_text as string).toLowerCase().trim();
+        word_frequencies[word] = (word_frequencies[word] ?? 0) + 1;
+      }
+    }
+
     results.push({
       ...poll,
       options: (poll.options ?? []) as PollOption[],
+      answer_type: answerType,
       vote_counts,
       total_votes: votes?.length ?? 0,
       session_title: sessionTitle ?? undefined,
+      average_rating,
+      rating_distribution,
+      text_responses,
+      word_frequencies,
     });
   }
 
@@ -93,12 +154,61 @@ export async function getPollWithResults(pollId: string): Promise<PollWithResult
   const sessions = poll.sessions as unknown as { title: string }[] | { title: string } | null;
   const sessionTitle = Array.isArray(sessions) ? sessions[0]?.title : sessions?.title;
 
+  let average_rating: number | undefined;
+  let rating_distribution: Record<number, number> | undefined;
+  let text_responses: string[] | undefined;
+  let word_frequencies: Record<string, number> | undefined;
+
+  const answerType = (poll.answer_type as AnswerType) ?? "multiple_choice";
+
+  if (answerType === "star_rating") {
+    const { data: ratingVotes } = await supabase
+      .from("live_poll_votes")
+      .select("rating_value")
+      .eq("poll_id", poll.id)
+      .not("rating_value", "is", null);
+
+    const ratings = (ratingVotes ?? []).map((v) => v.rating_value as number);
+    if (ratings.length > 0) {
+      average_rating = ratings.reduce((a, b) => a + b, 0) / ratings.length;
+      rating_distribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+      for (const r of ratings) {
+        rating_distribution[r] = (rating_distribution[r] ?? 0) + 1;
+      }
+    }
+  } else if (answerType === "short_answer") {
+    const { data: textVotes } = await supabase
+      .from("live_poll_votes")
+      .select("response_text")
+      .eq("poll_id", poll.id)
+      .not("response_text", "is", null);
+
+    text_responses = (textVotes ?? []).map((v) => v.response_text as string);
+  } else if (answerType === "word_cloud") {
+    const { data: wordVotes } = await supabase
+      .from("live_poll_votes")
+      .select("response_text")
+      .eq("poll_id", poll.id)
+      .not("response_text", "is", null);
+
+    word_frequencies = {};
+    for (const v of wordVotes ?? []) {
+      const word = (v.response_text as string).toLowerCase().trim();
+      word_frequencies[word] = (word_frequencies[word] ?? 0) + 1;
+    }
+  }
+
   return {
     ...poll,
     options: (poll.options ?? []) as PollOption[],
+    answer_type: answerType,
     vote_counts,
     total_votes: votes?.length ?? 0,
     session_title: sessionTitle ?? undefined,
+    average_rating,
+    rating_distribution,
+    text_responses,
+    word_frequencies,
   };
 }
 
@@ -129,12 +239,61 @@ export async function getActivePolls(eventId: string): Promise<PollWithResults[]
     const sessions = poll.sessions as unknown as { title: string }[] | { title: string } | null;
     const sessionTitle = Array.isArray(sessions) ? sessions[0]?.title : sessions?.title;
 
+    let average_rating: number | undefined;
+    let rating_distribution: Record<number, number> | undefined;
+    let text_responses: string[] | undefined;
+    let word_frequencies: Record<string, number> | undefined;
+
+    const answerType = (poll.answer_type as AnswerType) ?? "multiple_choice";
+
+    if (answerType === "star_rating") {
+      const { data: ratingVotes } = await supabase
+        .from("live_poll_votes")
+        .select("rating_value")
+        .eq("poll_id", poll.id)
+        .not("rating_value", "is", null);
+
+      const ratings = (ratingVotes ?? []).map((v) => v.rating_value as number);
+      if (ratings.length > 0) {
+        average_rating = ratings.reduce((a, b) => a + b, 0) / ratings.length;
+        rating_distribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+        for (const r of ratings) {
+          rating_distribution[r] = (rating_distribution[r] ?? 0) + 1;
+        }
+      }
+    } else if (answerType === "short_answer") {
+      const { data: textVotes } = await supabase
+        .from("live_poll_votes")
+        .select("response_text")
+        .eq("poll_id", poll.id)
+        .not("response_text", "is", null);
+
+      text_responses = (textVotes ?? []).map((v) => v.response_text as string);
+    } else if (answerType === "word_cloud") {
+      const { data: wordVotes } = await supabase
+        .from("live_poll_votes")
+        .select("response_text")
+        .eq("poll_id", poll.id)
+        .not("response_text", "is", null);
+
+      word_frequencies = {};
+      for (const v of wordVotes ?? []) {
+        const word = (v.response_text as string).toLowerCase().trim();
+        word_frequencies[word] = (word_frequencies[word] ?? 0) + 1;
+      }
+    }
+
     results.push({
       ...poll,
       options: (poll.options ?? []) as PollOption[],
+      answer_type: answerType,
       vote_counts,
       total_votes: votes?.length ?? 0,
       session_title: sessionTitle ?? undefined,
+      average_rating,
+      rating_distribution,
+      text_responses,
+      word_frequencies,
     });
   }
 
