@@ -1,4 +1,6 @@
-# Attendee Profile Extensions Design
+# Attendee Profile Extensions Design — COMPLETED
+
+**Status:** Implemented and tested (2026-08-16)
 
 **Goal:** Add Affiliations, Education, and Links sections to attendee profiles for Whova parity.
 
@@ -132,7 +134,7 @@ Display label if provided, otherwise show domain name.
 ## Files to Create/Modify
 
 **Create:**
-- `packages/supabase/migrations/086_attendee_profile_extensions.sql`
+- `packages/supabase/migrations/087_attendee_profile_extensions.sql`
 
 **Modify:**
 - `apps/web/src/features/attendee-profile/queries.ts` — add affiliation/education queries, add `links` to profile selects

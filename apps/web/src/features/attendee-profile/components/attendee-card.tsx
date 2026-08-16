@@ -109,8 +109,13 @@ export function AttendeeCard({
           size="lg"
         />
         <div className="min-w-0 flex-1">
-          <h3 className="truncate text-sm font-semibold text-foreground">
-            {profile.display_name}
+          <h3 className="truncate text-sm font-semibold">
+            <Link
+              href={`${basePath}/${profile.id}`}
+              className="text-foreground hover:text-[oklch(0.445_0.107_195)] hover:underline"
+            >
+              {profile.display_name}
+            </Link>
           </h3>
           {subtitle && (
             <p className="mt-0.5 truncate text-xs text-muted-foreground">
