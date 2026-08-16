@@ -1,69 +1,70 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { revalidatePath } from "next/cache";
 
-function createQueryMock(result: { data?: unknown; error?: unknown }) {
-  const handler: ProxyHandler<object> = {
-    get(_target, prop: string) {
-      if (prop === "then") return (resolve: (v: unknown) => void) => resolve(result);
-      return vi.fn(() => new Proxy({}, handler));
-    },
-  };
-  return new Proxy({}, handler);
-}
-
-const mockFrom = vi.fn();
-const mockAuth = {
-  getUser: vi.fn().mockResolvedValue({ data: { user: { id: "user-1" } }, error: null }),
-};
-
-vi.mock("@attendly/ui/supabase/server", () => ({
-  createClient: vi.fn(() => Promise.resolve({ from: mockFrom, auth: mockAuth })),
+vi.mock("next/cache", () => ({
+  revalidatePath: vi.fn(),
 }));
 
-describe("Logistics Actions", () => {
+const mockInsert = vi.fn().mockReturnValue({
+  select: vi.fn().mockReturnValue({
+    single: vi.fn().mockResolvedValue({
+      data: { id: "new-1", event_id: "evt-1", template: "parking", title: "Parking", content: "", sort_order: 0 },
+      error: null,
+    }),
+  }),
+});
+const mockUpdate = vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) });
+const mockDelete = vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) });
+const mockSelect = vi.fn().mockReturnValue({
+  eq: vi.fn().mockReturnValue({
+    order: vi.fn().mockReturnValue({
+      limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+    }),
+  }),
+});
+
+const mockFrom = vi.fn(() => ({
+  insert: mockInsert,
+  update: mockUpdate,
+  delete: mockDelete,
+  select: mockSelect,
+}));
+
+vi.mock("@attendly/ui/supabase/server", () => ({
+  createClient: vi.fn(() => Promise.resolve({ from: mockFrom })),
+}));
+
+describe("Logistics Item Actions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  describe("updateLogistics", () => {
-    it("updates venue fields and revalidates", async () => {
-      mockFrom.mockReturnValue(
-        createQueryMock({ data: null, error: null })
-      );
+  describe("createLogisticsItem", () => {
+    it("inserts a new item into logistics_items", async () => {
+      const { createLogisticsItem } = await import("./actions");
+      const result = await createLogisticsItem("evt-1", "parking", "Parking", "");
 
-      const { updateLogistics } = await import("./actions");
-      await updateLogistics("evt-1", {
-        venue_description: "Main hall downtown",
-        venue_map_url: "https://maps.google.com/embed?pb=123",
-      });
-
-      expect(mockFrom).toHaveBeenCalledWith("events");
-      expect(revalidatePath).toHaveBeenCalledWith("/events/evt-1/logistics");
+      expect(mockFrom).toHaveBeenCalledWith("logistics_items");
+      expect(result.id).toBe("new-1");
     });
+  });
 
-    it("merges logistics JSONB with existing data", async () => {
-      // First call: select existing logistics; Second call: update
-      let callCount = 0;
-      mockFrom.mockImplementation(() => {
-        callCount++;
-        if (callCount === 1) {
-          // select call to fetch existing
-          return createQueryMock({
-            data: { logistics: { wifi: { network: "OldNet", password: "old" }, parking: { title: "Lot A", body: "Free" } } },
-            error: null,
-          });
-        }
-        // update call
-        return createQueryMock({ data: null, error: null });
-      });
+  describe("updateLogisticsItem", () => {
+    it("updates an existing item", async () => {
+      const { updateLogisticsItem } = await import("./actions");
+      await updateLogisticsItem("item-1", { title: "Updated" });
 
-      const { updateLogistics } = await import("./actions");
-      await updateLogistics("evt-1", {
-        logistics: { wifi: { network: "NewNet", password: "new123" } },
-      });
+      expect(mockFrom).toHaveBeenCalledWith("logistics_items");
+      expect(mockUpdate).toHaveBeenCalled();
+    });
+  });
 
-      expect(mockFrom).toHaveBeenCalledWith("events");
-      expect(revalidatePath).toHaveBeenCalledWith("/events/evt-1/logistics");
+  describe("deleteLogisticsItem", () => {
+    it("deletes an item", async () => {
+      const { deleteLogisticsItem } = await import("./actions");
+      await deleteLogisticsItem("item-1");
+
+      expect(mockFrom).toHaveBeenCalledWith("logistics_items");
+      expect(mockDelete).toHaveBeenCalled();
     });
   });
 });
