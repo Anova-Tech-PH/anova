@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Trophy, PartyPopper } from "lucide-react";
+import { Avatar } from "@attendly/ui/components";
 import { createClient } from "@attendly/ui/supabase/client";
 import type { LeaderboardEntry } from "@/features/gamification/queries";
 import { toggleCongratulation } from "../congratulation-actions";
@@ -139,6 +140,12 @@ export function LeaderboardFull({
         </div>
       )}
 
+      {entries.length > 0 && (
+        <p className="text-sm text-muted-foreground text-center">
+          Congratulate the most active members of our community!
+        </p>
+      )}
+
       {entries.length === 0 ? (
         <div className="rounded-xl border p-8 text-center">
           <Trophy className="mx-auto h-8 w-8 text-muted-foreground/50" />
@@ -160,6 +167,7 @@ export function LeaderboardFull({
                 <span className="w-8 text-center text-sm font-medium">
                   {entry.rank <= 3 ? ["\u{1F947}", "\u{1F948}", "\u{1F949}"][entry.rank - 1] : entry.rank}
                 </span>
+                <Avatar src={entry.avatar_url} name={entry.full_name} size="sm" />
                 <span className="flex-1 text-sm truncate">
                   {entry.full_name ?? "Anonymous"}
                   {isMe && <span className="ml-1 text-xs text-muted-foreground">(You)</span>}

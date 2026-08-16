@@ -16,6 +16,16 @@ vi.mock("../congratulation-actions", () => ({
   toggleCongratulation: vi.fn(),
 }));
 
+const baseEntry = {
+  user_id: "u1",
+  total_points: 100,
+  challenges_completed: 3,
+  last_activity_at: null,
+  rank: 1,
+  full_name: "Alice Smith",
+  avatar_url: "https://example.com/alice.jpg",
+};
+
 describe("LeaderboardFull with congratulations", () => {
   const entries = [
     { user_id: "user-1", total_points: 100, challenges_completed: 3, last_activity_at: null, rank: 1, full_name: "Alice", avatar_url: null },
@@ -35,7 +45,8 @@ describe("LeaderboardFull with congratulations", () => {
         userCongratulations={[]}
       />
     );
-    expect(screen.getByText(/Congratulate/)).toBeDefined();
+    const button = screen.getByRole("button", { name: /Congratulate/ });
+    expect(button).toBeDefined();
   });
 
   it("shows Congratulated state for already-congratulated users", () => {
@@ -67,11 +78,76 @@ describe("LeaderboardFull with congratulations", () => {
         userCongratulations={[]}
       />
     );
-    // Only one congratulate button (for Bob), not for Alice
     const buttons = container.querySelectorAll("button");
     const congratButtons = Array.from(buttons).filter(
       (b) => b.textContent?.includes("Congratulate")
     );
     expect(congratButtons).toHaveLength(1);
+  });
+});
+
+describe("LeaderboardFull avatars", () => {
+  it("renders avatar for each leaderboard entry", () => {
+    render(
+      <LeaderboardFull
+        entries={[baseEntry]}
+        currentUserId={null}
+        userRank={null}
+        userPoints={null}
+        title="Leaderboard"
+        eventId="e1"
+      />
+    );
+
+    const img = screen.getByAltText("Alice Smith");
+    expect(img).toBeDefined();
+    expect(img.getAttribute("src")).toBe("https://example.com/alice.jpg");
+  });
+
+  it("renders initials when avatar_url is null", () => {
+    render(
+      <LeaderboardFull
+        entries={[{ ...baseEntry, avatar_url: null }]}
+        currentUserId={null}
+        userRank={null}
+        userPoints={null}
+        title="Leaderboard"
+        eventId="e1"
+      />
+    );
+
+    expect(screen.getByText("AS")).toBeDefined();
+  });
+});
+
+describe("LeaderboardFull social prompt", () => {
+  it("renders social prompt when entries exist", () => {
+    render(
+      <LeaderboardFull
+        entries={[baseEntry]}
+        currentUserId="u2"
+        userRank={2}
+        userPoints={50}
+        title="Leaderboard"
+        eventId="e1"
+      />
+    );
+
+    expect(screen.getByText(/Congratulate the most active members/)).toBeDefined();
+  });
+
+  it("does not render social prompt when no entries", () => {
+    render(
+      <LeaderboardFull
+        entries={[]}
+        currentUserId={null}
+        userRank={null}
+        userPoints={null}
+        title="Leaderboard"
+        eventId="e1"
+      />
+    );
+
+    expect(screen.queryByText(/Congratulate the most active members/)).toBeNull();
   });
 });
