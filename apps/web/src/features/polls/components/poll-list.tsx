@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { Fragment, useState, useTransition } from "react";
 import type { PollWithResults } from "@/features/polls/queries";
 import { useConfirm } from "@attendly/ui/components";
 import { openPoll, closePoll, deletePoll, togglePollResults } from "@/features/polls/actions";
@@ -10,13 +10,9 @@ import { pollsToCsv, downloadCsv } from "@/features/polls/export";
 export function PollList({
   polls,
   eventId,
-  orgSlug,
-  eventSlug,
 }: {
   polls: PollWithResults[];
   eventId: string;
-  orgSlug: string;
-  eventSlug: string;
 }) {
   const [isPending, startTransition] = useTransition();
   const { confirm, dialog: confirmDialog } = useConfirm();
@@ -89,9 +85,8 @@ export function PollList({
           </thead>
           <tbody>
             {polls.map((poll) => (
-              <>
+              <Fragment key={poll.id}>
                 <tr
-                  key={poll.id}
                   className="border-b last:border-b-0 hover:bg-muted/20"
                 >
                   <td className="px-4 py-3 font-medium">
@@ -168,7 +163,7 @@ export function PollList({
                           <button
                             type="button"
                             onClick={() => {
-                              const url = `${window.location.origin}/${orgSlug}/${eventSlug}/polls/${poll.id}/present`;
+                              const url = `${window.location.origin}/present/${poll.id}`;
                               window.open(url, "_blank");
                             }}
                             className="rounded-lg border px-3 py-1.5 text-xs font-medium hover:bg-muted/50"
@@ -190,7 +185,7 @@ export function PollList({
                           <button
                             type="button"
                             onClick={() => {
-                              const url = `${window.location.origin}/${orgSlug}/${eventSlug}/polls/${poll.id}/present`;
+                              const url = `${window.location.origin}/present/${poll.id}`;
                               window.open(url, "_blank");
                             }}
                             className="rounded-lg border px-3 py-1.5 text-xs font-medium hover:bg-muted/50"
@@ -217,7 +212,7 @@ export function PollList({
                     </td>
                   </tr>
                 )}
-              </>
+              </Fragment>
             ))}
           </tbody>
         </table>

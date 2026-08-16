@@ -85,6 +85,29 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // Protect portal routes (/:orgSlug/:eventSlug/...) — require login
+  const portalPattern = /^\/[^/]+\/[^/]+/;
+  const isPortalRoute =
+    portalPattern.test(pathname) &&
+    !pathname.startsWith("/dashboard") &&
+    !pathname.startsWith("/events") &&
+    !pathname.startsWith("/login") &&
+    !pathname.startsWith("/signup") &&
+    !pathname.startsWith("/onboarding") &&
+    !pathname.startsWith("/embed/") &&
+    !pathname.startsWith("/auth") &&
+    !pathname.startsWith("/api") &&
+    !pathname.startsWith("/register") &&
+    !pathname.startsWith("/kiosk") &&
+    !pathname.startsWith("/present");
+
+  if (isPortalRoute && !user) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    url.searchParams.set("redirect", pathname);
+    return NextResponse.redirect(url);
+  }
+
   // Redirect users without an org to onboarding (for protected organizer routes)
   if (
     user &&
