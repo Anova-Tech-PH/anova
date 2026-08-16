@@ -113,3 +113,196 @@ export async function updateProfileInterests(eventId: string, interestIds: strin
 
   revalidatePath("/");
 }
+
+// ============================================================
+// Affiliations
+// ============================================================
+
+export async function addAffiliation(
+  eventId: string,
+  data: {
+    organization: string;
+    role?: string;
+    start_date?: string | null;
+    end_date?: string | null;
+  }
+) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  if (!data.organization?.trim()) throw new Error("Organization is required");
+  if (data.organization.length > 200) throw new Error("Organization too long");
+
+  const { error } = await supabase
+    .from("attendee_affiliations")
+    .insert({
+      user_id: user.id,
+      event_id: eventId,
+      organization: data.organization.trim(),
+      role: data.role?.trim() || null,
+      start_date: data.start_date || null,
+      end_date: data.end_date || null,
+    });
+
+  if (error) throw error;
+  revalidatePath("/");
+}
+
+export async function updateAffiliation(
+  id: string,
+  data: {
+    organization: string;
+    role?: string;
+    start_date?: string | null;
+    end_date?: string | null;
+  }
+) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const { error } = await supabase
+    .from("attendee_affiliations")
+    .update({
+      organization: data.organization.trim(),
+      role: data.role?.trim() || null,
+      start_date: data.start_date || null,
+      end_date: data.end_date || null,
+    })
+    .eq("id", id)
+    .eq("user_id", user.id);
+
+  if (error) throw error;
+  revalidatePath("/");
+}
+
+export async function removeAffiliation(id: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const { error } = await supabase
+    .from("attendee_affiliations")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", user.id);
+
+  if (error) throw error;
+  revalidatePath("/");
+}
+
+// ============================================================
+// Education
+// ============================================================
+
+export async function addEducation(
+  eventId: string,
+  data: {
+    school: string;
+    degree?: string;
+    field_of_study?: string;
+    start_year?: number;
+    end_year?: number | null;
+  }
+) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  if (!data.school?.trim()) throw new Error("School is required");
+  if (data.school.length > 200) throw new Error("School name too long");
+
+  const { error } = await supabase
+    .from("attendee_education")
+    .insert({
+      user_id: user.id,
+      event_id: eventId,
+      school: data.school.trim(),
+      degree: data.degree?.trim() || null,
+      field_of_study: data.field_of_study?.trim() || null,
+      start_year: data.start_year || null,
+      end_year: data.end_year ?? null,
+    });
+
+  if (error) throw error;
+  revalidatePath("/");
+}
+
+export async function updateEducation(
+  id: string,
+  data: {
+    school: string;
+    degree?: string;
+    field_of_study?: string;
+    start_year?: number;
+    end_year?: number | null;
+  }
+) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const { error } = await supabase
+    .from("attendee_education")
+    .update({
+      school: data.school.trim(),
+      degree: data.degree?.trim() || null,
+      field_of_study: data.field_of_study?.trim() || null,
+      start_year: data.start_year || null,
+      end_year: data.end_year ?? null,
+    })
+    .eq("id", id)
+    .eq("user_id", user.id);
+
+  if (error) throw error;
+  revalidatePath("/");
+}
+
+export async function removeEducation(id: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const { error } = await supabase
+    .from("attendee_education")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", user.id);
+
+  if (error) throw error;
+  revalidatePath("/");
+}
+
+// ============================================================
+// Links
+// ============================================================
+
+type ProfileLink = {
+  type: "linkedin" | "twitter" | "github" | "website" | "other";
+  url: string;
+  label?: string;
+};
+
+export async function updateProfileLinks(eventId: string, links: ProfileLink[]) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  if (links.length > 10) throw new Error("Maximum 10 links allowed");
+
+  for (const link of links) {
+    if (!link.url.startsWith("https://") && !link.url.startsWith("http://")) {
+      throw new Error("URLs must start with https:// or http://");
+    }
+  }
+
+  const { error } = await supabase
+    .from("attendee_profiles")
+    .update({ links })
+    .eq("id", user.id)
+    .eq("event_id", eventId);
+
+  if (error) throw error;
+  revalidatePath("/");
+}
