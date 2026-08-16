@@ -108,6 +108,59 @@ export async function toggleFollow(topicId: string) {
   revalidatePath("/");
 }
 
+export async function toggleReaction(postId: string, emoji: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const { data: existing } = await supabase
+    .from("community_post_reactions")
+    .select("user_id")
+    .eq("user_id", user.id)
+    .eq("post_id", postId)
+    .eq("emoji", emoji)
+    .single();
+
+  if (existing) {
+    await supabase
+      .from("community_post_reactions")
+      .delete()
+      .eq("user_id", user.id)
+      .eq("post_id", postId)
+      .eq("emoji", emoji);
+  } else {
+    await supabase.from("community_post_reactions").insert({
+      user_id: user.id,
+      post_id: postId,
+      emoji,
+    });
+  }
+  revalidatePath("/", "layout");
+}
+
+export async function markTopicRead(topicId: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const { error } = await supabase
+    .from("community_topic_read_status")
+    .upsert(
+      {
+        user_id: user.id,
+        topic_id: topicId,
+        last_read_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id,topic_id" }
+    );
+  if (error) throw error;
+  revalidatePath("/", "layout");
+}
+
 export async function saveIcebreakerConfig(
   eventId: string,
   data: {

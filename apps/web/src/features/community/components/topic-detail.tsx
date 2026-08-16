@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import {
   ArrowLeft,
   MessageSquare,
@@ -12,7 +12,7 @@ import {
   Send,
 } from "lucide-react";
 import { Button, Badge, Textarea, Avatar } from "@attendly/ui/components";
-import { createPost, toggleFollow } from "@/features/community/actions";
+import { createPost, toggleFollow, toggleReaction, markTopicRead } from "@/features/community/actions";
 import { toast } from "sonner";
 import Link from "next/link";
 
@@ -30,6 +30,8 @@ const typeLabels = {
   ask_organizer: "Ask Organizer",
 } as const;
 
+const EMOJIS = ["👍", "❤", "🤣"] as const;
+
 interface Post {
   id: string;
   author_id: string;
@@ -39,6 +41,8 @@ interface Post {
     display_name: string | null;
     avatar_url: string | null;
   } | null;
+  reactions: Record<string, number>;
+  user_reactions: string[];
 }
 
 interface TopicDetailProps {
@@ -63,11 +67,78 @@ interface TopicDetailProps {
   backPath: string;
 }
 
+function PostReactions({
+  postId,
+  reactions,
+  userReactions,
+}: {
+  postId: string;
+  reactions: Record<string, number>;
+  userReactions: string[];
+}) {
+  const [localReactions, setLocalReactions] = useState(reactions);
+  const [localUserReactions, setLocalUserReactions] = useState(new Set(userReactions));
+  const [isPending, startTransition] = useTransition();
+
+  function handleToggle(emoji: string) {
+    const hasReacted = localUserReactions.has(emoji);
+    setLocalReactions((prev) => ({
+      ...prev,
+      [emoji]: (prev[emoji] ?? 0) + (hasReacted ? -1 : 1),
+    }));
+    setLocalUserReactions((prev) => {
+      const next = new Set(prev);
+      if (hasReacted) next.delete(emoji);
+      else next.add(emoji);
+      return next;
+    });
+
+    startTransition(async () => {
+      try {
+        await toggleReaction(postId, emoji);
+      } catch {
+        // revert on error
+        setLocalReactions(reactions);
+        setLocalUserReactions(new Set(userReactions));
+      }
+    });
+  }
+
+  return (
+    <div className="mt-2 flex gap-1">
+      {EMOJIS.map((emoji) => {
+        const count = localReactions[emoji] ?? 0;
+        const active = localUserReactions.has(emoji);
+        return (
+          <button
+            key={emoji}
+            onClick={() => handleToggle(emoji)}
+            disabled={isPending}
+            aria-label={`${emoji}${count > 0 ? ` ${count}` : ""}`}
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs transition-colors ${
+              active
+                ? "bg-blue-100 text-blue-700 border border-blue-300"
+                : "bg-muted text-muted-foreground hover:bg-accent"
+            }`}
+          >
+            {emoji}
+            {count > 0 && <span>{count}</span>}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 export function TopicDetail({ topic, backPath }: TopicDetailProps) {
   const [replyContent, setReplyContent] = useState("");
   const [isFollowPending, startFollowTransition] = useTransition();
   const [isPostPending, startPostTransition] = useTransition();
   const Icon = typeIcons[topic.type];
+
+  useEffect(() => {
+    markTopicRead(topic.id).catch(() => {});
+  }, [topic.id]);
 
   function handleToggleFollow() {
     startFollowTransition(async () => {
@@ -218,6 +289,11 @@ export function TopicDetail({ topic, backPath }: TopicDetailProps) {
                   <p className="mt-1.5 text-sm leading-relaxed whitespace-pre-wrap">
                     {post.content}
                   </p>
+                  <PostReactions
+                    postId={post.id}
+                    reactions={post.reactions ?? {}}
+                    userReactions={post.user_reactions ?? []}
+                  />
                 </div>
               </div>
             );

@@ -36,6 +36,7 @@ export interface TopicCardData {
   post_count: number;
   follower_count: number;
   is_following: boolean;
+  has_unread?: boolean;
 }
 
 export function TopicCard({
@@ -74,6 +75,9 @@ export function TopicCard({
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
+            {topic.has_unread && (
+              <span className="h-2 w-2 shrink-0 rounded-full bg-blue-500" aria-label="Unread" />
+            )}
             {topic.pinned && (
               <Pin className="h-3.5 w-3.5 shrink-0 text-amber-500" />
             )}

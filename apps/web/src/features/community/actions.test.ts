@@ -164,6 +164,65 @@ describe("Community Actions", () => {
     });
   });
 
+  describe("toggleReaction", () => {
+    it("adds reaction when not already reacted", async () => {
+      let callIdx = 0;
+      mockFrom.mockImplementation(() => {
+        callIdx++;
+        if (callIdx === 1)
+          return createQueryMock({ data: null, error: { code: "PGRST116" } });
+        return createQueryMock({ data: null, error: null });
+      });
+
+      const { toggleReaction } = await import("./actions");
+      await toggleReaction("post-1", "👍");
+
+      expect(mockFrom).toHaveBeenCalledWith("community_post_reactions");
+      expect(revalidatePath).toHaveBeenCalledWith("/", "layout");
+    });
+
+    it("removes reaction when already reacted", async () => {
+      let callIdx = 0;
+      mockFrom.mockImplementation(() => {
+        callIdx++;
+        if (callIdx === 1)
+          return createQueryMock({ data: { user_id: "user-1" }, error: null });
+        return createQueryMock({ data: null, error: null });
+      });
+
+      const { toggleReaction } = await import("./actions");
+      await toggleReaction("post-1", "👍");
+
+      expect(revalidatePath).toHaveBeenCalledWith("/", "layout");
+    });
+
+    it("throws when not authenticated", async () => {
+      mockAuth.getUser.mockResolvedValue({ data: { user: null }, error: null });
+
+      const { toggleReaction } = await import("./actions");
+      await expect(toggleReaction("post-1", "👍")).rejects.toThrow("Not authenticated");
+    });
+  });
+
+  describe("markTopicRead", () => {
+    it("upserts read status and revalidates", async () => {
+      mockFrom.mockReturnValue(createQueryMock({ data: null, error: null }));
+
+      const { markTopicRead } = await import("./actions");
+      await markTopicRead("topic-1");
+
+      expect(mockFrom).toHaveBeenCalledWith("community_topic_read_status");
+      expect(revalidatePath).toHaveBeenCalledWith("/", "layout");
+    });
+
+    it("throws when not authenticated", async () => {
+      mockAuth.getUser.mockResolvedValue({ data: { user: null }, error: null });
+
+      const { markTopicRead } = await import("./actions");
+      await expect(markTopicRead("topic-1")).rejects.toThrow("Not authenticated");
+    });
+  });
+
   describe("submitIcebreaker", () => {
     it("upserts icebreaker response and revalidates", async () => {
       mockFrom.mockReturnValue(createQueryMock({ data: null, error: null }));
