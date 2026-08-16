@@ -9,6 +9,7 @@ function makePoll(overrides: Partial<PollWithResults> = {}): PollWithResults {
     session_id: null,
     created_by: "user-1",
     question: "Favorite color?",
+    answer_type: "multiple_choice",
     options: [
       { id: "opt-a", text: "Red" },
       { id: "opt-b", text: "Blue" },
@@ -100,5 +101,58 @@ describe("pollsToCsv", () => {
 
     // Last field should be empty string
     expect(lines[1]).toMatch(/,""$/);
+  });
+
+  it("formats star rating poll with distribution", () => {
+    const poll = makePoll({
+      answer_type: "star_rating",
+      question: "Rate the session",
+      options: [],
+      vote_counts: {},
+      total_votes: 3,
+      average_rating: 4.3,
+      rating_distribution: { 1: 0, 2: 0, 3: 1, 4: 1, 5: 1 },
+    });
+    const csv = pollsToCsv([poll]);
+    const lines = csv.split("\n");
+
+    // Header + 5 rating rows
+    expect(lines).toHaveLength(6);
+    expect(lines[1]).toContain('"1 star"');
+    expect(lines[5]).toContain('"5 stars"');
+  });
+
+  it("formats short answer poll with text responses", () => {
+    const poll = makePoll({
+      answer_type: "short_answer",
+      question: "Any feedback?",
+      options: [],
+      vote_counts: {},
+      total_votes: 2,
+      text_responses: ["Great talk!", "Needs more examples"],
+    });
+    const csv = pollsToCsv([poll]);
+    const lines = csv.split("\n");
+
+    expect(lines).toHaveLength(3); // header + 2 responses
+    expect(lines[1]).toContain('"Great talk!"');
+    expect(lines[2]).toContain('"Needs more examples"');
+  });
+
+  it("formats word cloud poll with frequencies", () => {
+    const poll = makePoll({
+      answer_type: "word_cloud",
+      question: "One word to describe this?",
+      options: [],
+      vote_counts: {},
+      total_votes: 5,
+      word_frequencies: { "amazing": 3, "inspiring": 2 },
+    });
+    const csv = pollsToCsv([poll]);
+    const lines = csv.split("\n");
+
+    expect(lines).toHaveLength(3); // header + 2 words
+    expect(lines[1]).toContain('"amazing"');
+    expect(lines[1]).toContain('"3"');
   });
 });
