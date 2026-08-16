@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@attendly/ui/supabase/server";
 import { WebsiteRenderer } from "@/features/website/components/website-renderer";
 import type { WebsiteConfig } from "@/features/website/types";
-import type { LogisticsData } from "@/features/logistics/queries";
+import { getLogisticsItems } from "@/features/logistics/queries";
 
 export default async function PublicWebsitePage({
   params,
@@ -24,7 +24,7 @@ export default async function PublicWebsitePage({
   // Lookup event
   const { data: event } = await supabase
     .from("events")
-    .select("id, title, website_config, venue_description, venue_map_url, logistics")
+    .select("id, title, website_config, venue_description, venue_map_url")
     .eq("organization_id", org.id)
     .eq("slug", eventSlug)
     .eq("status", "published")
@@ -48,7 +48,7 @@ export default async function PublicWebsitePage({
   }
 
   // Fetch all data sections might need
-  const [speakersResult, sessionsResult, tiersResult, sponsorsResult] = await Promise.all([
+  const [speakersResult, sessionsResult, tiersResult, sponsorsResult, logisticsItems] = await Promise.all([
     supabase
       .from("speakers")
       .select("id, name, title, company, photo, is_featured")
@@ -73,6 +73,7 @@ export default async function PublicWebsitePage({
       .select("id, name, logo, tier_id")
       .eq("event_id", event.id)
       .order("sort_order"),
+    getLogisticsItems(event.id),
   ]);
 
   const speakers = speakersResult.data ?? [];
@@ -99,7 +100,6 @@ export default async function PublicWebsitePage({
   }
 
   const basePath = `/${orgSlug}/${eventSlug}`;
-  const logisticsData: LogisticsData = event.logistics ?? {};
 
   return (
     <WebsiteRenderer
@@ -111,10 +111,10 @@ export default async function PublicWebsitePage({
         logistics: {
           venue_description: event.venue_description ?? "",
           venue_map_url: event.venue_map_url ?? "",
-          logistics: logisticsData,
+          items: logisticsItems,
         },
         basePath,
-        registerUrl: `${basePath}/register`,
+        registerUrl: `/register${basePath}`,
       }}
     />
   );

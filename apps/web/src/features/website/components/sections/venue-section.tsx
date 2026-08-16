@@ -1,23 +1,20 @@
 import type { Section } from "../../types";
-import type { LogisticsData } from "@/features/logistics/queries";
+import type { LogisticsItem } from "@/features/logistics/queries";
 
 interface VenueSectionProps {
   section: Section;
   logistics: {
     venue_description: string;
     venue_map_url: string;
-    logistics: LogisticsData;
+    items: LogisticsItem[];
   };
 }
 
 export function VenueSection({ section, logistics }: VenueSectionProps) {
   const title = (section.content.title as string) || "Venue & Logistics";
-  const { venue_description, venue_map_url, logistics: data } = logistics;
+  const { venue_description, venue_map_url, items } = logistics;
 
-  const hasParking = data.parking?.body;
-  const hasTransportation = data.transportation?.body;
-  const hasWifi = data.wifi?.network;
-  const hasContent = venue_description || venue_map_url || hasParking || hasTransportation || hasWifi;
+  const hasContent = venue_description || venue_map_url || items.length > 0;
 
   if (!hasContent) return null;
 
@@ -58,38 +55,18 @@ export function VenueSection({ section, logistics }: VenueSectionProps) {
               )}
             </div>
           )}
-          <div className="grid gap-4 sm:grid-cols-3">
-            {hasParking && (
-              <div className="rounded-lg border bg-card p-4">
-                <h4 className="font-medium">Parking</h4>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {data.parking!.body}
-                </p>
-              </div>
-            )}
-            {hasTransportation && (
-              <div className="rounded-lg border bg-card p-4">
-                <h4 className="font-medium">Transportation</h4>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {data.transportation!.body}
-                </p>
-              </div>
-            )}
-            {hasWifi && (
-              <div className="rounded-lg border bg-card p-4">
-                <h4 className="font-medium">WiFi</h4>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Network: <span className="font-mono">{data.wifi!.network}</span>
-                  {data.wifi!.password && (
-                    <>
-                      <br />
-                      Password: <span className="font-mono">{data.wifi!.password}</span>
-                    </>
-                  )}
-                </p>
-              </div>
-            )}
-          </div>
+          {items.length > 0 && (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {items.map((item) => (
+                <div key={item.id} className="rounded-lg border bg-card p-4">
+                  <h4 className="font-medium">{item.title}</h4>
+                  <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">
+                    {item.content}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </section>

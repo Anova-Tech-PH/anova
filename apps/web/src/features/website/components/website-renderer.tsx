@@ -1,5 +1,5 @@
 import type { WebsiteConfig } from "../types";
-import type { LogisticsData } from "@/features/logistics/queries";
+import type { LogisticsItem } from "@/features/logistics/queries";
 import { HeroSection } from "./sections/hero-section";
 import { AboutSection } from "./sections/about-section";
 import { SpeakersSection } from "./sections/speakers-section";
@@ -40,7 +40,7 @@ interface EventData {
   logistics: {
     venue_description: string;
     venue_map_url: string;
-    logistics: LogisticsData;
+    items: LogisticsItem[];
   };
   basePath: string;
   registerUrl: string;
