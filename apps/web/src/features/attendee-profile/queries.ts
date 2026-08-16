@@ -99,7 +99,7 @@ export async function getAttendeeCategoryMap(eventId: string) {
 
   const map: Record<string, { name: string; color: string }> = {};
   for (const r of registrations ?? []) {
-    const cat = r.attendee_categories as { name: string; color: string } | null;
+    const cat = r.attendee_categories as unknown as { name: string; color: string } | null;
     if (r.user_id && cat) {
       map[r.user_id] = { name: cat.name, color: cat.color };
     }

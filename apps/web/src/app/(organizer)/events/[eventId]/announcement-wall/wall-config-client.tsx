@@ -213,12 +213,15 @@ export function WallConfigClient({
         </div>
         <div className="flex items-center gap-2">
           {wallUrl && (
-            <Button variant="outline" asChild>
-              <a href={wallUrl} target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="mr-2 h-4 w-4" />
-                Preview Wall
-              </a>
-            </Button>
+            <a
+              href={wallUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center rounded-md border px-3 py-1.5 text-sm font-medium hover:bg-muted transition-colors"
+            >
+              <ExternalLink className="mr-2 h-4 w-4" />
+              Preview Wall
+            </a>
           )}
           <Button onClick={handleSaveSettings} disabled={isSaving}>
             {isSaving ? (
@@ -400,12 +403,15 @@ export function WallConfigClient({
         {activityStreamEnabled && streamUrl && (
           <div className="space-y-4 pt-2">
             <div className="flex items-center gap-2">
-              <Button variant="outline" asChild>
-                <a href={streamUrl} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="mr-2 h-4 w-4" />
-                  Preview Stream
-                </a>
-              </Button>
+              <a
+                href={streamUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center rounded-md border px-3 py-1.5 text-sm font-medium hover:bg-muted transition-colors"
+              >
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Preview Stream
+              </a>
             </div>
 
             <div>
