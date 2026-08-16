@@ -102,6 +102,11 @@ export function PollList({
                     >
                       {poll.question}
                     </button>
+                    {poll.answer_type && poll.answer_type !== "multiple_choice" && (
+                      <span className="ml-2 text-[10px] font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
+                        {poll.answer_type.replace("_", " ")}
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">
                     {poll.session_title ?? "\u2014"}
@@ -184,11 +189,7 @@ export function PollList({
                 {expandedId === poll.id && (
                   <tr key={`${poll.id}-results`} className="border-b last:border-b-0">
                     <td colSpan={5} className="px-6 py-4 bg-muted/10">
-                      <PollResultsChart
-                        options={poll.options}
-                        voteCounts={poll.vote_counts}
-                        totalVotes={poll.total_votes}
-                      />
+                      <PollResultsChart poll={poll} />
                     </td>
                   </tr>
                 )}
