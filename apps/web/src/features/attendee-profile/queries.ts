@@ -137,3 +137,31 @@ export async function getBookmarkedAttendeeIds(eventId: string) {
 
   return data?.map(b => b.bookmarked_user_id) ?? [];
 }
+
+export async function getAttendeeAffiliations(eventId: string, userId: string) {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("attendee_affiliations")
+    .select("*")
+    .eq("event_id", eventId)
+    .eq("user_id", userId)
+    .order("sort_order");
+
+  if (error) return [];
+  return data ?? [];
+}
+
+export async function getAttendeeEducation(eventId: string, userId: string) {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("attendee_education")
+    .select("*")
+    .eq("event_id", eventId)
+    .eq("user_id", userId)
+    .order("sort_order");
+
+  if (error) return [];
+  return data ?? [];
+}

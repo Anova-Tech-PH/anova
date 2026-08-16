@@ -180,4 +180,79 @@ describe("Attendee Profile Queries", () => {
       expect(result).toEqual([]);
     });
   });
+
+  describe("getAttendeeAffiliations", () => {
+    it("returns affiliations for a user in an event", async () => {
+      const mockAffiliations = [
+        {
+          id: "aff-1",
+          user_id: "user-1",
+          event_id: "event-1",
+          organization: "Acme Corp",
+          role: "Engineer",
+          start_date: "2024-01",
+          end_date: null,
+          sort_order: 0,
+        },
+      ];
+      mockFrom.mockReturnValue(
+        createQueryMock({ data: mockAffiliations, error: null })
+      );
+
+      const { getAttendeeAffiliations } = await import("./queries");
+      const result = await getAttendeeAffiliations("event-1", "user-1");
+
+      expect(result).toEqual(mockAffiliations);
+      expect(mockFrom).toHaveBeenCalledWith("attendee_affiliations");
+    });
+
+    it("returns empty array on error", async () => {
+      mockFrom.mockReturnValue(
+        createQueryMock({ data: null, error: { message: "DB error" } })
+      );
+
+      const { getAttendeeAffiliations } = await import("./queries");
+      const result = await getAttendeeAffiliations("event-1", "user-1");
+
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe("getAttendeeEducation", () => {
+    it("returns education for a user in an event", async () => {
+      const mockEducation = [
+        {
+          id: "edu-1",
+          user_id: "user-1",
+          event_id: "event-1",
+          school: "MIT",
+          degree: "BS",
+          field_of_study: "Computer Science",
+          start_year: 2018,
+          end_year: 2022,
+          sort_order: 0,
+        },
+      ];
+      mockFrom.mockReturnValue(
+        createQueryMock({ data: mockEducation, error: null })
+      );
+
+      const { getAttendeeEducation } = await import("./queries");
+      const result = await getAttendeeEducation("event-1", "user-1");
+
+      expect(result).toEqual(mockEducation);
+      expect(mockFrom).toHaveBeenCalledWith("attendee_education");
+    });
+
+    it("returns empty array on error", async () => {
+      mockFrom.mockReturnValue(
+        createQueryMock({ data: null, error: { message: "DB error" } })
+      );
+
+      const { getAttendeeEducation } = await import("./queries");
+      const result = await getAttendeeEducation("event-1", "user-1");
+
+      expect(result).toEqual([]);
+    });
+  });
 });
