@@ -32,6 +32,7 @@ import {
   Brain,
   Stamp,
   Gift,
+  MapPin,
 } from "lucide-react";
 import { Logo } from "@attendly/ui/logo";
 import { createClient } from "@attendly/ui/supabase/client";
@@ -301,14 +302,6 @@ export function EventSidebar({
           isActive={isActive("/photos")}
         />
 
-        {/* Session Q&A */}
-        <NavLink
-          href={`${basePath}/qa`}
-          icon={HelpCircle}
-          label="Session Q&A"
-          isActive={isActive("/qa")}
-        />
-
         {/* Sponsors */}
         <NavLink
           href={`${basePath}/sponsors`}
@@ -316,16 +309,6 @@ export function EventSidebar({
           label="Sponsors"
           isActive={isActive("/sponsors")}
         />
-
-        {/* Resources (conditional) */}
-        {sidebarData.hasResources && (
-          <NavLink
-            href={`${basePath}/resources`}
-            icon={FileText}
-            label="Resources"
-            isActive={isActive("/resources")}
-          />
-        )}
 
         {/* Announcements */}
         <NavLink
@@ -335,37 +318,12 @@ export function EventSidebar({
           isActive={isActive("/announcements")}
         />
 
-        {/* Feedback (conditional) */}
-        {sidebarData.hasFeedback && (
-          <NavLink
-            href={`${basePath}/feedback`}
-            icon={ClipboardCheck}
-            label="Feedback"
-            isActive={isActive("/feedback")}
-          />
+        {/* Separator before Engagement */}
+        {(sidebarData.hasLeaderboard || sidebarData.hasContests || sidebarData.hasTrivia || sidebarData.hasPassport) && (
+          <div className="my-2 border-t" />
         )}
 
-        {/* Rooms (conditional) */}
-        {sidebarData.hasRooms && (
-          <NavLink
-            href={`${basePath}/rooms`}
-            icon={DoorOpen}
-            label="Rooms"
-            isActive={isActive("/rooms")}
-          />
-        )}
-
-        {/* Logistics (conditional) */}
-        {sidebarData.hasLogistics && (
-          <NavLink
-            href={`${basePath}/logistics`}
-            icon={ClipboardList}
-            label="Logistics"
-            isActive={isActive("/logistics")}
-          />
-        )}
-
-        {/* Leaderboard (standalone) */}
+        {/* Leaderboard (conditional) */}
         {sidebarData.hasLeaderboard && (
           <NavLink
             href={`${basePath}/leaderboard`}
@@ -414,6 +372,71 @@ export function EventSidebar({
           </CollapsibleSection>
         )}
 
+        {/* Separator before Resources */}
+        {(sidebarData.hasResources || sidebarData.hasRooms || sidebarData.hasLogistics || sidebarData.hasFeedback) && (
+          <div className="my-2 border-t" />
+        )}
+
+        {/* Resources (collapsible — groups Q&A, Documents, Logistics, Rooms) */}
+        <CollapsibleSection
+          label="Resources"
+          icon={FileText}
+          defaultOpen={
+            isActive("/qa") || isActive("/resources") || isActive("/logistics") || isActive("/rooms") || isActive("/floormap") || isActive("/feedback")
+          }
+        >
+          <NavLink
+            href={`${basePath}/qa`}
+            icon={HelpCircle}
+            label="Session Q&A"
+            isActive={isActive("/qa")}
+            indent
+          />
+          {sidebarData.hasResources && (
+            <NavLink
+              href={`${basePath}/resources`}
+              icon={FileText}
+              label="Documents"
+              isActive={isActive("/resources")}
+              indent
+            />
+          )}
+          {sidebarData.hasLogistics && (
+            <NavLink
+              href={`${basePath}/logistics`}
+              icon={ClipboardList}
+              label="Logistics"
+              isActive={isActive("/logistics")}
+              indent
+            />
+          )}
+          {sidebarData.hasRooms && (
+            <NavLink
+              href={`${basePath}/rooms`}
+              icon={DoorOpen}
+              label="Rooms"
+              isActive={isActive("/rooms")}
+              indent
+            />
+          )}
+          <NavLink
+            href={`${basePath}/floormap`}
+            icon={MapPin}
+            label="Floormap"
+            isActive={isActive("/floormap")}
+            indent
+          />
+          {sidebarData.hasFeedback && (
+            <NavLink
+              href={`${basePath}/feedback`}
+              icon={ClipboardCheck}
+              label="Feedback"
+              isActive={isActive("/feedback")}
+              indent
+            />
+          )}
+        </CollapsibleSection>
+
         {/* Separator before My Stuff */}
         {user && (
           <>
@@ -450,17 +473,16 @@ export function EventSidebar({
                 isActive={isActive("/profile")}
                 indent
               />
+              {sidebarData.hasCertificates && (
+                <NavLink
+                  href={`${basePath}/certificate`}
+                  icon={Award}
+                  label="Certificate"
+                  isActive={isActive("/certificate")}
+                  indent
+                />
+              )}
             </CollapsibleSection>
-
-            {/* Certificate (conditional) */}
-            {sidebarData.hasCertificates && (
-              <NavLink
-                href={`${basePath}/certificate`}
-                icon={Award}
-                label="Certificate"
-                isActive={isActive("/certificate")}
-              />
-            )}
           </>
         )}
       </nav>

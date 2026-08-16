@@ -218,8 +218,13 @@ export default async function SessionDetailPage({
   const canCreatePoll = !!orgMemberResult.data;
 
   // Process polls with vote counts
-  const pollsWithResults: { poll: PollWithResults; userVote: string | null }[] =
-    [];
+  const pollsWithResults: {
+    poll: PollWithResults;
+    userVote: string | null;
+    userTextResponse: string | null;
+    userRating: number | null;
+    userCheckboxVotes: string[];
+  }[] = [];
   for (const poll of pollsResult.data ?? []) {
     const { data: votes } = await supabase
       .from("live_poll_votes")
@@ -232,7 +237,13 @@ export default async function SessionDetailPage({
     }
 
     let userVote: string | null = null;
-    if (user) {
+    let userTextResponse: string | null = null;
+    let userRating: number | null = null;
+    let userCheckboxVotes: string[] = [];
+
+    const answerType = (poll.answer_type as string) ?? "multiple_choice";
+
+    if (user && answerType === "multiple_choice") {
       const { data: uv } = await supabase
         .from("live_poll_votes")
         .select("option_id")
@@ -240,6 +251,20 @@ export default async function SessionDetailPage({
         .eq("user_id", user.id)
         .single();
       userVote = uv?.option_id ?? null;
+    } else if (user && answerType !== "multiple_choice") {
+      const { data: userVotes } = await supabase
+        .from("live_poll_votes")
+        .select("option_id, response_text, rating_value")
+        .eq("poll_id", poll.id)
+        .eq("user_id", user.id);
+
+      if (answerType === "checkbox") {
+        userCheckboxVotes = (userVotes ?? []).map((v) => v.option_id).filter(Boolean) as string[];
+      } else if (answerType === "star_rating") {
+        userRating = (userVotes?.[0]?.rating_value as number) ?? null;
+      } else {
+        userTextResponse = (userVotes?.[0]?.response_text as string) ?? null;
+      }
     }
 
     pollsWithResults.push({
@@ -250,6 +275,9 @@ export default async function SessionDetailPage({
         total_votes: votes?.length ?? 0,
       },
       userVote,
+      userTextResponse,
+      userRating,
+      userCheckboxVotes,
     });
   }
 
@@ -500,11 +528,14 @@ export default async function SessionDetailPage({
                       No polls for this session yet.
                     </p>
                   ) : (
-                    pollsWithResults.map(({ poll, userVote }) => (
+                    pollsWithResults.map(({ poll, userVote, userTextResponse, userRating, userCheckboxVotes }) => (
                       <SessionPollCard
                         key={poll.id}
                         poll={poll}
                         userVote={userVote}
+                        userTextResponse={userTextResponse}
+                        userRating={userRating}
+                        userCheckboxVotes={userCheckboxVotes}
                       />
                     ))
                   )}
