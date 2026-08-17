@@ -4,7 +4,6 @@ import { createClient } from "@attendly/ui/supabase/server";
 import type { BoothFrame } from "./constants";
 
 export type { BoothFrame } from "./constants";
-export { FRAME_TEMPLATES } from "./constants";
 
 export async function getBoothFrames(eventId: string): Promise<BoothFrame[]> {
   const supabase = await createClient();
