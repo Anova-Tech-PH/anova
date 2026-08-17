@@ -640,10 +640,14 @@ export function EventBasicsForm({ mode, event, onSubmit }: EventBasicsFormProps)
   function update<K extends keyof EventFormData>(key: K, value: EventFormData[K]) {
     setForm((prev) => {
       const next = { ...prev, [key]: value };
-      // Auto-set end date to 23:59 of the selected start date if end date is empty
-      if (key === "start_date" && typeof value === "string" && value && !prev.end_date) {
-        const dateOnly = (value as string).split("T")[0];
-        next.end_date = `${dateOnly}T23:59`;
+      // Auto-set end date to 23:59 of start date if end date is empty or before start date
+      if (key === "start_date" && typeof value === "string" && value) {
+        const startDate = value as string;
+        const dateOnly = startDate.split("T")[0];
+        const autoEnd = `${dateOnly}T23:59`;
+        if (!prev.end_date || prev.end_date < startDate) {
+          next.end_date = autoEnd;
+        }
       }
       return next;
     });
