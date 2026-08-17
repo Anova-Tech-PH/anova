@@ -23,7 +23,7 @@ export default async function PromoCodesPage({
         <div>
           <h1 className="text-2xl font-semibold">Discount Codes</h1>
           <p className="text-sm text-muted-foreground">
-            Create codes to offer discounts to registrants.
+            Create codes to offer discounts to registrants. Easily set up discount codes right in the platform, or import multiple codes at once.
           </p>
         </div>
       </div>

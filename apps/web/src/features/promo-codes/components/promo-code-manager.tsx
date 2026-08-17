@@ -390,7 +390,7 @@ export function PromoCodeManager({
         <Card className="flex flex-col items-center justify-center py-12 text-center">
           <p className="text-muted-foreground">No discount codes have been created</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Create a code to offer discounts to registrants.
+            Create codes to offer discounts to registrants. Easily set up discount codes right in the platform, or import multiple codes at once.
           </p>
           <Button onClick={openCreate} variant="outline" className="mt-4" size="sm">
             <Plus className="mr-1.5 h-4 w-4" />
@@ -398,65 +398,85 @@ export function PromoCodeManager({
           </Button>
         </Card>
       ) : (
-        <div className="space-y-2">
-          {codes.map((code) => {
-            const status = getStatus(code);
-            return (
-              <Card key={code.id} className="p-4">
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex flex-wrap items-center gap-3 min-w-0">
-                    <code className="rounded bg-muted px-2 py-1 text-sm font-semibold">
-                      {code.code}
-                    </code>
-                    <span className="text-sm font-medium">
+        <div className="overflow-x-auto rounded-lg border">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-muted/50 text-left">
+                <th className="px-4 py-3 font-medium">Code</th>
+                <th className="px-4 py-3 font-medium">Discount</th>
+                <th className="px-4 py-3 font-medium">Status</th>
+                <th className="px-4 py-3 font-medium">Usage</th>
+                <th className="px-4 py-3 font-medium">Validity</th>
+                <th className="px-4 py-3 font-medium">Applies to</th>
+                <th className="px-4 py-3 font-medium text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {codes.map((code) => {
+                const status = getStatus(code);
+                return (
+                  <tr key={code.id} className="border-b last:border-b-0 hover:bg-muted/30">
+                    <td className="px-4 py-3">
+                      <code className="rounded bg-muted px-2 py-1 text-sm font-semibold">
+                        {code.code}
+                      </code>
+                    </td>
+                    <td className="px-4 py-3 font-medium whitespace-nowrap">
                       {formatDiscount(code)} off
-                    </span>
-                    <Badge variant={status.variant}>{status.label}</Badge>
-                    <span className="text-xs text-muted-foreground">
-                      Used: {formatUsage(code)}
-                    </span>
-                    {code.starts_at && (
-                      <span className="text-xs text-muted-foreground">
-                        From: {new Date(code.starts_at).toLocaleDateString()}
-                      </span>
-                    )}
-                    {code.expires_at && (
-                      <span className="text-xs text-muted-foreground">
-                        Until: {new Date(code.expires_at).toLocaleDateString()}
-                      </span>
-                    )}
-                    <span className="text-xs text-muted-foreground">
-                      {getTicketNames(code.applies_to)}
-                    </span>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleToggleActive(code)}
-                      title={code.active ? "Deactivate" : "Activate"}
-                    >
-                      {code.active ? "Deactivate" : "Activate"}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => openEdit(code)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDelete(code.id)}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </div>
-                </div>
-              </Card>
-            );
-          })}
+                    </td>
+                    <td className="px-4 py-3">
+                      <Badge variant={status.variant}>{status.label}</Badge>
+                    </td>
+                    <td className="px-4 py-3 tabular-nums whitespace-nowrap">
+                      {formatUsage(code)}
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
+                      {code.starts_at && code.expires_at ? (
+                        <span className="text-xs">
+                          {new Date(code.starts_at).toLocaleDateString()} – {new Date(code.expires_at).toLocaleDateString()}
+                        </span>
+                      ) : code.starts_at ? (
+                        <span className="text-xs">From {new Date(code.starts_at).toLocaleDateString()}</span>
+                      ) : code.expires_at ? (
+                        <span className="text-xs">Until {new Date(code.expires_at).toLocaleDateString()}</span>
+                      ) : (
+                        <span className="text-xs">No expiry</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      <span className="text-xs">{getTicketNames(code.applies_to)}</span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex justify-end items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleToggleActive(code)}
+                          title={code.active ? "Deactivate" : "Activate"}
+                        >
+                          {code.active ? "Deactivate" : "Activate"}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => openEdit(code)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(code.id)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       )}
 
