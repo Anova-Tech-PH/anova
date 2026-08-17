@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Button, Input } from "@attendly/ui/components";
 import { toast } from "sonner";
 import { issueRefund } from "../actions";
@@ -25,6 +25,14 @@ export function RefundDialog({
   const amountCents = Math.round(parseFloat(amount) * 100);
   const isFullRefund = amountCents >= maxRefundable;
 
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape" && !isPending) onClose();
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isPending, onClose]);
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     startTransition(async () => {
@@ -46,7 +54,12 @@ export function RefundDialog({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      onClick={(e) => {
+        if (e.target === e.currentTarget && !isPending) onClose();
+      }}
+    >
       <form
         onSubmit={handleSubmit}
         className="bg-background w-full max-w-sm space-y-4 rounded-xl border p-6 shadow-lg"

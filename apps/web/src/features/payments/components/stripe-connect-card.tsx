@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { CreditCard, ExternalLink, Unplug } from "lucide-react";
 import { Button, useConfirm } from "@attendly/ui/components";
+import { toast } from "sonner";
 import { disconnectStripe } from "../actions";
 
 type Props = {
@@ -33,7 +34,7 @@ export function StripeConnectCard({ organizationId, eventId, status }: Props) {
       if (error) throw new Error(error);
       window.location.href = url;
     } catch (err) {
-      console.error(err);
+      toast.error("Failed to connect Stripe. Please try again.");
       setLoading(false);
     }
   }
