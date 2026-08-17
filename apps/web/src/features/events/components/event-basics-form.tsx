@@ -7,6 +7,7 @@ import { RichTextEditor } from "@/shared/components/rich-text-editor";
 import { LocationPicker, type LocationData } from "@/shared/components/location-picker";
 import { TagInput } from "@/shared/components/tag-input";
 import { ImageUpload } from "@/shared/components/image-upload";
+import { SearchableSelect } from "@/shared/components/searchable-select";
 import { TIMEZONE_OPTIONS, toLocalInput } from "@/shared/utils/timezones";
 
 export type EventFormData = {
@@ -269,17 +270,12 @@ function StepBasics({
 
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Time zone</label>
-          <select
+          <SearchableSelect
             value={form.timezone}
-            onChange={(e) => update("timezone", e.target.value)}
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          >
-            {TIMEZONE_OPTIONS.map((tz) => (
-              <option key={tz.value} value={tz.value}>
-                {tz.label}
-              </option>
-            ))}
-          </select>
+            onChange={(value) => update("timezone", value)}
+            options={TIMEZONE_OPTIONS}
+            placeholder="Select timezone..."
+          />
         </div>
 
         <div className="space-y-1.5">
