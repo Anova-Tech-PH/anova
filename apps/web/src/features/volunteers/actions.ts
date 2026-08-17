@@ -613,12 +613,12 @@ export async function submitApplication(
     .eq("event_id", eventId)
     .single();
 
-  if (!settings?.is_published) throw new Error("Applications are not open");
+  if (!settings?.is_published) return { error: "Applications are not open" };
   if (
     settings.application_deadline &&
     new Date(settings.application_deadline) < new Date()
   ) {
-    throw new Error("Application deadline has passed");
+    return { error: "Application deadline has passed" };
   }
 
   // Get user if authenticated
@@ -644,8 +644,8 @@ export async function submitApplication(
     .single();
 
   if (error) {
-    if (error.code === "23505") throw new Error("You have already applied for this event");
-    throw new Error(error.message);
+    if (error.code === "23505") return { error: "You have already applied for this event" };
+    return { error: error.message };
   }
 
   // Insert role preferences, answers, availability in parallel
@@ -730,7 +730,7 @@ export async function submitApplication(
     }
   }
 
-  return application;
+  return { error: null, application };
 }
 
 // ─── Email Templates ─────────────────────────────────────────

@@ -2,8 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Button, Input } from "@attendly/ui/components";
-import { CheckCircle2, Clock, AlertTriangle } from "lucide-react";
-import { toast } from "sonner";
+import { CheckCircle2, Clock, AlertTriangle, XCircle } from "lucide-react";
 import type { VolunteerRole, VolunteerQuestion } from "../queries";
 import { submitApplication } from "../actions";
 
@@ -52,6 +51,7 @@ export function PublicVolunteerForm({
 }: PublicVolunteerFormProps) {
   const [isPending, startTransition] = useTransition();
   const [submitted, setSubmitted] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   // Form state
   const [name, setName] = useState(userName ?? "");
@@ -110,38 +110,37 @@ export function PublicVolunteerForm({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setFormError(null);
 
     if (!name.trim() || !email.trim()) {
-      toast.error("Name and email are required");
+      setFormError("Name and email are required.");
       return;
     }
 
     // Validate required questions
     for (const q of questions) {
       if (q.is_required && !answers[q.id]?.trim()) {
-        toast.error(`Please answer: ${q.question_text}`);
+        setFormError(`Please answer: ${q.question_text}`);
         return;
       }
     }
 
     startTransition(async () => {
-      try {
-        await submitApplication(eventId, {
-          name: name.trim(),
-          email: email.trim(),
-          phone: phone.trim() || undefined,
-          organization: organization.trim() || undefined,
-          roleIds: Array.from(selectedRoles),
-          availability: Array.from(selectedDays).map((date) => ({ date })),
-          answers: Object.entries(answers)
-            .filter(([, v]) => v.trim())
-            .map(([questionId, answerText]) => ({ questionId, answerText })),
-        });
+      const result = await submitApplication(eventId, {
+        name: name.trim(),
+        email: email.trim(),
+        phone: phone.trim() || undefined,
+        organization: organization.trim() || undefined,
+        roleIds: Array.from(selectedRoles),
+        availability: Array.from(selectedDays).map((date) => ({ date })),
+        answers: Object.entries(answers)
+          .filter(([, v]) => v.trim())
+          .map(([questionId, answerText]) => ({ questionId, answerText })),
+      });
+      if (result.error) {
+        setFormError(result.error);
+      } else {
         setSubmitted(true);
-      } catch (err) {
-        toast.error(
-          err instanceof Error ? err.message : "Failed to submit application"
-        );
       }
     });
   }
@@ -317,6 +316,14 @@ export function PublicVolunteerForm({
             </div>
           ))}
         </section>
+      )}
+
+      {/* Error */}
+      {formError && (
+        <div className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400">
+          <XCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>{formError}</span>
+        </div>
       )}
 
       {/* Submit */}
