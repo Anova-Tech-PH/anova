@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useCallback } from "react";
+import { useState, useTransition, useCallback, useEffect } from "react";
 import { Camera, Plus, ImageIcon, Film } from "lucide-react";
 import { Button } from "@attendly/ui/components";
 import { PhotoCard } from "./photo-card";
@@ -34,6 +34,7 @@ interface PhotoGalleryProps {
     videos: number;
   };
   frames: BoothFrame[];
+  initialPhotoId?: string;
 }
 
 export function PhotoGallery({
@@ -42,6 +43,7 @@ export function PhotoGallery({
   initialTotal,
   counts,
   frames,
+  initialPhotoId,
 }: PhotoGalleryProps) {
   const [photos, setPhotos] = useState<Photo[]>(initialPhotos);
   const [total, setTotal] = useState(initialTotal);
@@ -51,6 +53,39 @@ export function PhotoGallery({
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
   const [isLoadingMore, startLoadingMore] = useTransition();
   const [isTabLoading, startTabLoading] = useTransition();
+
+  // Auto-open modal when initialPhotoId is provided via deep-link
+  useEffect(() => {
+    if (initialPhotoId && photos.length > 0) {
+      const index = photos.findIndex((p) => p.id === initialPhotoId);
+      if (index !== -1) {
+        setSelectedPhotoIndex(index);
+      }
+    }
+  }, [initialPhotoId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Sync URL with selected photo
+  useEffect(() => {
+    if (selectedPhotoIndex !== null) {
+      const photoId = photos[selectedPhotoIndex]?.id;
+      if (photoId) {
+        const url = new URL(window.location.href);
+        url.searchParams.set("photo", photoId);
+        window.history.replaceState({}, "", url.toString());
+      }
+    } else {
+      const url = new URL(window.location.href);
+      if (url.searchParams.has("photo")) {
+        url.searchParams.delete("photo");
+        window.history.replaceState({}, "", url.toString());
+      }
+    }
+  }, [selectedPhotoIndex, photos]);
+
+  // Callback for when modal navigates to a different photo
+  const handleIndexChange = useCallback((index: number) => {
+    setSelectedPhotoIndex(index);
+  }, []);
 
   const handleLikeToggle = useCallback((photoId: string) => {
     setPhotos((prev) =>
@@ -204,6 +239,7 @@ export function PhotoGallery({
         open={selectedPhotoIndex !== null}
         onClose={() => setSelectedPhotoIndex(null)}
         onLikeToggle={handleLikeToggle}
+        onIndexChange={handleIndexChange}
       />
     </div>
   );

@@ -8,10 +8,13 @@ import { getBoothFrames } from "@/features/photo-booth/queries";
 
 export default async function PhotosPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ orgSlug: string; eventSlug: string }>;
+  searchParams: Promise<{ photo?: string }>;
 }) {
   const { orgSlug, eventSlug } = await params;
+  const { photo: initialPhotoId } = await searchParams;
   const supabase = await createClient();
 
   const { data: org } = await supabase
@@ -38,12 +41,12 @@ export default async function PhotosPage({
       title="Sign in to view photos"
       description="Sign in to view, share, and like event photos."
     >
-      <PhotosContent eventId={event.id} />
+      <PhotosContent eventId={event.id} initialPhotoId={initialPhotoId} />
     </AuthGuard>
   );
 }
 
-async function PhotosContent({ eventId }: { eventId: string }) {
+async function PhotosContent({ eventId, initialPhotoId }: { eventId: string; initialPhotoId?: string }) {
   const [{ photos, total }, counts, frames] = await Promise.all([
     getPhotos(eventId),
     getPhotoCount(eventId),
@@ -58,6 +61,7 @@ async function PhotosContent({ eventId }: { eventId: string }) {
         initialTotal={total}
         counts={counts}
         frames={frames}
+        initialPhotoId={initialPhotoId}
       />
     </div>
   );

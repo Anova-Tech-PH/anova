@@ -7,6 +7,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Download,
+  Share2,
   X,
   Send,
 } from "lucide-react";
@@ -44,6 +45,7 @@ interface PhotoDetailModalProps {
   open: boolean;
   onClose: () => void;
   onLikeToggle?: (photoId: string) => void;
+  onIndexChange?: (index: number) => void;
 }
 
 function formatRelativeTime(dateStr: string): string {
@@ -68,6 +70,7 @@ export function PhotoDetailModal({
   open,
   onClose,
   onLikeToggle,
+  onIndexChange,
 }: PhotoDetailModalProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -82,6 +85,13 @@ export function PhotoDetailModal({
   useEffect(() => {
     setCurrentIndex(initialIndex);
   }, [initialIndex]);
+
+  // Notify parent when current index changes (for URL sync)
+  useEffect(() => {
+    if (open) {
+      onIndexChange?.(currentIndex);
+    }
+  }, [currentIndex, open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch comments when photo changes
   const fetchComments = useCallback(async () => {
@@ -171,6 +181,29 @@ export function PhotoDetailModal({
       toast.error("Failed to post comment");
     } finally {
       setIsCommenting(false);
+    }
+  }
+
+  async function handleShare() {
+    const shareUrl = window.location.href;
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({
+          title: "Check out this photo!",
+          url: shareUrl,
+        });
+      } catch (err) {
+        if (err instanceof Error && err.name !== "AbortError") {
+          toast.error("Sharing failed");
+        }
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        toast.success("Link copied to clipboard");
+      } catch {
+        toast.error("Could not copy link");
+      }
     }
   }
 
@@ -293,6 +326,12 @@ export function PhotoDetailModal({
               </span>
             </button>
             <div className="flex-1" />
+            <button
+              onClick={handleShare}
+              className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Share2 className="h-4 w-4" />
+            </button>
             <a
               href={photo.image_url}
               download
