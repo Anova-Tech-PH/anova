@@ -9,7 +9,7 @@ import { cn } from "@attendly/ui/cn";
 import {
   BarChart2, BarChart3, Calendar, CalendarCheck, CalendarClock, Camera, CircleDot, ClipboardList,
   DoorOpen, IdCard, LayoutGrid, ListChecks, Mail, Map, Megaphone, Mic, Monitor,
-  MessageSquare, Globe, QrCode, Rocket, Settings, Tag, Ticket, Trophy, Users, Award, Zap,
+  MessageSquare, Globe, QrCode, Rocket, Settings, Shield, Tag, Ticket, Trophy, Users, Award, Zap,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { isGroupActive, type TopTabGroup, type TabItem } from "./event-top-tabs";
@@ -33,6 +33,7 @@ const iconMap: Record<string, LucideIcon> = {
   "qr-code": QrCode,
   rocket: Rocket,
   settings: Settings,
+  shield: Shield,
   tag: Tag,
   ticket: Ticket,
   users: Users,
