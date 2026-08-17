@@ -63,6 +63,8 @@ export async function uploadBannerImage(
   if (file.size > maxSize) throw new Error("File too large. Maximum size is 5MB.");
 
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Authentication required");
   const ext = file.name.split(".").pop() ?? "jpg";
   const path = `${eventId}/${randomUUID()}.${ext}`;
 
@@ -131,11 +133,14 @@ export async function updateRole(
   data: { name?: string; description?: string | null; max_volunteers?: number | null }
 ) {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Authentication required");
 
   const { error } = await supabase
     .from("volunteer_roles")
     .update(data)
-    .eq("id", roleId);
+    .eq("id", roleId)
+    .eq("event_id", eventId);
 
   if (error) throw new Error(error.message);
   revalidatePath(`/events/${eventId}/volunteers`);
@@ -143,11 +148,14 @@ export async function updateRole(
 
 export async function deleteRole(eventId: string, roleId: string) {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Authentication required");
 
   const { error } = await supabase
     .from("volunteer_roles")
     .delete()
-    .eq("id", roleId);
+    .eq("id", roleId)
+    .eq("event_id", eventId);
 
   if (error) throw new Error(error.message);
   revalidatePath(`/events/${eventId}/volunteers`);
@@ -195,11 +203,14 @@ export async function updateQuestion(
   data: { question_text?: string; is_required?: boolean }
 ) {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Authentication required");
 
   const { error } = await supabase
     .from("volunteer_questions")
     .update(data)
-    .eq("id", questionId);
+    .eq("id", questionId)
+    .eq("event_id", eventId);
 
   if (error) throw new Error(error.message);
   revalidatePath(`/events/${eventId}/volunteers`);
@@ -207,11 +218,14 @@ export async function updateQuestion(
 
 export async function deleteQuestion(eventId: string, questionId: string) {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Authentication required");
 
   const { error } = await supabase
     .from("volunteer_questions")
     .delete()
-    .eq("id", questionId);
+    .eq("id", questionId)
+    .eq("event_id", eventId);
 
   if (error) throw new Error(error.message);
   revalidatePath(`/events/${eventId}/volunteers`);
@@ -222,6 +236,8 @@ export async function reorderQuestions(
   questionIds: string[]
 ) {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Authentication required");
 
   for (let i = 0; i < questionIds.length; i++) {
     await supabase
@@ -248,6 +264,8 @@ export async function updateApplicationStatus(
   status: "accepted" | "rejected"
 ) {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Authentication required");
 
   const now = new Date().toISOString();
   const updateData: Record<string, unknown> = {
@@ -255,12 +273,19 @@ export async function updateApplicationStatus(
     ...(status === "accepted" ? { accepted_at: now } : { rejected_at: now }),
   };
 
-  const { error } = await supabase
+  const { error, count } = await supabase
     .from("volunteer_applications")
     .update(updateData)
-    .eq("id", applicationId);
+    .eq("id", applicationId)
+    .eq("event_id", eventId)
+    .eq("status", "pending");
 
   if (error) throw new Error(error.message);
+  // If no rows updated, application was not pending or doesn't belong to this event
+  if (count === 0) {
+    revalidatePath(`/events/${eventId}/volunteers`);
+    return;
+  }
 
   // Get application and event details for notification email
   const [appResult, eventResult] = await Promise.all([
@@ -347,11 +372,14 @@ export async function addOrganizerNotes(
   notes: string
 ) {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Authentication required");
 
   const { error } = await supabase
     .from("volunteer_applications")
     .update({ notes })
-    .eq("id", applicationId);
+    .eq("id", applicationId)
+    .eq("event_id", eventId);
 
   if (error) throw new Error(error.message);
   revalidatePath(`/events/${eventId}/volunteers`);
@@ -365,6 +393,17 @@ export async function assignRole(
   roleId: string
 ) {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Authentication required");
+
+  // Verify application belongs to this event
+  const { data: app } = await supabase
+    .from("volunteer_applications")
+    .select("id")
+    .eq("id", applicationId)
+    .eq("event_id", eventId)
+    .single();
+  if (!app) throw new Error("Application not found");
 
   const { error } = await supabase
     .from("volunteer_role_assignments")
@@ -380,6 +419,8 @@ export async function unassignRole(
   roleId: string
 ) {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Authentication required");
 
   const { error } = await supabase
     .from("volunteer_role_assignments")
@@ -519,6 +560,9 @@ export async function importContactsCsv(
   eventId: string,
   csvText: string
 ): Promise<{ email: string; name?: string }[]> {
+  const MAX_CSV_SIZE = 1024 * 1024; // 1MB
+  if (csvText.length > MAX_CSV_SIZE) throw new Error("CSV too large. Maximum size is 1MB.");
+
   const lines = csvText.split(/\r?\n/).filter((l) => l.trim());
   if (lines.length < 2) throw new Error("CSV must have headers and at least one row");
 
@@ -691,7 +735,18 @@ export async function submitApplication(
 
 // ─── Email Templates ─────────────────────────────────────────
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function buildAcceptanceEmail(name: string, eventTitle: string): string {
+  name = escapeHtml(name);
+  eventTitle = escapeHtml(eventTitle);
   return `<div style="font-family:sans-serif;max-width:600px;margin:0 auto">
     <h2>You're In!</h2>
     <p>Hi ${name},</p>
@@ -704,6 +759,8 @@ function buildAcceptanceEmail(name: string, eventTitle: string): string {
 }
 
 function buildRejectionEmail(name: string, eventTitle: string): string {
+  name = escapeHtml(name);
+  eventTitle = escapeHtml(eventTitle);
   return `<div style="font-family:sans-serif;max-width:600px;margin:0 auto">
     <h2>Thank You for Your Interest</h2>
     <p>Hi ${name},</p>
@@ -720,8 +777,10 @@ function buildInvitationEmail(
   applicationUrl: string | null,
   customMessage?: string
 ): string {
+  name = escapeHtml(name);
+  eventTitle = escapeHtml(eventTitle);
   const messageBlock = customMessage
-    ? `<p>${customMessage}</p>`
+    ? `<p>${escapeHtml(customMessage)}</p>`
     : "";
   const linkBlock = applicationUrl
     ? `<p><a href="${applicationUrl}" style="display:inline-block;padding:12px 24px;background:#2563eb;color:white;text-decoration:none;border-radius:6px">Apply Now</a></p>`
@@ -744,6 +803,8 @@ function buildReminderEmail(
   applicationUrl: string | null,
   deadline: string | null
 ): string {
+  name = escapeHtml(name);
+  eventTitle = escapeHtml(eventTitle);
   const deadlineBlock = deadline
     ? `<p><strong>Applications close on ${new Date(deadline).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}.</strong></p>`
     : "";
@@ -767,6 +828,9 @@ function buildNewApplicationEmail(
   applicantEmail: string,
   eventTitle: string
 ): string {
+  applicantName = escapeHtml(applicantName);
+  applicantEmail = escapeHtml(applicantEmail);
+  eventTitle = escapeHtml(eventTitle);
   return `<div style="font-family:sans-serif;max-width:600px;margin:0 auto">
     <h2>New Volunteer Application</h2>
     <p>A new volunteer application has been submitted for <strong>${eventTitle}</strong>:</p>
