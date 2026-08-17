@@ -1,4 +1,5 @@
 import { getPromoCodesByEvent } from "@/features/promo-codes/queries";
+import { getTicketTypesByEvent } from "@/features/tickets/queries";
 import { PromoCodeManager } from "@/features/promo-codes/components/promo-code-manager";
 import { Tag } from "lucide-react";
 
@@ -8,7 +9,10 @@ export default async function PromoCodesPage({
   params: Promise<{ eventId: string }>;
 }) {
   const { eventId } = await params;
-  const codes = await getPromoCodesByEvent(eventId);
+  const [codes, ticketTypes] = await Promise.all([
+    getPromoCodesByEvent(eventId),
+    getTicketTypesByEvent(eventId),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -19,12 +23,16 @@ export default async function PromoCodesPage({
         <div>
           <h1 className="text-2xl font-semibold">Discount Codes</h1>
           <p className="text-sm text-muted-foreground">
-            Create discount codes to offer special pricing on tickets.
+            Create codes to offer discounts to registrants.
           </p>
         </div>
       </div>
 
-      <PromoCodeManager eventId={eventId} initialCodes={codes} />
+      <PromoCodeManager
+        eventId={eventId}
+        initialCodes={codes}
+        ticketTypes={ticketTypes.map((t) => ({ id: t.id, name: t.name }))}
+      />
     </div>
   );
 }

@@ -34,7 +34,7 @@ export async function createPromoCode(
 
   if (error) {
     if (error.code === "23505") {
-      throw new Error("A promo code with this name already exists for this event");
+      throw new Error("A discount code with this name already exists for this event");
     }
     throw new Error(error.message);
   }
@@ -72,7 +72,7 @@ export async function updatePromoCode(
 
   if (error) {
     if (error.code === "23505") {
-      throw new Error("A promo code with this name already exists for this event");
+      throw new Error("A discount code with this name already exists for this event");
     }
     throw new Error(error.message);
   }

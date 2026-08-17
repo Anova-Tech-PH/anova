@@ -11,22 +11,31 @@ import {
 } from "../actions";
 import type { PromoCode } from "../queries";
 
+type TicketType = {
+  id: string;
+  name: string;
+};
+
 type PromoCodeFormData = {
   code: string;
   discount_type: "percentage" | "fixed";
   discount_value: string;
+  max_uses_type: "unlimited" | "limited";
   max_uses: string;
   starts_at: string;
   expires_at: string;
+  applies_to: string[];
 };
 
 const emptyForm: PromoCodeFormData = {
   code: "",
-  discount_type: "percentage",
+  discount_type: "fixed",
   discount_value: "",
+  max_uses_type: "unlimited",
   max_uses: "",
   starts_at: "",
   expires_at: "",
+  applies_to: [],
 };
 
 function getStatus(code: PromoCode): { label: string; variant: "success" | "warning" | "destructive" | "outline" } {
@@ -57,9 +66,11 @@ function toLocalDatetimeString(iso: string | null): string {
 export function PromoCodeManager({
   eventId,
   initialCodes,
+  ticketTypes,
 }: {
   eventId: string;
   initialCodes: PromoCode[];
+  ticketTypes: TicketType[];
 }) {
   const [codes, setCodes] = useState<PromoCode[]>(initialCodes);
   const [showForm, setShowForm] = useState(false);
@@ -80,9 +91,11 @@ export function PromoCodeManager({
       code: code.code,
       discount_type: code.discount_type,
       discount_value: String(code.discount_value),
+      max_uses_type: code.max_uses !== null ? "limited" : "unlimited",
       max_uses: code.max_uses !== null ? String(code.max_uses) : "",
       starts_at: toLocalDatetimeString(code.starts_at),
       expires_at: toLocalDatetimeString(code.expires_at),
+      applies_to: code.applies_to ?? [],
     });
     setShowForm(true);
   }
@@ -91,6 +104,15 @@ export function PromoCodeManager({
     setShowForm(false);
     setEditingId(null);
     setForm(emptyForm);
+  }
+
+  function toggleTicketType(ticketId: string) {
+    setForm((f) => ({
+      ...f,
+      applies_to: f.applies_to.includes(ticketId)
+        ? f.applies_to.filter((id) => id !== ticketId)
+        : [...f.applies_to, ticketId],
+    }));
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -103,9 +125,10 @@ export function PromoCodeManager({
         code: form.code.toUpperCase().trim(),
         discount_type: form.discount_type,
         discount_value: Number(form.discount_value),
-        max_uses: form.max_uses ? Number(form.max_uses) : null,
+        max_uses: form.max_uses_type === "limited" && form.max_uses ? Number(form.max_uses) : null,
         starts_at: form.starts_at ? new Date(form.starts_at).toISOString() : null,
         expires_at: form.expires_at ? new Date(form.expires_at).toISOString() : null,
+        applies_to: form.applies_to.length > 0 ? form.applies_to : [],
       };
 
       if (editingId) {
@@ -161,6 +184,14 @@ export function PromoCodeManager({
     }
   }
 
+  function getTicketNames(ids: string[]): string {
+    if (!ids || ids.length === 0) return "All tickets";
+    const names = ids
+      .map((id) => ticketTypes.find((t) => t.id === id)?.name)
+      .filter(Boolean);
+    return names.length > 0 ? names.join(", ") : "All tickets";
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -169,7 +200,7 @@ export function PromoCodeManager({
         </p>
         <Button onClick={openCreate} size="sm">
           <Plus className="mr-1.5 h-4 w-4" />
-          Add Discount Code
+          Create code
         </Button>
       </div>
 
@@ -178,60 +209,87 @@ export function PromoCodeManager({
         <Card className="p-5">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="font-medium">
-              {editingId ? "Edit Discount Code" : "New Discount Code"}
+              {editingId ? "Edit discount code" : "Create discount code"}
             </h3>
             <button onClick={closeForm} className="text-muted-foreground hover:text-foreground">
               <X className="h-4 w-4" />
             </button>
           </div>
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Code *</label>
+              <Input
+                required
+                maxLength={50}
+                value={form.code}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, code: e.target.value.toUpperCase() }))
+                }
+                placeholder="For example, whova50off"
+                className="uppercase"
+              />
+              <p className="text-right text-xs text-muted-foreground">
+                {form.code.length}/50
+              </p>
+            </div>
+
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <label className="text-sm font-medium">Code *</label>
+                <label className="text-sm font-medium">Discount start *</label>
                 <Input
+                  type="datetime-local"
                   required
-                  value={form.code}
+                  value={form.starts_at}
                   onChange={(e) =>
-                    setForm((f) => ({ ...f, code: e.target.value.toUpperCase() }))
+                    setForm((f) => ({ ...f, starts_at: e.target.value }))
                   }
-                  placeholder="SAVE20"
-                  className="uppercase"
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-sm font-medium">Discount Type *</label>
-                <div className="flex rounded-lg border">
-                  <button
-                    type="button"
-                    onClick={() => setForm((f) => ({ ...f, discount_type: "percentage" }))}
-                    className={`flex-1 rounded-l-lg px-3 py-2 text-sm font-medium transition-colors ${
-                      form.discount_type === "percentage"
-                        ? "bg-primary text-primary-foreground"
-                        : "hover:bg-muted"
-                    }`}
-                  >
-                    Percentage
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setForm((f) => ({ ...f, discount_type: "fixed" }))}
-                    className={`flex-1 rounded-r-lg px-3 py-2 text-sm font-medium transition-colors ${
-                      form.discount_type === "fixed"
-                        ? "bg-primary text-primary-foreground"
-                        : "hover:bg-muted"
-                    }`}
-                  >
-                    Fixed ($)
-                  </button>
-                </div>
+                <label className="text-sm font-medium">Discount end *</label>
+                <Input
+                  type="datetime-local"
+                  required
+                  value={form.expires_at}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, expires_at: e.target.value }))
+                  }
+                />
               </div>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <label className="text-sm font-medium">
-                  Discount Value *
-                </label>
+                <label className="text-sm font-medium">Discount type *</label>
+                <div className="flex flex-col gap-2">
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="radio"
+                      name="discount_type"
+                      checked={form.discount_type === "fixed"}
+                      onChange={() =>
+                        setForm((f) => ({ ...f, discount_type: "fixed" }))
+                      }
+                      className="accent-primary"
+                    />
+                    Flat amount
+                  </label>
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="radio"
+                      name="discount_type"
+                      checked={form.discount_type === "percentage"}
+                      onChange={() =>
+                        setForm((f) => ({ ...f, discount_type: "percentage" }))
+                      }
+                      className="accent-primary"
+                    />
+                    Percentage of price
+                  </label>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">Discount amount *</label>
                 <Input
                   required
                   type="number"
@@ -242,52 +300,85 @@ export function PromoCodeManager({
                   onChange={(e) =>
                     setForm((f) => ({ ...f, discount_value: e.target.value }))
                   }
-                  placeholder={form.discount_type === "percentage" ? "20" : "5.00"}
+                  placeholder={form.discount_type === "percentage" ? "20" : "0"}
                 />
               </div>
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Max Uses</label>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Number of uses *</label>
+              <div className="flex flex-col gap-2">
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="radio"
+                    name="max_uses_type"
+                    checked={form.max_uses_type === "unlimited"}
+                    onChange={() =>
+                      setForm((f) => ({ ...f, max_uses_type: "unlimited", max_uses: "" }))
+                    }
+                    className="accent-primary"
+                  />
+                  Unlimited
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="radio"
+                    name="max_uses_type"
+                    checked={form.max_uses_type === "limited"}
+                    onChange={() =>
+                      setForm((f) => ({ ...f, max_uses_type: "limited" }))
+                    }
+                    className="accent-primary"
+                  />
+                  Limited to
+                </label>
+              </div>
+              {form.max_uses_type === "limited" && (
                 <Input
                   type="number"
                   min="1"
+                  required
                   value={form.max_uses}
                   onChange={(e) =>
                     setForm((f) => ({ ...f, max_uses: e.target.value }))
                   }
-                  placeholder="Unlimited"
+                  placeholder="Enter maximum number of uses"
+                  className="mt-2 max-w-xs"
                 />
-              </div>
+              )}
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
+            {ticketTypes.length > 0 && (
               <div className="space-y-1.5">
-                <label className="text-sm font-medium">Start Date</label>
-                <Input
-                  type="datetime-local"
-                  value={form.starts_at}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, starts_at: e.target.value }))
-                  }
-                />
+                <label className="text-sm font-medium">Assigned tickets</label>
+                <p className="text-xs text-muted-foreground">
+                  Select which tickets this discount code applies to. Leave empty to apply to all tickets.
+                </p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {ticketTypes.map((ticket) => (
+                    <button
+                      key={ticket.id}
+                      type="button"
+                      onClick={() => toggleTicketType(ticket.id)}
+                      className={`rounded-full border px-3 py-1 text-sm transition-colors ${
+                        form.applies_to.includes(ticket.id)
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border hover:bg-muted"
+                      }`}
+                    >
+                      {ticket.name}
+                    </button>
+                  ))}
+                </div>
               </div>
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">End Date</label>
-                <Input
-                  type="datetime-local"
-                  value={form.expires_at}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, expires_at: e.target.value }))
-                  }
-                />
-              </div>
-            </div>
+            )}
 
             <div className="flex gap-2 pt-2">
-              <Button type="submit" loading={loading}>
-                {editingId ? "Update" : "Create"} Discount Code
-              </Button>
               <Button type="button" variant="outline" onClick={closeForm}>
                 Cancel
+              </Button>
+              <Button type="submit" loading={loading}>
+                {editingId ? "Update" : "Create"}
               </Button>
             </div>
           </form>
@@ -297,13 +388,13 @@ export function PromoCodeManager({
       {/* Code list */}
       {codes.length === 0 && !showForm ? (
         <Card className="flex flex-col items-center justify-center py-12 text-center">
-          <p className="text-muted-foreground">No discount codes yet.</p>
+          <p className="text-muted-foreground">No discount codes have been created</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Create one to offer discounts on your event tickets.
+            Create a code to offer discounts to registrants.
           </p>
           <Button onClick={openCreate} variant="outline" className="mt-4" size="sm">
             <Plus className="mr-1.5 h-4 w-4" />
-            Add Discount Code
+            Create code
           </Button>
         </Card>
       ) : (
@@ -334,6 +425,9 @@ export function PromoCodeManager({
                         Until: {new Date(code.expires_at).toLocaleDateString()}
                       </span>
                     )}
+                    <span className="text-xs text-muted-foreground">
+                      {getTicketNames(code.applies_to)}
+                    </span>
                   </div>
                   <div className="flex shrink-0 items-center gap-1">
                     <Button
