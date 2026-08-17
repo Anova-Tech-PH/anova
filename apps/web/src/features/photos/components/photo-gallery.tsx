@@ -101,6 +101,19 @@ export function PhotoGallery({
     );
   }, []);
 
+  const handleUploadComplete = useCallback(() => {
+    startTabLoading(async () => {
+      try {
+        const result = await getPhotos(eventId, { tab: activeTab, page: 1, pageSize: 20 });
+        setPhotos(result.photos as Photo[]);
+        setTotal(result.total);
+        setPage(1);
+      } catch {
+        // keep current state
+      }
+    });
+  }, [eventId, activeTab]);
+
   const pageSize = 20;
   const hasMore = photos.length < total;
 
@@ -229,6 +242,7 @@ export function PhotoGallery({
         eventId={eventId}
         open={showUpload}
         onClose={() => setShowUpload(false)}
+        onUploadComplete={handleUploadComplete}
         frames={frames}
       />
 

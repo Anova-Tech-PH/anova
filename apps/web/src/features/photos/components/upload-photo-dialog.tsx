@@ -35,6 +35,7 @@ interface UploadPhotoDialogProps {
   eventId: string;
   open: boolean;
   onClose: () => void;
+  onUploadComplete?: () => void;
   frames: BoothFrame[];
 }
 
@@ -42,6 +43,7 @@ export function UploadPhotoDialog({
   eventId,
   open,
   onClose,
+  onUploadComplete,
   frames,
 }: UploadPhotoDialogProps) {
   const [step, setStep] = useState<Step>("method");
@@ -187,6 +189,7 @@ export function UploadPhotoDialog({
             ? `${photos.length} photos uploaded!`
             : "Photo uploaded!"
         );
+        onUploadComplete?.();
         setStep("done");
       } catch (err) {
         toast.error(

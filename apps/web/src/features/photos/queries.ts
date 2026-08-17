@@ -71,12 +71,39 @@ export async function getPhotos(
 
 export async function getPhotoComments(photoId: string) {
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data: comments } = await supabase
     .from("photo_comments")
     .select("id, content, created_at, user_id")
     .eq("photo_id", photoId)
     .order("created_at", { ascending: true });
-  return data ?? [];
+
+  if (!comments || comments.length === 0) return [];
+
+  // Get event_id from the photo to look up attendee profiles
+  const { data: photo } = await supabase
+    .from("event_photos")
+    .select("event_id")
+    .eq("id", photoId)
+    .single();
+
+  if (!photo) return comments;
+
+  // Fetch author names
+  const userIds = [...new Set(comments.map((c) => c.user_id))];
+  const { data: profiles } = await supabase
+    .from("attendee_profiles")
+    .select("id, display_name")
+    .eq("event_id", photo.event_id)
+    .in("id", userIds);
+
+  const nameMap = new Map(
+    (profiles ?? []).map((p) => [p.id, p.display_name])
+  );
+
+  return comments.map((c) => ({
+    ...c,
+    author_name: nameMap.get(c.user_id) ?? "Attendee",
+  }));
 }
 
 export async function getPhotoStats(eventId: string) {

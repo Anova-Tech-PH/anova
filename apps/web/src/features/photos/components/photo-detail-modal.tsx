@@ -99,12 +99,7 @@ export function PhotoDetailModal({
     setIsLoadingComments(true);
     try {
       const data = await getPhotoComments(photo.id);
-      setComments(
-        data.map((c) => ({
-          ...c,
-          author_name: undefined,
-        }))
-      );
+      setComments(data);
     } catch {
       // keep empty
     } finally {
