@@ -153,28 +153,15 @@ export function RichTextEditor({
     content,
     editable: !readOnly,
     immediatelyRender: false,
+    shouldRerenderOnTransaction: false,
+    onCreate: ({ editor: e }) => {
+      // Ensure editable is applied after full initialization
+      e.setEditable(!readOnly);
+    },
     onUpdate: ({ editor: e }) => {
       onChange(e.getHTML());
     },
   });
-
-  useEffect(() => {
-    if (!editor || editor.isDestroyed) return;
-    const editorHtml = editor.getHTML();
-    // Don't sync if both are effectively empty
-    const editorEmpty = !editorHtml || editorHtml === "<p></p>";
-    const contentEmpty = !content || content === "<p></p>";
-    if (editorEmpty && contentEmpty) return;
-    if (content !== editorHtml) {
-      editor.commands.setContent(content, { emitUpdate: false });
-    }
-  }, [content, editor]);
-
-  useEffect(() => {
-    if (editor && !editor.isDestroyed) {
-      editor.setEditable(!readOnly);
-    }
-  }, [readOnly, editor]);
 
   if (!editor) return null;
 
