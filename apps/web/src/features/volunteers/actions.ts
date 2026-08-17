@@ -700,35 +700,36 @@ export async function submitApplication(
     );
   }
 
-  // Notify organizer
-  const { data: event } = await supabase
-    .from("events")
-    .select("title, organization_id")
-    .eq("id", eventId)
-    .single();
+  // Notify organizer (fire-and-forget to avoid blocking the response)
+  void (async () => {
+    const { data: event } = await supabase
+      .from("events")
+      .select("title, organization_id")
+      .eq("id", eventId)
+      .single();
 
-  if (event) {
-    // Get org member emails to notify
-    const { data: orgMembers } = await supabase
-      .from("organization_members")
-      .select("user_id, users:user_id(email)")
-      .eq("organization_id", event.organization_id)
-      .in("role", ["owner", "admin"]);
+    if (event) {
+      const { data: orgMembers } = await supabase
+        .from("organization_members")
+        .select("user_id, users:user_id(email)")
+        .eq("organization_id", event.organization_id)
+        .in("role", ["owner", "admin"]);
 
-    const memberEmails = (orgMembers ?? [])
-      .map((m: any) => (m.users as any)?.email)
-      .filter(Boolean);
+      const memberEmails = (orgMembers ?? [])
+        .map((m: any) => (m.users as any)?.email)
+        .filter(Boolean);
 
-    for (const email of memberEmails.slice(0, 5)) {
-      await sendEmail({
-        organizationId: event.organization_id,
-        eventId,
-        to: { email },
-        subject: `New volunteer application from ${data.name}`,
-        html: buildNewApplicationEmail(data.name, data.email, event.title),
-      }).catch(() => {});
+      for (const email of memberEmails.slice(0, 5)) {
+        await sendEmail({
+          organizationId: event.organization_id,
+          eventId,
+          to: { email },
+          subject: `New volunteer application from ${data.name}`,
+          html: buildNewApplicationEmail(data.name, data.email, event.title),
+        }).catch(() => {});
+      }
     }
-  }
+  })();
 
   return { error: null, application };
 }
