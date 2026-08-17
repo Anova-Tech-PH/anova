@@ -2,7 +2,6 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**
  * Fetch all events the user has registered for, with org info and ticket type.
- * Matches the inline query in apps/attendee my-events page.
  */
 export async function getMyEvents(client: SupabaseClient, userId: string) {
   const { data, error } = await client

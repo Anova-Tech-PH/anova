@@ -11,7 +11,6 @@
     "test:coverage": "turbo run test:coverage",
     "test:e2e": "playwright test",
     "test:e2e:web": "playwright test --project=web",
-    "test:e2e:attendee": "playwright test --project=attendee",
     "test:db": "npx supabase test db"
   },
   "devDependencies": {

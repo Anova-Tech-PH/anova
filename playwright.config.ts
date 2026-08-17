@@ -20,14 +20,6 @@ export default defineConfig({
       },
     },
     {
-      name: 'attendee',
-      testDir: './tests/e2e/attendee',
-      use: {
-        ...devices['Desktop Chrome'],
-        baseURL: 'http://localhost:3001',
-      },
-    },
-    {
       name: 'website',
       testDir: './tests/e2e/website',
       use: {
@@ -40,11 +32,6 @@ export default defineConfig({
     {
       command: 'pnpm --filter @attendly/web dev',
       url: 'http://localhost:3000',
-      reuseExistingServer: !process.env.CI,
-    },
-    {
-      command: 'pnpm --filter @attendly/attendee dev',
-      url: 'http://localhost:3001',
       reuseExistingServer: !process.env.CI,
     },
     {
