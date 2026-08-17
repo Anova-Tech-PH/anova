@@ -16,6 +16,8 @@ import {
   shareTemplate,
   requestTemplate,
   updateTemplateRequestStatus,
+  searchOrganizations,
+  searchEvents,
 } from "../actions";
 
 const STATUS_VARIANT: Record<string, "default" | "success" | "warning" | "destructive" | "info" | "outline"> = {
@@ -47,7 +49,11 @@ export function ShareTemplatesSection({
 
   const [shareEmail, setShareEmail] = useState("");
   const [shareOrgId, setShareOrgId] = useState("");
+  const [shareOrgQuery, setShareOrgQuery] = useState("");
+  const [orgResults, setOrgResults] = useState<{ id: string; name: string }[]>([]);
   const [requestEventId, setRequestEventId] = useState("");
+  const [requestEventQuery, setRequestEventQuery] = useState("");
+  const [eventResults, setEventResults] = useState<{ id: string; name: string }[]>([]);
   const [requestMessage, setRequestMessage] = useState("");
 
   const [isPending, startTransition] = useTransition();
@@ -79,6 +85,8 @@ export function ShareTemplatesSection({
         await shareTemplate(eventId, { orgId: shareOrgId.trim() });
         toast.success("Template shared with organization");
         setShareOrgId("");
+        setShareOrgQuery("");
+        setOrgResults([]);
         setShowShareOrg(false);
       } catch (err) {
         toast.error(
@@ -86,6 +94,36 @@ export function ShareTemplatesSection({
         );
       }
     });
+  }
+
+  async function handleOrgSearch(query: string) {
+    setShareOrgQuery(query);
+    setShareOrgId("");
+    if (query.trim().length < 2) {
+      setOrgResults([]);
+      return;
+    }
+    try {
+      const results = await searchOrganizations(query.trim());
+      setOrgResults(results);
+    } catch {
+      setOrgResults([]);
+    }
+  }
+
+  async function handleEventSearch(query: string) {
+    setRequestEventQuery(query);
+    setRequestEventId("");
+    if (query.trim().length < 2) {
+      setEventResults([]);
+      return;
+    }
+    try {
+      const results = await searchEvents(query.trim(), eventId);
+      setEventResults(results);
+    } catch {
+      setEventResults([]);
+    }
   }
 
   function handleRequest() {
@@ -99,6 +137,8 @@ export function ShareTemplatesSection({
         );
         toast.success("Template request sent");
         setRequestEventId("");
+        setRequestEventQuery("");
+        setEventResults([]);
         setRequestMessage("");
         setShowRequest(false);
       } catch (err) {
@@ -324,15 +364,41 @@ export function ShareTemplatesSection({
             <div className="space-y-4">
               <div>
                 <label className="mb-1.5 block text-sm font-medium">
-                  Organization ID
+                  Organization Name
                 </label>
                 <Input
                   type="text"
-                  value={shareOrgId}
-                  onChange={(e) => setShareOrgId(e.target.value)}
-                  placeholder="Enter organization ID"
+                  value={shareOrgQuery}
+                  onChange={(e) => handleOrgSearch(e.target.value)}
+                  placeholder="Search by organization name..."
                   disabled={isPending}
                 />
+                {orgResults.length > 0 && !shareOrgId && (
+                  <ul className="mt-1 max-h-40 overflow-y-auto rounded-lg border border-border bg-background">
+                    {orgResults.map((org) => (
+                      <li key={org.id}>
+                        <button
+                          type="button"
+                          className="w-full px-3 py-2 text-left text-sm hover:bg-muted/50"
+                          onClick={() => {
+                            setShareOrgId(org.id);
+                            setShareOrgQuery(org.name);
+                            setOrgResults([]);
+                          }}
+                        >
+                          {org.name}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {shareOrgQuery.trim().length >= 2 &&
+                  orgResults.length === 0 &&
+                  !shareOrgId && (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      No organizations found.
+                    </p>
+                  )}
               </div>
               <div className="flex justify-end gap-3">
                 <Button
@@ -340,6 +406,8 @@ export function ShareTemplatesSection({
                   onClick={() => {
                     setShowShareOrg(false);
                     setShareOrgId("");
+                    setShareOrgQuery("");
+                    setOrgResults([]);
                   }}
                   disabled={isPending}
                 >
@@ -347,7 +415,7 @@ export function ShareTemplatesSection({
                 </Button>
                 <Button
                   onClick={handleShareOrg}
-                  disabled={isPending || !shareOrgId.trim()}
+                  disabled={isPending || !shareOrgId}
                 >
                   {isPending ? "Sharing..." : "Share"}
                 </Button>
@@ -367,15 +435,41 @@ export function ShareTemplatesSection({
             <div className="space-y-4">
               <div>
                 <label className="mb-1.5 block text-sm font-medium">
-                  Event ID
+                  Event Name
                 </label>
                 <Input
                   type="text"
-                  value={requestEventId}
-                  onChange={(e) => setRequestEventId(e.target.value)}
-                  placeholder="Enter the event ID to request from"
+                  value={requestEventQuery}
+                  onChange={(e) => handleEventSearch(e.target.value)}
+                  placeholder="Search by event name..."
                   disabled={isPending}
                 />
+                {eventResults.length > 0 && !requestEventId && (
+                  <ul className="mt-1 max-h-40 overflow-y-auto rounded-lg border border-border bg-background">
+                    {eventResults.map((evt) => (
+                      <li key={evt.id}>
+                        <button
+                          type="button"
+                          className="w-full px-3 py-2 text-left text-sm hover:bg-muted/50"
+                          onClick={() => {
+                            setRequestEventId(evt.id);
+                            setRequestEventQuery(evt.name);
+                            setEventResults([]);
+                          }}
+                        >
+                          {evt.name}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {requestEventQuery.trim().length >= 2 &&
+                  eventResults.length === 0 &&
+                  !requestEventId && (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      No events found.
+                    </p>
+                  )}
               </div>
               <div>
                 <label className="mb-1.5 block text-sm font-medium">
@@ -395,6 +489,8 @@ export function ShareTemplatesSection({
                   onClick={() => {
                     setShowRequest(false);
                     setRequestEventId("");
+                    setRequestEventQuery("");
+                    setEventResults([]);
                     setRequestMessage("");
                   }}
                   disabled={isPending}
@@ -403,7 +499,7 @@ export function ShareTemplatesSection({
                 </Button>
                 <Button
                   onClick={handleRequest}
-                  disabled={isPending || !requestEventId.trim()}
+                  disabled={isPending || !requestEventId}
                 >
                   {isPending ? "Sending..." : "Send Request"}
                 </Button>

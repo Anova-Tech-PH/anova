@@ -197,3 +197,42 @@ export async function updateTemplateRequestStatus(
 
   revalidatePath(`/events/${eventId}/admin-settings`);
 }
+
+export async function searchOrganizations(query: string) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const { data, error } = await supabase
+    .from("organizations")
+    .select("id, name")
+    .ilike("name", `%${query}%`)
+    .limit(10);
+
+  if (error) throw new Error(error.message);
+
+  return data ?? [];
+}
+
+export async function searchEvents(query: string, excludeEventId: string) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const { data, error } = await supabase
+    .from("events")
+    .select("id, title")
+    .ilike("title", `%${query}%`)
+    .neq("id", excludeEventId)
+    .limit(10);
+
+  if (error) throw new Error(error.message);
+
+  return (data ?? []).map((e) => ({ id: e.id, name: e.title }));
+}

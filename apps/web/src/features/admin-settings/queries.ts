@@ -214,10 +214,10 @@ export async function getTemplateRequests(
   // Fetch event names
   const { data: events } = await supabase
     .from("events")
-    .select("id, name")
+    .select("id, title")
     .in("id", eventIds);
 
-  const eventMap = new Map((events ?? []).map((e) => [e.id, e.name]));
+  const eventMap = new Map((events ?? []).map((e) => [e.id, e.title]));
 
   // Fetch requester profiles
   const { data: profiles } = await supabase
