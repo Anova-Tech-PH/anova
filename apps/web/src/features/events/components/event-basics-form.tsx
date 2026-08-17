@@ -638,7 +638,15 @@ export function EventBasicsForm({ mode, event, onSubmit }: EventBasicsFormProps)
   });
 
   function update<K extends keyof EventFormData>(key: K, value: EventFormData[K]) {
-    setForm((prev) => ({ ...prev, [key]: value }));
+    setForm((prev) => {
+      const next = { ...prev, [key]: value };
+      // Auto-set end date to 23:59 of the selected start date if end date is empty
+      if (key === "start_date" && typeof value === "string" && value && !prev.end_date) {
+        const dateOnly = (value as string).split("T")[0];
+        next.end_date = `${dateOnly}T23:59`;
+      }
+      return next;
+    });
   }
 
   function toggleOrgType(type: string) {
