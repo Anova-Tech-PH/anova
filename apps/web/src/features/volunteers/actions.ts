@@ -700,36 +700,42 @@ export async function submitApplication(
     );
   }
 
-  // Notify organizer (fire-and-forget to avoid blocking the response)
-  void (async () => {
-    const { data: event } = await supabase
-      .from("events")
-      .select("title, organization_id")
-      .eq("id", eventId)
-      .single();
+  // Notify organizer (fire-and-forget via setTimeout to detach from server action lifecycle)
+  const applicantName = data.name;
+  const applicantEmail = data.email;
+  setTimeout(async () => {
+    try {
+      const { data: event } = await supabase
+        .from("events")
+        .select("title, organization_id")
+        .eq("id", eventId)
+        .single();
 
-    if (event) {
-      const { data: orgMembers } = await supabase
-        .from("organization_members")
-        .select("user_id, users:user_id(email)")
-        .eq("organization_id", event.organization_id)
-        .in("role", ["owner", "admin"]);
+      if (event) {
+        const { data: orgMembers } = await supabase
+          .from("organization_members")
+          .select("user_id, users:user_id(email)")
+          .eq("organization_id", event.organization_id)
+          .in("role", ["owner", "admin"]);
 
-      const memberEmails = (orgMembers ?? [])
-        .map((m: any) => (m.users as any)?.email)
-        .filter(Boolean);
+        const memberEmails = (orgMembers ?? [])
+          .map((m: any) => (m.users as any)?.email)
+          .filter(Boolean);
 
-      for (const email of memberEmails.slice(0, 5)) {
-        await sendEmail({
-          organizationId: event.organization_id,
-          eventId,
-          to: { email },
-          subject: `New volunteer application from ${data.name}`,
-          html: buildNewApplicationEmail(data.name, data.email, event.title),
-        }).catch(() => {});
+        for (const memberEmail of memberEmails.slice(0, 5)) {
+          await sendEmail({
+            organizationId: event.organization_id,
+            eventId,
+            to: { email: memberEmail },
+            subject: `New volunteer application from ${applicantName}`,
+            html: buildNewApplicationEmail(applicantName, applicantEmail, event.title),
+          }).catch(() => {});
+        }
       }
+    } catch {
+      // Silently fail — notification emails are best-effort
     }
-  })();
+  }, 0);
 
   return { error: null, application };
 }
