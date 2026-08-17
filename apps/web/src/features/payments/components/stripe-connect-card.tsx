@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { CreditCard, ExternalLink, Unplug } from "lucide-react";
+import Link from "next/link";
+import { CreditCard, ExternalLink, Unplug, ArrowRight } from "lucide-react";
 import { Button, useConfirm } from "@attendly/ui/components";
 import { toast } from "sonner";
 import { disconnectStripe } from "../actions";
@@ -88,6 +89,23 @@ export function StripeConnectCard({ organizationId, eventId, status }: Props) {
             <Unplug className="mr-1.5 h-3.5 w-3.5" />
             Disconnect
           </Button>
+        </div>
+        <div className="rounded-lg bg-muted/30 p-3 text-sm text-muted-foreground">
+          <p className="font-medium text-foreground">Next steps</p>
+          <ul className="mt-1.5 space-y-1">
+            <li className="flex items-center gap-1.5">
+              <ArrowRight className="h-3 w-3" />
+              <Link href={`/events/${eventId}/tickets`} className="underline hover:text-foreground">
+                Set up paid tickets
+              </Link>
+            </li>
+            <li className="flex items-center gap-1.5">
+              <ArrowRight className="h-3 w-3" />
+              <Link href={`/events/${eventId}/orders`} className="underline hover:text-foreground">
+                View orders & transactions
+              </Link>
+            </li>
+          </ul>
         </div>
         {dialog}
       </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Button } from "@attendly/ui/components";
 import type { OrderRow } from "../queries";
 import { RefundDialog } from "./refund-dialog";
@@ -23,8 +24,21 @@ export function OrdersTable({
   if (orders.length === 0) {
     return (
       <div className="rounded-xl border border-dashed bg-muted/20 py-12 text-center text-muted-foreground">
-        No orders yet. Orders will appear here when attendees purchase paid
-        tickets.
+        <p>No orders yet. Orders will appear here when attendees purchase paid tickets.</p>
+        <div className="mt-4 flex justify-center gap-3">
+          <Link
+            href={`/events/${eventId}/tickets`}
+            className="inline-flex items-center rounded-md border px-3 py-1.5 text-sm font-medium hover:bg-muted"
+          >
+            Set up paid tickets
+          </Link>
+          <Link
+            href={`/events/${eventId}/payout`}
+            className="inline-flex items-center rounded-md border px-3 py-1.5 text-sm font-medium hover:bg-muted"
+          >
+            Connect Stripe
+          </Link>
+        </div>
       </div>
     );
   }
