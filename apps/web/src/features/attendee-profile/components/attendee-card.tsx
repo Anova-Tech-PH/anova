@@ -157,28 +157,28 @@ export function AttendeeCard({
       </div>
 
       {/* Action buttons */}
-      <div className="mt-3 flex gap-2">
+      <div className="mt-3 flex items-center gap-1.5">
         <Link
           href={`${basePath}/${profile.id}`}
-          className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-input bg-background px-3 py-1.5 text-xs font-medium shadow-sm transition-all hover:bg-accent hover:text-accent-foreground"
+          className="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-2.5 py-1 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
         >
-          <Eye className="h-3.5 w-3.5" />
-          View Profile
+          <Eye className="h-3 w-3" />
+          Profile
         </Link>
         <button
           onClick={() => setShowMessage(!showMessage)}
-          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-input bg-background px-3 py-1.5 text-xs font-medium shadow-sm transition-all hover:bg-accent hover:text-accent-foreground"
+          className="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-2.5 py-1 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
           aria-label="Say Hi"
         >
-          <Hand className="h-3.5 w-3.5" />
+          <Hand className="h-3 w-3" />
           Say Hi
         </button>
         <button
           onClick={() => setShowNotes(!showNotes)}
-          className="shrink-0 rounded-lg border border-input bg-background p-1.5 shadow-sm transition-all hover:bg-accent"
+          className="rounded-md border border-input bg-background p-1 transition-colors hover:bg-accent"
           aria-label="Take Notes"
         >
-          <Pencil className="h-3.5 w-3.5" />
+          <Pencil className="h-3 w-3" />
         </button>
       </div>
 

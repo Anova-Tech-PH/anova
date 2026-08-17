@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import Image from "next/image";
 import { Search, RotateCcw, User } from "lucide-react";
 import {
   SpeakerProfileModal,
@@ -159,12 +158,12 @@ export function SpeakersClientPage({
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Banner */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-12 px-4">
+      <div className="bg-[oklch(0.445_0.107_195)] text-white py-12 px-4">
         <div className="max-w-6xl mx-auto text-center">
           <h1 className="text-3xl md:text-4xl font-bold mb-2">
             Meet Our Speakers
           </h1>
-          <p className="text-blue-100 text-lg">
+          <p className="text-white/80 text-lg">
             {speakers.length} speaker{speakers.length !== 1 ? "s" : ""} at{" "}
             {eventTitle}
           </p>
@@ -247,11 +246,9 @@ export function SpeakersClientPage({
                 {/* Square photo area */}
                 <div className="aspect-square bg-gray-100 flex items-center justify-center overflow-hidden">
                   {speaker.photo ? (
-                    <Image
+                    <img
                       src={speaker.photo}
                       alt={speaker.name}
-                      width={400}
-                      height={400}
                       className="w-full h-full object-cover"
                     />
                   ) : (

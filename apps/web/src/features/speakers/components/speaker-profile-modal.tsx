@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import {
   X,
   Pencil,
@@ -137,11 +136,9 @@ export function SpeakerProfileModal({
         <div className="flex items-start gap-4 mb-6">
           <div className="h-16 w-16 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden shrink-0">
             {speaker.photo ? (
-              <Image
+              <img
                 src={speaker.photo}
                 alt={speaker.name}
-                width={64}
-                height={64}
                 className="h-16 w-16 rounded-full object-cover"
               />
             ) : (
