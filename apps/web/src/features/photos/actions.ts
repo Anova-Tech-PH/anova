@@ -12,6 +12,7 @@ export async function uploadPhoto(eventId: string, formData: FormData) {
 
   const file = formData.get("file") as File;
   const caption = formData.get("caption") as string;
+  const frameId = formData.get("frameId") as string | null;
   const mediaType = file?.type?.startsWith("video/") ? "video" : "photo";
 
   if (!file) throw new Error("No file provided");
@@ -35,6 +36,7 @@ export async function uploadPhoto(eventId: string, formData: FormData) {
     image_url: urlData.publicUrl,
     media_type: mediaType,
     caption: caption || null,
+    ...(frameId ? { frame_id: frameId } : {}),
   });
   if (error) throw error;
 

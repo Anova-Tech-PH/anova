@@ -4,6 +4,7 @@ import { AuthGuard } from "../auth-guard";
 import { getPhotos } from "@/features/photos/queries";
 import { getPhotoCount } from "@/features/photos/queries";
 import { PhotoGallery } from "@/features/photos/components/photo-gallery";
+import { getBoothFrames } from "@/features/photo-booth/queries";
 
 export default async function PhotosPage({
   params,
@@ -43,9 +44,10 @@ export default async function PhotosPage({
 }
 
 async function PhotosContent({ eventId }: { eventId: string }) {
-  const [{ photos, total }, counts] = await Promise.all([
+  const [{ photos, total }, counts, frames] = await Promise.all([
     getPhotos(eventId),
     getPhotoCount(eventId),
+    getBoothFrames(eventId),
   ]);
 
   return (
@@ -55,6 +57,7 @@ async function PhotosContent({ eventId }: { eventId: string }) {
         initialPhotos={photos as Parameters<typeof PhotoGallery>[0]["initialPhotos"]}
         initialTotal={total}
         counts={counts}
+        frames={frames}
       />
     </div>
   );

@@ -7,6 +7,7 @@ import { PhotoCard } from "./photo-card";
 import { UploadPhotoDialog } from "./upload-photo-dialog";
 import { PhotoDetailModal } from "./photo-detail-modal";
 import { getPhotos } from "@/features/photos/queries";
+import type { BoothFrame } from "@/features/photo-booth/constants";
 
 type Tab = "all" | "photos" | "videos";
 
@@ -32,6 +33,7 @@ interface PhotoGalleryProps {
     photos: number;
     videos: number;
   };
+  frames: BoothFrame[];
 }
 
 export function PhotoGallery({
@@ -39,6 +41,7 @@ export function PhotoGallery({
   initialPhotos,
   initialTotal,
   counts,
+  frames,
 }: PhotoGalleryProps) {
   const [photos, setPhotos] = useState<Photo[]>(initialPhotos);
   const [total, setTotal] = useState(initialTotal);
@@ -191,6 +194,7 @@ export function PhotoGallery({
         eventId={eventId}
         open={showUpload}
         onClose={() => setShowUpload(false)}
+        frames={frames}
       />
 
       {/* Photo Detail Modal */}
