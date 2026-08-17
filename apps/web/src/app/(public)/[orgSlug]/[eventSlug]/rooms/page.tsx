@@ -21,7 +21,7 @@ export default async function PublicRoomsPage({
 
   const { data: event } = await supabase
     .from("events")
-    .select("id, title")
+    .select("id, title, timezone")
     .eq("organization_id", org.id)
     .eq("slug", eventSlug)
     .eq("status", "published")
@@ -64,7 +64,7 @@ export default async function PublicRoomsPage({
                 <p className="text-sm text-muted-foreground">{room.description}</p>
               )}
               <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-                <span>{new Date(room.starts_at).toLocaleString()} - {new Date(room.ends_at).toLocaleTimeString()}</span>
+                <span>{new Date(room.starts_at).toLocaleString("en-US", { ...(event.timezone && { timeZone: event.timezone }) })} - {new Date(room.ends_at).toLocaleTimeString("en-US", { ...(event.timezone && { timeZone: event.timezone }) })}</span>
                 {room.facilitator_name && <span>Facilitator: {room.facilitator_name}</span>}
                 {room.location && <span>Location: {room.location}</span>}
                 <span>{room.breakout_room_participants.length}{room.max_capacity ? ` / ${room.max_capacity}` : ""} joined</span>

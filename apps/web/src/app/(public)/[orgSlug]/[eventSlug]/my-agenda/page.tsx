@@ -5,10 +5,11 @@ import Link from "next/link";
 import { AuthGuard } from "../auth-guard";
 import { getMyAgendaSessions } from "@/features/my-agenda/queries";
 
-function formatTime(iso: string) {
+function formatTime(iso: string, tz?: string) {
   return new Date(iso).toLocaleTimeString("en-US", {
     hour: "numeric",
     minute: "2-digit",
+    ...(tz && { timeZone: tz }),
   });
 }
 
@@ -69,7 +70,7 @@ async function MyAgendaContent({
 
   const { data: event } = await supabase
     .from("events")
-    .select("id")
+    .select("id, timezone")
     .eq("slug", eventSlug)
     .eq("organization_id", org?.id ?? "")
     .single();
@@ -91,6 +92,7 @@ async function MyAgendaContent({
       weekday: "long",
       month: "long",
       day: "numeric",
+      ...(event.timezone && { timeZone: event.timezone }),
     });
     (dayGroups[day] ??= []).push(s);
   }
@@ -189,8 +191,8 @@ async function MyAgendaContent({
                   <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <Clock className="h-3 w-3" />
-                      {formatTime(session.start_time)} -{" "}
-                      {formatTime(session.end_time)}
+                      {formatTime(session.start_time, event.timezone)} -{" "}
+                      {formatTime(session.end_time, event.timezone)}
                     </span>
                     {session.location && (
                       <span className="flex items-center gap-1">

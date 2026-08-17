@@ -15,11 +15,11 @@ interface EventHeaderBarProps {
 }
 
 export function EventHeaderBar({ event }: EventHeaderBarProps) {
-  const [useLocalTime, setUseLocalTime] = useState(true);
+  const [useLocalTime, setUseLocalTime] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("attendly-timezone-pref");
-    if (saved === "event") setUseLocalTime(false);
+    if (saved === "local") setUseLocalTime(true);
   }, []);
 
   function toggleTimezone() {

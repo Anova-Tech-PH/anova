@@ -22,19 +22,21 @@ import { SessionDetailTabs } from "./session-detail-tabs";
 import type { FeedbackQuestion } from "@/features/feedback/queries";
 import type { PollWithResults } from "@/features/polls/queries";
 
-function formatDate(iso: string) {
+function formatDate(iso: string, tz?: string) {
   return new Date(iso).toLocaleDateString("en-US", {
     weekday: "short",
     month: "short",
     day: "numeric",
     year: "numeric",
+    ...(tz && { timeZone: tz }),
   });
 }
 
-function formatTime(iso: string) {
+function formatTime(iso: string, tz?: string) {
   return new Date(iso).toLocaleTimeString("en-US", {
     hour: "numeric",
     minute: "2-digit",
+    ...(tz && { timeZone: tz }),
   });
 }
 
@@ -74,7 +76,7 @@ export default async function SessionDetailPage({
   // Verify this session belongs to a published event at this slug
   const { data: event } = await supabase
     .from("events")
-    .select("id, title, organization_id")
+    .select("id, title, organization_id, timezone")
     .eq("id", session.event_id)
     .eq("status", "published")
     .single();
@@ -378,11 +380,11 @@ export default async function SessionDetailPage({
           <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
             <span className="inline-flex items-center gap-1.5">
               <Calendar className="h-4 w-4" />
-              {formatDate(session.start_time)}
+              {formatDate(session.start_time, event.timezone)}
             </span>
             <span className="inline-flex items-center gap-1.5">
               <Clock className="h-4 w-4" />
-              {formatTime(session.start_time)} - {formatTime(session.end_time)}
+              {formatTime(session.start_time, event.timezone)} - {formatTime(session.end_time, event.timezone)}
             </span>
             {session.location && (
               <span className="inline-flex items-center gap-1.5">

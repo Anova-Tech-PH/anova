@@ -16,25 +16,29 @@ import { Badge, Avatar } from "@attendly/ui/components";
 import { getActivityFeed } from "@/features/activity-feed/queries";
 import { ActivityFeed } from "@/features/activity-feed/components/activity-feed";
 
-function formatTime(iso: string) {
+function formatTime(iso: string, tz?: string) {
   return new Date(iso).toLocaleTimeString("en-US", {
     hour: "numeric",
     minute: "2-digit",
+    ...(tz && { timeZone: tz }),
   });
 }
 
-function formatDateRange(start: string, end: string) {
+function formatDateRange(start: string, end: string, tz?: string) {
   const s = new Date(start);
   const e = new Date(end);
   const opts: Intl.DateTimeFormatOptions = {
     month: "long",
     day: "numeric",
     year: "numeric",
+    ...(tz && { timeZone: tz }),
   };
-  if (s.toDateString() === e.toDateString()) {
+  const sStr = s.toLocaleDateString("en-US", { ...(tz && { timeZone: tz }) });
+  const eStr = e.toLocaleDateString("en-US", { ...(tz && { timeZone: tz }) });
+  if (sStr === eStr) {
     return s.toLocaleDateString("en-US", opts);
   }
-  return `${s.toLocaleDateString("en-US", { month: "long", day: "numeric" })} – ${e.toLocaleDateString("en-US", opts)}`;
+  return `${s.toLocaleDateString("en-US", { month: "long", day: "numeric", ...(tz && { timeZone: tz }) })} – ${e.toLocaleDateString("en-US", opts)}`;
 }
 
 const typeBadgeVariant: Record<
@@ -139,6 +143,7 @@ export default async function PublicEventPage({
       weekday: "long",
       month: "long",
       day: "numeric",
+      ...(event.timezone && { timeZone: event.timezone }),
     });
     (dayGroups[day] ??= []).push(s);
   }
@@ -181,7 +186,7 @@ export default async function PublicEventPage({
           <div className={`mt-6 flex flex-wrap items-center justify-center gap-4 text-sm ${event.cover_image ? "text-white/80" : "text-muted-foreground"}`}>
             <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 shadow-sm backdrop-blur-sm ${event.cover_image ? "bg-white/10" : "bg-card/60"}`}>
               <Calendar className={`h-4 w-4 ${event.cover_image ? "text-white" : "text-primary"}`} />
-              {formatDateRange(event.start_date, event.end_date)}
+              {formatDateRange(event.start_date, event.end_date, event.timezone)}
             </span>
             {event.venue_name && (
               <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 shadow-sm backdrop-blur-sm ${event.cover_image ? "bg-white/10" : "bg-card/60"}`}>
@@ -427,7 +432,7 @@ export default async function PublicEventPage({
                           <div className="shrink-0 text-right text-xs text-muted-foreground">
                             <div className="flex items-center gap-1">
                               <Clock className="h-3 w-3" />
-                              {formatTime(session.start_time)}
+                              {formatTime(session.start_time, event.timezone)}
                             </div>
                             {session.location && (
                               <div className="mt-0.5 flex items-center gap-1">

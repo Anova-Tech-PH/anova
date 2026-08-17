@@ -11,19 +11,21 @@ import { NoteButton } from "@/features/session-notes/components/note-button";
 import type { FeedbackQuestion } from "@/features/feedback/queries";
 import type { PollWithResults } from "@/features/polls/queries";
 
-function formatTime(iso: string) {
+function formatTime(iso: string, tz?: string) {
   return new Date(iso).toLocaleTimeString("en-US", {
     hour: "numeric",
     minute: "2-digit",
+    ...(tz && { timeZone: tz }),
   });
 }
 
-function formatDayTab(dateStr: string) {
+function formatDayTab(dateStr: string, tz?: string) {
   const d = new Date(dateStr);
   return d.toLocaleDateString("en-US", {
     weekday: "short",
     month: "short",
     day: "numeric",
+    ...(tz && { timeZone: tz }),
   });
 }
 
@@ -57,7 +59,7 @@ export default async function PublicSchedulePage({
 
   const { data: event } = await supabase
     .from("events")
-    .select("id, title")
+    .select("id, title, timezone")
     .eq("organization_id", org.id)
     .eq("slug", eventSlug)
     .eq("status", "published")
@@ -223,7 +225,9 @@ export default async function PublicSchedulePage({
   const dayMap = new Map<string, typeof sessions>();
 
   for (const s of sessions ?? []) {
-    const dateKey = new Date(s.start_time).toISOString().split("T")[0]; // YYYY-MM-DD
+    const dateKey = event.timezone
+      ? new Date(s.start_time).toLocaleDateString("en-CA", { timeZone: event.timezone }) // YYYY-MM-DD in event tz
+      : new Date(s.start_time).toISOString().split("T")[0];
     if (!dayMap.has(dateKey)) {
       dayMap.set(dateKey, []);
     }
@@ -233,7 +237,7 @@ export default async function PublicSchedulePage({
   for (const [dateKey, daySessions] of dayMap) {
     dayGroupsOrdered.push({
       dateKey,
-      label: formatDayTab(dateKey + "T12:00:00"),
+      label: formatDayTab(dateKey + "T12:00:00", event.timezone),
       sessions: daySessions,
     });
   }
@@ -412,7 +416,7 @@ export default async function PublicSchedulePage({
                     <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
-                        {formatTime(session.start_time)} - {formatTime(session.end_time)}
+                        {formatTime(session.start_time, event.timezone)} - {formatTime(session.end_time, event.timezone)}
                       </span>
                       {session.location && (
                         <span className="flex items-center gap-1">
