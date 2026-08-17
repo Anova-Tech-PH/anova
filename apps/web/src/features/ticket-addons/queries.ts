@@ -7,6 +7,8 @@ export type TicketAddon = {
   description: string | null;
   price: number;
   quantity: number | null;
+  limit_per_order: number | null;
+  available_until: string | null;
   applies_to_tickets: string[] | null;
   sort_order: number;
   created_at: string;

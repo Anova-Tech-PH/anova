@@ -10,6 +10,8 @@ export async function createAddon(
     description?: string;
     price: number;
     quantity?: number | null;
+    limit_per_order?: number | null;
+    available_until?: string | null;
     applies_to_tickets?: string[] | null;
   }
 ) {
@@ -38,6 +40,8 @@ export async function createAddon(
       description: data.description?.trim() || null,
       price: data.price,
       quantity: data.quantity ?? null,
+      limit_per_order: data.limit_per_order ?? 10,
+      available_until: data.available_until ?? null,
       applies_to_tickets: data.applies_to_tickets ?? null,
       sort_order: sortOrder,
     })
@@ -57,6 +61,8 @@ export async function updateAddon(
     description?: string | null;
     price?: number;
     quantity?: number | null;
+    limit_per_order?: number | null;
+    available_until?: string | null;
     applies_to_tickets?: string[] | null;
   }
 ) {
