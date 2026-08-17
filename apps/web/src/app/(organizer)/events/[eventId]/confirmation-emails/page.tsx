@@ -18,7 +18,7 @@ export default async function ConfirmationEmailsPage({
       <div>
         <h2 className="text-lg font-semibold">Confirmation Emails</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Customize the emails sent to attendees after registration.
+          Attendees receive a confirmation email once they register for your event. Customize the content and settings for those emails here.
         </p>
       </div>
       <EmailTemplateManager eventId={eventId} templates={templates} ticketTypes={ticketTypes} />

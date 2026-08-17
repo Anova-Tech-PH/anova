@@ -207,19 +207,25 @@ export function EmailTemplateManager({
             )}
 
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">Subject *</label>
-              <Input
-                required
-                value={form.subject}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, subject: e.target.value }))
-                }
-                placeholder='e.g. Your registration for {{event_name}} is confirmed!'
-              />
+              <label className="text-sm font-medium">Email subject *</label>
+              <div className="relative">
+                <Input
+                  required
+                  maxLength={100}
+                  value={form.subject}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, subject: e.target.value }))
+                  }
+                  placeholder='e.g. Your tickets for {{event_name}}'
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                  {form.subject.length}/100
+                </span>
+              </div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">Body *</label>
+              <label className="text-sm font-medium">Custom message *</label>
               <Textarea
                 required
                 rows={8}
@@ -254,10 +260,9 @@ export function EmailTemplateManager({
       {/* Template list */}
       {templates.length === 0 && !showForm ? (
         <Card className="flex flex-col items-center justify-center py-12 text-center">
-          <p className="text-muted-foreground">No email templates yet.</p>
+          <p className="text-muted-foreground">No confirmation emails yet.</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Create templates to customize confirmation emails sent after
-            registration.
+            Create a default confirmation email that attendees receive after registering, or customize emails per ticket type.
           </p>
           <Button
             onClick={openCreate}

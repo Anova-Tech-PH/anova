@@ -23,7 +23,7 @@ export default async function TicketAddonsPage({
         <div>
           <h2 className="text-2xl font-semibold">Ticket Add-ons</h2>
           <p className="text-sm text-muted-foreground">
-            Create optional extras attendees can add during registration.
+            Sell add-ons such as t-shirts, parking passes, and other extras. Attendees can purchase these during registration.
           </p>
         </div>
       </div>

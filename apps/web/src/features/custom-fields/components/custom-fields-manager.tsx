@@ -84,7 +84,7 @@ export function CustomFieldsManager({
 
   async function handleSave() {
     if (!form.label.trim() || !form.field_key.trim()) {
-      toast.error("Label and key are required");
+      toast.error("Question label and key are required");
       return;
     }
 
@@ -116,7 +116,7 @@ export function CustomFieldsManager({
               : f
           )
         );
-        toast.success("Field updated");
+        toast.success("Question updated");
       } else {
         const newField = await createCustomField(eventId, {
           label: form.label,
@@ -127,14 +127,14 @@ export function CustomFieldsManager({
           placeholder: form.placeholder || undefined,
         });
         setFields((prev) => [...prev, newField as CustomField]);
-        toast.success("Field added");
+        toast.success("Question added");
       }
 
       setShowForm(false);
       setEditingId(null);
       setForm(emptyForm);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to save field");
+      toast.error(err instanceof Error ? err.message : "Failed to save question");
     } finally {
       setSaving(false);
     }
@@ -144,9 +144,9 @@ export function CustomFieldsManager({
     try {
       await deleteCustomField(eventId, fieldId);
       setFields((prev) => prev.filter((f) => f.id !== fieldId));
-      toast.success("Field deleted");
+      toast.success("Question deleted");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to delete field");
+      toast.error(err instanceof Error ? err.message : "Failed to delete question");
     }
   }
 
@@ -156,7 +156,7 @@ export function CustomFieldsManager({
       {fields.length === 0 && !showForm && (
         <Card>
           <CardContent className="py-12 text-center text-muted-foreground">
-            No custom fields yet. Add fields to collect additional information
+            No questions yet. Add questions to collect additional information
             from registrants.
           </CardContent>
         </Card>
@@ -212,7 +212,7 @@ export function CustomFieldsManager({
         <Card>
           <CardContent className="space-y-4 py-5">
             <h3 className="text-sm font-semibold">
-              {editingId ? "Edit Field" : "Add New Field"}
+              {editingId ? "Edit Question" : "Add New Question"}
             </h3>
 
             <div className="grid gap-4 sm:grid-cols-2">
@@ -299,7 +299,7 @@ export function CustomFieldsManager({
 
             <div className="flex gap-2">
               <Button onClick={handleSave} loading={saving} disabled={saving}>
-                {editingId ? "Update Field" : "Add Field"}
+                {editingId ? "Update Question" : "Add Question"}
               </Button>
               <Button
                 variant="outline"
@@ -319,7 +319,7 @@ export function CustomFieldsManager({
       {!showForm && (
         <Button onClick={openAdd} variant="outline" className="gap-2">
           <Plus className="h-4 w-4" />
-          Add Field
+          Add Question
         </Button>
       )}
     </div>

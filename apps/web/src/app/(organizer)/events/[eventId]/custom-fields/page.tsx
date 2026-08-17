@@ -17,9 +17,9 @@ export default async function CustomFieldsPage({
           <ListChecks className="h-5 w-5 text-[oklch(0.445_0.107_195)]" />
         </div>
         <div>
-          <h1 className="text-2xl font-semibold">Registration Form Fields</h1>
+          <h1 className="text-2xl font-semibold">Question Forms</h1>
           <p className="text-sm text-muted-foreground">
-            Add custom questions to your registration form.
+            Customize the questions attendees answer when registering for your event.
           </p>
         </div>
       </div>

@@ -17,7 +17,7 @@ export default async function PromoCodesPage({
           <Tag className="h-5 w-5 text-[oklch(0.445_0.107_195)]" />
         </div>
         <div>
-          <h1 className="text-2xl font-semibold">Promo Codes</h1>
+          <h1 className="text-2xl font-semibold">Discount Codes</h1>
           <p className="text-sm text-muted-foreground">
             Create discount codes to offer special pricing on tickets.
           </p>

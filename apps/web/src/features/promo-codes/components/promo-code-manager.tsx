@@ -117,15 +117,15 @@ export function PromoCodeManager({
               : c
           )
         );
-        toast.success("Promo code updated");
+        toast.success("Discount code updated");
       } else {
         const created = await createPromoCode(eventId, payload);
         setCodes((prev) => [created, ...prev]);
-        toast.success("Promo code created");
+        toast.success("Discount code created");
       }
       closeForm();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to save promo code");
+      toast.error(err instanceof Error ? err.message : "Failed to save discount code");
     } finally {
       setLoading(false);
     }
@@ -133,15 +133,15 @@ export function PromoCodeManager({
 
   async function handleDelete(codeId: string) {
     const ok = await confirm({
-      title: "Delete Promo Code",
-      description: "Delete this promo code? This action cannot be undone.",
+      title: "Delete Discount Code",
+      description: "Delete this discount code? This action cannot be undone.",
       confirmLabel: "Delete",
     });
     if (!ok) return;
     try {
       await deletePromoCode(eventId, codeId);
       setCodes((prev) => prev.filter((c) => c.id !== codeId));
-      toast.success("Promo code deleted");
+      toast.success("Discount code deleted");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to delete");
     }
@@ -155,7 +155,7 @@ export function PromoCodeManager({
           c.id === code.id ? { ...c, active: !c.active } : c
         )
       );
-      toast.success(code.active ? "Promo code deactivated" : "Promo code activated");
+      toast.success(code.active ? "Discount code deactivated" : "Discount code activated");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to update");
     }
@@ -165,11 +165,11 @@ export function PromoCodeManager({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          {codes.length} promo code{codes.length !== 1 ? "s" : ""}
+          {codes.length} discount code{codes.length !== 1 ? "s" : ""}
         </p>
         <Button onClick={openCreate} size="sm">
           <Plus className="mr-1.5 h-4 w-4" />
-          Add Promo Code
+          Add Discount Code
         </Button>
       </div>
 
@@ -178,7 +178,7 @@ export function PromoCodeManager({
         <Card className="p-5">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="font-medium">
-              {editingId ? "Edit Promo Code" : "New Promo Code"}
+              {editingId ? "Edit Discount Code" : "New Discount Code"}
             </h3>
             <button onClick={closeForm} className="text-muted-foreground hover:text-foreground">
               <X className="h-4 w-4" />
@@ -284,7 +284,7 @@ export function PromoCodeManager({
 
             <div className="flex gap-2 pt-2">
               <Button type="submit" loading={loading}>
-                {editingId ? "Update" : "Create"} Promo Code
+                {editingId ? "Update" : "Create"} Discount Code
               </Button>
               <Button type="button" variant="outline" onClick={closeForm}>
                 Cancel
@@ -297,13 +297,13 @@ export function PromoCodeManager({
       {/* Code list */}
       {codes.length === 0 && !showForm ? (
         <Card className="flex flex-col items-center justify-center py-12 text-center">
-          <p className="text-muted-foreground">No promo codes yet.</p>
+          <p className="text-muted-foreground">No discount codes yet.</p>
           <p className="mt-1 text-sm text-muted-foreground">
             Create one to offer discounts on your event tickets.
           </p>
           <Button onClick={openCreate} variant="outline" className="mt-4" size="sm">
             <Plus className="mr-1.5 h-4 w-4" />
-            Add Promo Code
+            Add Discount Code
           </Button>
         </Card>
       ) : (

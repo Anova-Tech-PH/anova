@@ -163,7 +163,7 @@ export function AddonManager({
         </p>
         <Button onClick={openCreate} size="sm">
           <Plus className="mr-1.5 h-4 w-4" />
-          Add Add-on
+          Create Add-on
         </Button>
       </div>
 
@@ -280,7 +280,7 @@ export function AddonManager({
         <Card className="flex flex-col items-center justify-center py-12 text-center">
           <p className="text-muted-foreground">No add-ons yet.</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Create optional extras attendees can add during registration.
+            Create add-ons such as t-shirts, parking passes, or meal upgrades that attendees can purchase during registration.
           </p>
           <Button
             onClick={openCreate}
@@ -289,7 +289,7 @@ export function AddonManager({
             size="sm"
           >
             <Plus className="mr-1.5 h-4 w-4" />
-            Add Add-on
+            Create Add-on
           </Button>
         </Card>
       ) : (
