@@ -60,7 +60,7 @@ export function OrdersTable({ orders }: { orders: OrderRow[] }) {
                   <span
                     className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${statusStyles[order.status] ?? "bg-gray-100 text-gray-700"}`}
                   >
-                    {order.status.replace("_", " ")}
+                    {order.status.replaceAll("_", " ")}
                   </span>
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">

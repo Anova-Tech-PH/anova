@@ -26,7 +26,7 @@ export async function getOrders(eventId: string): Promise<OrderRow[]> {
 
   if (error) throw new Error(error.message);
 
-  return (data ?? []).map((o: any) => ({
+  return (data ?? []).map((o) => ({
     id: o.id,
     customer_name: o.customer_name,
     customer_email: o.customer_email,
@@ -37,18 +37,22 @@ export async function getOrders(eventId: string): Promise<OrderRow[]> {
     status: o.status,
     created_at: o.created_at,
     stripe_payment_intent_id: o.stripe_payment_intent_id,
-    ticket_name: o.registrations?.ticket_types?.name ?? "Unknown",
+    ticket_name:
+      (o.registrations as { ticket_types: { name: string } | null } | null)
+        ?.ticket_types?.name ?? "Unknown",
   }));
 }
 
 export async function getOrderSummary(eventId: string) {
   const supabase = await createClient();
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("orders")
     .select("amount_total, amount_refunded, status")
     .eq("event_id", eventId)
     .neq("status", "pending");
+
+  if (error) throw new Error(error.message);
 
   const orders = data ?? [];
   const gross = orders.reduce((sum, o) => sum + o.amount_total, 0);
