@@ -22,7 +22,7 @@ export default async function OrdersPage({
         </p>
       </div>
       <OrderSummaryCards summary={summary} />
-      <OrdersTable orders={orders} />
+      <OrdersTable orders={orders} eventId={eventId} />
     </div>
   );
 }
