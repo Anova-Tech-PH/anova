@@ -15,6 +15,7 @@ import { Button, Textarea } from "@attendly/ui/components";
 import { ModalOverlay } from "@attendly/ui/components";
 import { uploadPhoto } from "@/features/photos/actions";
 import { FrameSelector } from "@/features/photos/components/frame-selector";
+import { SelfieCapture } from "@/features/photos/components/selfie-capture";
 import { SocialShare } from "@/features/photos/components/social-share";
 import { renderFrameOnPhoto } from "@/features/photos/lib/render-frame";
 import type { BoothFrame } from "@/features/photo-booth/constants";
@@ -22,7 +23,7 @@ import { toast } from "sonner";
 
 const MAX_PHOTOS = 9;
 
-type Step = "method" | "preview" | "done";
+type Step = "method" | "selfie" | "preview" | "done";
 
 interface PhotoEntry {
   file: File;
@@ -202,7 +203,7 @@ export function UploadPhotoDialog({
       <div className="w-full max-w-md rounded-xl bg-card p-6 shadow-xl">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
-          {step === "preview" && (
+          {(step === "preview" || step === "selfie") && (
             <button
               type="button"
               onClick={() => {
@@ -215,6 +216,7 @@ export function UploadPhotoDialog({
           )}
           <h3 className="text-lg font-semibold flex-1">
             {step === "method" && "Share a Photo"}
+            {step === "selfie" && "Take a Selfie"}
             {step === "preview" && "Preview & Frame"}
             {step === "done" && "Photo Shared!"}
           </h3>
@@ -279,12 +281,10 @@ export function UploadPhotoDialog({
                 </span>
               </button>
 
-              {/* Take a Selfie (placeholder) */}
+              {/* Take a Selfie */}
               <button
                 type="button"
-                onClick={() =>
-                  toast.info("Selfie capture coming soon")
-                }
+                onClick={() => setStep("selfie")}
                 className="flex flex-col items-center gap-2 rounded-xl border-2 border-dashed border-border bg-muted/30 p-6 cursor-pointer hover:bg-muted/50 hover:border-primary/50 transition-colors"
               >
                 <Camera className="h-8 w-8 text-muted-foreground" />
@@ -298,6 +298,28 @@ export function UploadPhotoDialog({
               Upload up to {MAX_PHOTOS} photos at once
             </p>
           </div>
+        )}
+
+        {/* Step: Selfie Capture */}
+        {step === "selfie" && (
+          <SelfieCapture
+            frames={frames}
+            onCapture={(blob, frameId) => {
+              const file = new File([blob], `selfie-${Date.now()}.jpg`, {
+                type: "image/jpeg",
+              });
+              const entry: PhotoEntry = {
+                file,
+                previewUrl: URL.createObjectURL(file),
+                caption: "",
+              };
+              setPhotos([entry]);
+              setActiveIndex(0);
+              if (frameId) setSelectedFrameId(frameId);
+              setStep("preview");
+            }}
+            onCancel={() => setStep("method")}
+          />
         )}
 
         {/* Step 2: Preview + Frame Selection */}
