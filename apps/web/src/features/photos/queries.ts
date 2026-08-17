@@ -79,6 +79,34 @@ export async function getPhotoComments(photoId: string) {
   return data ?? [];
 }
 
+export async function getPhotoStats(eventId: string) {
+  const supabase = await createClient();
+  const [photos, videos, likesResult] = await Promise.all([
+    supabase
+      .from("event_photos")
+      .select("id", { count: "exact", head: true })
+      .eq("event_id", eventId)
+      .eq("media_type", "photo"),
+    supabase
+      .from("event_photos")
+      .select("id", { count: "exact", head: true })
+      .eq("event_id", eventId)
+      .eq("media_type", "video"),
+    supabase
+      .from("event_photos")
+      .select("likes_count")
+      .eq("event_id", eventId),
+  ]);
+  return {
+    photoCount: photos.count ?? 0,
+    videoCount: videos.count ?? 0,
+    totalLikes: (likesResult.data ?? []).reduce(
+      (sum: number, p: { likes_count: number }) => sum + p.likes_count,
+      0
+    ),
+  };
+}
+
 export async function getPhotoCount(eventId: string) {
   const supabase = await createClient();
 
