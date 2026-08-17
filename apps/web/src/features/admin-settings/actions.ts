@@ -25,7 +25,7 @@ export async function setInvitationCode(
 
   if (error) throw new Error(error.message);
 
-  revalidatePath(`/events/${eventId}/settings`);
+  revalidatePath(`/events/${eventId}/admin-settings`);
 }
 
 export async function addEventAdmin(
@@ -59,7 +59,7 @@ export async function addEventAdmin(
 
   if (error) throw new Error(error.message);
 
-  revalidatePath(`/events/${eventId}/settings`);
+  revalidatePath(`/events/${eventId}/admin-settings`);
 }
 
 export async function updateEventAdminRole(
@@ -82,7 +82,7 @@ export async function updateEventAdminRole(
 
   if (error) throw new Error(error.message);
 
-  revalidatePath(`/events/${eventId}/settings`);
+  revalidatePath(`/events/${eventId}/admin-settings`);
 }
 
 export async function removeEventAdmin(adminId: string, eventId: string) {
@@ -101,7 +101,7 @@ export async function removeEventAdmin(adminId: string, eventId: string) {
 
   if (error) throw new Error(error.message);
 
-  revalidatePath(`/events/${eventId}/settings`);
+  revalidatePath(`/events/${eventId}/admin-settings`);
 }
 
 export async function shareTemplate(
@@ -128,7 +128,7 @@ export async function shareTemplate(
 
   if (error) throw new Error(error.message);
 
-  revalidatePath(`/events/${eventId}/settings`);
+  revalidatePath(`/events/${eventId}/admin-settings`);
 }
 
 export async function updateSharedTemplateStatus(
@@ -173,7 +173,7 @@ export async function requestTemplate(
 
   if (error) throw new Error(error.message);
 
-  revalidatePath(`/events/${requestingEventId}/settings`);
+  revalidatePath(`/events/${requestingEventId}/admin-settings`);
 }
 
 export async function updateTemplateRequestStatus(
@@ -195,5 +195,5 @@ export async function updateTemplateRequestStatus(
 
   if (error) throw new Error(error.message);
 
-  revalidatePath(`/events/${eventId}/settings`);
+  revalidatePath(`/events/${eventId}/admin-settings`);
 }
