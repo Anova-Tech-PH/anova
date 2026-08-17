@@ -204,7 +204,7 @@ export function RegistrationPagesManager({
         </p>
         <Button onClick={openCreate} size="sm">
           <Plus className="mr-1.5 h-4 w-4" />
-          Add Page
+          Create new registration page
         </Button>
       </div>
 
@@ -290,7 +290,7 @@ export function RegistrationPagesManager({
         <Card className="flex flex-col items-center justify-center py-12 text-center">
           <p className="text-muted-foreground">No registration pages yet.</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Create registration pages with different ticket subsets, each with a unique shareable URL.
+            Create and customize registration pages for your attendees. We recommend creating multiple registration pages if you want to hide some tickets from specific attendees.
           </p>
           <Button
             onClick={openCreate}
@@ -299,63 +299,77 @@ export function RegistrationPagesManager({
             size="sm"
           >
             <Plus className="mr-1.5 h-4 w-4" />
-            Add Page
+            Create new registration page
           </Button>
         </Card>
       ) : (
-        <div className="space-y-2">
-          {pages.map((page) => (
-            <Card key={page.id} className="p-4">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex flex-col gap-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <span className="text-sm font-semibold">{page.name}</span>
-                    {page.is_default && (
-                      <Badge variant="outline">Default</Badge>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <code className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                      /register/{page.slug}
-                    </code>
-                    <CopyButton text={`/register/${page.slug}`} />
-                  </div>
-                  <div className="flex flex-wrap gap-1 mt-1">
+        <div className="overflow-x-auto rounded-lg border">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-muted/50 text-left">
+                <th className="px-4 py-3 font-medium">Registration Page Name</th>
+                <th className="px-4 py-3 font-medium">Included Tickets</th>
+                <th className="px-4 py-3 font-medium">URL</th>
+                <th className="px-4 py-3 font-medium text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pages.map((page) => (
+                <tr key={page.id} className="border-b last:border-b-0 hover:bg-muted/30">
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{page.name}</span>
+                      {page.is_default && (
+                        <Badge variant="outline" className="text-xs">Default</Badge>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
                     {page.ticket_type_ids.length === 0 ? (
-                      <span className="text-xs text-muted-foreground">
-                        All tickets
-                      </span>
+                      <span className="text-muted-foreground">All tickets</span>
                     ) : (
-                      page.ticket_type_ids.map((id) => {
-                        const name = getTicketName(id);
-                        return name ? (
-                          <Badge key={id} variant="outline" className="text-xs">
-                            {name}
-                          </Badge>
-                        ) : null;
-                      })
+                      <div className="flex flex-wrap gap-1">
+                        {page.ticket_type_ids.map((id) => {
+                          const name = getTicketName(id);
+                          return name ? (
+                            <Badge key={id} variant="outline" className="text-xs">
+                              {name}
+                            </Badge>
+                          ) : null;
+                        })}
+                      </div>
                     )}
-                  </div>
-                </div>
-                <div className="flex shrink-0 items-center gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => openEdit(page)}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDelete(page.id)}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          ))}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-1.5">
+                      <code className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                        /register/{page.slug}
+                      </code>
+                      <CopyButton text={`/register/${page.slug}`} />
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <div className="flex justify-end items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => openEdit(page)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(page.id)}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 
