@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useCallback } from "react";
 import Image from "next/image";
-import { Camera, Video, Heart, Trash2, Download, ImageIcon, Film, Plus } from "lucide-react";
+import { Camera, Video, Heart, Trash2, Download, ImageIcon, Film, Plus, DownloadCloud } from "lucide-react";
 import { Button, Card, CardContent, ConfirmDialog } from "@attendly/ui/components";
 import { toast } from "sonner";
 import { getPhotos } from "@/features/photos/queries";
@@ -169,13 +169,36 @@ export function PhotoCollection({
 
   return (
     <div className="space-y-6">
-      {/* Header with upload button */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Photo Collection</h2>
-        <Button onClick={() => setShowUpload(true)}>
-          <Plus className="mr-1.5 h-4 w-4" />
-          Upload Photo
-        </Button>
+      {/* Description + Action Buttons */}
+      <div className="space-y-3">
+        <p className="text-sm text-muted-foreground">
+          Add, view, and manage photos gathered from the app.
+        </p>
+        <div className="flex items-center gap-3">
+          <Button onClick={() => setShowUpload(true)}>
+            <Plus className="mr-1.5 h-4 w-4" />
+            Add photo
+          </Button>
+          {photos.length > 0 && (
+            <Button
+              variant="outline"
+              onClick={() => {
+                photos.forEach((photo) => {
+                  const a = document.createElement("a");
+                  a.href = photo.image_url;
+                  a.download = "";
+                  a.target = "_blank";
+                  a.rel = "noopener noreferrer";
+                  a.click();
+                });
+                toast.success("Downloading photos...");
+              }}
+            >
+              <DownloadCloud className="mr-1.5 h-4 w-4" />
+              Download all photos
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Stats Header */}
