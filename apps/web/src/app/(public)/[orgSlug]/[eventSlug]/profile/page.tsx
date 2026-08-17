@@ -3,6 +3,8 @@ import { AuthGuard } from "../auth-guard";
 import { getMyProfile, getAttendeeAffiliations, getAttendeeEducation } from "@/features/attendee-profile/queries";
 import { getEventInterests } from "@/features/matchmaking/queries";
 import { ProfileEditor } from "@/features/attendee-profile/components/profile-editor";
+import { getProfileFrames } from "@/features/profile-frames/queries";
+import { ProfileFrameSection } from "./profile-frame-section";
 
 export default async function ProfilePage({
   params,
@@ -50,11 +52,12 @@ async function ProfilePageContent({ eventId }: { eventId: string }) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const [profile, interestsData, affiliations, education] = await Promise.all([
+  const [profile, interestsData, affiliations, education, frames] = await Promise.all([
     getMyProfile(eventId),
     getEventInterests(eventId),
     user ? getAttendeeAffiliations(eventId, user.id) : Promise.resolve([]),
     user ? getAttendeeEducation(eventId, user.id) : Promise.resolve([]),
+    getProfileFrames(eventId),
   ]);
 
   let selectedInterestIds: string[] = [];
@@ -68,16 +71,25 @@ async function ProfilePageContent({ eventId }: { eventId: string }) {
   }
 
   return (
-    <ProfileEditor
-      profile={profile}
-      eventId={eventId}
-      interests={interestsData.interests.map((i) => ({
-        id: i.id,
-        name: i.name,
-      }))}
-      selectedInterestIds={selectedInterestIds}
-      affiliations={affiliations}
-      education={education}
-    />
+    <div className="space-y-6">
+      <ProfileEditor
+        profile={profile}
+        eventId={eventId}
+        interests={interestsData.interests.map((i) => ({
+          id: i.id,
+          name: i.name,
+        }))}
+        selectedInterestIds={selectedInterestIds}
+        affiliations={affiliations}
+        education={education}
+      />
+      {frames.length > 0 && (
+        <ProfileFrameSection
+          eventId={eventId}
+          frames={frames}
+          currentFrameId={(profile as Record<string, unknown>)?.profile_frame_id as string | null ?? null}
+        />
+      )}
+    </div>
   );
 }

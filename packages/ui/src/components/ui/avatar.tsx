@@ -44,27 +44,29 @@ interface AvatarProps {
   size?: "xs" | "sm" | "md" | "lg" | "xl";
   className?: string;
   ring?: boolean;
+  frame?: { color: string; label: string } | null;
 }
 
-export function Avatar({ src, name, size = "md", className, ring }: AvatarProps) {
+export function Avatar({ src, name, size = "md", className, ring, frame }: AvatarProps) {
   const [imgError, setImgError] = useState(false);
   const sizeClass = sizes[size];
   const colorClass = name ? avatarColors[hashName(name) % avatarColors.length] : avatarColors[0];
   const ringClass = ring ? "ring-2 ring-background shadow-sm" : "";
 
+  let avatarElement: React.ReactNode;
+
   if (src && !imgError) {
-    return (
+    avatarElement = (
       <img
         src={src}
         alt={name || "Avatar"}
         onError={() => setImgError(true)}
         className={cn("shrink-0 rounded-full object-cover", sizeClass, ringClass, className)}
+        style={frame ? { border: `3px solid ${frame.color}` } : undefined}
       />
     );
-  }
-
-  if (name) {
-    return (
+  } else if (name) {
+    avatarElement = (
       <div
         className={cn(
           "flex shrink-0 items-center justify-center rounded-full font-medium",
@@ -73,22 +75,38 @@ export function Avatar({ src, name, size = "md", className, ring }: AvatarProps)
           ringClass,
           className
         )}
+        style={frame ? { border: `3px solid ${frame.color}` } : undefined}
       >
         {getInitials(name)}
       </div>
     );
+  } else {
+    avatarElement = (
+      <div
+        className={cn(
+          "flex shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground",
+          sizeClass,
+          ringClass,
+          className
+        )}
+        style={frame ? { border: `3px solid ${frame.color}` } : undefined}
+      >
+        <User className="h-1/2 w-1/2" />
+      </div>
+    );
   }
 
+  if (!frame) return avatarElement;
+
   return (
-    <div
-      className={cn(
-        "flex shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground",
-        sizeClass,
-        ringClass,
-        className
-      )}
-    >
-      <User className="h-1/2 w-1/2" />
+    <div className="relative inline-flex flex-col items-center">
+      {avatarElement}
+      <span
+        className="absolute -bottom-1 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full px-1.5 py-0.5 text-[8px] font-semibold text-white"
+        style={{ backgroundColor: frame.color }}
+      >
+        {frame.label}
+      </span>
     </div>
   );
 }
