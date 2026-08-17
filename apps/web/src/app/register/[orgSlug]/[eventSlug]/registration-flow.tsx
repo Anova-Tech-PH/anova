@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { registerForEvent } from "@/features/registration/actions";
 import { trackRegistrationIntent } from "@/features/registration/intent-actions";
 import { validatePromoCode } from "@/features/promo-codes/actions";
+import { createCheckoutSession } from "@/features/payments/checkout-actions";
 import { QrConfirmation } from "./qr-confirmation";
 import { Input, Button, Textarea } from "@attendly/ui/components";
 
@@ -33,6 +34,8 @@ export function RegistrationFlow({
   tickets,
   customFields = [],
   initialIntent,
+  orgSlug,
+  eventSlug,
 }: {
   eventId: string;
   tickets: TicketType[];
@@ -43,6 +46,8 @@ export function RegistrationFlow({
     name?: string;
     custom_fields?: Record<string, string | boolean>;
   };
+  orgSlug: string;
+  eventSlug: string;
 }) {
   const [selectedTicket, setSelectedTicket] = useState<string | null>(initialIntent?.ticket_type_id ?? null);
   const [name, setName] = useState(initialIntent?.name ?? "");
@@ -141,6 +146,28 @@ export function RegistrationFlow({
         }
       }
 
+      // Paid ticket: redirect to Stripe Checkout
+      if (finalPrice > 0) {
+        const { url } = await createCheckoutSession({
+          event_id: eventId,
+          ticket_type_id: selectedTicket,
+          name,
+          email,
+          custom_fields: Object.keys(custom_fields).length > 0 ? custom_fields : undefined,
+          promo_code_id: appliedPromo?.id,
+          discount_amount: appliedPromo ? discountAmount : undefined,
+          origin: window.location.origin,
+          org_slug: orgSlug,
+          event_slug: eventSlug,
+        });
+        if (url) {
+          window.location.href = url;
+          return;
+        }
+        throw new Error("Failed to create checkout session");
+      }
+
+      // Free ticket: register directly
       const reg = await registerForEvent({
         event_id: eventId,
         ticket_type_id: selectedTicket,
@@ -435,7 +462,11 @@ export function RegistrationFlow({
             loading={loading}
             className="w-full"
           >
-            {loading ? "Registering..." : "Complete Registration"}
+            {loading
+              ? "Registering..."
+              : finalPrice > 0
+                ? `Pay $${finalPrice.toFixed(2)} & Register`
+                : "Complete Registration"}
           </Button>
         </form>
       )}

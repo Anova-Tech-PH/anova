@@ -583,6 +583,7 @@ interface EventBasicsFormProps {
 export function EventBasicsForm({ mode, event, onSubmit }: EventBasicsFormProps) {
   const [saving, setSaving] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [endDateManuallySet, setEndDateManuallySet] = useState(!!event?.end_date);
 
   const [form, setForm] = useState<EventFormData>(() => {
     if (event) {
@@ -638,16 +639,13 @@ export function EventBasicsForm({ mode, event, onSubmit }: EventBasicsFormProps)
   });
 
   function update<K extends keyof EventFormData>(key: K, value: EventFormData[K]) {
+    if (key === "end_date") setEndDateManuallySet(true);
     setForm((prev) => {
       const next = { ...prev, [key]: value };
-      // Auto-set end date to 23:59 of start date if end date is empty or before start date
-      if (key === "start_date" && typeof value === "string" && value) {
-        const startDate = value as string;
-        const dateOnly = startDate.split("T")[0];
-        const autoEnd = `${dateOnly}T23:59`;
-        if (!prev.end_date || prev.end_date < startDate) {
-          next.end_date = autoEnd;
-        }
+      // Auto-set end date to 23:59 of start date unless user manually set it
+      if (key === "start_date" && typeof value === "string" && value && !endDateManuallySet) {
+        const dateOnly = (value as string).split("T")[0];
+        next.end_date = `${dateOnly}T23:59`;
       }
       return next;
     });

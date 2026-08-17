@@ -130,6 +130,8 @@ export default async function RegisterPage({
           tickets={ticketsWithAvailability}
           customFields={customFields}
           initialIntent={initialIntent}
+          orgSlug={orgSlug}
+          eventSlug={eventSlug}
         />
       )}
 

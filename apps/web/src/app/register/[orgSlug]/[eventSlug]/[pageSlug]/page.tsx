@@ -145,6 +145,8 @@ export default async function RegisterByPageSlugPage({
           tickets={ticketsWithAvailability}
           customFields={customFields}
           initialIntent={initialIntent}
+          orgSlug={orgSlug}
+          eventSlug={eventSlug}
         />
       )}
 
