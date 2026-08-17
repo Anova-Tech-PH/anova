@@ -121,6 +121,8 @@ export default async function EventLayout({
             { href: `/events/${eventId}/registration-settings`, label: "Registration Settings" },
           ],
         },
+        { href: `/events/${eventId}/payout`, label: "Payout", icon: "credit-card" },
+        { href: `/events/${eventId}/orders`, label: "Orders & Transactions", icon: "receipt" },
       ],
     },
     {
