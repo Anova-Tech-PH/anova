@@ -2,11 +2,13 @@
 
 import { useState, useTransition, useCallback } from "react";
 import Image from "next/image";
-import { Camera, Video, Heart, Trash2, Download, ImageIcon, Film } from "lucide-react";
+import { Camera, Video, Heart, Trash2, Download, ImageIcon, Film, Plus } from "lucide-react";
 import { Button, Card, CardContent, ConfirmDialog } from "@attendly/ui/components";
 import { toast } from "sonner";
 import { getPhotos } from "@/features/photos/queries";
 import { deletePhoto } from "@/features/photos/actions";
+import { UploadPhotoDialog } from "./upload-photo-dialog";
+import type { BoothFrame } from "@/features/photo-booth/constants";
 
 type Tab = "all" | "photos" | "videos";
 
@@ -29,6 +31,7 @@ interface PhotoCollectionProps {
   initialTotal: number;
   counts: { total: number; photos: number; videos: number };
   stats: { photoCount: number; videoCount: number; totalLikes: number };
+  frames?: BoothFrame[];
 }
 
 export function PhotoCollection({
@@ -37,6 +40,7 @@ export function PhotoCollection({
   initialTotal,
   counts,
   stats,
+  frames = [],
 }: PhotoCollectionProps) {
   const [photos, setPhotos] = useState<Photo[]>(initialPhotos);
   const [total, setTotal] = useState(initialTotal);
@@ -48,6 +52,20 @@ export function PhotoCollection({
   const [isLoadingMore, startLoadingMore] = useTransition();
   const [isTabLoading, startTabLoading] = useTransition();
   const [isDeleting, startDeleting] = useTransition();
+  const [showUpload, setShowUpload] = useState(false);
+
+  const handleUploadComplete = useCallback(() => {
+    startTabLoading(async () => {
+      try {
+        const result = await getPhotos(eventId, { tab: activeTab, page: 1, pageSize: 20 });
+        setPhotos(result.photos as Photo[]);
+        setTotal(result.total);
+        setPage(1);
+      } catch {
+        // keep current state
+      }
+    });
+  }, [eventId, activeTab]);
 
   const pageSize = 20;
   const hasMore = photos.length < total;
@@ -151,6 +169,15 @@ export function PhotoCollection({
 
   return (
     <div className="space-y-6">
+      {/* Header with upload button */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold">Photo Collection</h2>
+        <Button onClick={() => setShowUpload(true)}>
+          <Plus className="mr-1.5 h-4 w-4" />
+          Upload Photo
+        </Button>
+      </div>
+
       {/* Stats Header */}
       <div className="grid grid-cols-3 gap-4">
         {statCards.map((stat) => (
@@ -341,6 +368,15 @@ export function PhotoCollection({
         variant="destructive"
         onConfirm={handleBulkDelete}
         onCancel={() => setShowBulkDelete(false)}
+      />
+
+      {/* Upload Dialog */}
+      <UploadPhotoDialog
+        eventId={eventId}
+        open={showUpload}
+        onClose={() => setShowUpload(false)}
+        onUploadComplete={handleUploadComplete}
+        frames={frames}
       />
     </div>
   );

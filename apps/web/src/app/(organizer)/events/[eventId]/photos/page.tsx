@@ -3,6 +3,7 @@ import {
   getPhotoCount,
   getPhotoStats,
 } from "@/features/photos/queries";
+import { getBoothFrames } from "@/features/photo-booth/queries";
 import { PhotoCollection } from "@/features/photos/components/photo-collection";
 
 export default async function PhotoCollectionPage({
@@ -12,10 +13,11 @@ export default async function PhotoCollectionPage({
 }) {
   const { eventId } = await params;
 
-  const [{ photos, total }, counts, stats] = await Promise.all([
+  const [{ photos, total }, counts, stats, frames] = await Promise.all([
     getPhotos(eventId),
     getPhotoCount(eventId),
     getPhotoStats(eventId),
+    getBoothFrames(eventId),
   ]);
 
   return (
@@ -25,6 +27,7 @@ export default async function PhotoCollectionPage({
       initialTotal={total}
       counts={counts}
       stats={stats}
+      frames={frames}
     />
   );
 }
