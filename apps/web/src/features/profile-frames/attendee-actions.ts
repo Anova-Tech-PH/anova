@@ -14,7 +14,7 @@ export async function setProfileFrame(eventId: string, frameId: string | null) {
     .from("attendee_profiles")
     .update({ profile_frame_id: frameId })
     .eq("event_id", eventId)
-    .eq("user_id", user.id);
+    .eq("id", user.id);
 
   if (error) throw error;
   revalidatePath("/", "layout");
