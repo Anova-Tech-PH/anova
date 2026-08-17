@@ -15,6 +15,7 @@ import { Button, Textarea } from "@attendly/ui/components";
 import { ModalOverlay } from "@attendly/ui/components";
 import { uploadPhoto } from "@/features/photos/actions";
 import { FrameSelector } from "@/features/photos/components/frame-selector";
+import { SocialShare } from "@/features/photos/components/social-share";
 import { renderFrameOnPhoto } from "@/features/photos/lib/render-frame";
 import type { BoothFrame } from "@/features/photo-booth/constants";
 import { toast } from "sonner";
@@ -405,20 +406,17 @@ export function UploadPhotoDialog({
           </div>
         )}
 
-        {/* Step 3: Post-upload (placeholder for Task 12) */}
+        {/* Step 3: Post-upload sharing */}
         {step === "done" && (
           <div className="flex flex-col items-center gap-4 py-6 text-center">
             <CheckCircle2 className="h-12 w-12 text-green-500" />
             <div>
               <p className="text-base font-medium">Photo uploaded!</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Share it with friends.
-              </p>
             </div>
-            {/* Social sharing placeholder — Task 12 will replace this */}
-            <Button onClick={resetAndClose} className="mt-2">
-              Done
-            </Button>
+            <SocialShare
+              photoUrl={typeof window !== "undefined" ? window.location.href : ""}
+              onClose={resetAndClose}
+            />
           </div>
         )}
       </div>
