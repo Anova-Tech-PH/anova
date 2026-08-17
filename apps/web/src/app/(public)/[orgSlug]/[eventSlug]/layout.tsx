@@ -48,7 +48,7 @@ export default async function PublicEventLayout({
 
   if (event) {
     // Run visibility queries in parallel
-    const [roomsResult, resourcesResult, attendeesResult, communityResult, messagesResult, gamificationResult, registrationResult, surveyResult, logisticsResult] = await Promise.all([
+    const [roomsResult, resourcesResult, attendeesResult, communityResult, messagesResult, gamificationResult, registrationResult, surveyResult, logisticsResult, volunteerResult] = await Promise.all([
       supabase
         .from("breakout_rooms")
         .select("id", { count: "exact", head: true })
@@ -94,6 +94,11 @@ export default async function PublicEventLayout({
         .from("logistics_items")
         .select("id", { count: "exact", head: true })
         .eq("event_id", event.id),
+      supabase
+        .from("volunteer_settings")
+        .select("is_published")
+        .eq("event_id", event.id)
+        .single(),
     ]);
 
     const settings = (event.settings ?? {}) as Record<string, unknown>;
@@ -109,6 +114,7 @@ export default async function PublicEventLayout({
       hasLeaderboard: gamificationResult.data?.enabled === true,
       isRegistered: (registrationResult.count ?? 0) > 0,
       hasFeedback: (surveyResult.count ?? 0) > 0,
+      hasVolunteer: volunteerResult.data?.is_published === true,
     };
 
     // If gamification is enabled, check for contests, trivia, and sponsors

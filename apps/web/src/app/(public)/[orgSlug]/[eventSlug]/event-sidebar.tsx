@@ -33,6 +33,7 @@ import {
   Stamp,
   Gift,
   MapPin,
+  HeartHandshake,
 } from "lucide-react";
 import { Logo } from "@attendly/ui/logo";
 import { createClient } from "@attendly/ui/supabase/client";
@@ -68,6 +69,8 @@ export interface SidebarData {
   hasTrivia?: boolean;
   /** Whether passport is available (gamification enabled + sponsors exist) */
   hasPassport?: boolean;
+  /** Whether volunteer applications are open */
+  hasVolunteer?: boolean;
 }
 
 export const defaultSidebarData: SidebarData = {
@@ -84,6 +87,7 @@ export const defaultSidebarData: SidebarData = {
   hasContests: false,
   hasTrivia: false,
   hasPassport: false,
+  hasVolunteer: false,
 };
 
 /* ------------------------------------------------------------------ */
@@ -317,6 +321,16 @@ export function EventSidebar({
           label="Announcements"
           isActive={isActive("/announcements")}
         />
+
+        {/* Volunteer (conditional) */}
+        {sidebarData.hasVolunteer && (
+          <NavLink
+            href={`${basePath}/volunteer`}
+            icon={HeartHandshake}
+            label="Volunteer"
+            isActive={isActive("/volunteer")}
+          />
+        )}
 
         {/* Separator before Engagement */}
         {(sidebarData.hasLeaderboard || sidebarData.hasContests || sidebarData.hasTrivia || sidebarData.hasPassport) && (
