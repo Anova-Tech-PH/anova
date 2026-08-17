@@ -24,6 +24,7 @@ import {
   Building2,
   Plus,
   Trash2,
+  Send,
 } from "lucide-react";
 import { toast } from "sonner";
 import type {
@@ -46,6 +47,8 @@ interface ApplicationsTabProps {
   total: number;
   roles: VolunteerRole[];
   breakdown: VolunteerBreakdown;
+  applicationUrl: string | null;
+  onSwitchToInvitations: () => void;
 }
 
 export function ApplicationsTab({
@@ -54,6 +57,8 @@ export function ApplicationsTab({
   total,
   roles,
   breakdown,
+  applicationUrl,
+  onSwitchToInvitations,
 }: ApplicationsTabProps) {
   const [isPending, startTransition] = useTransition();
   const { confirm, dialog: confirmDialog } = useConfirm();
@@ -288,9 +293,31 @@ export function ApplicationsTab({
       {/* Applications Table */}
       {filteredApps.length === 0 ? (
         <div className="rounded-xl border border-dashed bg-muted/20 py-12 text-center text-sm text-muted-foreground">
-          {initialApplications.length === 0
-            ? "No applications yet. Share your application portal to start receiving volunteers."
-            : "No applications match your filters."}
+          {initialApplications.length === 0 ? (
+            <div className="space-y-3">
+              <p>No applications yet. Share the portal link or send invitations to start recruiting.</p>
+              <div className="flex justify-center gap-2">
+                {applicationUrl && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      navigator.clipboard.writeText(applicationUrl);
+                      toast.success("Link copied to clipboard");
+                    }}
+                  >
+                    Copy Portal Link
+                  </Button>
+                )}
+                <Button size="sm" onClick={onSwitchToInvitations}>
+                  <Send className="mr-1 h-3.5 w-3.5" />
+                  Send Invitations
+                </Button>
+              </div>
+            </div>
+          ) : (
+            "No applications match your filters."
+          )}
         </div>
       ) : (
         <div className="rounded-xl border overflow-hidden">

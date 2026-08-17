@@ -205,7 +205,25 @@ export function InvitationsTab({
       {/* Invitation List */}
       {invitations.length === 0 ? (
         <div className="rounded-xl border border-dashed bg-muted/20 py-12 text-center text-sm text-muted-foreground">
-          No invitations sent yet. Send invitations to recruit volunteers.
+          <div className="space-y-3">
+            <p>No invitations sent yet. Send invitations or share the application link to recruit volunteers.</p>
+            <div className="flex justify-center gap-2">
+              {applicationUrl && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={copyLink}
+                >
+                  <Copy className="mr-1 h-3.5 w-3.5" />
+                  Copy Portal Link
+                </Button>
+              )}
+              <Button size="sm" onClick={() => setShowSendForm(true)}>
+                <Send className="mr-1 h-3.5 w-3.5" />
+                Send Invitations
+              </Button>
+            </div>
+          </div>
         </div>
       ) : (
         <div className="rounded-xl border overflow-hidden">

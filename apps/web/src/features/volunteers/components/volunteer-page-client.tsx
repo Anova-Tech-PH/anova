@@ -96,6 +96,8 @@ export function VolunteerPageClient({
           total={totalApplications}
           roles={roles}
           breakdown={breakdown}
+          applicationUrl={applicationUrl}
+          onSwitchToInvitations={() => setCurrentTab("invitations")}
         />
       )}
 
