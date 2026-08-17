@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useCallback } from "react";
 import { Camera, Plus, ImageIcon, Film } from "lucide-react";
 import { Button } from "@attendly/ui/components";
 import { PhotoCard } from "./photo-card";
 import { UploadPhotoDialog } from "./upload-photo-dialog";
+import { PhotoDetailModal } from "./photo-detail-modal";
 import { getPhotos } from "@/features/photos/queries";
 
 type Tab = "all" | "photos" | "videos";
@@ -44,8 +45,23 @@ export function PhotoGallery({
   const [activeTab, setActiveTab] = useState<Tab>("all");
   const [page, setPage] = useState(1);
   const [showUpload, setShowUpload] = useState(false);
+  const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
   const [isLoadingMore, startLoadingMore] = useTransition();
   const [isTabLoading, startTabLoading] = useTransition();
+
+  const handleLikeToggle = useCallback((photoId: string) => {
+    setPhotos((prev) =>
+      prev.map((p) =>
+        p.id === photoId
+          ? {
+              ...p,
+              is_liked: !p.is_liked,
+              likes_count: p.is_liked ? p.likes_count - 1 : p.likes_count + 1,
+            }
+          : p
+      )
+    );
+  }, []);
 
   const pageSize = 20;
   const hasMore = photos.length < total;
@@ -145,8 +161,14 @@ export function PhotoGallery({
       ) : (
         <>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {photos.map((photo) => (
-              <PhotoCard key={photo.id} photo={photo} />
+            {photos.map((photo, index) => (
+              <div
+                key={photo.id}
+                className="cursor-pointer"
+                onClick={() => setSelectedPhotoIndex(index)}
+              >
+                <PhotoCard photo={photo} />
+              </div>
             ))}
           </div>
 
@@ -169,6 +191,15 @@ export function PhotoGallery({
         eventId={eventId}
         open={showUpload}
         onClose={() => setShowUpload(false)}
+      />
+
+      {/* Photo Detail Modal */}
+      <PhotoDetailModal
+        photos={photos}
+        initialIndex={selectedPhotoIndex ?? 0}
+        open={selectedPhotoIndex !== null}
+        onClose={() => setSelectedPhotoIndex(null)}
+        onLikeToggle={handleLikeToggle}
       />
     </div>
   );
