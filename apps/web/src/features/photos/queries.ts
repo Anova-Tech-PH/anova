@@ -69,6 +69,16 @@ export async function getPhotos(
   };
 }
 
+export async function getPhotoComments(photoId: string) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("photo_comments")
+    .select("id, content, created_at, user_id")
+    .eq("photo_id", photoId)
+    .order("created_at", { ascending: true });
+  return data ?? [];
+}
+
 export async function getPhotoCount(eventId: string) {
   const supabase = await createClient();
 
