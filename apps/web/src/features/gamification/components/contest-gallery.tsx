@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useRef } from "react";
+import { useState, useTransition, useRef, useCallback } from "react";
 import {
   Heart,
   Send,
@@ -9,6 +9,7 @@ import {
   MessageSquare,
   Lightbulb,
   ImageIcon,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button, Card, Input } from "@attendly/ui/components";
@@ -19,6 +20,9 @@ import {
 import { uploadContestPhoto } from "../lib/upload";
 import type { Contest, ContestEntry } from "../contest-queries";
 import Link from "next/link";
+import type { BoothFrame } from "@/features/photo-booth/constants";
+import { FrameSelector } from "@/features/photos/components/frame-selector";
+import { renderFrameOnPhoto } from "@/features/photos/lib/render-frame";
 
 const TYPE_ICONS: Record<string, typeof Camera> = {
   photo: Camera,
@@ -38,12 +42,14 @@ export function ContestGallery({
   userLikes: initialLikes,
   userId,
   basePath,
+  frames = [],
 }: {
   contest: Contest;
   entries: ContestEntry[];
   userLikes: string[];
   userId: string | null;
   basePath: string;
+  frames?: BoothFrame[];
 }) {
   const [entries, setEntries] = useState(initialEntries);
   const [likedIds, setLikedIds] = useState(new Set(initialLikes));
@@ -51,6 +57,11 @@ export function ContestGallery({
   const [newText, setNewText] = useState("");
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Frame selection state for photo contests
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [pendingPreviewUrl, setPendingPreviewUrl] = useState<string | null>(null);
+  const [selectedFrameId, setSelectedFrameId] = useState<string | null>(null);
 
   const Icon = TYPE_ICONS[contest.type] ?? Camera;
   const label = TYPE_LABELS[contest.type] ?? contest.type;
@@ -102,15 +113,52 @@ export function ContestGallery({
     });
   }
 
-  // ── Photo upload ─────────────────────────────────────────
-  async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  // ── Photo upload (two-step: pick file → optional frame → submit) ──
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file || !userId) return;
 
+    // If frames are available, show the preview + frame selector
+    if (frames.length > 0) {
+      setPendingFile(file);
+      setPendingPreviewUrl(URL.createObjectURL(file));
+      setSelectedFrameId(null);
+    } else {
+      // No frames — upload directly
+      uploadPhoto(file);
+    }
+
+    // Reset input so the same file can be re-selected
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  const cancelPendingUpload = useCallback(() => {
+    if (pendingPreviewUrl) URL.revokeObjectURL(pendingPreviewUrl);
+    setPendingFile(null);
+    setPendingPreviewUrl(null);
+    setSelectedFrameId(null);
+  }, [pendingPreviewUrl]);
+
+  async function uploadPhoto(file: File) {
+    if (!userId) return;
+
     setUploading(true);
     try {
+      // Apply frame if selected
+      let uploadBlob: Blob = file;
+      if (selectedFrameId) {
+        const frame = frames.find((f) => f.id === selectedFrameId);
+        if (frame) {
+          uploadBlob = await renderFrameOnPhoto(file, {
+            template: frame.template,
+            message: frame.message,
+            color: frame.color,
+          });
+        }
+      }
+
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", new File([uploadBlob], file.name, { type: uploadBlob.type || file.type }));
       const imageUrl = await uploadContestPhoto(formData);
 
       const entry = await submitContestEntry(contest.id, userId, {
@@ -129,13 +177,15 @@ export function ContestGallery({
       };
       setEntries((prev) => [newEntry, ...prev]);
       toast.success("Photo submitted successfully!");
+
+      // Clear pending state
+      cancelPendingUpload();
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Failed to upload photo."
       );
     } finally {
       setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   }
 
@@ -253,22 +303,79 @@ export function ContestGallery({
         <>
           {/* Upload button */}
           {userId && contest.status === "active" && (
-            <div>
+            <div className="space-y-4">
               <input
                 ref={fileInputRef}
                 type="file"
                 accept="image/jpeg,image/png,image/webp,image/gif"
                 className="hidden"
-                onChange={handlePhotoUpload}
+                onChange={handleFileSelect}
               />
-              <Button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-                className="gap-2"
-              >
-                <Camera className="h-4 w-4" />
-                {uploading ? "Uploading..." : "Upload Photo"}
-              </Button>
+              {!pendingFile && (
+                <Button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="gap-2"
+                >
+                  <Camera className="h-4 w-4" />
+                  {uploading ? "Uploading..." : "Upload Photo"}
+                </Button>
+              )}
+
+              {/* Frame selection preview */}
+              {pendingFile && pendingPreviewUrl && (
+                <Card className="space-y-4 p-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-semibold">Preview &amp; Frame</h3>
+                    <button
+                      type="button"
+                      onClick={cancelPendingUpload}
+                      className="rounded-md p-1 text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  <div className="mx-auto max-w-xs overflow-hidden rounded-lg border">
+                    <img
+                      src={pendingPreviewUrl}
+                      alt="Photo preview"
+                      className="w-full object-contain"
+                    />
+                  </div>
+
+                  {frames.length > 0 && (
+                    <div>
+                      <p className="mb-2 text-xs font-medium text-muted-foreground">
+                        Select a frame (optional)
+                      </p>
+                      <FrameSelector
+                        frames={frames}
+                        selectedFrameId={selectedFrameId}
+                        onSelect={setSelectedFrameId}
+                      />
+                    </div>
+                  )}
+
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={cancelPendingUpload}
+                      disabled={uploading}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={() => uploadPhoto(pendingFile)}
+                      disabled={uploading}
+                      className="gap-2"
+                    >
+                      <Camera className="h-4 w-4" />
+                      {uploading ? "Uploading..." : "Submit Photo"}
+                    </Button>
+                  </div>
+                </Card>
+              )}
             </div>
           )}
 

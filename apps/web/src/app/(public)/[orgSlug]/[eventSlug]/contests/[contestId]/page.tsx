@@ -6,6 +6,7 @@ import {
   getUserLikes,
 } from "@/features/gamification/contest-queries";
 import { ContestGallery } from "@/features/gamification/components/contest-gallery";
+import { getBoothFrames } from "@/features/photo-booth/queries";
 
 export default async function ContestDetailPage({
   params,
@@ -54,6 +55,9 @@ export default async function ContestDetailPage({
     userLikes = Array.from(likesSet);
   }
 
+  // Fetch booth frames for photo contests
+  const frames = contest.type === "photo" ? await getBoothFrames(event.id) : [];
+
   return (
     <div className="mx-auto max-w-2xl space-y-6 px-4 py-8">
       <ContestGallery
@@ -62,6 +66,7 @@ export default async function ContestDetailPage({
         userLikes={userLikes}
         userId={user?.id ?? null}
         basePath={`/${orgSlug}/${eventSlug}/contests`}
+        frames={frames}
       />
     </div>
   );
