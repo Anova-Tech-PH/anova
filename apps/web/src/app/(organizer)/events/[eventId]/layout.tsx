@@ -166,9 +166,8 @@ export default async function EventLayout({
     {
       label: "Outreach",
       icon: "globe" as const,
-      firstHref: `/events/${eventId}/website`,
+      firstHref: `/events/${eventId}/emails`,
       items: [
-        { href: `/events/${eventId}/website`, label: "Website", icon: "globe" },
         { href: `/events/${eventId}/emails`, label: "Emails", icon: "mail" },
         { href: `/events/${eventId}/certificates`, label: "Certificates", icon: "award" },
         { href: `/events/${eventId}/marketing`, label: "Marketing", icon: "globe" },
