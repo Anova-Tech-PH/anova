@@ -151,7 +151,16 @@ export default async function EventLayout({
         { href: `/events/${eventId}/floormap`, label: "Floormap", icon: "map" },
         { href: `/events/${eventId}/announcement-wall`, label: "Announcement Wall", icon: "monitor" },
         { href: `/events/${eventId}/polls`, label: "Live Polling", icon: "bar-chart-2" },
-        { href: "#", label: "Photos", icon: "camera", disabled: true },
+        {
+          href: `/events/${eventId}/photos`,
+          label: "Photos",
+          icon: "camera",
+          children: [
+            { href: `/events/${eventId}/photos`, label: "Photo Collection" },
+            { href: `/events/${eventId}/photos/booth`, label: "Photo Booth" },
+            { href: `/events/${eventId}/photos/frames`, label: "Profile Photo Frames" },
+          ],
+        },
       ],
     },
     {
