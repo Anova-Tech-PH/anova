@@ -22,7 +22,7 @@ export async function issueRefund(data: {
   const { data: order } = await supabase
     .from("orders")
     .select(
-      "*, registrations(id, event_id), events:event_id(organization_id, stripe_account_id, organizations(stripe_account_id))",
+      "*, registrations!registration_id(id, event_id), events:event_id(organization_id, stripe_account_id, organizations(stripe_account_id))",
     )
     .eq("id", data.orderId)
     .single();

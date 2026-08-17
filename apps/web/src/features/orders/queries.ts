@@ -19,7 +19,7 @@ export async function getOrders(eventId: string): Promise<OrderRow[]> {
 
   const { data, error } = await supabase
     .from("orders")
-    .select("*, registrations(ticket_types(name))")
+    .select("*, registrations!registration_id(ticket_types(name))")
     .eq("event_id", eventId)
     .neq("status", "pending")
     .order("created_at", { ascending: false });
