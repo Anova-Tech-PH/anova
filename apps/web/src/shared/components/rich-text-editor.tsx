@@ -159,7 +159,13 @@ export function RichTextEditor({
   });
 
   useEffect(() => {
-    if (editor && !editor.isDestroyed && content !== editor.getHTML()) {
+    if (!editor || editor.isDestroyed) return;
+    const editorHtml = editor.getHTML();
+    // Don't sync if both are effectively empty
+    const editorEmpty = !editorHtml || editorHtml === "<p></p>";
+    const contentEmpty = !content || content === "<p></p>";
+    if (editorEmpty && contentEmpty) return;
+    if (content !== editorHtml) {
       editor.commands.setContent(content, { emitUpdate: false });
     }
   }, [content, editor]);
