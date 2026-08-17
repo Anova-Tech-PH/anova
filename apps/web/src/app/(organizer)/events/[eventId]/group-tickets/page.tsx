@@ -1,20 +1,30 @@
+import { getGroupTicketsWithCounts } from "@/features/tickets/group-tickets-queries";
+import { GroupTicketList } from "@/features/tickets/components/group-ticket-list";
 import { Users } from "lucide-react";
-import { ComingSoon } from "@/features/speakers/components/coming-soon";
 
-export default function GroupTicketsPage() {
+export default async function GroupTicketsPage({
+  params,
+}: {
+  params: Promise<{ eventId: string }>;
+}) {
+  const { eventId } = await params;
+  const tickets = await getGroupTicketsWithCounts(eventId);
+
   return (
-    <div className="space-y-8">
-      <div>
-        <h2 className="text-lg font-semibold">Group Tickets</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Manage group ticket types and bundle configurations.
-        </p>
+    <div className="space-y-6">
+      <div className="flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[oklch(0.445_0.107_195_/_0.1)]">
+          <Users className="h-5 w-5 text-[oklch(0.445_0.107_195)]" />
+        </div>
+        <div>
+          <h2 className="text-2xl font-semibold">Group Tickets</h2>
+          <p className="text-sm text-muted-foreground">
+            Sell more tickets by offering bulk purchase discounts.
+          </p>
+        </div>
       </div>
-      <ComingSoon
-        title="Group Tickets"
-        description="Create group ticket bundles that allow team leads to register multiple attendees at once. Configure group sizes and member information forms."
-        icon={<Users className="h-7 w-7" />}
-      />
+
+      <GroupTicketList eventId={eventId} initialTickets={tickets} />
     </div>
   );
 }

@@ -8,8 +8,9 @@ import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@attendly/ui/cn";
 import {
   BarChart2, BarChart3, Calendar, CalendarCheck, CalendarClock, Camera, CircleDot, ClipboardList,
-  DoorOpen, IdCard, LayoutGrid, ListChecks, Mail, Map, Megaphone, Mic, Monitor,
-  MessageSquare, Globe, QrCode, Rocket, Settings, Shield, Tag, Ticket, Trophy, Users, Award, Zap,
+  DoorOpen, FileText, Filter, Gauge, HandHelping, IdCard, LayoutGrid, Link as LinkIcon, ListChecks,
+  LogOut, Mail, Map, Megaphone, Mic, Monitor, MessageSquare, Globe, Plug, QrCode, Rocket, Settings,
+  Shield, Tag, Ticket, Trophy, Users, Award, Zap,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { isGroupActive, type TopTabGroup, type TabItem } from "./event-top-tabs";
@@ -22,14 +23,21 @@ const iconMap: Record<string, LucideIcon> = {
   "calendar-check": CalendarCheck,
   "clipboard-list": ClipboardList,
   "door-open": DoorOpen,
+  "file-text": FileText,
+  filter: Filter,
+  gauge: Gauge,
   globe: Globe,
+  "hand-helping": HandHelping,
   "id-card": IdCard,
   "layout-grid": LayoutGrid,
+  link: LinkIcon,
   "list-checks": ListChecks,
+  "log-out": LogOut,
   mail: Mail,
   megaphone: Megaphone,
   mic: Mic,
   "message-square": MessageSquare,
+  plug: Plug,
   "qr-code": QrCode,
   rocket: Rocket,
   settings: Settings,

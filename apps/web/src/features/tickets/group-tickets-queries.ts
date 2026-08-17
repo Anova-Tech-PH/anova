@@ -1,13 +1,29 @@
 import { createClient } from "@attendly/ui/supabase/server";
 
-export async function getGroupTickets(eventId: string) {
+export async function getGroupTicketsWithCounts(eventId: string) {
   const supabase = await createClient();
-  const { data, error } = await supabase
+  const { data: tickets, error } = await supabase
     .from("ticket_types")
     .select("*")
     .eq("event_id", eventId)
     .gt("group_size", 1)
     .order("sort_order");
   if (error) throw new Error(error.message);
-  return data;
+
+  // Get registration counts per ticket type
+  const { data: counts } = await supabase
+    .from("registrations")
+    .select("ticket_type_id")
+    .eq("event_id", eventId)
+    .in("status", ["confirmed", "checked_in"]);
+
+  const countMap: Record<string, number> = {};
+  for (const r of counts ?? []) {
+    countMap[r.ticket_type_id] = (countMap[r.ticket_type_id] ?? 0) + 1;
+  }
+
+  return tickets.map((t) => ({
+    ...t,
+    sold: countMap[t.id] ?? 0,
+  }));
 }
