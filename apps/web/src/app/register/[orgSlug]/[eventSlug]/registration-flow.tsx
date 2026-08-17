@@ -82,6 +82,7 @@ export function RegistrationFlow({
   } | null>(null);
 
   // Promo code state
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [promoOpen, setPromoOpen] = useState(false);
   const [promoInput, setPromoInput] = useState("");
   const [promoLoading, setPromoLoading] = useState(false);
@@ -135,6 +136,7 @@ export function RegistrationFlow({
     e.preventDefault();
     if (!selectedTicket) return;
     setLoading(true);
+    setSubmitError(null);
 
     try {
       // Build custom_fields from dynamic values
@@ -179,7 +181,9 @@ export function RegistrationFlow({
       });
       setConfirmation(reg);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Registration failed");
+      const message = err instanceof Error ? err.message : "Registration failed";
+      setSubmitError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -455,6 +459,12 @@ export function RegistrationFlow({
               )}
             </div>
           ))}
+
+          {submitError && (
+            <div className="rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-700">
+              {submitError}
+            </div>
+          )}
 
           <Button
             type="submit"

@@ -58,10 +58,8 @@ export async function POST(request: NextRequest) {
       accountId = account.id;
 
       // Save account ID using service role to bypass RLS
-      const { createClient: createAdminClient } = await import(
-        "@supabase/supabase-js"
-      );
-      const adminSupabase = createAdminClient(
+      const supabaseJs = await import("@supabase/supabase-js");
+      const adminSupabase = supabaseJs.createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.SUPABASE_SERVICE_ROLE_KEY!
       );
@@ -72,6 +70,7 @@ export async function POST(request: NextRequest) {
         .eq("id", organizationId);
 
       if (updateError) {
+        console.error("Failed to save Stripe account:", updateError);
         return NextResponse.json(
           { error: "Failed to save Stripe account" },
           { status: 500 }

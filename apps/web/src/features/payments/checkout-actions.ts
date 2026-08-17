@@ -131,10 +131,8 @@ export async function createCheckoutSession(data: {
     }
 
     // 7. Create service-role client for inserting records (bypasses RLS)
-    const { createClient: createAdminClient } = await import(
-      "@supabase/supabase-js"
-    );
-    const adminSupabase = createAdminClient(
+    const supabaseJs = await import("@supabase/supabase-js");
+    const adminSupabase = supabaseJs.createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
