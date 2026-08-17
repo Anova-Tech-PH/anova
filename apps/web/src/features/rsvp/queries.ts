@@ -30,33 +30,33 @@ export async function getSessionRsvpSummaries(eventId: string): Promise<RsvpSumm
     .order("start_time", { ascending: true });
 
   if (error) throw new Error(error.message);
+  if (!sessions || sessions.length === 0) return [];
 
-  const summaries: RsvpSummary[] = [];
-  for (const session of sessions ?? []) {
-    const { count: confirmedCount } = await supabase
-      .from("session_rsvps")
-      .select("*", { count: "exact", head: true })
-      .eq("session_id", session.id)
-      .eq("status", "confirmed");
+  const sessionIds = sessions.map((s) => s.id);
 
-    const { count: waitlistedCount } = await supabase
-      .from("session_rsvps")
-      .select("*", { count: "exact", head: true })
-      .eq("session_id", session.id)
-      .eq("status", "waitlisted");
+  // Fetch all RSVPs in one query instead of N+1
+  const { data: rsvps } = await supabase
+    .from("session_rsvps")
+    .select("session_id, status")
+    .in("session_id", sessionIds)
+    .in("status", ["confirmed", "waitlisted"]);
 
-    summaries.push({
-      session_id: session.id,
-      title: session.title,
-      start_time: session.start_time,
-      capacity: session.capacity,
-      rsvp_enabled: session.rsvp_enabled,
-      confirmed_count: confirmedCount ?? 0,
-      waitlisted_count: waitlistedCount ?? 0,
-    });
+  const countMap: Record<string, { confirmed: number; waitlisted: number }> = {};
+  for (const r of rsvps ?? []) {
+    if (!countMap[r.session_id]) countMap[r.session_id] = { confirmed: 0, waitlisted: 0 };
+    if (r.status === "confirmed") countMap[r.session_id].confirmed++;
+    else if (r.status === "waitlisted") countMap[r.session_id].waitlisted++;
   }
 
-  return summaries;
+  return sessions.map((session) => ({
+    session_id: session.id,
+    title: session.title,
+    start_time: session.start_time,
+    capacity: session.capacity,
+    rsvp_enabled: session.rsvp_enabled,
+    confirmed_count: countMap[session.id]?.confirmed ?? 0,
+    waitlisted_count: countMap[session.id]?.waitlisted ?? 0,
+  }));
 }
 
 export async function getSessionRsvpAttendees(sessionId: string): Promise<(SessionRsvp & { name?: string; email?: string })[]> {
