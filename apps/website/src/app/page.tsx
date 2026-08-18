@@ -1,654 +1,534 @@
 import Image from "next/image";
+import { HeroVideo } from "@/components/hero-video";
 
 const APP_URL = "https://app.eventriv.com";
 
-function GridIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path d="M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z" />
-    </svg>
-  );
-}
+const STATS = [
+  { num: "5min", label: "From signup to a live event page" },
+  { num: "1", label: "Tool instead of five" },
+  { num: "\u221E", label: "Events on the free plan" },
+  { num: "$0", label: "Early access pricing" },
+];
 
-function ArrowIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        d="M14 5l7 7m0 0l-7 7m7-7H3"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-      />
-    </svg>
-  );
-}
+const STEPS = [
+  {
+    num: "01",
+    title: "Create the event",
+    copy: "Tickets, schedule, speakers, and the details attendees ask about \u2014 set up in one guided flow and published when you decide.",
+  },
+  {
+    num: "02",
+    title: "Share one link",
+    copy: "Every event gets a public page carrying registration, programme, and venue information. Send the link; that is the whole distribution step.",
+  },
+  {
+    num: "03",
+    title: "Run the day",
+    copy: "Track registrations, scan people in with QR codes, and message attendees from the same dashboard you built the event in.",
+  },
+];
+
+const USE_CASES = [
+  {
+    title: "Conferences",
+    copy: "Multi-day programmes, speaker management, parallel tracks, and breakout rooms that stay in sync.",
+    tags: ["Multi-day", "Tracks", "Speakers"],
+  },
+  {
+    title: "Meetups",
+    copy: "Duplicate last month\u2019s event, open registration, scan people in at the door. Recurring without the admin.",
+    tags: ["Recurring", "QR check-in"],
+  },
+  {
+    title: "Workshops",
+    copy: "Hard capacity caps, prerequisites collected up front, and direct messaging to everyone in the room.",
+    tags: ["Capacity caps", "Messaging"],
+  },
+];
+
+const PLAN_FEATURES = [
+  "Unlimited events",
+  "Ticketing and registration",
+  "Multi-track schedules",
+  "Speaker management",
+  "QR code check-in",
+  "Attendee messaging",
+  "Analytics dashboard",
+  "Public event pages",
+];
+
+const FAQS = [
+  {
+    q: "Is Eventriv really free?",
+    a: "Yes. Every feature is free during early access \u2014 no credit card and no trial clock. Paid plans come later for advanced needs, and the core keeps a free tier.",
+  },
+  {
+    q: "How long does setup take?",
+    a: "Under five minutes. Create the event, add tickets and a schedule, publish the page. Everything else can be filled in later.",
+  },
+  {
+    q: "Do I need technical skills?",
+    a: "No. If you can fill out a form, you can run an event on Eventriv.",
+  },
+  {
+    q: "What kinds of events fit?",
+    a: "Conferences, meetups, workshops, seminars, and community events \u2014 from ten people to ten thousand.",
+  },
+  {
+    q: "How does QR check-in work?",
+    a: "Each registrant gets a unique code. At the door, scan it with any phone camera or the built-in scanner. No extra hardware.",
+  },
+  {
+    q: "Can I customise the event page?",
+    a: "Yes. Every event gets a public page with details, schedule, speakers, and registration, and you control what appears on it.",
+  },
+];
 
 export default function HomePage() {
   return (
     <div className="min-h-screen">
-      {/* Nav */}
-      <header className="bg-surface/80 backdrop-blur-md w-full top-0 sticky z-50 border-b border-outline-variant/30 transition-all duration-300">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
-          <div className="flex items-center gap-8">
-            <a
-              className="font-display text-2xl font-bold text-primary flex items-center gap-2 group"
-              href="#"
-            >
-              <GridIcon className="w-6 h-6 fill-current group-hover:scale-110 transition-transform" />
-              Eventriv
+      {/* ── Header ── */}
+      <header className="sticky top-0 z-30 h-[74px] border-b border-white/10 [background:rgba(8,8,10,0.82)] [backdrop-filter:blur(14px)]">
+        <div className="mx-auto flex h-full max-w-[1240px] items-center gap-9 [padding:0_clamp(20px,5vw,64px)]">
+          <a
+            href="#"
+            className="text-[20px] font-[800] tracking-[-0.04em] text-on-surface"
+          >
+            EVEN
+            <span className="bg-[image:var(--gradient-brand)] bg-clip-text text-transparent [--gradient-brand:linear-gradient(100deg,#8b3dff,#ff2f92_60%,#ff8a3d)]">
+              TRIV
+            </span>
+          </a>
+          <nav className="mr-auto hidden items-center gap-[30px] text-[11px] font-semibold uppercase tracking-[0.22em] text-on-surface-variant md:flex">
+            <a href="#product" className="transition-colors hover:text-accent-pink">
+              Product
             </a>
-            <nav className="hidden md:flex space-x-6">
-              <a
-                href="#features"
-                className="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors"
-              >
-                Features
-              </a>
-              <a
-                href="#use-cases"
-                className="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors"
-              >
-                Use Cases
-              </a>
-              <a
-                href="#pricing"
-                className="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors"
-              >
-                Pricing
-              </a>
-            </nav>
-          </div>
-          <div className="flex items-center space-x-4">
-            <a
-              href={`${APP_URL}/login`}
-              className="hidden sm:block text-sm font-medium text-on-surface hover:text-primary transition-colors"
-            >
-              Log In
+            <a href="#use-cases" className="transition-colors hover:text-accent-pink">
+              Use cases
             </a>
-            <a
-              href={`${APP_URL}/signup`}
-              className="inline-flex items-center justify-center rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary transition-all active:scale-95"
-            >
-              Get Early Access
+            <a href="#pricing" className="transition-colors hover:text-accent-pink">
+              Pricing
             </a>
-          </div>
+            <a href="#faq" className="transition-colors hover:text-accent-pink">
+              FAQ
+            </a>
+          </nav>
+          <a
+            href={`${APP_URL}/login`}
+            className="hidden text-[13px] font-semibold text-on-surface-variant transition-colors hover:text-accent-pink sm:block"
+          >
+            Log in
+          </a>
+          <a
+            href={`${APP_URL}/signup`}
+            className="rounded-[2px] px-5 py-[11px] text-[13px] font-bold text-white [background:linear-gradient(100deg,#8b3dff,#ff2f92_62%,#ff8a3d)] hover:brightness-[0.94] transition-[filter]"
+          >
+            Get early access
+          </a>
         </div>
       </header>
 
       <main>
-        {/* Hero */}
-        <section className="pt-24 pb-16 md:pt-32 md:pb-24 overflow-hidden relative">
-          <div className="absolute inset-0 mesh-gradient -z-10" />
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-            <p className="text-sm font-medium uppercase tracking-widest text-primary mb-6">
-              Stop juggling spreadsheets, emails, and five different tools
-            </p>
-            <h1 className="font-display text-5xl md:text-7xl lg:text-8xl tracking-tight text-on-surface mx-auto max-w-4xl leading-[1.1] font-bold relative [text-wrap:balance]">
-              Everything your event needs.{" "}
-              <br />
-              <span className="text-primary">One place.</span>
+        {/* ── Hero ── */}
+        <section className="relative overflow-hidden border-b border-white/10">
+          {/* Radial glows */}
+          <div
+            className="pointer-events-none absolute"
+            style={{
+              top: "-30%",
+              left: "-10%",
+              width: "70vw",
+              height: "120%",
+              background:
+                "radial-gradient(closest-side, rgba(139,61,255,0.22), transparent)",
+            }}
+          />
+          <div
+            className="pointer-events-none absolute"
+            style={{
+              top: "10%",
+              right: "-15%",
+              width: "60vw",
+              height: "100%",
+              background:
+                "radial-gradient(closest-side, rgba(255,47,146,0.16), transparent)",
+            }}
+          />
+
+          <div className="relative mx-auto max-w-[1240px] [padding:clamp(64px,9vw,120px)_clamp(20px,5vw,64px)_0]">
+            {/* Meta row */}
+            <div className="flex flex-wrap justify-between gap-4 text-[11px] font-semibold uppercase tracking-[0.24em]">
+              <span className="text-outline">Event operations 0.1</span>
+              <span className="text-on-surface-variant">
+                Conferences / Meetups / Workshops
+              </span>
+            </div>
+
+            {/* Hairline */}
+            <div className="my-[26px] h-px bg-white/10 [margin-bottom:clamp(48px,7vw,84px)]" />
+
+            {/* H1 */}
+            <h1 className="font-[800] uppercase leading-[0.86] tracking-[-0.05em] [font-size:clamp(52px,10.5vw,168px)] [margin-left:-0.05em]">
+              <span className="block">Everything</span>
+              <span className="block">your event</span>
+              <span className="block bg-[image:linear-gradient(96deg,#8b3dff_4%,#ff2f92_48%,#ff8a3d_92%)] bg-clip-text text-transparent">
+                needs.
+              </span>
             </h1>
-            <p className="mt-8 text-lg md:text-xl text-on-surface-variant max-w-2xl mx-auto leading-relaxed">
-              Create, manage, and run conferences, meetups, and workshops — set
-              up in under 5 minutes, not weeks.
-            </p>
-            <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <a
-                href={`${APP_URL}/signup`}
-                className="inline-flex items-center justify-center rounded-full bg-primary px-8 py-3.5 text-base font-semibold text-white shadow-lg shadow-primary/30 hover:bg-primary-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary transition-all active:scale-95 group"
-              >
-                Get early access
-                <ArrowIcon className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </a>
-            </div>
-            <p className="mt-4 text-sm text-outline">
-              Free while in early access. No credit card required.
-            </p>
 
-            {/* Composite Mockup */}
-            <div className="mt-20 mx-auto max-w-5xl relative">
-              {/* Main — Schedule (full, dominant) */}
-              <div className="rounded-2xl md:rounded-[2rem] bg-white/50 backdrop-blur-xl p-2 md:p-4 border border-outline-variant/30 shadow-2xl relative z-10 animate-float">
-                <div className="absolute top-4 left-6 flex gap-2 z-20">
-                  <div className="w-3 h-3 rounded-full bg-outline-variant/50" />
-                  <div className="w-3 h-3 rounded-full bg-outline-variant/50" />
-                  <div className="w-3 h-3 rounded-full bg-outline-variant/50" />
+            {/* Two-column: copy + buttons */}
+            <div className="mt-[clamp(40px,5vw,64px)] grid items-end gap-8 pb-[clamp(48px,7vw,88px)] [grid-template-columns:1fr] md:gap-[32px_clamp(32px,6vw,96px)] md:[grid-template-columns:1fr_1fr]">
+              <p className="m-0 max-w-[52ch] text-[17px] leading-[1.65] text-on-surface-variant">
+                Ticketing, multi-track schedules, speaker management, and door
+                check-in in one place. Set up in under five minutes — not weeks
+                of spreadsheets, email threads, and five different tools.
+              </p>
+              <div className="flex flex-col items-start gap-4">
+                <div className="flex flex-wrap gap-3">
+                  <a
+                    href={`${APP_URL}/signup`}
+                    className="rounded-[2px] px-[26px] py-[15px] text-[14px] font-bold text-white [background:linear-gradient(100deg,#8b3dff,#ff2f92_62%,#ff8a3d)] hover:brightness-[0.94] transition-[filter]"
+                  >
+                    Start an event
+                  </a>
+                  <a
+                    href="#product"
+                    className="rounded-[2px] border border-white/[0.22] px-[26px] py-[15px] text-[14px] font-bold text-on-surface transition-colors hover:border-white/[0.38]"
+                  >
+                    See how it works
+                  </a>
                 </div>
-                <Image
-                  src="/screenshots/schedule.png"
-                  alt="Schedule builder with speakers, tracks, and sessions"
-                  width={1920}
-                  height={1080}
-                  className="w-full h-auto rounded-xl md:rounded-2xl border border-outline-variant/20 shadow-sm object-cover object-top aspect-[16/12]"
-                  priority
-                />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-outline">
+                  Free while in early access — no credit card
+                </span>
               </div>
-
-              {/* Floating accent — Ticket selection (bottom-right) */}
-              <div className="hidden md:block absolute -right-8 lg:-right-16 -bottom-10 w-[280px] lg:w-[320px] rounded-2xl bg-white/90 backdrop-blur-xl p-2.5 border border-primary/20 shadow-xl shadow-primary/10 z-20 rotate-2 hover:rotate-0 hover:shadow-primary/20 transition-all duration-500">
-                <Image
-                  src="/screenshots/public-event.png"
-                  alt="Public event page with ticket selection"
-                  width={1920}
-                  height={1080}
-                  className="w-full h-auto rounded-xl border border-outline-variant/20 shadow-sm object-cover object-top aspect-[4/3]"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Decorative gradients */}
-          <div
-            aria-hidden="true"
-            className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
-          >
-            <div className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-primary to-primary/20 opacity-40 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]" />
-          </div>
-          <div
-            aria-hidden="true"
-            className="absolute right-0 top-1/4 -z-10 transform-gpu overflow-hidden blur-3xl"
-          >
-            <div className="relative right-0 aspect-square w-[30rem] translate-x-1/3 rounded-full bg-gradient-to-br from-primary/30 to-transparent opacity-50" />
-          </div>
-        </section>
-
-        {/* How It Works */}
-        <section className="py-20 md:py-32 bg-primary/5 border-y border-primary/10 relative">
-          <div className="absolute left-8 top-8 w-16 h-16 border-4 border-primary/10 rounded-full" />
-          <div className="absolute right-12 bottom-12 w-24 h-24 bg-primary/5 rounded-full blur-xl" />
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div className="max-w-2xl mb-16">
-              <h2 className="text-sm font-semibold uppercase tracking-widest text-primary">
-                How it works
-              </h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-16">
-              {[
-                {
-                  num: "1",
-                  title: "Create your event",
-                  desc: "Set up your event with tickets, schedule, and speakers in a guided flow. Publish when you\u2019re ready.",
-                },
-                {
-                  num: "2",
-                  title: "Share your page",
-                  desc: "Every event gets a public page with registration, schedule, and all the details. Just share the link.",
-                },
-                {
-                  num: "3",
-                  title: "Manage everything",
-                  desc: "Track registrations, check in attendees with QR codes, and communicate \u2014 all from one dashboard.",
-                },
-              ].map((step) => (
-                <div
-                  key={step.num}
-                  className="relative group bg-white p-8 rounded-2xl shadow-sm border border-outline-variant/20 hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
-                >
-                  <span className="block text-5xl font-display text-primary mb-6 font-bold transition-transform group-hover:scale-110 origin-left">
-                    {step.num}
-                  </span>
-                  <h3 className="text-xl font-semibold text-on-surface mb-3">
-                    {step.title}
-                  </h3>
-                  <p className="text-on-surface-variant leading-relaxed [text-wrap:balance]">
-                    {step.desc}
-                  </p>
-                </div>
-              ))}
             </div>
           </div>
         </section>
 
-        {/* Feature Showcases */}
+        {/* ── Hero Video ── */}
+        <HeroVideo />
+
+        {/* ── Stat Row ── */}
+        <section className="mx-auto max-w-[1240px] border-b border-white/10 [padding:clamp(48px,6vw,72px)_clamp(20px,5vw,64px)]">
+          <div className="grid grid-cols-2 gap-9 md:grid-cols-4 md:gap-[36px_28px]">
+            {STATS.map((stat) => (
+              <div key={stat.label}>
+                <p className="m-0 font-[800] leading-none tracking-[-0.045em] [font-size:clamp(34px,4vw,58px)] [margin-left:-0.04em] bg-[image:linear-gradient(100deg,#8b3dff,#ff2f92_60%,#ff8a3d)] bg-clip-text text-transparent">
+                  {stat.num}
+                </p>
+                <p className="mt-4 text-[11px] font-semibold leading-[1.5] uppercase tracking-[0.2em] text-outline">
+                  {stat.label}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── How It Works ── */}
         <section
-          id="features"
-          className="py-20 md:py-32 bg-surface relative"
+          id="product"
+          className="mx-auto max-w-[1240px] [padding:clamp(64px,8vw,104px)_clamp(20px,5vw,64px)_clamp(40px,5vw,64px)]"
         >
-          <div className="absolute right-0 top-1/4 w-32 h-32 bg-primary/5 rounded-l-full blur-2xl" />
-          <div className="absolute left-0 bottom-1/4 w-40 h-40 bg-primary/5 rounded-r-full blur-2xl" />
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col gap-32 relative z-10">
-            {/* Feature 1: Schedule */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center">
-              <div className="order-2 lg:order-1 relative rounded-2xl bg-white border border-primary/20 p-2 shadow-xl shadow-primary/5 group hover:shadow-primary/10 transition-shadow">
-                <Image
-                  src="/screenshots/schedule.png"
-                  alt="Interactive Schedule Builder Interface"
-                  width={1920}
-                  height={1080}
-                  className="w-full rounded-xl border border-outline-variant/20 shadow-sm"
-                />
-              </div>
-              <div className="order-1 lg:order-2 bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-outline-variant/20 border-l-4 border-l-primary hover:shadow-md transition-shadow">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-6">
-                  <svg
-                    className="w-6 h-6 text-primary"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                    />
-                  </svg>
-                </div>
-                <h2 className="text-sm font-semibold uppercase tracking-widest text-primary mb-2">
-                  Schedule
-                </h2>
-                <h3 className="font-display text-4xl lg:text-5xl font-medium text-on-surface mb-6 [text-wrap:balance]">
-                  Your schedule, organized
-                </h3>
-                <p className="text-lg text-on-surface-variant leading-relaxed">
-                  Build multi-track schedules with sessions, speakers, and
-                  breakout rooms. Attendees see a clear timeline — you see
-                  who&apos;s going where.
-                </p>
-              </div>
+          <span className="mb-[18px] block text-[11px] font-semibold uppercase tracking-[0.24em] text-outline">
+            How it works
+          </span>
+          {STEPS.map((step) => (
+            <div
+              key={step.num}
+              className="grid items-baseline gap-5 border-t border-white/10 py-9 [grid-template-columns:1fr] md:gap-[20px_clamp(24px,4vw,72px)] md:[grid-template-columns:minmax(56px,120px)_minmax(0,400px)_minmax(0,1fr)]"
+            >
+              <p className="m-0 text-[13px] font-[800] tracking-[0.18em] text-accent-pink [font-feature-settings:'tnum'_1]">
+                {step.num}
+              </p>
+              <h2 className="m-0 font-[800] leading-[1.15] tracking-[-0.03em] [font-size:clamp(22px,2.4vw,30px)] [margin-left:-0.03em]">
+                {step.title}
+              </h2>
+              <p className="m-0 max-w-[54ch] text-[15.5px] leading-[1.7] text-on-surface-variant">
+                {step.copy}
+              </p>
             </div>
+          ))}
+        </section>
 
-            {/* Feature 2: Registration */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center">
-              <div className="bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-outline-variant/20 border-r-4 border-r-primary hover:shadow-md transition-shadow">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-6">
-                  <svg
-                    className="w-6 h-6 text-primary"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                    />
-                  </svg>
-                </div>
-                <h2 className="text-sm font-semibold uppercase tracking-widest text-primary mb-2">
-                  Registration
-                </h2>
-                <h3 className="font-display text-4xl lg:text-5xl font-medium text-on-surface mb-6 [text-wrap:balance]">
-                  Registration that works
-                </h3>
-                <p className="text-lg text-on-surface-variant leading-relaxed">
-                  Create ticket types, set capacity limits, and collect the info
-                  you need. Every registrant gets a QR code for check-in at the
-                  door.
-                </p>
-              </div>
-              <div className="relative rounded-2xl bg-white border border-primary/20 p-2 shadow-xl shadow-primary/5 group hover:shadow-primary/10 transition-shadow">
-                <Image
-                  src="/screenshots/event-detail.png"
-                  alt="Event Ticketing and Registration Setup"
-                  width={1920}
-                  height={1080}
-                  className="w-full rounded-xl border border-outline-variant/20 shadow-sm"
-                />
-              </div>
+        {/* ── Product Sections ── */}
+        <section className="mx-auto max-w-[1240px] [padding:0_clamp(20px,5vw,64px)_clamp(64px,8vw,96px)]">
+          {/* Schedule */}
+          <div className="grid items-center gap-8 border-t border-white/10 [padding:clamp(48px,6vw,72px)_0] [grid-template-columns:1fr] lg:gap-[32px_clamp(32px,5vw,88px)] lg:[grid-template-columns:minmax(0,5fr)_minmax(0,7fr)]">
+            <div>
+              <span className="mb-[18px] block text-[11px] font-semibold uppercase tracking-[0.24em] text-accent-pink">
+                Schedule
+              </span>
+              <h2 className="font-[800] leading-[1.04] tracking-[-0.04em] [font-size:clamp(28px,3.4vw,44px)] [margin-left:-0.03em]">
+                Multi-track, one timeline
+              </h2>
+              <p className="mt-[22px] max-w-[46ch] text-[15.5px] leading-[1.7] text-on-surface-variant">
+                Build sessions, tracks, and breakout rooms against a single
+                clock. Attendees read one clear timeline; you see who is going
+                where and what is about to fill up.
+              </p>
             </div>
+            <div className="overflow-hidden rounded-[3px] border border-white/[0.14] bg-surface-container">
+              <Image
+                src="/screenshots/schedule.png"
+                alt="Multi-track schedule builder"
+                width={1920}
+                height={1080}
+                className="w-full"
+              />
+            </div>
+          </div>
 
-            {/* Feature 3: Dashboard */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center">
-              <div className="order-2 lg:order-1 relative rounded-2xl bg-white border border-primary/20 p-2 shadow-xl shadow-primary/5 group hover:shadow-primary/10 transition-shadow">
-                <Image
-                  src="/screenshots/public-event.png"
-                  alt="Event Analytics Dashboard"
-                  width={1920}
-                  height={1080}
-                  className="w-full rounded-xl border border-outline-variant/20 shadow-sm"
-                />
-              </div>
-              <div className="order-1 lg:order-2 bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-outline-variant/20 border-l-4 border-l-primary hover:shadow-md transition-shadow">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-6">
-                  <svg
-                    className="w-6 h-6 text-primary"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                    />
-                  </svg>
-                </div>
-                <h2 className="text-sm font-semibold uppercase tracking-widest text-primary mb-2">
-                  Dashboard
-                </h2>
-                <h3 className="font-display text-4xl lg:text-5xl font-medium text-on-surface mb-6 [text-wrap:balance]">
-                  Know what&apos;s happening
-                </h3>
-                <p className="text-lg text-on-surface-variant leading-relaxed">
-                  See total registrations, check-in rates, and upcoming events at
-                  a glance. No digging through spreadsheets — it&apos;s all there
-                  when you open the app.
-                </p>
-              </div>
+          {/* Registration */}
+          <div className="grid items-center gap-8 border-t border-white/10 [padding:clamp(48px,6vw,72px)_0] [grid-template-columns:1fr] lg:gap-[32px_clamp(32px,5vw,88px)] lg:[grid-template-columns:minmax(0,7fr)_minmax(0,5fr)]">
+            <div className="order-2 lg:order-1 overflow-hidden rounded-[3px] border border-white/[0.14] bg-surface-container">
+              <Image
+                src="/screenshots/event-detail.png"
+                alt="Ticket types and QR check-in"
+                width={1920}
+                height={1080}
+                className="w-full"
+              />
+            </div>
+            <div className="order-1 lg:order-2">
+              <span className="mb-[18px] block text-[11px] font-semibold uppercase tracking-[0.24em] text-accent-pink">
+                Registration
+              </span>
+              <h2 className="font-[800] leading-[1.04] tracking-[-0.04em] [font-size:clamp(28px,3.4vw,44px)] [margin-left:-0.03em]">
+                Doors that move fast
+              </h2>
+              <p className="mt-[22px] max-w-[46ch] text-[15.5px] leading-[1.7] text-on-surface-variant">
+                Set ticket types, capacity limits, and the questions you need
+                answered. Every registrant arrives with a QR code, and any phone
+                becomes the scanner at the door.
+              </p>
+            </div>
+          </div>
+
+          {/* Dashboard */}
+          <div className="grid items-center gap-8 border-t border-white/10 [padding:clamp(48px,6vw,72px)_0_0] [grid-template-columns:1fr] lg:gap-[32px_clamp(32px,5vw,88px)] lg:[grid-template-columns:minmax(0,5fr)_minmax(0,7fr)]">
+            <div>
+              <span className="mb-[18px] block text-[11px] font-semibold uppercase tracking-[0.24em] text-accent-pink">
+                Dashboard
+              </span>
+              <h2 className="font-[800] leading-[1.04] tracking-[-0.04em] [font-size:clamp(28px,3.4vw,44px)] [margin-left:-0.03em]">
+                The numbers, before you ask
+              </h2>
+              <p className="mt-[22px] max-w-[46ch] text-[15.5px] leading-[1.7] text-on-surface-variant">
+                Registrations, check-in rate, and what is coming next — on
+                screen when you open the app. No exports, no reconciling between
+                tools.
+              </p>
+            </div>
+            <div className="overflow-hidden rounded-[3px] border border-white/[0.14] bg-surface-container">
+              <Image
+                src="/screenshots/dashboard.png"
+                alt="Event analytics dashboard"
+                width={1920}
+                height={1080}
+                className="w-full"
+              />
             </div>
           </div>
         </section>
 
-        {/* Event Types Grid */}
+        {/* ── Use Cases ── */}
         <section
           id="use-cases"
-          className="py-20 md:py-32 bg-surface-container-low border-y border-outline-variant/20 relative"
+          className="mx-auto max-w-[1240px] border-t border-white/10 [padding:clamp(64px,8vw,96px)_clamp(20px,5vw,64px)]"
         >
-          <div className="absolute right-10 top-10 w-20 h-20 border-2 border-primary/10 rotate-12" />
-          <div className="absolute left-10 bottom-10 w-16 h-16 border-2 border-primary/10 -rotate-12" />
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div className="mb-12">
-              <h2 className="text-sm font-semibold uppercase tracking-widest text-primary text-center md:text-left">
-                Built for every kind of event
-              </h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
-              {/* Conferences */}
-              <div className="bg-white rounded-2xl p-8 border border-outline-variant/20 shadow-sm hover:shadow-lg hover:border-primary/30 transition-all duration-300 group">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-6 group-hover:bg-primary group-hover:text-white transition-colors text-primary">
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                    />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-semibold text-on-surface mb-4">
-                  Conferences
-                </h3>
-                <p className="text-on-surface-variant leading-relaxed">
-                  Multi-day schedules, speaker management, tracks, breakout
-                  rooms, and attendee networking built in.
-                </p>
-              </div>
+          <span className="mb-[18px] block text-[11px] font-semibold uppercase tracking-[0.24em] text-outline">
+            Use cases
+          </span>
+          <h2 className="font-[800] uppercase leading-[1.02] tracking-[-0.045em] [font-size:clamp(30px,4vw,56px)] [margin-left:-0.03em]">
+            Built for every
+            <br />
+            kind of gathering
+          </h2>
 
-              {/* Meetups */}
-              <div className="bg-white rounded-2xl p-8 border border-outline-variant/20 shadow-sm hover:shadow-lg hover:border-primary/30 transition-all duration-300 group">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-6 group-hover:bg-primary group-hover:text-white transition-colors text-primary">
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                    />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-semibold text-on-surface mb-4">
-                  Meetups
+          <div className="mt-[clamp(40px,5vw,64px)] grid grid-cols-1 divide-y divide-white/10 md:-ml-[30px] md:grid-cols-3 md:divide-x md:divide-y-0 md:[background:rgba(255,255,255,0.1)] md:[gap:1px]">
+            {USE_CASES.map((uc) => (
+              <div
+                key={uc.title}
+                className="bg-surface p-[34px_0px] md:p-[34px_30px]"
+              >
+                <h3 className="text-[22px] font-[800] tracking-[-0.03em]">
+                  {uc.title}
                 </h3>
-                <p className="text-on-surface-variant leading-relaxed">
-                  Quick setup, easy registration, and QR check-in at the door.
-                  Perfect for recurring community events.
+                <p className="mt-4 mb-[22px] text-[15px] leading-[1.7] text-on-surface-variant">
+                  {uc.copy}
                 </p>
-              </div>
-
-              {/* Workshops */}
-              <div className="bg-white rounded-2xl p-8 border border-outline-variant/20 shadow-sm hover:shadow-lg hover:border-primary/30 transition-all duration-300 group">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-6 group-hover:bg-primary group-hover:text-white transition-colors text-primary">
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                    />
-                  </svg>
+                <div className="flex flex-wrap gap-2">
+                  {uc.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="rounded-[2px] border border-white/[0.18] px-[10px] py-[6px] text-[10px] font-bold uppercase tracking-[0.16em] text-on-surface-variant"
+                    >
+                      {tag}
+                    </span>
+                  ))}
                 </div>
-                <h3 className="text-xl font-semibold text-on-surface mb-4">
-                  Workshops
-                </h3>
-                <p className="text-on-surface-variant leading-relaxed">
-                  Focused sessions, attendee limits, direct messaging, and
-                  everything you need for hands-on learning.
-                </p>
               </div>
-            </div>
+            ))}
           </div>
         </section>
 
-        {/* Pricing */}
-        <section id="pricing" className="py-20 md:py-32 bg-surface relative">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div className="text-center mb-16">
-              <h2 className="text-sm font-semibold uppercase tracking-widest text-primary">
+        {/* ── Pricing ── */}
+        <section
+          id="pricing"
+          className="mx-auto max-w-[1240px] border-t border-white/10 [padding:clamp(64px,8vw,96px)_clamp(20px,5vw,64px)]"
+        >
+          <div className="grid grid-cols-1 gap-10 lg:gap-[40px_clamp(32px,5vw,88px)] lg:[grid-template-columns:minmax(0,5fr)_minmax(0,7fr)]">
+            {/* Left */}
+            <div>
+              <span className="mb-[18px] block text-[11px] font-semibold uppercase tracking-[0.24em] text-outline">
                 Pricing
+              </span>
+              <h2 className="font-[800] uppercase leading-[0.98] tracking-[-0.05em] [font-size:clamp(32px,4.2vw,60px)] [margin-left:-0.04em]">
+                <span className="block">Free to start.</span>
+                <span className="block bg-[image:linear-gradient(100deg,#8b3dff,#ff2f92_58%,#ff8a3d)] bg-clip-text text-transparent">
+                  Free to grow.
+                </span>
               </h2>
-              <h3 className="mt-4 font-display text-4xl md:text-5xl font-medium text-on-surface [text-wrap:balance]">
-                Free to start. Free to grow.
-              </h3>
-              <p className="mt-4 text-lg text-on-surface-variant max-w-xl mx-auto">
-                Eventriv is free during early access. No hidden fees, no credit card, no catch.
+              <p className="mt-[26px] max-w-[38ch] text-[15.5px] leading-[1.7] text-on-surface-variant">
+                Every feature is included during early access. No seat counts,
+                no per-ticket cut, no credit card.
               </p>
             </div>
-            <div className="max-w-md mx-auto bg-white rounded-3xl p-10 border-2 border-primary/20 shadow-xl shadow-primary/5 relative overflow-hidden">
-              <div className="absolute top-0 right-0 bg-primary text-white text-xs font-semibold px-4 py-1.5 rounded-bl-xl">
-                Early Access
+
+            {/* Right — pricing panel */}
+            <div className="overflow-hidden rounded-[3px] border border-white/[0.16] bg-surface-container">
+              {/* Header */}
+              <div className="flex items-baseline justify-between gap-6 border-b border-white/[0.14] p-[26px]">
+                <div>
+                  <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent-pink">
+                    Early access
+                  </div>
+                  <div className="mt-[10px] text-[26px] font-[800] tracking-[-0.03em]">
+                    Organiser plan
+                  </div>
+                </div>
+                <div className="text-[46px] font-[800] tracking-[-0.05em] bg-[image:linear-gradient(100deg,#8b3dff,#ff2f92_60%,#ff8a3d)] bg-clip-text text-transparent">
+                  $0
+                </div>
               </div>
-              <p className="text-sm font-semibold uppercase tracking-widest text-primary">
-                Starter
-              </p>
-              <div className="mt-4 flex items-baseline gap-2">
-                <span className="font-display text-6xl font-bold text-on-surface">$0</span>
-                <span className="text-on-surface-variant">/month</span>
-              </div>
-              <p className="mt-2 text-on-surface-variant">
-                Everything you need to run events, completely free.
-              </p>
-              <ul className="mt-8 space-y-4">
-                {[
-                  "Unlimited events",
-                  "Ticketing & registration",
-                  "Multi-track schedules",
-                  "Speaker management",
-                  "QR code check-in",
-                  "Attendee messaging",
-                  "Analytics dashboard",
-                  "Public event pages",
-                ].map((feature) => (
-                  <li key={feature} className="flex items-start gap-3">
-                    <svg
-                      className="w-5 h-5 text-primary mt-0.5 shrink-0"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        d="M5 13l4 4L19 7"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                      />
-                    </svg>
-                    <span className="text-on-surface">{feature}</span>
+
+              {/* Features */}
+              <ul className="m-0 grid list-none grid-cols-1 gap-x-7 p-[10px_26px] sm:grid-cols-2">
+                {PLAN_FEATURES.map((feat) => (
+                  <li
+                    key={feat}
+                    className="flex items-baseline gap-3 border-b border-white/[0.08] py-[10px] text-[14.5px] leading-[1.7] text-[#d4d4d8]"
+                  >
+                    <span className="relative top-[9px] block h-[6px] w-[6px] shrink-0 rounded-full bg-accent-pink" />
+                    {feat}
                   </li>
                 ))}
               </ul>
+
+              {/* CTA */}
+              <div className="p-[26px]">
+                <a
+                  href={`${APP_URL}/signup`}
+                  className="block rounded-[2px] px-[22px] py-[15px] text-left text-[14px] font-bold text-white [background:linear-gradient(100deg,#8b3dff,#ff2f92_62%,#ff8a3d)] hover:brightness-[0.94] transition-[filter]"
+                >
+                  Get early access
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── FAQ ── */}
+        <section
+          id="faq"
+          className="mx-auto max-w-[1240px] border-t border-white/10 [padding:clamp(64px,8vw,96px)_clamp(20px,5vw,64px)]"
+        >
+          <span className="mb-[18px] block text-[11px] font-semibold uppercase tracking-[0.24em] text-outline">
+            FAQ
+          </span>
+          <h2 className="mb-[clamp(32px,4vw,52px)] font-[800] uppercase leading-[1.02] tracking-[-0.045em] [font-size:clamp(30px,4vw,56px)] [margin-left:-0.03em]">
+            Questions organisers ask
+          </h2>
+          <div className="grid grid-cols-1 gap-x-[clamp(32px,5vw,88px)] border-t border-white/10 md:grid-cols-2">
+            {FAQS.map((faq) => (
+              <details
+                key={faq.q}
+                className="border-b border-white/10"
+              >
+                <summary className="flex items-baseline gap-4 py-[22px] text-[16.5px] font-bold leading-[1.5] tracking-[-0.02em] select-none">
+                  <span className="flex-1">{faq.q}</span>
+                  <span className="faq-plus text-[20px] font-[800] leading-none text-accent-pink">
+                    +
+                  </span>
+                </summary>
+                <p className="m-0 pb-[22px] pr-12 text-[15px] leading-[1.7] text-on-surface-variant">
+                  {faq.a}
+                </p>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        {/* ── Closing CTA ── */}
+        <section className="relative overflow-hidden border-t border-white/10 bg-surface-container-low">
+          <div className="pointer-events-none absolute inset-0 [background:linear-gradient(104deg,rgba(139,61,255,0.42),rgba(255,47,146,0.32)_52%,rgba(255,138,61,0.28))]" />
+          <div className="relative mx-auto max-w-[1240px] [padding:clamp(72px,9vw,120px)_clamp(20px,5vw,64px)]">
+            <h2 className="font-[800] uppercase leading-[0.92] tracking-[-0.05em] [font-size:clamp(34px,5.6vw,84px)] [margin-left:-0.05em]">
+              Open registration
+              <br />
+              today.
+            </h2>
+            <div className="mt-[clamp(32px,4vw,48px)] flex flex-wrap items-center gap-[14px]">
               <a
                 href={`${APP_URL}/signup`}
-                className="mt-10 w-full inline-flex items-center justify-center rounded-full bg-primary px-8 py-3.5 text-base font-semibold text-white shadow-lg shadow-primary/30 hover:bg-primary-hover transition-all active:scale-95 group"
+                className="rounded-[2px] bg-on-surface px-7 py-4 text-[14px] font-bold text-surface"
               >
-                Get early access
-                <ArrowIcon className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                Get early access — free
               </a>
+              <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/70">
+                No credit card required
+              </span>
             </div>
-          </div>
-        </section>
-
-        {/* FAQ */}
-        <section className="py-20 md:py-32 bg-surface-container-low border-y border-outline-variant/20">
-          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
-              <h2 className="text-sm font-semibold uppercase tracking-widest text-primary">
-                Questions & Answers
-              </h2>
-              <h3 className="mt-4 font-display text-4xl md:text-5xl font-medium text-on-surface [text-wrap:balance]">
-                Frequently asked questions
-              </h3>
-            </div>
-            <div className="space-y-6">
-              {[
-                {
-                  q: "Is Eventriv really free?",
-                  a: "Yes. During early access, every feature is completely free. No credit card, no trial period. We\u2019ll introduce paid plans later for advanced needs, but the core features will always have a free tier.",
-                },
-                {
-                  q: "How long does it take to set up an event?",
-                  a: "Under 5 minutes. Create your event, add tickets and a schedule, and publish your public event page. You can always add more details later.",
-                },
-                {
-                  q: "Do I need any technical skills?",
-                  a: "Not at all. Eventriv is designed so anyone can create and manage events. If you can fill out a form, you can run an event.",
-                },
-                {
-                  q: "What types of events can I run?",
-                  a: "Conferences, meetups, workshops, seminars, community events \u2014 anything with attendees. Whether it\u2019s 10 people or 10,000, the platform scales with you.",
-                },
-                {
-                  q: "How does QR code check-in work?",
-                  a: "Every registered attendee gets a unique QR code. At the door, scan it with any phone camera or our built-in scanner. No extra hardware needed.",
-                },
-                {
-                  q: "Can I customize my event page?",
-                  a: "Yes. Every event gets a public page with your event details, schedule, speakers, and registration. You control what\u2019s shown and can share the link anywhere.",
-                },
-              ].map((faq) => (
-                <details
-                  key={faq.q}
-                  className="group bg-white rounded-2xl border border-outline-variant/20 shadow-sm hover:shadow-md transition-shadow"
-                >
-                  <summary className="flex items-center justify-between cursor-pointer p-6 text-on-surface font-semibold text-lg select-none">
-                    {faq.q}
-                    <svg
-                      className="w-5 h-5 text-on-surface-variant shrink-0 ml-4 transition-transform group-open:rotate-180"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        d="M19 9l-7 7-7-7"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                      />
-                    </svg>
-                  </summary>
-                  <div className="px-6 pb-6 text-on-surface-variant leading-relaxed">
-                    {faq.a}
-                  </div>
-                </details>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Bottom CTA */}
-        <section className="py-32 bg-primary/5 text-center relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-primary/10 z-0" />
-          <div className="absolute -top-24 -left-24 w-64 h-64 bg-primary/10 rounded-full blur-3xl" />
-          <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-primary/10 rounded-full blur-3xl" />
-          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <h2 className="font-display text-4xl md:text-5xl font-medium text-on-surface mb-4 [text-wrap:balance]">
-              Ready to run your next event?
-            </h2>
-            <p className="text-lg text-on-surface-variant mb-10 max-w-lg mx-auto">
-              Be one of the first organizers on the platform. Get in early, shape the product, and run events for free.
-            </p>
-            <a
-              href={`${APP_URL}/signup`}
-              className="inline-flex items-center justify-center rounded-full bg-primary px-8 py-3.5 text-base font-semibold text-white shadow-lg shadow-primary/30 hover:bg-primary-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary transition-all active:scale-95 group"
-            >
-              Get early access
-              <ArrowIcon className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </a>
-            <p className="mt-6 text-sm text-outline">
-              Free while in early access. No credit card required.
-            </p>
           </div>
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-surface-container-low border-t border-outline-variant/30 w-full pt-16 pb-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center md:items-start gap-8">
-            <div className="flex flex-col items-center md:items-start">
-              <a
-                className="font-display text-2xl font-bold text-on-surface flex items-center gap-2 mb-4"
-                href="#"
-              >
-                <GridIcon className="w-6 h-6 fill-current text-primary" />
-                Eventriv
-              </a>
-            </div>
-            <div className="flex flex-wrap justify-center gap-6 md:gap-8">
-              <a
-                href="#features"
-                className="text-sm text-on-surface-variant hover:text-primary transition-colors"
-              >
-                Features
-              </a>
-              <a
-                href="#use-cases"
-                className="text-sm text-on-surface-variant hover:text-primary transition-colors"
-              >
-                Use Cases
-              </a>
-              <a
-                href="#pricing"
-                className="text-sm text-on-surface-variant hover:text-primary transition-colors"
-              >
-                Pricing
-              </a>
-              <a
-                href="/privacy-policy"
-                className="text-sm text-on-surface-variant hover:text-primary transition-colors"
-              >
-                Privacy Policy
-              </a>
-              <a
-                href="/terms-of-service"
-                className="text-sm text-on-surface-variant hover:text-primary transition-colors"
-              >
-                Terms of Service
-              </a>
-            </div>
-          </div>
-          <div className="mt-12 pt-8 border-t border-outline-variant/20 flex justify-center md:justify-end">
-            <p className="text-sm text-outline">
-              &copy; {new Date().getFullYear()} Eventriv. All rights reserved.
-            </p>
-          </div>
+      {/* ── Footer ── */}
+      <footer className="border-t border-white/10">
+        <div className="mx-auto flex max-w-[1240px] flex-wrap items-baseline gap-[24px_40px] [padding:clamp(40px,5vw,64px)_clamp(20px,5vw,64px)]">
+          <a
+            href="#"
+            className="text-[19px] font-[800] tracking-[-0.04em] text-on-surface"
+          >
+            EVEN
+            <span className="bg-[image:linear-gradient(100deg,#8b3dff,#ff2f92_60%,#ff8a3d)] bg-clip-text text-transparent">
+              TRIV
+            </span>
+          </a>
+          <nav className="mr-auto flex flex-wrap gap-6 text-[11px] font-semibold uppercase tracking-[0.18em] text-outline">
+            <a href="#product" className="transition-colors hover:text-accent-pink">
+              Product
+            </a>
+            <a href="#use-cases" className="transition-colors hover:text-accent-pink">
+              Use cases
+            </a>
+            <a href="#pricing" className="transition-colors hover:text-accent-pink">
+              Pricing
+            </a>
+            <a href="#faq" className="transition-colors hover:text-accent-pink">
+              FAQ
+            </a>
+            <a href="/privacy-policy" className="transition-colors hover:text-accent-pink">
+              Privacy
+            </a>
+            <a href="/terms-of-service" className="transition-colors hover:text-accent-pink">
+              Terms
+            </a>
+          </nav>
+          <span className="text-[11px] uppercase tracking-[0.14em] text-muted">
+            &copy; {new Date().getFullYear()} Eventriv
+          </span>
         </div>
       </footer>
     </div>

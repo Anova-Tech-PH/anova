@@ -6,8 +6,8 @@ import { usePathname } from "next/navigation";
 import { LayoutDashboard, Calendar, Settings, Menu, X, Users } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { PageTransition } from "@attendly/ui/components";
-import { Logo } from "@attendly/ui/logo";
 import { cn } from "@attendly/ui/cn";
+import { ThemeToggle } from "@/shared/components/theme-toggle";
 
 const organizerNav = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -18,6 +18,20 @@ const organizerNav = [
 /** Matches /events/<uuid>/... but NOT /events or /events/new */
 function isEventDetailRoute(pathname: string) {
   return /^\/events\/[0-9a-f-]{36}(\/|$)/i.test(pathname);
+}
+
+function Wordmark({ size = "default" }: { size?: "default" | "small" }) {
+  return (
+    <span
+      className={cn(
+        "font-[800] tracking-[-0.04em]",
+        size === "small" ? "text-[16px]" : "text-[20px]"
+      )}
+    >
+      <span className="text-foreground">EVEN</span>
+      <span className="gradient-brand-text">TRIV</span>
+    </span>
+  );
 }
 
 function NavItem({
@@ -34,27 +48,27 @@ function NavItem({
       href={item.href}
       title={collapsed ? item.label : undefined}
       className={cn(
-        "group relative flex items-center rounded-xl text-sm transition-all duration-200",
+        "group relative flex items-center rounded-[3px] text-sm transition-all duration-200",
         collapsed ? "justify-center px-2 py-2" : "gap-3 px-3 py-2",
         active
-          ? "text-sidebar-accent-foreground font-medium"
-          : "text-sidebar-foreground hover:bg-sidebar-accent/40 hover:translate-x-0.5"
+          ? "text-foreground font-medium"
+          : "text-muted-foreground hover:text-foreground hover:bg-accent"
       )}
     >
       {active && (
         <motion.div
           layoutId="sidebar-indicator"
-          className="absolute inset-0 rounded-xl bg-sidebar-accent shadow-sm"
+          className="absolute inset-0 rounded-[3px] bg-sidebar-accent"
           transition={{ type: "spring", bounce: 0.15, duration: 0.4 }}
         />
       )}
       <span className={cn("relative flex items-center", collapsed ? "" : "w-full gap-3")}>
         <span
           className={cn(
-            "flex h-7 w-7 items-center justify-center rounded-lg transition-colors duration-200",
+            "flex h-7 w-7 items-center justify-center rounded-[3px] transition-colors duration-200",
             active
-              ? "bg-[oklch(0.445_0.107_195)] text-white shadow-sm"
-              : "group-hover:bg-sidebar-accent/60"
+              ? "gradient-brand text-white"
+              : "group-hover:bg-sidebar-accent"
           )}
         >
           <item.icon className="h-4 w-4" />
@@ -77,8 +91,8 @@ function SidebarContent({
       <nav className="flex flex-1 flex-col gap-0.5 p-2 pt-3">
         {!collapsed && (
           <div className="flex items-center gap-2 px-3 py-1.5">
-            <span className="h-1.5 w-1.5 rounded-full bg-[oklch(0.445_0.107_195)]" />
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">
+            <span className="h-1.5 w-1.5 rounded-full bg-brand-pink" />
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground/60">
               Organizer
             </p>
           </div>
@@ -88,24 +102,25 @@ function SidebarContent({
         ))}
       </nav>
 
-      <div className="border-t border-sidebar-accent/60 bg-gradient-to-t from-sidebar-accent/20 to-transparent p-2">
+      <div className="border-t border-sidebar-border p-2 space-y-0.5">
+        <ThemeToggle collapsed={collapsed} />
         <Link
           href="/settings"
           title={collapsed ? "Settings" : undefined}
           className={cn(
-            "group relative flex items-center rounded-xl text-sm transition-all duration-200",
+            "group relative flex items-center rounded-[3px] text-sm transition-all duration-200",
             collapsed ? "justify-center px-2 py-2.5" : "gap-3 px-3 py-2.5",
             isActive("/settings")
-              ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium shadow-sm"
-              : "text-sidebar-foreground hover:bg-sidebar-accent/40 hover:translate-x-0.5"
+              ? "bg-sidebar-accent text-foreground font-medium"
+              : "text-muted-foreground hover:text-foreground hover:bg-accent"
           )}
         >
           <span
             className={cn(
-              "flex h-7 w-7 items-center justify-center rounded-lg transition-colors duration-200",
+              "flex h-7 w-7 items-center justify-center rounded-[3px] transition-colors duration-200",
               isActive("/settings")
-                ? "bg-[oklch(0.445_0.107_195)] text-white shadow-sm"
-                : "bg-sidebar-accent/40 group-hover:bg-sidebar-accent/60"
+                ? "gradient-brand text-white"
+                : "bg-white/[0.04] group-hover:bg-sidebar-accent"
             )}
           >
             <Settings className="h-4 w-4" />
@@ -142,20 +157,19 @@ export default function OrganizerLayout({
       <motion.aside
         animate={{ width: collapsed ? 56 : 240 }}
         transition={{ duration: 0.25, ease: "easeOut" }}
-        className="hidden shrink-0 border-r bg-sidebar lg:flex lg:flex-col overflow-hidden"
+        className="hidden shrink-0 border-r border-sidebar-border bg-sidebar lg:flex lg:flex-col overflow-hidden"
       >
         <div className={cn(
-          "relative flex h-14 items-center border-b",
+          "relative flex h-[58px] items-center border-b border-sidebar-border",
           collapsed ? "justify-center px-1" : "px-4"
         )}>
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[oklch(0.445_0.107_195)]/5 to-transparent" />
           <Link href="/dashboard" className="relative">
             {collapsed ? (
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[oklch(0.445_0.107_195)] text-white text-xs font-bold">
-                A
+              <span className="flex h-7 w-7 items-center justify-center rounded-[3px] gradient-brand text-white text-xs font-bold">
+                E
               </span>
             ) : (
-              <Logo size="sm" />
+              <Wordmark />
             )}
           </Link>
         </div>
@@ -171,7 +185,7 @@ export default function OrganizerLayout({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+              className="fixed inset-0 z-40 bg-black/60 lg:hidden"
               onClick={() => setMobileOpen(false)}
             />
             <motion.aside
@@ -179,16 +193,15 @@ export default function OrganizerLayout({
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", bounce: 0.1, duration: 0.35 }}
-              className="fixed inset-y-0 left-0 z-50 flex w-60 flex-col bg-sidebar shadow-xl lg:hidden"
+              className="fixed inset-y-0 left-0 z-50 flex w-60 flex-col bg-sidebar border-r border-sidebar-border lg:hidden"
             >
-              <div className="relative flex h-14 items-center justify-between border-b px-4">
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[oklch(0.445_0.107_195)]/5 to-transparent" />
+              <div className="relative flex h-[58px] items-center justify-between border-b border-sidebar-border px-4">
                 <Link href="/dashboard" className="relative" onClick={() => setMobileOpen(false)}>
-                  <Logo size="sm" />
+                  <Wordmark />
                 </Link>
                 <button
                   onClick={() => setMobileOpen(false)}
-                  className="relative rounded-md p-1 text-muted-foreground hover:text-foreground"
+                  className="relative rounded-[3px] p-1 text-muted-foreground hover:text-foreground"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -201,15 +214,15 @@ export default function OrganizerLayout({
 
       {/* Main content */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-14 items-center gap-3 border-b px-4 shadow-[0_1px_3px_0_rgba(0,0,0,0.05)] lg:hidden">
+        <header className="flex h-[58px] items-center gap-3 border-b border-sidebar-border px-4 lg:hidden">
           <button
             onClick={() => setMobileOpen(true)}
-            className="rounded-md p-1 text-muted-foreground hover:text-foreground"
+            className="rounded-[3px] p-1 text-muted-foreground hover:text-foreground"
           >
             <Menu className="h-5 w-5" />
           </button>
           <Link href="/dashboard">
-            <Logo size="sm" />
+            <Wordmark size="small" />
           </Link>
         </header>
         <main className="flex-1 p-4 lg:p-6">

@@ -8,7 +8,6 @@ import { toast } from "sonner";
 import { Button } from "@attendly/ui/components";
 import { Input } from "@attendly/ui/components";
 import { PageTransition } from "@attendly/ui/components";
-import { Logo } from "@attendly/ui/logo";
 import { User, Mail, Lock, ArrowRight, Users } from "lucide-react";
 
 export default function SignupPage() {
@@ -80,60 +79,50 @@ function SignupForm() {
   return (
     <div className="flex min-h-screen">
       {/* Left branded panel */}
-      <div className="hidden lg:flex lg:w-1/2 flex-col justify-center bg-gradient-to-br from-primary via-primary/90 to-primary/80 p-12 text-primary-foreground relative overflow-hidden">
-        {/* Floating decorative shapes */}
-        <div className="absolute top-16 right-24 h-48 w-48 rounded-full bg-white/[0.06] animate-[float_18s_ease-in-out_infinite]" />
-        <div className="absolute bottom-24 right-12 h-56 w-56 rounded-full bg-white/[0.04] animate-[float_22s_ease-in-out_infinite_reverse]" />
-        <div className="absolute top-1/3 right-40 h-24 w-24 rounded-full bg-info/10 animate-[float_14s_ease-in-out_infinite]" />
-        <div className="absolute bottom-40 left-4 h-16 w-16 rounded-full bg-white/[0.08] animate-[float_16s_ease-in-out_infinite_reverse]" />
-        <div className="absolute top-12 left-1/2 h-12 w-12 rounded-full bg-white/[0.05] animate-[float_10s_ease-in-out_infinite]" />
+      <div className="hidden lg:flex lg:w-1/2 flex-col justify-center p-12 text-white relative overflow-hidden [background:linear-gradient(140deg,#6a2cc0_0%,#c4206e_55%,#d06a28_100%)]">
+        <div className="absolute top-16 right-24 h-48 w-48 rounded-full bg-white/5 blur-xl" />
+        <div className="absolute bottom-24 right-12 h-56 w-56 rounded-full bg-white/[0.04] blur-lg" />
+        <div className="absolute bottom-40 left-4 h-16 w-16 rounded-full bg-white/[0.08] blur-xl" />
 
-        <div className="max-w-md space-y-8 relative z-10">
-          <Logo size="xl" variant="white" />
+        <div className="max-w-md space-y-8 relative z-10 [text-shadow:0_1px_2px_rgba(0,0,0,0.2)]">
+          <span className="text-[32px] font-[800] tracking-[-0.04em]">EVENTRIV</span>
           <div className="space-y-4">
-            <h2 className="text-4xl font-bold font-serif leading-tight">
+            <h2 className="text-4xl font-[800] leading-tight tracking-[-0.03em]">
               Stop juggling<br />spreadsheets.
             </h2>
-            <p className="text-lg text-primary-foreground/80 leading-relaxed">
+            <p className="text-lg text-white/90 leading-relaxed">
               One place for tickets, schedules, speakers, and check-ins. Built for organizers who run 2–200 events a year.
             </p>
           </div>
-          {/* Social proof */}
-          <div className="flex items-center gap-3 text-primary-foreground/70">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/15">
+          <div className="flex items-center gap-3 text-white/80">
+            <div className="flex h-9 w-9 items-center justify-center rounded-[2px] bg-white/20">
               <Users className="h-4 w-4" />
             </div>
             <div>
-              <p className="text-sm font-medium text-primary-foreground/90">Join 2,000+ organizers</p>
-              <p className="text-xs text-primary-foreground/60">run their events on Eventriv</p>
+              <p className="text-sm font-medium text-white/90">Join 2,000+ organizers</p>
+              <p className="text-xs text-white/70">run their events on Eventriv</p>
             </div>
           </div>
         </div>
-
-        <style>{`
-          @keyframes float {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            33% { transform: translateY(-15px) rotate(1deg); }
-            66% { transform: translateY(10px) rotate(-1deg); }
-          }
-        `}</style>
       </div>
 
       {/* Right form panel */}
-      <div className="flex flex-1 items-center justify-center px-4">
+      <div className="flex flex-1 items-center justify-center px-4 bg-white text-zinc-900 theme-light">
         <PageTransition>
           <div className="w-full max-w-sm space-y-6">
             {/* Mobile logo */}
             <div className="lg:hidden flex justify-center mb-4">
-              <Logo size="lg" />
+              <span className="text-[24px] font-[800] tracking-[-0.04em]">
+                <span className="text-foreground">EVEN</span>
+                <span className="gradient-brand-text">TRIV</span>
+              </span>
             </div>
 
             <div className="space-y-2 text-center lg:text-left">
-              {/* Decorative dots */}
               <div className="flex gap-1 justify-center lg:justify-start mb-3">
                 <span className="h-1.5 w-1.5 rounded-full bg-primary/40" />
-                <span className="h-1.5 w-6 rounded-full bg-primary/25" />
-                <span className="h-1.5 w-3 rounded-full bg-primary/30" />
+                <span className="h-1.5 w-6 rounded-full bg-brand-pink/25" />
+                <span className="h-1.5 w-3 rounded-full bg-brand-orange/30" />
                 <span className="h-1.5 w-1.5 rounded-full bg-primary/40" />
               </div>
               <h1 className="text-2xl font-semibold">Create your account</h1>
@@ -242,9 +231,9 @@ function SignupForm() {
               <span className="underline cursor-pointer hover:text-muted-foreground">Privacy Policy</span>
             </p>
 
-            <div className="rounded-lg border bg-muted/30 p-4 text-center text-sm text-muted-foreground">
+            <div className="rounded-md border border-border bg-muted/50 p-4 text-center text-sm text-muted-foreground">
               Already have an account?{" "}
-              <Link href={`/login${searchParams.get("redirect") ? `?redirect=${encodeURIComponent(searchParams.get("redirect")!)}` : ""}`} className="text-primary font-semibold hover:underline">
+              <Link href={`/login${searchParams.get("redirect") ? `?redirect=${encodeURIComponent(searchParams.get("redirect")!)}` : ""}`} className="text-brand-pink font-semibold hover:underline">
                 Sign in
               </Link>
             </div>

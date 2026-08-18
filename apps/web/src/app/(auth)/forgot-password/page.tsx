@@ -9,7 +9,7 @@ import { Input } from "@attendly/ui/components";
 import { Card } from "@attendly/ui/components";
 import { PageTransition } from "@attendly/ui/components";
 import { MailCheck, Mail, KeyRound, ArrowRight, ArrowLeft } from "lucide-react";
-import { Logo } from "@attendly/ui/logo";
+
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -38,28 +38,18 @@ export default function ForgotPasswordPage() {
   if (sent) {
     return (
       <div className="flex min-h-screen">
-        <div className="hidden lg:flex lg:w-1/2 flex-col justify-center bg-gradient-to-br from-primary via-primary/90 to-primary/80 p-12 text-primary-foreground relative overflow-hidden">
-          {/* Floating decorative shapes */}
-          <div className="absolute top-24 right-20 h-52 w-52 rounded-full bg-white/[0.05] animate-[float_17s_ease-in-out_infinite]" />
-          <div className="absolute bottom-20 right-28 h-36 w-36 rounded-full bg-white/[0.07] animate-[float_21s_ease-in-out_infinite_reverse]" />
-          <div className="absolute top-1/2 right-10 h-16 w-16 rounded-full bg-info/10 animate-[float_13s_ease-in-out_infinite]" />
+        <div className="hidden lg:flex lg:w-1/2 flex-col justify-center p-12 text-white [background:linear-gradient(140deg,#6a2cc0_0%,#c4206e_55%,#d06a28_100%)] relative overflow-hidden">
+          <div className="absolute top-24 right-20 h-52 w-52 rounded-full bg-white/5 blur-xl" />
+          <div className="absolute bottom-20 right-28 h-36 w-36 rounded-full bg-white/[0.07] blur-lg" />
 
           <div className="max-w-md space-y-8 relative z-10">
-            <Logo size="xl" variant="white" />
-            <h2 className="text-4xl font-bold font-serif leading-tight">
+            <span className="text-[32px] font-[800] tracking-[-0.04em]">EVENTRIV</span>
+            <h2 className="text-4xl font-[800] leading-tight tracking-[-0.03em]">
               We&apos;ve got<br />your back.
             </h2>
           </div>
-
-          <style>{`
-            @keyframes float {
-              0%, 100% { transform: translateY(0px) rotate(0deg); }
-              33% { transform: translateY(-15px) rotate(1deg); }
-              66% { transform: translateY(10px) rotate(-1deg); }
-            }
-          `}</style>
         </div>
-        <div className="flex flex-1 items-center justify-center px-4">
+        <div className="flex flex-1 items-center justify-center px-4 bg-white text-zinc-900 theme-light">
           <PageTransition>
             <Card className="w-full max-w-sm p-8">
               <div className="space-y-4 text-center">
@@ -95,40 +85,35 @@ export default function ForgotPasswordPage() {
   return (
     <div className="flex min-h-screen">
       {/* Left branded panel */}
-      <div className="hidden lg:flex lg:w-1/2 flex-col justify-center bg-gradient-to-br from-primary via-primary/90 to-primary/80 p-12 text-primary-foreground relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 flex-col justify-center p-12 text-white [background:linear-gradient(140deg,#6a2cc0_0%,#c4206e_55%,#d06a28_100%)] relative overflow-hidden">
         {/* Floating decorative shapes */}
-        <div className="absolute top-24 right-20 h-52 w-52 rounded-full bg-white/[0.05] animate-[float_17s_ease-in-out_infinite]" />
-        <div className="absolute bottom-20 right-28 h-36 w-36 rounded-full bg-white/[0.07] animate-[float_21s_ease-in-out_infinite_reverse]" />
-        <div className="absolute top-1/2 right-10 h-16 w-16 rounded-full bg-info/10 animate-[float_13s_ease-in-out_infinite]" />
+        <div className="absolute top-24 right-20 h-52 w-52 rounded-full bg-white/5 blur-xl" />
+        <div className="absolute bottom-20 right-28 h-36 w-36 rounded-full bg-white/[0.07] blur-lg" />
 
         <div className="max-w-md space-y-8 relative z-10">
-          <Logo size="xl" variant="white" />
+          <span className="text-[32px] font-[800] tracking-[-0.04em]">EVENTRIV</span>
           <div className="space-y-4">
-            <h2 className="text-4xl font-bold font-serif leading-tight">
+            <h2 className="text-4xl font-[800] leading-tight tracking-[-0.03em]">
               We&apos;ve got<br />your back.
             </h2>
-            <p className="text-lg text-primary-foreground/80">
+            <p className="text-lg text-white/90">
               Happens to the best of us. We&apos;ll have you back in no time.
             </p>
           </div>
         </div>
 
-        <style>{`
-          @keyframes float {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            33% { transform: translateY(-15px) rotate(1deg); }
-            66% { transform: translateY(10px) rotate(-1deg); }
-          }
-        `}</style>
       </div>
 
       {/* Right form panel */}
-      <div className="flex flex-1 items-center justify-center px-4">
+      <div className="flex flex-1 items-center justify-center px-4 bg-white text-zinc-900 theme-light">
         <PageTransition>
           <div className="w-full max-w-sm space-y-6">
             {/* Mobile logo */}
             <div className="lg:hidden flex justify-center mb-4">
-              <Logo size="lg" />
+              <span className="text-[24px] font-[800] tracking-[-0.04em]">
+                <span className="text-foreground">EVEN</span>
+                <span className="gradient-brand-text">TRIV</span>
+              </span>
             </div>
 
             <div className="space-y-2 text-center lg:text-left">

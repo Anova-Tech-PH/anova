@@ -10,38 +10,37 @@ export const metadata: Metadata = {
 export default function TermsOfServicePage() {
   return (
     <div className="min-h-screen bg-surface">
-      {/* Nav */}
-      <header className="bg-surface/80 backdrop-blur-md w-full top-0 sticky z-50 border-b border-outline-variant/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
+      <header className="sticky top-0 z-30 h-[74px] border-b border-white/10 [background:rgba(8,8,10,0.82)] [backdrop-filter:blur(14px)]">
+        <div className="mx-auto flex h-full max-w-[1240px] items-center justify-between [padding:0_clamp(20px,5vw,64px)]">
           <Link
             href="/"
-            className="font-display text-2xl font-bold text-primary flex items-center gap-2"
+            className="text-[20px] font-[800] tracking-[-0.04em] text-on-surface"
           >
-            <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
-              <path d="M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z" />
-            </svg>
-            Eventriv
+            EVEN
+            <span className="bg-[image:linear-gradient(100deg,#8b3dff,#ff2f92_60%,#ff8a3d)] bg-clip-text text-transparent">
+              TRIV
+            </span>
           </Link>
           <Link
             href="/"
-            className="text-sm font-medium text-on-surface-variant hover:text-primary transition-colors"
+            className="text-[13px] font-semibold text-on-surface-variant transition-colors hover:text-accent-pink"
           >
             &larr; Back to home
           </Link>
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
-        <h1 className="font-display text-4xl md:text-5xl font-bold text-on-surface mb-4">
+      <main className="mx-auto max-w-3xl px-4 py-16 sm:px-6 md:py-24 lg:px-8">
+        <h1 className="text-4xl font-[800] tracking-[-0.03em] text-on-surface md:text-5xl">
           Terms of Service
         </h1>
-        <p className="text-on-surface-variant mb-12">
+        <p className="mt-4 mb-12 text-on-surface-variant">
           Last updated: August 6, 2026
         </p>
 
-        <div className="prose-custom space-y-10 text-on-surface-variant leading-relaxed">
+        <div className="space-y-10 text-[15px] leading-[1.7] text-on-surface-variant">
           <section>
-            <h2 className="text-xl font-semibold text-on-surface mb-3">
+            <h2 className="mb-3 text-xl font-bold text-on-surface">
               1. Acceptance of Terms
             </h2>
             <p>
@@ -52,7 +51,7 @@ export default function TermsOfServicePage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-on-surface mb-3">
+            <h2 className="mb-3 text-xl font-bold text-on-surface">
               2. Description of Service
             </h2>
             <p>
@@ -65,11 +64,11 @@ export default function TermsOfServicePage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-on-surface mb-3">
+            <h2 className="mb-3 text-xl font-bold text-on-surface">
               3. User Accounts
             </h2>
             <p className="mb-3">When you create an account, you agree to:</p>
-            <ul className="list-disc pl-6 space-y-2">
+            <ul className="list-disc space-y-2 pl-6">
               <li>Provide accurate and complete information.</li>
               <li>Maintain the security of your account credentials.</li>
               <li>
@@ -83,14 +82,12 @@ export default function TermsOfServicePage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-on-surface mb-3">
+            <h2 className="mb-3 text-xl font-bold text-on-surface">
               4. Acceptable Use
             </h2>
             <p className="mb-3">You agree not to use the Service to:</p>
-            <ul className="list-disc pl-6 space-y-2">
-              <li>
-                Violate any applicable laws or regulations.
-              </li>
+            <ul className="list-disc space-y-2 pl-6">
+              <li>Violate any applicable laws or regulations.</li>
               <li>
                 Create events that promote illegal activities, violence, or
                 discrimination.
@@ -110,11 +107,13 @@ export default function TermsOfServicePage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-on-surface mb-3">
+            <h2 className="mb-3 text-xl font-bold text-on-surface">
               5. Event Organizer Responsibilities
             </h2>
-            <p className="mb-3">As an event organizer, you are responsible for:</p>
-            <ul className="list-disc pl-6 space-y-2">
+            <p className="mb-3">
+              As an event organizer, you are responsible for:
+            </p>
+            <ul className="list-disc space-y-2 pl-6">
               <li>
                 The accuracy of event information including dates, venues, and
                 descriptions.
@@ -123,7 +122,8 @@ export default function TermsOfServicePage() {
                 Compliance with local laws and regulations regarding your events.
               </li>
               <li>
-                Handling attendee data in accordance with applicable privacy laws.
+                Handling attendee data in accordance with applicable privacy
+                laws.
               </li>
               <li>
                 Any obligations to attendees including refunds, if applicable.
@@ -132,7 +132,7 @@ export default function TermsOfServicePage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-on-surface mb-3">
+            <h2 className="mb-3 text-xl font-bold text-on-surface">
               6. Intellectual Property
             </h2>
             <p>
@@ -145,7 +145,7 @@ export default function TermsOfServicePage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-on-surface mb-3">
+            <h2 className="mb-3 text-xl font-bold text-on-surface">
               7. Pricing and Payment
             </h2>
             <p>
@@ -157,7 +157,7 @@ export default function TermsOfServicePage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-on-surface mb-3">
+            <h2 className="mb-3 text-xl font-bold text-on-surface">
               8. Service Availability
             </h2>
             <p>
@@ -169,7 +169,7 @@ export default function TermsOfServicePage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-on-surface mb-3">
+            <h2 className="mb-3 text-xl font-bold text-on-surface">
               9. Limitation of Liability
             </h2>
             <p>
@@ -181,20 +181,20 @@ export default function TermsOfServicePage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-on-surface mb-3">
+            <h2 className="mb-3 text-xl font-bold text-on-surface">
               10. Termination
             </h2>
             <p>
               You may terminate your account at any time. We may suspend or
-              terminate your access to the Service if you violate these Terms. Upon
-              termination, your right to use the Service will immediately cease.
-              We will make your data available for export for a reasonable period
-              after termination.
+              terminate your access to the Service if you violate these Terms.
+              Upon termination, your right to use the Service will immediately
+              cease. We will make your data available for export for a reasonable
+              period after termination.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-on-surface mb-3">
+            <h2 className="mb-3 text-xl font-bold text-on-surface">
               11. Changes to Terms
             </h2>
             <p>
@@ -206,14 +206,14 @@ export default function TermsOfServicePage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-on-surface mb-3">
+            <h2 className="mb-3 text-xl font-bold text-on-surface">
               12. Contact Us
             </h2>
             <p>
               If you have questions about these Terms, please contact us at{" "}
               <a
                 href="mailto:legal@eventriv.com"
-                className="text-primary hover:text-primary-hover transition-colors underline"
+                className="text-accent-pink transition-colors hover:text-accent-pink-soft underline"
               >
                 legal@eventriv.com
               </a>
@@ -223,14 +223,14 @@ export default function TermsOfServicePage() {
         </div>
       </main>
 
-      <footer className="border-t border-outline-variant/30 bg-surface-container-low">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex justify-between items-center">
-          <p className="text-sm text-outline">
-            &copy; {new Date().getFullYear()} Eventriv. All rights reserved.
+      <footer className="border-t border-white/10">
+        <div className="mx-auto flex max-w-[1240px] items-center justify-between [padding:clamp(40px,5vw,64px)_clamp(20px,5vw,64px)]">
+          <p className="text-[11px] uppercase tracking-[0.14em] text-muted">
+            &copy; {new Date().getFullYear()} Eventriv
           </p>
           <Link
             href="/privacy-policy"
-            className="text-sm text-on-surface-variant hover:text-primary transition-colors"
+            className="text-[11px] font-semibold uppercase tracking-[0.18em] text-outline transition-colors hover:text-accent-pink"
           >
             Privacy Policy
           </Link>

@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { DM_Sans, Source_Serif_4 } from "next/font/google";
+import { Archivo, Source_Serif_4 } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
 
-const dmSans = DM_Sans({
-  variable: "--font-dm-sans",
+const archivo = Archivo({
+  variable: "--font-archivo",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 const sourceSerif = Source_Serif_4({
@@ -19,22 +20,33 @@ export const metadata: Metadata = {
   description: "Modern event management platform",
 };
 
+const themeScript = `
+(function(){
+  var t = localStorage.getItem('theme');
+  if (!t) t = 'dark';
+  if (t === 'dark') document.documentElement.classList.add('dark');
+})();
+`;
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body
-        className={`${dmSans.variable} ${sourceSerif.variable} font-sans antialiased`}
+        className={`${archivo.variable} ${sourceSerif.variable} font-sans antialiased`}
       >
         {children}
         <Toaster
           position="bottom-right"
           gap={8}
           toastOptions={{
-            className: "!bg-card !text-card-foreground !border-border !shadow-lg !rounded-xl",
+            className: "!bg-card !text-card-foreground !border-border !shadow-lg !rounded-lg",
             style: {
               padding: "14px 16px",
             },
