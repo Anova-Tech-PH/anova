@@ -114,3 +114,33 @@ export async function getChallengeProgress(
     enabled: rule.enabled as boolean,
   }));
 }
+
+export async function getBadgeDefinitions(
+  client: SupabaseClient,
+  eventId: string
+) {
+  const { data, error } = await client
+    .from("badge_definitions")
+    .select("id, name, description, icon, criteria_type, criteria_value, sort_order")
+    .or(`event_id.eq.${eventId},event_id.is.null`)
+    .order("sort_order");
+
+  if (error) return [];
+  return data ?? [];
+}
+
+export async function getGamificationConfig(
+  client: SupabaseClient,
+  eventId: string
+) {
+  const { data, error } = await client
+    .from("gamification_configs")
+    .select(
+      "enabled, leaderboard_title, hide_organizers, prizes_description, prize_image_url"
+    )
+    .eq("event_id", eventId)
+    .single();
+
+  if (error) return null;
+  return data;
+}
