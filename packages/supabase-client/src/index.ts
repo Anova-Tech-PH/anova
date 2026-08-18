@@ -26,6 +26,7 @@ export * from "./queries/rsvp";
 export * from "./queries/my-agenda";
 export * from "./queries/contests";
 export * from "./queries/trivia";
+export * from "./queries/passport";
 
 // Realtime
 export * from "./realtime/messaging";
