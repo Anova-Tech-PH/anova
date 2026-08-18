@@ -5,12 +5,15 @@ import { createClient } from "@supabase/supabase-js";
 import { sendRegistrationConfirmationEmail } from "@/features/emails/actions";
 import type Stripe from "stripe";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
+  const supabase = getSupabase();
   const { registration_id, order_id, event_id } = session.metadata ?? {};
   if (!registration_id || !order_id || !event_id) {
     console.error("[Stripe Webhook] Missing metadata on checkout.session.completed", session.id);
@@ -77,6 +80,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 }
 
 async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
+  const supabase = getSupabase();
   const { registration_id, order_id } = session.metadata ?? {};
   if (!registration_id || !order_id) {
     console.error("[Stripe Webhook] Missing metadata on checkout.session.expired", session.id);
@@ -106,6 +110,7 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
 }
 
 async function handleChargeRefunded(charge: Stripe.Charge) {
+  const supabase = getSupabase();
   const paymentIntentId = charge.payment_intent as string;
   if (!paymentIntentId) {
     console.error("[Stripe Webhook] No payment_intent on charge.refunded event");
