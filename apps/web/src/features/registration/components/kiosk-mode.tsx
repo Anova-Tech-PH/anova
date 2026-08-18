@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { CheckCircle, AlertCircle, XCircle, Search, QrCode, ArrowLeft } from "lucide-react";
+import { CheckCircle, AlertCircle, XCircle, Search, QrCode, ArrowLeft, AlertTriangle } from "lucide-react";
 import { checkInByQrCode, checkInByRegistrationId, searchRegistrations } from "../actions";
+import { fetchPendingConsentForms } from "@/features/consent-forms/actions";
 
 type CheckInSession = { id: string; title: string; start_time: string };
 type SearchResult = { id: string; name: string; email: string; status: string; ticket_types: { name: string } | { name: string }[] };
@@ -12,7 +13,8 @@ type KioskState =
   | { mode: "scanning" }
   | { mode: "searching" }
   | { mode: "success"; name: string; ticketType: string; alreadyCheckedIn: boolean }
-  | { mode: "error"; message: string };
+  | { mode: "error"; message: string }
+  | { mode: "consent_warning"; name: string; pendingForms: { id: string; title: string }[] };
 
 function getTicketName(tt: { name: string } | { name: string }[] | null): string {
   if (!tt) return "General";
@@ -49,7 +51,22 @@ export function KioskMode({
     resetTimerRef.current = setTimeout(resetToIdle, 4000);
   }
 
-  async function handleCheckInResult(result: { name: string; already_checked_in: boolean; ticket_types: any }) {
+  async function handleCheckInResult(result: { name: string; email: string; already_checked_in: boolean; ticket_types: any }) {
+    // Check for pending consent forms (non-blocking — show success first if none)
+    try {
+      const pending = await fetchPendingConsentForms(eventId, result.email);
+      if (pending.length > 0) {
+        setState({
+          mode: "consent_warning",
+          name: result.name,
+          pendingForms: pending,
+        });
+        return; // Don't auto-reset — user must dismiss
+      }
+    } catch {
+      // If consent check fails, proceed with normal success flow
+    }
+
     setState({
       mode: "success",
       name: result.name,
@@ -175,6 +192,37 @@ export function KioskMode({
             </h2>
             <p className="text-2xl">{state.name}</p>
             <p className="text-lg text-muted-foreground">{state.ticketType}</p>
+          </div>
+        )}
+
+        {/* Consent Warning */}
+        {state.mode === "consent_warning" && (
+          <div className="text-center space-y-4 animate-in fade-in duration-300">
+            <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-yellow-100">
+              <AlertTriangle className="h-12 w-12 text-yellow-600" />
+            </div>
+            <h2 className="text-3xl font-bold text-yellow-700">Action Required</h2>
+            <p className="text-2xl">{state.name}</p>
+            <p className="text-lg text-muted-foreground">
+              The following consent form(s) must be completed:
+            </p>
+            <ul className="mx-auto max-w-md space-y-2 text-left">
+              {state.pendingForms.map((form) => (
+                <li
+                  key={form.id}
+                  className="flex items-center gap-2 rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3 text-yellow-800"
+                >
+                  <AlertTriangle className="h-4 w-4 shrink-0" />
+                  <span className="font-medium">{form.title}</span>
+                </li>
+              ))}
+            </ul>
+            <button
+              onClick={resetToIdle}
+              className="mt-4 rounded-xl border-2 px-8 py-3 text-lg font-medium hover:bg-muted transition-colors"
+            >
+              Dismiss
+            </button>
           </div>
         )}
 

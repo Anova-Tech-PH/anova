@@ -640,6 +640,17 @@ function escapeCsvField(value: string): string {
   return value;
 }
 
+// ─── Check-in Query (server action wrapper) ─────────────────
+
+export async function fetchPendingConsentForms(
+  eventId: string,
+  email: string
+): Promise<{ id: string; title: string }[]> {
+  const { getPendingConsentForms } = await import("./queries");
+  const forms = await getPendingConsentForms(eventId, email);
+  return forms.map((f) => ({ id: f.id, title: f.title }));
+}
+
 // ─── Email Template ──────────────────────────────────────────
 
 function escapeHtml(str: string): string {
