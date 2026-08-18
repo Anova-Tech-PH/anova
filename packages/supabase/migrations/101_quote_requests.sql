@@ -24,9 +24,7 @@ alter table public.quote_requests enable row level security;
 
 -- Public can INSERT (submit form without auth)
 grant insert on public.quote_requests to anon;
-
--- Only authenticated users (admins) can read/update
-grant select, update on public.quote_requests to authenticated;
+grant insert on public.quote_requests to authenticated;
 
 -- Allow anonymous inserts (form submissions)
 create policy "Anyone can submit a quote request"
@@ -34,14 +32,5 @@ create policy "Anyone can submit a quote request"
   to anon, authenticated
   with check (true);
 
--- Only org admins can view/manage quotes (simple auth check for now)
-create policy "Authenticated users can view quote requests"
-  on public.quote_requests for select
-  to authenticated
-  using (true);
-
-create policy "Authenticated users can update quote requests"
-  on public.quote_requests for update
-  to authenticated
-  using (true)
-  with check (true);
+-- No SELECT/UPDATE/DELETE policies for anon or authenticated
+-- Admin access is via service_role client only (bypasses RLS)

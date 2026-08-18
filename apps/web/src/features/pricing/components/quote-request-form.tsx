@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@attendly/ui/components";
-import { Input, Textarea } from "@attendly/ui/components";
+import { Button, Input, Textarea } from "@attendly/ui/components";
 import { submitQuoteRequest } from "../actions";
 import { CheckCircle2 } from "lucide-react";
 
