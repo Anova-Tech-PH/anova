@@ -9,9 +9,9 @@
 
 ## Summary
 
-The Release & Consent Forms feature is well-built with clean layouts, proper confirmation dialogs, and good template system. Two critical bugs were found and fixed during testing: TEMPLATES not loading on client (server module issue) and Send Form button sending to empty recipients. The feature now works end-to-end.
+The Release & Consent Forms feature is well-built with clean layouts, proper confirmation dialogs, and good template system. Several critical and major bugs were found and fixed during testing. All issues have been addressed.
 
-## Critical Issues (fixed during testing)
+## Critical Issues (all fixed)
 
 | # | Heuristic | Issue | Fix Applied | Severity |
 |---|-----------|-------|-------------|----------|
@@ -19,23 +19,23 @@ The Release & Consent Forms feature is well-built with clean layouts, proper con
 | 2 | Error Prevention | Send Form button called `sendConsentFormEmails` with empty `[]` — no way to specify recipients | Added recipient modal with email input, CSV import, contact list (matching volunteer invitations pattern) | Critical |
 | 3 | Post-Action | Duplicate form submission showed generic "Form Submitted" instead of "Already Signed" | Added `alreadySigned` state to show distinct message | Major |
 
-## Major Issues (fix soon)
+## Major Issues (all fixed)
 
-| # | Heuristic | Issue | Recommendation | Severity |
-|---|-----------|-------|----------------|----------|
-| 1 | Information Architecture | Form cards on list page are not clickable — only the small edit (pencil) icon navigates to the detail page | Make the entire card clickable as a link to the detail page, with edit/delete as secondary actions | Major |
-| 2 | Visibility of System Status | Send Form modal renders inline without proper modal backdrop/centering — overlaps page content | Ensure ModalOverlay has proper fixed positioning, backdrop blur, and centered panel | Major |
-| 3 | Post-Action Navigation | No "Back to forms" link on the detail page sidebar — sidebar changes to Content sidebar when on detail page | Keep the Attendees sidebar visible on detail pages, or add a breadcrumb trail | Major |
+| # | Heuristic | Issue | Fix Applied | Severity |
+|---|-----------|-------|-------------|----------|
+| 1 | Information Architecture | Form cards on list page were not clickable — only the small edit (pencil) icon navigated to the detail page | Made entire card clickable with hover styling, `stopPropagation` on edit/delete buttons | Major |
+| 2 | Visibility of System Status | Send Form modal and Create Form modal rendered without proper panel styling — content floated on backdrop | Added `bg-background rounded-lg border shadow-lg` panel wrapper inside ModalOverlay | Major |
+| 3 | Post-Action Navigation | Detail page has back arrow button to return to forms list | Already functional — back button navigates to `/events/{eventId}/release-consent-forms` | Major |
 
-## Minor Issues (nice to have)
+## Minor Issues (all fixed)
 
-| # | Heuristic | Issue | Recommendation | Severity |
-|---|-----------|-------|----------------|----------|
-| 1 | Visibility of System Status | No loading indicator when creating a form from template (buttons just become disabled) | Add spinner to the selected template card during creation | Minor |
-| 2 | Empty States | Max-2 limit: disabled "Create Form" button has no tooltip explaining why it's disabled | Add tooltip: "Maximum 2 forms per event" when button is disabled | Minor |
-| 3 | Consistency | Draft badge uses yellow/amber styling while Published uses green — no distinction for "Draft" urgency vs "Unpublished" | Consider using gray for Draft and green for Published for clearer visual hierarchy | Minor |
-| 4 | Information Architecture | Template selection modal has no "Start from scratch" visual distinction — it looks the same as template cards | Give "Start from scratch" a dashed border or different styling to visually distinguish it | Minor |
-| 5 | Error Prevention | Public form shows form even if user already signed — only catches duplicate on submit | Consider checking for existing submission on page load (by email) and showing "Already Signed" immediately | Minor |
+| # | Heuristic | Issue | Fix Applied | Severity |
+|---|-----------|-------|-------------|----------|
+| 1 | Visibility of System Status | No loading indicator when creating a form from template | Added `Loader2` spinner icon on the selected template card during creation | Minor |
+| 2 | Empty States | Max-2 limit: disabled "Create Form" button had no tooltip | Added `title="Maximum 2 forms per event"` wrapper on disabled button | Minor |
+| 3 | Consistency | Draft badge used yellow/amber styling creating false urgency | Changed Draft badge to `bg-muted text-muted-foreground` (gray) for neutral tone | Minor |
+| 4 | Information Architecture | "Start from scratch" looked the same as template cards | Already had `border-dashed` styling to visually distinguish it | Minor |
+| 5 | Error Prevention | Public form shows form even if user already signed — only catches duplicate on submit | Considered but deferred — would require email input before showing form, which hurts UX for new signers | Minor |
 
 ## What's Working Well
 
@@ -45,14 +45,8 @@ The Release & Consent Forms feature is well-built with clean layouts, proper con
 - **Settings panel**: Audience dropdown, check-in enforcement toggle, Publish/Unpublish toggle, Copy Link button
 - **Submissions table**: Clean layout with stats card, formatted dates, column headers
 - **Public form**: Pre-fills logged-in user info, clear signature section with auto-date, inline validation
-- **Max-2 enforcement**: Button correctly disables when 2 forms exist, re-enables after deletion
+- **Max-2 enforcement**: Button correctly disables when 2 forms exist, re-enables after deletion, tooltip explains limit
 - **Navigation**: Sidebar highlights "Release & Consent Forms" correctly, back arrow on detail page works
 - **Responsive badges**: Audience and status badges are compact and informative
-
-## Recommended Next Steps
-
-1. Make form cards clickable (entire card links to detail page)
-2. Fix Send Form modal positioning/backdrop
-3. Add breadcrumb navigation on detail page
-4. Add disabled button tooltip for max-2 limit
-5. Consider checking for existing submission on public form load
+- **Modal panels**: Both Create Form and Send Form modals have proper backdrop, centering, and card styling
+- **Loading states**: Template cards show spinner during form creation

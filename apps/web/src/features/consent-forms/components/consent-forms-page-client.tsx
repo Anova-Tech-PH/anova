@@ -12,6 +12,7 @@ import {
   HandHelping,
   Globe,
   X,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -52,6 +53,7 @@ export function ConsentFormsPageClient({
   const [forms, setForms] = useState(initialForms);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [creatingTemplate, setCreatingTemplate] = useState<string | null>(null);
   const { confirm, dialog: confirmDialog } = useConfirm();
 
   async function handleCreate(templateKey?: string) {
@@ -60,6 +62,7 @@ export function ConsentFormsPageClient({
       : null;
     const title = template ? template.title : "Untitled Form";
 
+    setCreatingTemplate(templateKey ?? "blank");
     startTransition(async () => {
       try {
         const form = await createConsentForm(
@@ -77,6 +80,8 @@ export function ConsentFormsPageClient({
         toast.error(
           err instanceof Error ? err.message : "Failed to create form"
         );
+      } finally {
+        setCreatingTemplate(null);
       }
     });
   }
@@ -112,13 +117,15 @@ export function ConsentFormsPageClient({
             participants.
           </p>
         </div>
-        <Button
-          onClick={() => setShowCreateModal(true)}
-          disabled={forms.length >= 2 || isPending}
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Create Form
-        </Button>
+        <div title={forms.length >= 2 ? "Maximum 2 forms per event" : undefined}>
+          <Button
+            onClick={() => setShowCreateModal(true)}
+            disabled={forms.length >= 2 || isPending}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Create Form
+          </Button>
+        </div>
       </div>
 
       {forms.length === 0 ? (
@@ -171,7 +178,7 @@ export function ConsentFormsPageClient({
                           className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
                             form.status === "published"
                               ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                              : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
+                              : "bg-muted text-muted-foreground"
                           }`}
                         >
                           {form.status === "published" ? "Published" : "Draft"}
@@ -220,7 +227,7 @@ export function ConsentFormsPageClient({
       {/* Create Form Modal */}
       {showCreateModal && (
         <ModalOverlay onClose={() => setShowCreateModal(false)}>
-          <div className="space-y-4">
+          <div className="w-full max-w-md rounded-lg border bg-background p-6 shadow-lg space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">Create Consent Form</h3>
               <button
@@ -243,7 +250,11 @@ export function ConsentFormsPageClient({
                   disabled={isPending}
                   className="flex w-full items-start gap-3 rounded-lg border p-3 text-left transition-colors hover:bg-muted disabled:opacity-50"
                 >
-                  <FileText className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                  {creatingTemplate === template.key ? (
+                    <Loader2 className="mt-0.5 h-5 w-5 shrink-0 animate-spin text-primary" />
+                  ) : (
+                    <FileText className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                  )}
                   <div>
                     <p className="text-sm font-medium">{template.title}</p>
                     <p className="mt-0.5 text-xs text-muted-foreground">
@@ -258,7 +269,11 @@ export function ConsentFormsPageClient({
                 disabled={isPending}
                 className="flex w-full items-start gap-3 rounded-lg border border-dashed p-3 text-left transition-colors hover:bg-muted disabled:opacity-50"
               >
-                <Plus className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
+                {creatingTemplate === "blank" ? (
+                  <Loader2 className="mt-0.5 h-5 w-5 shrink-0 animate-spin text-muted-foreground" />
+                ) : (
+                  <Plus className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" />
+                )}
                 <div>
                   <p className="text-sm font-medium">Start from scratch</p>
                   <p className="mt-0.5 text-xs text-muted-foreground">

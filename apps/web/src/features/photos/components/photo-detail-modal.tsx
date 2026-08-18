@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import Image from "next/image";
 import {
   Heart,
   ChevronLeft,
@@ -239,17 +238,12 @@ export function PhotoDetailModal({
               className="max-h-[90vh] max-w-full object-contain"
             />
           ) : (
-            <div className="relative w-full h-full min-h-[300px] md:min-h-[500px]">
-              <Image
-                key={photo.id}
-                src={photo.image_url}
-                alt={photo.caption || "Event photo"}
-                fill
-                className="object-contain"
-                sizes="(max-width: 768px) 100vw, 60vw"
-                priority
-              />
-            </div>
+            <img
+              key={photo.id}
+              src={photo.image_url}
+              alt={photo.caption || "Event photo"}
+              className="max-h-[90vh] max-w-full object-contain"
+            />
           )}
 
           {/* Navigation arrows */}
@@ -276,12 +270,10 @@ export function PhotoDetailModal({
           {/* Author section */}
           <div className="px-4 py-3 flex items-center gap-3">
             {photo.author?.avatar_url ? (
-              <Image
+              <img
                 src={photo.author.avatar_url}
                 alt={photo.author.display_name ?? ""}
-                width={36}
-                height={36}
-                className="rounded-full object-cover"
+                className="h-9 w-9 rounded-full object-cover"
               />
             ) : (
               <div className="h-9 w-9 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-semibold">

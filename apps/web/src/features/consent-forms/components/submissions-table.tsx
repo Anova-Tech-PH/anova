@@ -264,7 +264,7 @@ export function SubmissionsTable({
       {/* Send Form Modal */}
       {showSendForm && (
         <ModalOverlay onClose={() => setShowSendForm(false)}>
-          <div className="space-y-4">
+          <div className="w-full max-w-md rounded-lg border bg-background p-6 shadow-lg space-y-4">
             <h3 className="text-lg font-semibold">Send Consent Form</h3>
 
             <div className="space-y-2">

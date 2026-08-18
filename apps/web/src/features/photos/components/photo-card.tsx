@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import Image from "next/image";
 import { Heart } from "lucide-react";
 import { togglePhotoLike } from "@/features/photos/actions";
 import { toast } from "sonner";
@@ -55,12 +54,10 @@ export function PhotoCard({ photo }: PhotoCardProps) {
             playsInline
           />
         ) : (
-          <Image
+          <img
             src={photo.image_url}
             alt={photo.caption || "Event photo"}
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            className="h-full w-full object-cover"
           />
         )}
 

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition, useCallback } from "react";
-import Image from "next/image";
 import { Camera, Video, Heart, Trash2, Download, ImageIcon, Film, Plus, DownloadCloud } from "lucide-react";
 import { Button, Card, CardContent, ConfirmDialog } from "@attendly/ui/components";
 import { toast } from "sonner";
@@ -287,12 +286,10 @@ export function PhotoCollection({
                       playsInline
                     />
                   ) : (
-                    <Image
+                    <img
                       src={photo.image_url}
                       alt={photo.caption || "Event photo"}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                      className="h-full w-full object-cover"
                     />
                   )}
 

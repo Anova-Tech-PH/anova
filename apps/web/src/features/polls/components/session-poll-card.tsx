@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Check } from "lucide-react";
 import { toast } from "sonner";
 import { votePoll, voteRating, voteText, voteCheckbox } from "@/features/polls/actions";
 import type { PollWithResults } from "@/features/polls/queries";
@@ -47,9 +48,9 @@ function CheckboxVoting({
       {poll.options.map((option) => (
         <label
           key={option.id}
-          className={`flex items-center gap-2 rounded-md border px-3 py-2 text-sm cursor-pointer transition-colors ${
+          className={`flex items-center gap-2 rounded-md border-2 px-3 py-2 text-sm cursor-pointer transition-colors ${
             selected.includes(option.id)
-              ? "border-primary bg-primary/5"
+              ? "border-primary bg-primary/5 font-medium"
               : "border-border hover:border-primary/30"
           } ${isClosed ? "cursor-default" : ""}`}
         >
@@ -58,9 +59,14 @@ function CheckboxVoting({
             checked={selected.includes(option.id)}
             onChange={() => toggleOption(option.id)}
             disabled={isClosed || loading}
-            className="rounded border-border"
+            className="rounded border-border accent-primary"
           />
           <span>{option.text}</span>
+          {selected.includes(option.id) && (
+            <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-primary shrink-0">
+              <Check className="h-3 w-3 text-primary-foreground" />
+            </span>
+          )}
         </label>
       ))}
       {!isClosed && (
@@ -268,7 +274,7 @@ export function SessionPollCard({
                 key={option.id}
                 onClick={() => handleVote(option.id)}
                 disabled={isClosed || loading}
-                className={`relative w-full rounded-md border px-3 py-2 text-left text-sm transition-colors disabled:cursor-default ${
+                className={`relative w-full rounded-md border-2 px-3 py-2 text-left text-sm transition-colors disabled:cursor-default ${
                   isSelected
                     ? "border-primary bg-primary/5 font-medium"
                     : "border-border hover:border-primary/30 hover:bg-muted/50"
@@ -281,7 +287,14 @@ export function SessionPollCard({
                   />
                 )}
                 <div className="relative flex items-center justify-between">
-                  <span>{option.text}</span>
+                  <div className="flex items-center gap-2">
+                    {isSelected && (
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary shrink-0">
+                        <Check className="h-3 w-3 text-primary-foreground" />
+                      </span>
+                    )}
+                    <span>{option.text}</span>
+                  </div>
                   {showResults && (
                     <span className="text-xs text-muted-foreground ml-2">
                       {pct}%

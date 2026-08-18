@@ -141,7 +141,7 @@ export async function middleware(request: NextRequest) {
 
     if (!count || count === 0) {
       const url = request.nextUrl.clone();
-      url.pathname = "/onboarding";
+      url.pathname = "/my-events";
       return NextResponse.redirect(url);
     }
   }

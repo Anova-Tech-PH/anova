@@ -7,7 +7,7 @@ import { BookmarkButton } from "./bookmark-button";
 import { RsvpButton } from "@/features/rsvp/components/rsvp-button";
 import { SessionFeedbackForm } from "@/features/feedback/components/session-feedback-form";
 import { SessionPollCard } from "@/features/polls/components/session-poll-card";
-import { NoteButton } from "@/features/session-notes/components/note-button";
+import { Pencil } from "lucide-react";
 import type { FeedbackQuestion } from "@/features/feedback/queries";
 import type { PollWithResults } from "@/features/polls/queries";
 
@@ -494,10 +494,13 @@ export default async function PublicSchedulePage({
                             initialBookmarked={bookmarkedIds.has(session.id)}
                           />
                           {session.type !== "break" && (
-                            <NoteButton
-                              sessionId={session.id}
-                              initialContent={sessionNote}
-                            />
+                            <Link
+                              href={`${basePath}/schedule/${session.id}#notes`}
+                              className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                            >
+                              <Pencil className="h-3 w-3" />
+                              {sessionNote ? "Edit notes" : "Add notes"}
+                            </Link>
                           )}
                         </>
                       )}

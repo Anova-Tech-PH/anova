@@ -34,8 +34,8 @@ import {
   Gift,
   MapPin,
   HeartHandshake,
+  LayoutDashboard,
 } from "lucide-react";
-import { Logo } from "@attendly/ui/logo";
 import { createClient } from "@attendly/ui/supabase/client";
 
 /* ------------------------------------------------------------------ */
@@ -196,30 +196,61 @@ function CollapsibleSection({
 export function EventSidebar({
   params,
   sidebarData = defaultSidebarData,
+  eventTitle,
 }: {
   params: Promise<{ orgSlug: string; eventSlug: string }>;
   sidebarData?: SidebarData;
+  eventTitle: string;
 }) {
   const { orgSlug, eventSlug } = use(params);
   const pathname = usePathname();
   const basePath = `/${orgSlug}/${eventSlug}`;
 
   const [user, setUser] = useState<{ email: string } | null>(null);
+  const [isOrganizer, setIsOrganizer] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [switcherOpen, setSwitcherOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [otherEvents, setOtherEvents] = useState<{ title: string; orgSlug: string; eventSlug: string }[]>([]);
   const menuRef = useRef<HTMLDivElement>(null);
+  const switcherRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user ? { email: data.user.email ?? "" } : null);
+    supabase.auth.getUser().then(async ({ data }) => {
+      if (data.user) {
+        setUser({ email: data.user.email ?? "" });
+        const [orgResult, regResult] = await Promise.all([
+          supabase
+            .from("organization_members")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", data.user.id),
+          supabase
+            .from("registrations")
+            .select("events:event_id (title, slug, organizations:organization_id (slug))")
+            .eq("user_id", data.user.id)
+            .neq("status", "cancelled"),
+        ]);
+        setIsOrganizer((orgResult.count ?? 0) > 0);
+        const events = (regResult.data ?? [])
+          .map((r) => {
+            const ev = r.events as unknown as { title: string; slug: string; organizations: { slug: string } };
+            if (!ev) return null;
+            return { title: ev.title, orgSlug: ev.organizations.slug, eventSlug: ev.slug };
+          })
+          .filter((e): e is NonNullable<typeof e> => e !== null && !(e.orgSlug === orgSlug && e.eventSlug === eventSlug));
+        setOtherEvents(events);
+      }
     });
-  }, []);
+  }, [orgSlug, eventSlug]);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setMenuOpen(false);
+      }
+      if (switcherRef.current && !switcherRef.current.contains(e.target as Node)) {
+        setSwitcherOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClick);
@@ -245,10 +276,65 @@ export function EventSidebar({
 
   const sidebarContent = (
     <>
-      <div className="p-4 border-b">
-        <Link href="/">
-          <Logo size="sm" />
-        </Link>
+      <div className="border-b" ref={switcherRef}>
+        <button
+          onClick={() => setSwitcherOpen(!switcherOpen)}
+          className="flex w-full items-center gap-2 p-4 text-left hover:bg-muted/50 transition-colors"
+        >
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-xs font-bold text-primary shrink-0">
+            {eventTitle.charAt(0).toUpperCase()}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold leading-tight truncate">{eventTitle}</p>
+          </div>
+          <ChevronDown className={`h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform ${switcherOpen ? "rotate-180" : ""}`} />
+        </button>
+
+        {switcherOpen && (
+          <div className="border-t bg-card px-2 py-2 space-y-1 max-h-72 overflow-y-auto">
+            {otherEvents.length > 0 && (
+              <>
+                <p className="px-2 pt-1 pb-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                  Switch event
+                </p>
+                {otherEvents.map((ev) => (
+                  <Link
+                    key={`${ev.orgSlug}/${ev.eventSlug}`}
+                    href={`/${ev.orgSlug}/${ev.eventSlug}`}
+                    onClick={() => setSwitcherOpen(false)}
+                    className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  >
+                    <div className="flex h-6 w-6 items-center justify-center rounded bg-muted text-[10px] font-bold shrink-0">
+                      {ev.title.charAt(0).toUpperCase()}
+                    </div>
+                    <span className="truncate">{ev.title}</span>
+                  </Link>
+                ))}
+                <div className="my-1 border-t" />
+              </>
+            )}
+
+            <Link
+              href="/my-events"
+              onClick={() => setSwitcherOpen(false)}
+              className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            >
+              <Calendar className="h-4 w-4 shrink-0" />
+              All My Events
+            </Link>
+
+            {isOrganizer && (
+              <Link
+                href="/dashboard"
+                onClick={() => setSwitcherOpen(false)}
+                className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              >
+                <LayoutDashboard className="h-4 w-4 shrink-0" />
+                Organizer Dashboard
+              </Link>
+            )}
+          </div>
+        )}
       </div>
 
       <nav className="flex-1 overflow-y-auto p-2 space-y-0.5">
@@ -541,8 +627,11 @@ export function EventSidebar({
     <>
       {/* Mobile top bar with hamburger */}
       <div className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between border-b bg-background px-4 py-3 lg:hidden">
-        <Link href="/">
-          <Logo size="sm" />
+        <Link href={basePath} className="flex items-center gap-2 truncate max-w-[60%]">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-xs font-bold text-primary shrink-0">
+            {eventTitle.charAt(0).toUpperCase()}
+          </div>
+          <span className="text-sm font-semibold truncate">{eventTitle}</span>
         </Link>
         <button
           onClick={() => setMobileOpen(!mobileOpen)}

@@ -445,7 +445,7 @@ export default async function SessionDetailPage({
 
           {/* Personal Notes (Whova-style card) */}
           {user && (
-            <div className="mt-6">
+            <div className="mt-6" id="notes">
               <NoteCard
                 sessionId={sessionId}
                 initialContent={noteContent}

@@ -144,7 +144,7 @@ export default async function PublicEventLayout({
 
   return (
     <div className="min-h-screen lg:flex">
-      <EventSidebar params={params} sidebarData={sidebarData} />
+      <EventSidebar params={params} sidebarData={sidebarData} eventTitle={event?.title ?? ""} />
       <div className="flex-1 min-w-0 flex flex-col">
         {event && <EventHeaderBar event={event} />}
         <main className="flex-1 min-w-0 pt-[57px] lg:pt-0">{children}</main>

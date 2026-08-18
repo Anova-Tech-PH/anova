@@ -172,7 +172,7 @@ export function SpeakersClientPage({
 
       {/* Filters Row */}
       <div className="max-w-6xl mx-auto px-4 py-6">
-        <div className="flex flex-wrap items-center gap-3 mb-6">
+        <div className="grid grid-cols-2 gap-3 mb-6 sm:flex sm:flex-wrap sm:items-center">
           {/* Day filter */}
           <select
             aria-label="Speaking on"
@@ -206,14 +206,14 @@ export function SpeakersClientPage({
           {/* Reset button */}
           <button
             onClick={resetFilters}
-            className="flex items-center gap-1.5 px-3 py-2 text-sm border rounded-md hover:bg-gray-100 bg-white"
+            className="flex items-center justify-center gap-1.5 px-3 py-2 text-sm border rounded-md hover:bg-gray-100 bg-white"
           >
             <RotateCcw className="h-4 w-4" />
             Reset filters
           </button>
 
           {/* Search input */}
-          <div className="relative flex-1 min-w-[200px]">
+          <div className="relative sm:flex-1 sm:min-w-[200px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
               type="text"

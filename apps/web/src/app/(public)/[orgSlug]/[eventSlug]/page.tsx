@@ -201,23 +201,6 @@ export default async function PublicEventPage({
               </span>
             )}
           </div>
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-            <Link
-              href={`/register/${orgSlug}/${eventSlug}`}
-              className={buttonVariants({
-                size: "lg",
-                className: "gap-2 px-8 shadow-lg shadow-primary/20",
-              })}
-            >
-              {isRegistered ? "View My Ticket" : "Register Now"}
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            {!isRegistered && startingPrice != null && (
-              <span className={`text-sm ${event.cover_image ? "text-white/70" : "text-muted-foreground"}`}>
-                Starting from <span className={`font-semibold ${event.cover_image ? "text-white" : "text-foreground"}`}>${Number(startingPrice).toFixed(0)}</span>
-              </span>
-            )}
-          </div>
           {/* Quick stats */}
           <div className={`mt-8 flex items-center justify-center gap-6 text-xs ${event.cover_image ? "text-white/70" : "text-muted-foreground"}`}>
             {(regCount ?? 0) > 0 && (

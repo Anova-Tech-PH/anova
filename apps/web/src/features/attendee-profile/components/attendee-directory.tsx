@@ -101,8 +101,8 @@ export function AttendeeDirectory({
         </p>
       </div>
 
-      {/* Tabs */}
-      <div className="mb-4 flex gap-1 overflow-x-auto rounded-lg bg-muted/50 p-1">
+      {/* Tabs — desktop */}
+      <div className="mb-4 hidden sm:flex gap-1 overflow-x-auto rounded-lg bg-muted/50 p-1">
         {tabs.map(({ key, label, icon: Icon }) => (
           <button
             key={key}
@@ -117,6 +117,19 @@ export function AttendeeDirectory({
             {label}
           </button>
         ))}
+      </div>
+
+      {/* Tabs — mobile dropdown */}
+      <div className="mb-4 sm:hidden">
+        <select
+          value={currentTab}
+          onChange={(e) => handleTabChange(e.target.value)}
+          className="w-full rounded-lg border bg-background px-3 py-2 text-sm font-medium text-foreground"
+        >
+          {tabs.map(({ key, label }) => (
+            <option key={key} value={key}>{label}</option>
+          ))}
+        </select>
       </div>
 
       {/* Search */}

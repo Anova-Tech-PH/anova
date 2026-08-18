@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition, useRef, useCallback } from "react";
-import Image from "next/image";
 import {
   Upload,
   X,
@@ -344,12 +343,11 @@ export function UploadPhotoDialog({
                   controls
                 />
               ) : (
-                <div className="relative aspect-video">
-                  <Image
+                <div className="aspect-video bg-black flex items-center justify-center">
+                  <img
                     src={activePhoto.previewUrl}
                     alt="Preview"
-                    fill
-                    className="object-contain bg-black"
+                    className="max-h-full max-w-full object-contain"
                   />
                 </div>
               )}
@@ -369,11 +367,10 @@ export function UploadPhotoDialog({
                         : "border-transparent hover:border-muted-foreground/30"
                     }`}
                   >
-                    <Image
+                    <img
                       src={photo.previewUrl}
                       alt={`Photo ${index + 1}`}
-                      fill
-                      className="object-cover"
+                      className="h-full w-full object-cover"
                     />
                   </button>
                 ))}
