@@ -30,6 +30,7 @@ export * from "./queries/passport";
 export * from "./queries/polls";
 export * from "./queries/session-chat";
 export * from "./queries/session-likes";
+export * from "./queries/attendees";
 
 // Realtime
 export * from "./realtime/messaging";
@@ -56,3 +57,4 @@ export * from "./mutations/volunteers";
 export * from "./mutations/polls";
 export * from "./mutations/session-chat";
 export * from "./mutations/session-likes";
+export * from "./mutations/attendees";
