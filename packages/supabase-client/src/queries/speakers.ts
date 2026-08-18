@@ -12,6 +12,20 @@ export async function getSpeakers(client: SupabaseClient, eventId: string) {
   return data ?? [];
 }
 
+export async function getSpeakersWithSessions(client: SupabaseClient, eventId: string) {
+  const { data, error } = await client
+    .from("speakers")
+    .select(
+      `*, session_speakers(sessions(id, title, start_time, end_time, session_tracks(tracks(id, name, color))))`
+    )
+    .eq("event_id", eventId)
+    .order("sort_order", { ascending: true, nullsFirst: false })
+    .order("name");
+
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
+
 export async function getSpeakerDetail(client: SupabaseClient, speakerId: string) {
   const { data, error } = await client
     .from("speakers")
