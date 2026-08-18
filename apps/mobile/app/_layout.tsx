@@ -32,7 +32,7 @@ function AuthGuard() {
       router.replace("/(auth)/sign-in");
     } else if (session && inAuthGroup) {
       // Signed in but still on auth screen, redirect to app
-      router.replace("/(app)/rooms");
+      router.replace("/(app)/home");
     }
   }, [session, isLoading, segments]);
 
@@ -49,7 +49,7 @@ function AuthGuard() {
       (response) => {
         const data = response.notification.request.content.data;
         if (data?.type === "connection") {
-          router.replace("/(app)/people");
+          router.replace("/(app)/attendees");
         }
       }
     );
@@ -60,7 +60,7 @@ function AuthGuard() {
   if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" color="#0d7377" />
+        <ActivityIndicator size="large" color="#8b3dff" />
       </View>
     );
   }

@@ -3,26 +3,31 @@ import { StyleSheet, Platform } from "react-native";
 // ── Color Palette ──────────────────────────────────────────────
 export const colors = {
   // Primary
-  primary: "#0d7377",
-  primaryDark: "#095c5f",
-  primaryLight: "#e0f2f3",
-  primaryMuted: "rgba(13, 115, 119, 0.08)",
-  primarySoft: "rgba(13, 115, 119, 0.15)",
+  primary: "#8b3dff",
+  primaryDark: "#7030d4",
+  primaryLight: "#f3edff",
+  primaryMuted: "rgba(139, 61, 255, 0.08)",
+  primarySoft: "rgba(139, 61, 255, 0.15)",
 
-  // Accent gradient endpoints
-  gradientStart: "#0d7377",
-  gradientEnd: "#0a9396",
+  // Brand accents
+  brandPink: "#ff2f92",
+  brandOrange: "#ff8a3d",
+
+  // Gradient endpoints
+  gradientStart: "#8b3dff",
+  gradientMid: "#ff2f92",
+  gradientEnd: "#ff8a3d",
 
   // Neutrals
-  background: "#f5f7f0",
+  background: "#fafafa",
   surface: "#ffffff",
-  surfaceElevated: "#fafcf7",
-  textPrimary: "#1a2e05",
+  surfaceElevated: "#fafafa",
+  textPrimary: "#09090b",
   textSecondary: "#4b5563",
   textMuted: "#9ca3af",
-  border: "#e8ebe3",
-  borderLight: "#f0f2ec",
-  divider: "#f3f4f1",
+  border: "#e4e4e7",
+  borderLight: "#f0f0f2",
+  divider: "#f4f4f5",
 
   // Status
   success: "#16a34a",
@@ -77,7 +82,7 @@ export const radius = {
 export const shadows = {
   sm: Platform.select({
     ios: {
-      shadowColor: "#1a2e05",
+      shadowColor: "#09090b",
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.06,
       shadowRadius: 3,
@@ -87,7 +92,7 @@ export const shadows = {
   }),
   md: Platform.select({
     ios: {
-      shadowColor: "#1a2e05",
+      shadowColor: "#09090b",
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.08,
       shadowRadius: 8,
@@ -97,7 +102,7 @@ export const shadows = {
   }),
   lg: Platform.select({
     ios: {
-      shadowColor: "#1a2e05",
+      shadowColor: "#09090b",
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.10,
       shadowRadius: 16,

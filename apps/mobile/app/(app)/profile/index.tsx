@@ -83,7 +83,7 @@ export default function ProfileScreen() {
         {/* Gradient header + avatar */}
         <View style={styles.headerWrapper}>
           <LinearGradient
-            colors={[colors.gradientStart, colors.gradientEnd]}
+            colors={[colors.gradientStart, colors.gradientMid, colors.gradientEnd]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.gradientHeader}
@@ -91,7 +91,7 @@ export default function ProfileScreen() {
           <View style={styles.avatarContainer}>
             <View style={styles.avatarBorder}>
               <LinearGradient
-                colors={[colors.gradientStart, colors.gradientEnd]}
+                colors={[colors.gradientStart, colors.gradientMid, colors.gradientEnd]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.avatarGradient}

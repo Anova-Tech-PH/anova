@@ -59,27 +59,21 @@ export default function SignUpScreen() {
       >
         {/* Gradient Hero with decorative elements */}
         <LinearGradient
-          colors={["#0a6365", "#0d7377", "#0a9396", "#14b8a6"]}
+          colors={["#6a2cc0", "#c4206e", "#d06a28"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.hero}
         >
-          {/* Floating decorative circles */}
           <View style={styles.decoContainer}>
             <View style={[styles.decoCircle, styles.decoCircle1]} />
             <View style={[styles.decoCircle, styles.decoCircle2]} />
             <View style={[styles.decoCircle, styles.decoCircle3]} />
-            <View style={[styles.decoDot, styles.decoDot1]} />
-            <View style={[styles.decoDot, styles.decoDot2]} />
-            <View style={[styles.decoDot, styles.decoDot3]} />
           </View>
 
-          {/* Icon badge */}
-          <View style={styles.iconBadge}>
-            <Ionicons name="sparkles" size={32} color={colors.white} />
-          </View>
-
-          <Text style={styles.brand}>Eventriv</Text>
+          <Text style={styles.brand}>
+            <Text>EVEN</Text>
+            <Text style={{ opacity: 0.6 }}>TRIV</Text>
+          </Text>
           <Text style={styles.heroSubtitle}>
             Join a world of amazing events
           </Text>
@@ -210,7 +204,7 @@ export default function SignUpScreen() {
             style={{ marginTop: spacing.xl }}
           >
             <LinearGradient
-              colors={["#0d7377", "#0a9396"]}
+              colors={[colors.gradientStart, colors.gradientMid, colors.gradientEnd]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={[styles.button, loading && styles.buttonDisabled]}
@@ -289,7 +283,7 @@ export default function SignUpScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0a6365",
+    backgroundColor: "#6a2cc0",
   },
   scrollContent: {
     flexGrow: 1,
@@ -307,65 +301,30 @@ const styles = StyleSheet.create({
   decoCircle: {
     position: "absolute",
     borderRadius: 999,
-    borderWidth: 1.5,
-    borderColor: "rgba(255,255,255,0.12)",
+    backgroundColor: "rgba(255,255,255,0.06)",
   },
   decoCircle1: {
-    width: 180,
-    height: 180,
-    top: -40,
-    right: -50,
+    width: 200,
+    height: 200,
+    top: -50,
+    right: -60,
   },
   decoCircle2: {
-    width: 120,
-    height: 120,
-    bottom: -20,
-    left: -30,
+    width: 140,
+    height: 140,
+    bottom: -30,
+    left: -40,
   },
   decoCircle3: {
     width: 80,
     height: 80,
-    top: 30,
-    left: 40,
-    borderColor: "rgba(255,255,255,0.08)",
-  },
-  decoDot: {
-    position: "absolute",
-    borderRadius: 999,
-    backgroundColor: "rgba(255,255,255,0.15)",
-  },
-  decoDot1: {
-    width: 8,
-    height: 8,
-    top: 50,
-    right: 60,
-  },
-  decoDot2: {
-    width: 12,
-    height: 12,
-    bottom: 40,
-    right: 40,
-  },
-  decoDot3: {
-    width: 6,
-    height: 6,
-    top: 90,
-    left: 80,
-  },
-  iconBadge: {
-    width: 64,
-    height: 64,
-    borderRadius: 20,
-    backgroundColor: "rgba(255,255,255,0.18)",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: spacing.lg,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.25)",
+    top: 40,
+    left: 50,
+    backgroundColor: "rgba(255,255,255,0.04)",
   },
   brand: {
     ...typography.brand,
-    fontSize: 36,
+    fontSize: 42,
     color: colors.white,
     textAlign: "center",
     marginBottom: 6,
@@ -412,7 +371,7 @@ const styles = StyleSheet.create({
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f8faf5",
+    backgroundColor: colors.surfaceElevated,
     borderWidth: 1.5,
     borderColor: colors.borderLight,
     borderRadius: 14,
@@ -438,7 +397,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     ...Platform.select({
       ios: {
-        shadowColor: "#0d7377",
+        shadowColor: "#8b3dff",
         shadowOffset: { width: 0, height: 6 },
         shadowOpacity: 0.3,
         shadowRadius: 12,
@@ -509,7 +468,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
   },
   termsLink: {
-    color: colors.primary,
+    color: colors.brandPink,
   },
   // -- Footer --------------------------------------------------
   footer: {
@@ -523,6 +482,6 @@ const styles = StyleSheet.create({
   },
   link: {
     ...typography.captionBold,
-    color: colors.primary,
+    color: colors.brandPink,
   },
 });

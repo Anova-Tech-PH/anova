@@ -295,7 +295,7 @@ export default function RoomsScreen() {
                       style={styles.joinButtonWrapper}
                     >
                       <LinearGradient
-                        colors={[colors.gradientStart, colors.gradientEnd]}
+                        colors={[colors.gradientStart, colors.gradientMid, colors.gradientEnd]}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 0 }}
                         style={[
