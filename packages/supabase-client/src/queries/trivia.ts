@@ -89,14 +89,30 @@ export async function getTriviaLeaderboard(
   client: SupabaseClient,
   gameId: string,
 ) {
-  const { data, error } = await client
+  const { data: attempts, error } = await client
     .from("trivia_attempts")
-    .select("*, profiles(full_name, avatar_url)")
+    .select("*")
     .eq("game_id", gameId)
     .not("completed_at", "is", null)
     .order("score", { ascending: false })
     .order("total_time_ms", { ascending: true });
 
-  if (error) return [];
-  return data ?? [];
+  if (error || !attempts) return [];
+
+  const userIds = [...new Set(attempts.map((a: any) => a.user_id))];
+  if (userIds.length === 0) return attempts.map((a: any) => ({ ...a, profiles: null }));
+
+  const { data: profiles } = await client
+    .from("profiles")
+    .select("id, full_name, avatar_url")
+    .in("id", userIds);
+
+  const profileMap = new Map(
+    (profiles ?? []).map((p: any) => [p.id, { full_name: p.full_name, avatar_url: p.avatar_url }]),
+  );
+
+  return attempts.map((a: any) => ({
+    ...a,
+    profiles: profileMap.get(a.user_id) ?? null,
+  }));
 }

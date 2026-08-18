@@ -56,23 +56,39 @@ export async function getContestDetail(
 }
 
 /**
- * Get contest entries with profile join, ordered by likes_count desc.
+ * Get contest entries ordered by likes_count desc, with author profiles.
+ * Fetches entries then resolves profiles separately (no direct FK to profiles).
  * Returns empty array on error.
  */
 export async function getContestEntries(
   client: SupabaseClient,
   contestId: string,
 ) {
-  const { data, error } = await client
+  const { data: entries, error } = await client
     .from("contest_entries")
-    .select(
-      "id, contest_id, user_id, content, image_url, likes_count, created_at, profiles(full_name, avatar_url)",
-    )
+    .select("id, contest_id, user_id, content, image_url, likes_count, created_at")
     .eq("contest_id", contestId)
     .order("likes_count", { ascending: false });
 
-  if (error) return [];
-  return data ?? [];
+  if (error || !entries) return [];
+
+  // Resolve profiles for entry authors
+  const userIds = [...new Set(entries.map((e: any) => e.user_id))];
+  if (userIds.length === 0) return entries.map((e: any) => ({ ...e, profiles: null }));
+
+  const { data: profiles } = await client
+    .from("profiles")
+    .select("id, full_name, avatar_url")
+    .in("id", userIds);
+
+  const profileMap = new Map(
+    (profiles ?? []).map((p: any) => [p.id, { full_name: p.full_name, avatar_url: p.avatar_url }]),
+  );
+
+  return entries.map((e: any) => ({
+    ...e,
+    profiles: profileMap.get(e.user_id) ?? null,
+  }));
 }
 
 /**
