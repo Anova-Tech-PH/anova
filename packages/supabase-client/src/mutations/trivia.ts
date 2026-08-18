@@ -33,3 +33,45 @@ export async function submitTriviaAnswer(
 
   return { correct, correctOption: question.correct_option };
 }
+
+/**
+ * Start a trivia attempt for a user.
+ * Returns the attempt ID or throws on error.
+ */
+export async function startTriviaAttempt(
+  client: SupabaseClient,
+  params: { gameId: string; userId: string },
+): Promise<{ id: string }> {
+  const { data, error } = await client
+    .from("trivia_attempts")
+    .insert({
+      game_id: params.gameId,
+      user_id: params.userId,
+    })
+    .select("id")
+    .single();
+
+  if (error) throw new Error(error.message);
+  return { id: data.id };
+}
+
+/**
+ * Complete a trivia attempt with score and time.
+ * Throws on error.
+ */
+export async function completeTriviaAttempt(
+  client: SupabaseClient,
+  attemptId: string,
+  params: { score: number; totalTimeMs: number },
+): Promise<void> {
+  const { error } = await client
+    .from("trivia_attempts")
+    .update({
+      completed_at: new Date().toISOString(),
+      score: params.score,
+      total_time_ms: params.totalTimeMs,
+    })
+    .eq("id", attemptId);
+
+  if (error) throw new Error(error.message);
+}
