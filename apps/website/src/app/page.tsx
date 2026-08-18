@@ -6,8 +6,8 @@ const APP_URL = "https://app.eventriv.com";
 const STATS = [
   { num: "5min", label: "From signup to a live event page" },
   { num: "1", label: "Tool instead of five" },
-  { num: "\u221E", label: "Events on the free plan" },
-  { num: "$0", label: "Early access pricing" },
+  { num: "\u221E", label: "Events — no per-ticket fees" },
+  { num: "24h", label: "Custom quote turnaround" },
 ];
 
 const STEPS = [
@@ -59,8 +59,8 @@ const PLAN_FEATURES = [
 
 const FAQS = [
   {
-    q: "Is Eventriv really free?",
-    a: "Yes. Every feature is free during early access \u2014 no credit card and no trial clock. Paid plans come later for advanced needs, and the core keeps a free tier.",
+    q: "How does pricing work?",
+    a: "We offer custom per-event pricing based on your event size and needs. No per-ticket fees, no hidden charges. Request a quote and we\u2019ll get back to you within 24 hours.",
   },
   {
     q: "How long does setup take?",
@@ -123,7 +123,7 @@ export default function HomePage() {
             href={`${APP_URL}/signup`}
             className="rounded-[2px] px-5 py-[11px] text-[13px] font-bold text-white [background:linear-gradient(100deg,#8b3dff,#ff2f92_62%,#ff8a3d)] hover:brightness-[0.94] transition-[filter]"
           >
-            Get early access
+            Get started
           </a>
         </div>
       </header>
@@ -199,7 +199,7 @@ export default function HomePage() {
                   </a>
                 </div>
                 <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-outline">
-                  Free while in early access — no credit card
+                  Custom pricing — no per-ticket fees
                 </span>
               </div>
             </div>
@@ -385,32 +385,31 @@ export default function HomePage() {
                 Pricing
               </span>
               <h2 className="font-[800] uppercase leading-[0.98] tracking-[-0.05em] [font-size:clamp(32px,4.2vw,60px)] [margin-left:-0.04em]">
-                <span className="block">Free to start.</span>
+                <span className="block">Custom pricing</span>
                 <span className="block bg-[image:linear-gradient(100deg,#8b3dff,#ff2f92_58%,#ff8a3d)] bg-clip-text text-transparent">
-                  Free to grow.
+                  for every event.
                 </span>
               </h2>
               <p className="mt-[26px] max-w-[38ch] text-[15.5px] leading-[1.7] text-on-surface-variant">
-                Every feature is included during early access. No seat counts,
-                no per-ticket cut, no credit card.
+                Every event is unique. Tell us about yours and we&apos;ll create
+                a custom package — no per-ticket fees, no hidden charges.
               </p>
             </div>
 
-            {/* Right — pricing panel */}
+            {/* Right — pricing CTA panel */}
             <div className="overflow-hidden rounded-[3px] border border-white/[0.16] bg-surface-container">
               {/* Header */}
-              <div className="flex items-baseline justify-between gap-6 border-b border-white/[0.14] p-[26px]">
-                <div>
-                  <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent-pink">
-                    Early access
-                  </div>
-                  <div className="mt-[10px] text-[26px] font-[800] tracking-[-0.03em]">
-                    Organiser plan
-                  </div>
+              <div className="border-b border-white/[0.14] p-[26px]">
+                <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent-pink">
+                  Per-event pricing
                 </div>
-                <div className="text-[46px] font-[800] tracking-[-0.05em] bg-[image:linear-gradient(100deg,#8b3dff,#ff2f92_60%,#ff8a3d)] bg-clip-text text-transparent">
-                  $0
+                <div className="mt-[10px] text-[26px] font-[800] tracking-[-0.03em]">
+                  Tailored to your needs
                 </div>
+                <p className="mt-[12px] text-[14px] leading-[1.7] text-[#d4d4d8]">
+                  Get a custom quote based on your event size, format, and features.
+                  Most quotes delivered within 24 hours.
+                </p>
               </div>
 
               {/* Features */}
@@ -429,10 +428,10 @@ export default function HomePage() {
               {/* CTA */}
               <div className="p-[26px]">
                 <a
-                  href={`${APP_URL}/signup`}
-                  className="block rounded-[2px] px-[22px] py-[15px] text-left text-[14px] font-bold text-white [background:linear-gradient(100deg,#8b3dff,#ff2f92_62%,#ff8a3d)] hover:brightness-[0.94] transition-[filter]"
+                  href={`${APP_URL}/pricing`}
+                  className="block rounded-[2px] px-[22px] py-[15px] text-center text-[14px] font-bold text-white [background:linear-gradient(100deg,#8b3dff,#ff2f92_62%,#ff8a3d)] hover:brightness-[0.94] transition-[filter]"
                 >
-                  Get early access
+                  Get your quote
                 </a>
               </div>
             </div>
@@ -481,13 +480,13 @@ export default function HomePage() {
             </h2>
             <div className="mt-[clamp(32px,4vw,48px)] flex flex-wrap items-center gap-[14px]">
               <a
-                href={`${APP_URL}/signup`}
+                href={`${APP_URL}/pricing`}
                 className="rounded-[2px] bg-on-surface px-7 py-4 text-[14px] font-bold text-surface"
               >
-                Get early access — free
+                Get your quote
               </a>
               <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/70">
-                No credit card required
+                Custom pricing — no per-ticket fees
               </span>
             </div>
           </div>
