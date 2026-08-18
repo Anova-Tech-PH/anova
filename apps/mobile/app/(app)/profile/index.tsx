@@ -1,316 +1,456 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
-  TouchableOpacity,
+  TextInput,
+  ScrollView,
   StyleSheet,
   ActivityIndicator,
-  ScrollView,
   RefreshControl,
+  TouchableOpacity,
+  Alert,
+  KeyboardAvoidingView,
   Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getProfile } from "@attendly/supabase-client";
-import { LinearGradient } from "expo-linear-gradient";
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
+import { getProfile, updateProfileMutation } from "@attendly/supabase-client";
 import { supabase } from "../../../src/lib/supabase";
 import { useAuth } from "../../../src/lib/auth-context";
+import { Avatar } from "../../../src/components/avatar";
 import {
   colors,
   typography,
   spacing,
   radius,
   shadows,
+  shared,
 } from "../../../src/theme";
 
-function getInitials(name: string | null) {
-  if (!name) return "?";
-  return name
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
+// ── Avatar Upload Helper ──────────────────────────────────────────
+
+async function uploadAvatar(uri: string): Promise<string> {
+  const response = await fetch(uri);
+  const blob = await response.blob();
+  const ext = uri.split(".").pop()?.split("?")[0] ?? "jpg";
+  const fileName = `avatars/${Date.now()}.${ext}`;
+
+  const { error } = await supabase.storage
+    .from("event-images")
+    .upload(fileName, blob, { contentType: `image/${ext === "png" ? "png" : "jpeg"}` });
+
+  if (error) throw error;
+
+  const { data } = supabase.storage.from("event-images").getPublicUrl(fileName);
+  return data.publicUrl;
 }
 
-const AVATAR_SIZE = 96;
-const GRADIENT_HEIGHT = 160;
-const AVATAR_OVERLAP = AVATAR_SIZE / 2;
+// ── Component ─────────────────────────────────────────────────────
+
+const AVATAR_SIZE = 100;
 
 export default function ProfileScreen() {
   const { user, signOut } = useAuth();
   const queryClient = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
 
-  const { data: profile, isLoading } = useQuery({
+  // Form state
+  const [fullName, setFullName] = useState("");
+  const [bio, setBio] = useState("");
+  const [jobTitle, setJobTitle] = useState("");
+  const [company, setCompany] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [dirty, setDirty] = useState(false);
+
+  const {
+    data: profile,
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: ["profile", user?.id],
     queryFn: () => getProfile(supabase, user!.id),
     enabled: !!user?.id,
   });
 
+  // Sync fetched profile into form state
+  useEffect(() => {
+    if (profile) {
+      setFullName(profile.full_name ?? "");
+      setBio(profile.bio ?? "");
+      setJobTitle(profile.job_title ?? "");
+      setCompany(profile.company ?? "");
+      setAvatarUrl(profile.avatar_url ?? null);
+      setDirty(false);
+    }
+  }, [profile]);
+
+  // Save mutation
+  const saveMutation = useMutation({
+    mutationFn: () =>
+      updateProfileMutation(supabase, user!.id, {
+        full_name: fullName.trim(),
+        avatar_url: avatarUrl ?? undefined,
+        bio: bio.trim(),
+        company: company.trim(),
+        job_title: jobTitle.trim(),
+      }),
+    onSuccess: () => {
+      setDirty(false);
+      queryClient.invalidateQueries({ queryKey: ["profile", user?.id] });
+      Alert.alert("Saved", "Your profile has been updated.");
+    },
+    onError: (err: Error) => {
+      Alert.alert("Error", err.message);
+    },
+  });
+
   const onRefresh = async () => {
     setRefreshing(true);
-    await queryClient.invalidateQueries({ queryKey: ["profile", user?.id] });
+    await refetch();
     setRefreshing(false);
   };
 
+  const handleFieldChange = (
+    setter: (v: string) => void,
+    value: string,
+  ) => {
+    setter(value);
+    setDirty(true);
+  };
+
+  const pickAvatar = async () => {
+    const permResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permResult.granted) {
+      Alert.alert(
+        "Permission required",
+        "Please allow access to your photo library.",
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (result.canceled || !result.assets?.[0]) return;
+
+    setUploading(true);
+    try {
+      const url = await uploadAvatar(result.assets[0].uri);
+      setAvatarUrl(url);
+      setDirty(true);
+    } catch (err) {
+      Alert.alert(
+        "Upload failed",
+        err instanceof Error ? err.message : "Could not upload avatar.",
+      );
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // ── Loading state ───────────────────────────────────────────────
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.centered} edges={["bottom"]}>
+      <SafeAreaView style={shared.centered} edges={["bottom"]}>
         <ActivityIndicator size="large" color={colors.primary} />
       </SafeAreaView>
     );
   }
 
-  const interests: string[] =
-    profile?.interests && Array.isArray(profile.interests)
-      ? profile.interests
-      : [];
+  // ── Empty state (no profile found) ──────────────────────────────
+  if (!profile && !isLoading) {
+    return (
+      <SafeAreaView style={shared.centered} edges={["bottom"]}>
+        <Ionicons
+          name="person-outline"
+          size={48}
+          color={colors.textMuted}
+        />
+        <Text style={styles.emptyText}>Profile not found</Text>
+        <TouchableOpacity style={styles.signOutBtn} onPress={signOut}>
+          <Text style={styles.signOutBtnText}>Sign Out</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={["bottom"]}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={colors.primary}
-          />
-        }
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        {/* Gradient header + avatar */}
-        <View style={styles.headerWrapper}>
-          <LinearGradient
-            colors={[colors.gradientStart, colors.gradientMid, colors.gradientEnd]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.gradientHeader}
-          />
-          <View style={styles.avatarContainer}>
-            <View style={styles.avatarBorder}>
-              <LinearGradient
-                colors={[colors.gradientStart, colors.gradientMid, colors.gradientEnd]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.avatarGradient}
-              >
-                <Text style={styles.avatarText}>
-                  {getInitials(profile?.full_name)}
-                </Text>
-              </LinearGradient>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={colors.primary}
+            />
+          }
+        >
+          {/* ── Avatar Section ─────────────────────────────────── */}
+          <View style={styles.avatarSection}>
+            <TouchableOpacity
+              style={styles.avatarWrapper}
+              onPress={pickAvatar}
+              activeOpacity={0.7}
+              disabled={uploading}
+            >
+              {uploading ? (
+                <View style={styles.avatarLoading}>
+                  <ActivityIndicator size="small" color={colors.white} />
+                </View>
+              ) : (
+                <Avatar
+                  name={fullName || profile?.full_name || null}
+                  size={AVATAR_SIZE}
+                  photoUrl={avatarUrl}
+                />
+              )}
+              <View style={styles.cameraButton}>
+                <Ionicons name="camera" size={16} color={colors.white} />
+              </View>
+            </TouchableOpacity>
+            <Text style={styles.avatarHint}>Tap to change photo</Text>
+          </View>
+
+          {/* ── Email (read-only) ──────────────────────────────── */}
+          <View style={styles.fieldGroup}>
+            <Text style={styles.fieldLabel}>Email</Text>
+            <View style={[styles.input, styles.inputDisabled]}>
+              <Text style={styles.inputDisabledText}>
+                {user?.email ?? ""}
+              </Text>
             </View>
           </View>
-        </View>
 
-        {/* Name & email */}
-        <View style={styles.nameSection}>
-          <Text style={styles.name}>
-            {profile?.full_name ?? "No name set"}
-          </Text>
-          <Text style={styles.email}>{user?.email ?? ""}</Text>
-        </View>
+          {/* ── Display Name ───────────────────────────────────── */}
+          <View style={styles.fieldGroup}>
+            <Text style={styles.fieldLabel}>Display Name</Text>
+            <TextInput
+              style={styles.input}
+              value={fullName}
+              onChangeText={(v) => handleFieldChange(setFullName, v)}
+              placeholder="Your name"
+              placeholderTextColor={colors.textMuted}
+              autoCapitalize="words"
+            />
+          </View>
 
-        {/* Info cards */}
-        <View style={styles.cardsContainer}>
-          {(profile?.company || profile?.job_title) && (
-            <View style={styles.card}>
-              <View style={styles.sectionHeader}>
-                <Ionicons
-                  name="briefcase-outline"
-                  size={16}
-                  color={colors.textMuted}
-                />
-                <Text style={styles.sectionTitle}>Work</Text>
-              </View>
-              {profile?.job_title && (
-                <Text style={styles.fieldValue}>{profile.job_title}</Text>
-              )}
-              {profile?.company && (
-                <Text style={styles.meta}>{profile.company}</Text>
-              )}
-            </View>
-          )}
+          {/* ── Job Title ──────────────────────────────────────── */}
+          <View style={styles.fieldGroup}>
+            <Text style={styles.fieldLabel}>Job Title</Text>
+            <TextInput
+              style={styles.input}
+              value={jobTitle}
+              onChangeText={(v) => handleFieldChange(setJobTitle, v)}
+              placeholder="e.g. Software Engineer"
+              placeholderTextColor={colors.textMuted}
+              autoCapitalize="words"
+            />
+          </View>
 
-          {profile?.bio && (
-            <View style={styles.card}>
-              <View style={styles.sectionHeader}>
-                <Ionicons
-                  name="document-text-outline"
-                  size={16}
-                  color={colors.textMuted}
-                />
-                <Text style={styles.sectionTitle}>Bio</Text>
-              </View>
-              <Text style={styles.bio}>{profile.bio}</Text>
-            </View>
-          )}
+          {/* ── Company ────────────────────────────────────────── */}
+          <View style={styles.fieldGroup}>
+            <Text style={styles.fieldLabel}>Company</Text>
+            <TextInput
+              style={styles.input}
+              value={company}
+              onChangeText={(v) => handleFieldChange(setCompany, v)}
+              placeholder="e.g. Acme Inc."
+              placeholderTextColor={colors.textMuted}
+              autoCapitalize="words"
+            />
+          </View>
 
-          {interests.length > 0 && (
-            <View style={styles.card}>
-              <View style={styles.sectionHeader}>
-                <Ionicons
-                  name="heart-outline"
-                  size={16}
-                  color={colors.textMuted}
-                />
-                <Text style={styles.sectionTitle}>Interests</Text>
-              </View>
-              <View style={styles.tagsContainer}>
-                {interests.map((tag: string, i: number) => (
-                  <View key={i} style={styles.tag}>
-                    <Text style={styles.tagText}>{tag}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          )}
+          {/* ── Bio ────────────────────────────────────────────── */}
+          <View style={styles.fieldGroup}>
+            <Text style={styles.fieldLabel}>Bio</Text>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              value={bio}
+              onChangeText={(v) => handleFieldChange(setBio, v)}
+              placeholder="Tell others about yourself..."
+              placeholderTextColor={colors.textMuted}
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+            />
+          </View>
 
-          <TouchableOpacity style={styles.signOutButton} onPress={signOut}>
-            <Text style={styles.signOutText}>Sign Out</Text>
+          {/* ── Save Button ────────────────────────────────────── */}
+          <TouchableOpacity
+            style={[
+              styles.saveBtn,
+              (!dirty || saveMutation.isPending) && styles.saveBtnDisabled,
+            ]}
+            onPress={() => saveMutation.mutate()}
+            disabled={!dirty || saveMutation.isPending}
+            activeOpacity={0.8}
+          >
+            {saveMutation.isPending ? (
+              <ActivityIndicator size="small" color={colors.white} />
+            ) : (
+              <Text style={styles.saveBtnText}>Save Changes</Text>
+            )}
           </TouchableOpacity>
-        </View>
-      </ScrollView>
+
+          {/* ── Sign Out Button ────────────────────────────────── */}
+          <TouchableOpacity
+            style={styles.signOutBtn}
+            onPress={() =>
+              Alert.alert("Sign Out", "Are you sure you want to sign out?", [
+                { text: "Cancel", style: "cancel" },
+                { text: "Sign Out", style: "destructive", onPress: signOut },
+              ])
+            }
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name="log-out-outline"
+              size={18}
+              color={colors.error}
+              style={{ marginRight: spacing.sm }}
+            />
+            <Text style={styles.signOutBtnText}>Sign Out</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
+
+// ── Styles ────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
   },
-  centered: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: colors.background,
-  },
   scrollContent: {
+    padding: spacing.lg,
     paddingBottom: 48,
   },
 
-  // Header
-  headerWrapper: {
+  // Avatar
+  avatarSection: {
+    alignItems: "center",
+    marginBottom: spacing.xxl,
+    marginTop: spacing.md,
+  },
+  avatarWrapper: {
     position: "relative",
-    marginBottom: AVATAR_OVERLAP + spacing.md,
   },
-  gradientHeader: {
-    height: GRADIENT_HEIGHT,
-    borderBottomLeftRadius: radius.xl,
-    borderBottomRightRadius: radius.xl,
-  },
-  avatarContainer: {
-    position: "absolute",
-    bottom: -AVATAR_OVERLAP,
-    alignSelf: "center",
-    width: "100%",
-    alignItems: "center",
-  },
-  avatarBorder: {
-    width: AVATAR_SIZE + 6,
-    height: AVATAR_SIZE + 6,
-    borderRadius: (AVATAR_SIZE + 6) / 2,
-    backgroundColor: colors.white,
-    justifyContent: "center",
-    alignItems: "center",
-    ...shadows.lg,
-  },
-  avatarGradient: {
+  avatarLoading: {
     width: AVATAR_SIZE,
     height: AVATAR_SIZE,
     borderRadius: AVATAR_SIZE / 2,
+    backgroundColor: colors.textMuted,
     justifyContent: "center",
     alignItems: "center",
   },
-  avatarText: {
-    color: colors.white,
-    fontSize: 32,
-    fontWeight: "700",
-  },
-
-  // Name
-  nameSection: {
+  cameraButton: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.primary,
+    justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.xxl,
-  },
-  name: {
-    ...typography.h1,
-    color: colors.textPrimary,
-    marginBottom: spacing.xs,
-  },
-  email: {
-    ...typography.caption,
-    color: colors.textMuted,
-  },
-
-  // Cards
-  cardsContainer: {
-    paddingHorizontal: spacing.lg,
-  },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
+    borderWidth: 2,
+    borderColor: colors.white,
     ...shadows.md,
   },
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    marginBottom: spacing.sm,
-  },
-  sectionTitle: {
-    ...typography.captionBold,
+  avatarHint: {
+    ...typography.caption,
     color: colors.textMuted,
+    marginTop: spacing.sm,
+  },
+
+  // Fields
+  fieldGroup: {
+    marginBottom: spacing.lg,
+  },
+  fieldLabel: {
+    ...typography.captionBold,
+    color: colors.textSecondary,
+    marginBottom: spacing.xs,
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
-  fieldValue: {
+  input: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: 14,
     fontSize: 16,
-    fontWeight: "600",
     color: colors.textPrimary,
   },
-  meta: {
-    ...typography.caption,
-    color: colors.textSecondary,
-    marginTop: 2,
+  inputDisabled: {
+    backgroundColor: colors.surfaceElevated,
+    borderColor: colors.borderLight,
   },
-  bio: {
-    ...typography.body,
-    color: colors.textSecondary,
+  inputDisabledText: {
+    fontSize: 16,
+    color: colors.textMuted,
   },
-  tagsContainer: {
+  textArea: {
+    minHeight: 100,
+    paddingTop: 14,
+  },
+
+  // Save button
+  saveBtn: {
+    backgroundColor: colors.primary,
+    borderRadius: radius.md,
+    paddingVertical: 15,
+    alignItems: "center",
+    marginTop: spacing.md,
+    marginBottom: spacing.lg,
+  },
+  saveBtnDisabled: {
+    opacity: 0.5,
+  },
+  saveBtnText: {
+    color: colors.white,
+    ...typography.button,
+  },
+
+  // Sign out
+  signOutBtn: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.sm,
-  },
-  tag: {
-    backgroundColor: colors.primarySoft,
-    borderRadius: radius.full,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs + 2,
-  },
-  tagText: {
-    ...typography.captionBold,
-    color: colors.primary,
-  },
-  signOutButton: {
-    marginTop: spacing.lg,
+    justifyContent: "center",
+    alignItems: "center",
     backgroundColor: colors.white,
     borderRadius: radius.md,
     borderWidth: 1.5,
     borderColor: colors.error,
     paddingVertical: 14,
-    alignItems: "center",
   },
-  signOutText: {
+  signOutBtnText: {
     ...typography.button,
     color: colors.error,
+  },
+
+  // Empty
+  emptyText: {
+    ...typography.body,
+    color: colors.textMuted,
+    marginTop: spacing.md,
+    marginBottom: spacing.xxl,
   },
 });
