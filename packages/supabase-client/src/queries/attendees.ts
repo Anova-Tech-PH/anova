@@ -24,7 +24,7 @@ export async function getAttendeeNote(
     .select("content")
     .eq("user_id", userId)
     .eq("target_user_id", targetUserId)
-    .single();
+    .maybeSingle();
 
   return data?.content ?? "";
 }
