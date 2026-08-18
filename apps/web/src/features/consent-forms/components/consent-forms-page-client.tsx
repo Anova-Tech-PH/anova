@@ -147,7 +147,15 @@ export function ConsentFormsPageClient({
           {forms.map((form) => {
             const AudienceIcon = audienceIcons[form.audience];
             return (
-              <Card key={form.id}>
+              <Card
+                key={form.id}
+                className="cursor-pointer transition-colors hover:border-primary/40"
+                onClick={() =>
+                  router.push(
+                    `/events/${eventId}/release-consent-forms/${form.id}`
+                  )
+                }
+              >
                 <CardContent className="p-5">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
@@ -180,18 +188,22 @@ export function ConsentFormsPageClient({
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() =>
+                        onClick={(e) => {
+                          e.stopPropagation();
                           router.push(
                             `/events/${eventId}/release-consent-forms/${form.id}`
-                          )
-                        }
+                          );
+                        }}
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleDelete(form.id, form.title)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(form.id, form.title);
+                        }}
                         disabled={isPending}
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
