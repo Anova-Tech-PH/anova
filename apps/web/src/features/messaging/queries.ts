@@ -55,9 +55,55 @@ export async function getConversations(eventId: string) {
     .eq("event_id", eventId)
     .in("id", otherUserIds);
 
+  // For users without attendee profiles, fall back to profiles table or registration name
+  const missingIds = otherUserIds.filter(
+    (id) => !profiles?.some((p) => p.id === id)
+  );
+  const fallbackProfiles: typeof profiles = [];
+  if (missingIds.length > 0) {
+    // Try the global profiles table first (has full_name from auth metadata)
+    const { data: globalProfiles } = await supabase
+      .from("profiles")
+      .select("id, full_name, avatar_url, company, job_title")
+      .in("id", missingIds);
+
+    const foundIds = new Set(globalProfiles?.map((p) => p.id) ?? []);
+    for (const p of globalProfiles ?? []) {
+      fallbackProfiles.push({
+        id: p.id,
+        display_name: p.full_name ?? "Attendee",
+        avatar_url: p.avatar_url,
+        title: p.job_title,
+        company: p.company,
+      });
+    }
+
+    // For any still missing, try registrations
+    const stillMissing = missingIds.filter((id) => !foundIds.has(id));
+    if (stillMissing.length > 0) {
+      const { data: regs } = await supabase
+        .from("registrations")
+        .select("user_id, name")
+        .eq("event_id", eventId)
+        .in("user_id", stillMissing);
+      for (const id of stillMissing) {
+        const reg = regs?.find((r) => r.user_id === id);
+        fallbackProfiles.push({
+          id,
+          display_name: reg?.name ?? "Attendee",
+          avatar_url: null,
+          title: null,
+          company: null,
+        });
+      }
+    }
+  }
+
+  const allProfiles = [...(profiles ?? []), ...fallbackProfiles];
+
   return Array.from(conversationMap.values()).map((conv) => ({
     ...conv,
-    profile: profiles?.find((p) => p.id === conv.otherUserId) ?? null,
+    profile: allProfiles.find((p) => p.id === conv.otherUserId) ?? null,
   }));
 }
 

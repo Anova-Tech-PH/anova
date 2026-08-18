@@ -20,12 +20,13 @@ export default function LoginPage() {
 }
 
 function LoginForm() {
-  const [email, setEmail] = useState("");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialEmail = searchParams.get("email") ?? "";
+  const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const router = useRouter();
-  const searchParams = useSearchParams();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -173,7 +174,7 @@ function LoginForm() {
 
             <div className="rounded-lg border bg-muted/30 p-4 text-center text-sm text-muted-foreground">
               Don&apos;t have an account?{" "}
-              <Link href="/signup" className="text-primary font-semibold hover:underline">
+              <Link href={`/signup${searchParams.get("redirect") ? `?redirect=${encodeURIComponent(searchParams.get("redirect")!)}` : ""}`} className="text-primary font-semibold hover:underline">
                 Sign up for free
               </Link>
             </div>

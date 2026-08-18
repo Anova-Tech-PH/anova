@@ -1,7 +1,18 @@
 "use server";
 
 import { createClient } from "@attendly/ui/supabase/server";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
+
+export async function checkUserExistsByEmail(email: string): Promise<boolean> {
+  const admin = createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  );
+  const { data: { users } } = await admin.auth.admin.listUsers({ perPage: 1000 });
+  return users.some((u) => u.email === email);
+}
 
 export async function createAttendeeAccount(data: {
   email: string;
@@ -10,6 +21,7 @@ export async function createAttendeeAccount(data: {
 }) {
   const supabase = await createClient();
 
+  // Try to create a new account
   const { data: authData, error } = await supabase.auth.signUp({
     email: data.email,
     password: data.password,
@@ -18,8 +30,25 @@ export async function createAttendeeAccount(data: {
     },
   });
 
-  if (error) throw new Error(error.message);
-  if (!authData.user) throw new Error("Account creation failed");
+  let userId: string;
+
+  if (error?.message === "User already registered") {
+    // Account exists — sign them in instead
+    const { data: signInData, error: signInError } =
+      await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      });
+    if (signInError) throw new Error(signInError.message);
+    if (!signInData.user) throw new Error("Sign in failed");
+    userId = signInData.user.id;
+  } else if (error) {
+    throw new Error(error.message);
+  } else if (!authData.user) {
+    throw new Error("Account creation failed");
+  } else {
+    userId = authData.user.id;
+  }
 
   // Link existing registrations by email to this new account.
   // Use service role client — the authenticated user's RLS can't update rows where user_id IS NULL.
@@ -30,11 +59,11 @@ export async function createAttendeeAccount(data: {
   );
   await adminClient
     .from("registrations")
-    .update({ user_id: authData.user.id, updated_at: new Date().toISOString() })
+    .update({ user_id: userId, updated_at: new Date().toISOString() })
     .eq("email", data.email)
     .is("user_id", null);
 
-  return { userId: authData.user.id };
+  return { userId };
 }
 
 export async function toggleSessionBookmark(sessionId: string) {

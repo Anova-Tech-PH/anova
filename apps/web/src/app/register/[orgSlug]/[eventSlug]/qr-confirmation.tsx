@@ -1,28 +1,36 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Check, UserPlus, Lock } from "lucide-react";
+import { useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { Check, Lock, ArrowRight } from "lucide-react";
 import QRCode from "qrcode";
 import { toast } from "sonner";
 import { Card, Button, Input } from "@attendly/ui/components";
-import { createAttendeeAccount } from "@/features/attendee/actions";
+import { createAttendeeAccount, checkUserExistsByEmail } from "@/features/attendee/actions";
+import Link from "next/link";
 
 export function QrConfirmation({
   name,
   email,
   qrCode,
   ticketName,
+  orgSlug,
+  eventSlug,
 }: {
   name: string;
   email: string;
   qrCode: string;
   ticketName: string;
+  orgSlug: string;
+  eventSlug: string;
 }) {
+  const router = useRouter();
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
-  const [showAccountForm, setShowAccountForm] = useState(false);
   const [password, setPassword] = useState("");
   const [accountLoading, setAccountLoading] = useState(false);
   const [accountCreated, setAccountCreated] = useState(false);
+  const [existingUser, setExistingUser] = useState<boolean | null>(null);
+  const portalUrl = `/${orgSlug}/${eventSlug}`;
 
   useEffect(() => {
     QRCode.toDataURL(qrCode, {
@@ -32,15 +40,28 @@ export function QrConfirmation({
     }).then(setQrDataUrl);
   }, [qrCode]);
 
+  useEffect(() => {
+    checkUserExistsByEmail(email).then(setExistingUser);
+  }, [email]);
+
   async function handleCreateAccount(e: React.FormEvent) {
     e.preventDefault();
     setAccountLoading(true);
     try {
       await createAttendeeAccount({ email, password, fullName: name });
       setAccountCreated(true);
-      toast.success("Account created!");
+      toast.success("Account created! Redirecting to event portal...");
+      router.push(portalUrl);
+      router.refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to create account");
+      const message = err instanceof Error ? err.message : "Failed to create account";
+      if (message === "Invalid login credentials") {
+        // Account exists with a different password — redirect to login
+        toast.info("You already have an account. Redirecting to login...");
+        router.push(`/login?email=${encodeURIComponent(email)}&redirect=${encodeURIComponent(portalUrl)}`);
+        return;
+      }
+      toast.error(message);
     } finally {
       setAccountLoading(false);
     }
@@ -82,16 +103,39 @@ export function QrConfirmation({
       </Card>
 
       {accountCreated ? (
-        <div className="rounded-xl border bg-primary/5 p-4 text-center">
+        <div className="rounded-xl border bg-primary/5 p-4 text-center space-y-3">
           <p className="text-sm font-medium">Account created!</p>
-          <p className="mt-2 text-xs text-muted-foreground">
-            Sign in to the attendee app to manage your tickets.
+          <p className="text-xs text-muted-foreground">
+            You can now access the event portal and manage your tickets.
           </p>
+          <a
+            href={portalUrl}
+            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
+            Go to Event Portal
+            <ArrowRight className="h-4 w-4" />
+          </a>
         </div>
-      ) : showAccountForm ? (
+      ) : existingUser ? (
+        <div className="rounded-xl border p-4 space-y-3 text-center">
+          <p className="text-sm font-medium">You already have an account</p>
+          <p className="text-xs text-muted-foreground">
+            Sign in to access the event portal and manage your tickets.
+          </p>
+          <Link
+            href={`/login?email=${encodeURIComponent(email)}&redirect=${encodeURIComponent(portalUrl)}`}
+            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
+            Sign in & view event
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+      ) : existingUser === false ? (
         <form onSubmit={handleCreateAccount} className="rounded-xl border p-4 space-y-3">
-          <p className="text-sm font-medium">Set a password to create your account</p>
-          <p className="text-xs text-muted-foreground">{email}</p>
+          <p className="text-sm font-medium">Create your account to access the event</p>
+          <p className="text-xs text-muted-foreground">
+            Set a password for {email} to view the full event portal, network with attendees, and manage your tickets.
+          </p>
           <Input
             type="password"
             required
@@ -101,18 +145,10 @@ export function QrConfirmation({
             placeholder="At least 8 characters"
           />
           <Button type="submit" loading={accountLoading} className="w-full">
-            {accountLoading ? "Creating..." : "Create account"}
+            {accountLoading ? "Creating..." : "Create account & continue"}
           </Button>
         </form>
-      ) : (
-        <button
-          onClick={() => setShowAccountForm(true)}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed p-4 text-sm text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-colors"
-        >
-          <UserPlus className="h-4 w-4" />
-          Create an account to manage your tickets
-        </button>
-      )}
+      ) : null}
     </div>
   );
 }

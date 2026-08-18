@@ -20,12 +20,13 @@ export default function SignupPage() {
 }
 
 function SignupForm() {
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const initialEmail = searchParams.get("email") ?? "";
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState(initialEmail);
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -41,13 +42,35 @@ function SignupForm() {
     });
 
     if (error) {
-      toast.error(error.message);
-      setLoading(false);
-      return;
+      if (error.message === "User already registered") {
+        // Account exists — try signing in instead
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (signInError) {
+          toast.error("An account with this email already exists. Please sign in instead.", {
+            action: {
+              label: "Go to Login",
+              onClick: () => {
+                const redirect = searchParams.get("redirect");
+                router.push(`/login${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ""}`);
+              },
+            },
+          });
+          setLoading(false);
+          return;
+        }
+        toast.success("Signed in successfully!");
+      } else {
+        toast.error(error.message);
+        setLoading(false);
+        return;
+      }
     }
 
     const redirect = searchParams.get("redirect");
-    const dest = redirect && redirect.startsWith("/") && !redirect.startsWith("//") ? redirect : "/onboarding";
+    const dest = redirect && redirect.startsWith("/") && !redirect.startsWith("//") ? redirect : "/my-events";
     router.push(dest);
     router.refresh();
   }
@@ -113,7 +136,7 @@ function SignupForm() {
               </div>
               <h1 className="text-2xl font-semibold">Create your account</h1>
               <p className="text-sm text-muted-foreground">
-                Start managing events in minutes
+                Join events or start organizing
               </p>
             </div>
 
@@ -204,7 +227,7 @@ function SignupForm() {
 
             <div className="rounded-lg border bg-muted/30 p-4 text-center text-sm text-muted-foreground">
               Already have an account?{" "}
-              <Link href="/login" className="text-primary font-semibold hover:underline">
+              <Link href={`/login${searchParams.get("redirect") ? `?redirect=${encodeURIComponent(searchParams.get("redirect")!)}` : ""}`} className="text-primary font-semibold hover:underline">
                 Sign in
               </Link>
             </div>

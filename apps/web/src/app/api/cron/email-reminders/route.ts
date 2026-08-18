@@ -83,7 +83,7 @@ async function processReminders(supabase: ReturnType<typeof createServiceClient>
               hour: "numeric",
               minute: "2-digit",
             }),
-            eventUrl: `/${(event.organizations as any)?.slug}/${event.slug}`,
+            eventUrl: `${process.env.NEXT_PUBLIC_APP_URL || process.env.E2E_BASE_URL || "http://localhost:3000"}/${(event.organizations as any)?.slug}/${event.slug}`,
             timeUntil,
           })
         );

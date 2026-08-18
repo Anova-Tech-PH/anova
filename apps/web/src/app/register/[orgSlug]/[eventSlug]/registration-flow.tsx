@@ -215,6 +215,8 @@ export function RegistrationFlow({
         email={confirmation.email}
         qrCode={confirmation.qr_code}
         ticketName={selected?.name ?? ""}
+        orgSlug={orgSlug}
+        eventSlug={eventSlug}
       />
     );
   }

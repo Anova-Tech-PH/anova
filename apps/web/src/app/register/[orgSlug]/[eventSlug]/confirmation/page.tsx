@@ -69,6 +69,8 @@ export default async function ConfirmationPage({
     );
   }
 
+  const { orgSlug, eventSlug } = await params;
+
   return (
     <div className="mx-auto max-w-lg px-4 py-12">
       <QrConfirmation
@@ -76,6 +78,8 @@ export default async function ConfirmationPage({
         email={reg.email}
         qrCode={reg.qr_code}
         ticketName={(reg.ticket_types as any)?.name ?? "General"}
+        orgSlug={orgSlug}
+        eventSlug={eventSlug}
       />
     </div>
   );

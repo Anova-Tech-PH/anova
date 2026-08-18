@@ -71,7 +71,7 @@ export function RegistrationConfirmation({
             href={eventUrl}
             style={{ backgroundColor: "#18181b", color: "#fff", padding: "10px 20px", borderRadius: "6px", fontSize: "14px", textDecoration: "none" }}
           >
-            View Event
+            Create Account & View Event
           </Button>
           <Hr style={{ margin: "24px 0", borderColor: "#e5e7eb" }} />
           <Text style={{ fontSize: "12px", color: "#9ca3af" }}>

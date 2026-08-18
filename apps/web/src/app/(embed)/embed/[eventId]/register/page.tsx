@@ -138,6 +138,8 @@ export default async function RegisterEmbedPage({
           tickets={ticketsWithAvailability}
           customFields={customFields}
           initialIntent={initialIntent}
+          orgSlug={(event.organizations as any)?.slug ?? ""}
+          eventSlug={event.slug}
         />
       )}
 

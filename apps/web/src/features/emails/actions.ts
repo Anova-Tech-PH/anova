@@ -181,8 +181,8 @@ export async function sendBroadcastEmail(data: {
     throw new Error("No recipients match the selected filters");
   }
 
-  const orgs = event.organizations as unknown as { slug: string }[] | null;
-  const orgSlug = orgs?.[0]?.slug ?? "";
+  const org = event.organizations as unknown as { slug: string } | { slug: string }[] | null;
+  const orgSlug = Array.isArray(org) ? (org[0]?.slug ?? "") : (org?.slug ?? "");
   const eventDate = new Date(event.start_date).toLocaleDateString("en-US", {
     weekday: "long", year: "numeric", month: "long", day: "numeric",
   });
@@ -265,9 +265,11 @@ export async function sendRegistrationConfirmationEmail(
   // If an automation row exists and is explicitly disabled, skip
   if (automation && !automation.enabled) return;
 
-  const orgs = event.organizations as unknown as { slug: string }[] | null;
-  const orgSlug = orgs?.[0]?.slug ?? "";
-  const eventUrl = `/${orgSlug}/${event.slug}`;
+  const org = event.organizations as unknown as { slug: string } | { slug: string }[] | null;
+  const orgSlug = Array.isArray(org) ? (org[0]?.slug ?? "") : (org?.slug ?? "");
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.E2E_BASE_URL || "http://localhost:3000";
+  const portalPath = `/${orgSlug}/${event.slug}`;
+  const eventUrl = `${baseUrl}/auth/setup?email=${encodeURIComponent(registration.email)}&redirect=${encodeURIComponent(portalPath)}`;
 
   const { render } = await import("@react-email/components");
   const { RegistrationConfirmation } = await import("./lib/templates/registration-confirmation");
@@ -471,8 +473,8 @@ export async function sendCampaign(campaignId: string) {
     return { sentCount: 0, failedCount: 0 };
   }
 
-  const orgs = event.organizations as unknown as { slug: string }[] | null;
-  const orgSlug = orgs?.[0]?.slug ?? "";
+  const org = event.organizations as unknown as { slug: string } | { slug: string }[] | null;
+  const orgSlug = Array.isArray(org) ? (org[0]?.slug ?? "") : (org?.slug ?? "");
 
   let sentCount = 0;
   let failedCount = 0;

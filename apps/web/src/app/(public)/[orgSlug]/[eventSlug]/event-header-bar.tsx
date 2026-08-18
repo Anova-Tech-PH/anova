@@ -30,10 +30,11 @@ export function EventHeaderBar({ event }: EventHeaderBarProps) {
 
   const startDate = new Date(event.start_date);
   const endDate = new Date(event.end_date);
+  const tzOpt = event.timezone ? { timeZone: event.timezone } : {};
   const dateStr =
-    startDate.toDateString() === endDate.toDateString()
-      ? startDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-      : `${startDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })} – ${endDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`;
+    startDate.toLocaleDateString("en-US", tzOpt) === endDate.toLocaleDateString("en-US", tzOpt)
+      ? startDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", ...tzOpt })
+      : `${startDate.toLocaleDateString("en-US", { month: "short", day: "numeric", ...tzOpt })} – ${endDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", ...tzOpt })}`;
 
   const mapUrl = event.venue_name
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.venue_name)}`

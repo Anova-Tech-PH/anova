@@ -56,11 +56,30 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Redirect logged-in users away from auth pages (except onboarding)
+  // Protect /my-events — requires auth, no org needed
+  if (pathname.startsWith("/my-events")) {
+    if (!user) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      url.searchParams.set("redirect", "/my-events");
+      return NextResponse.redirect(url);
+    }
+  }
+
+  // Redirect logged-in users away from auth pages
   if (pathname.startsWith("/login") || pathname.startsWith("/signup")) {
     if (user) {
+      const redirect = request.nextUrl.searchParams.get("redirect");
+      if (redirect && redirect.startsWith("/") && !redirect.startsWith("//")) {
+        return NextResponse.redirect(new URL(redirect, request.url));
+      }
+      // Check if user is an organizer (has org membership)
+      const { count } = await supabase
+        .from("organization_members")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id);
       const url = request.nextUrl.clone();
-      url.pathname = "/dashboard";
+      url.pathname = count && count > 0 ? "/dashboard" : "/my-events";
       return NextResponse.redirect(url);
     }
   }
@@ -99,7 +118,9 @@ export async function middleware(request: NextRequest) {
     !pathname.startsWith("/api") &&
     !pathname.startsWith("/register") &&
     !pathname.startsWith("/kiosk") &&
-    !pathname.startsWith("/present");
+    !pathname.startsWith("/present") &&
+    !pathname.startsWith("/settings") &&
+    !pathname.startsWith("/my-events");
 
   if (isPortalRoute && !user) {
     const url = request.nextUrl.clone();
