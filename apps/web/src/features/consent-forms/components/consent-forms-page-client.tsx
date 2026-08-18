@@ -21,7 +21,8 @@ import {
   ModalOverlay,
   useConfirm,
 } from "@attendly/ui/components";
-import { createConsentForm, deleteConsentForm, TEMPLATES } from "../actions";
+import { createConsentForm, deleteConsentForm } from "../actions";
+import { TEMPLATES } from "../templates";
 import type { ConsentForm } from "../queries";
 
 interface ConsentFormsPageClientProps {

@@ -27,6 +27,7 @@ export function PublicConsentForm({
 }: PublicConsentFormProps) {
   const [isPending, startTransition] = useTransition();
   const [submitted, setSubmitted] = useState(false);
+  const [alreadySigned, setAlreadySigned] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
   // Form state
@@ -39,9 +40,13 @@ export function PublicConsentForm({
     return (
       <div className="text-center py-16">
         <CheckCircle2 className="mx-auto h-12 w-12 text-green-500" />
-        <h2 className="mt-4 text-xl font-semibold">Form Submitted</h2>
+        <h2 className="mt-4 text-xl font-semibold">
+          {alreadySigned ? "Already Signed" : "Form Submitted"}
+        </h2>
         <p className="mt-2 text-muted-foreground">
-          Thank you for signing this form. Your submission has been recorded.
+          {alreadySigned
+            ? "You have already signed this form. No further action is needed."
+            : "Thank you for signing this form. Your submission has been recorded."}
         </p>
       </div>
     );
@@ -93,6 +98,7 @@ export function PublicConsentForm({
 
       if (result.error) {
         if (result.error.includes("already signed")) {
+          setAlreadySigned(true);
           setSubmitted(true);
         } else {
           setFormError(result.error);
