@@ -23,7 +23,8 @@ function SignupForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialEmail = searchParams.get("email") ?? "";
-  const [fullName, setFullName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -33,11 +34,12 @@ function SignupForm() {
     setLoading(true);
 
     const supabase = createClient();
+    const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { full_name: fullName },
+        data: { full_name: fullName, first_name: firstName.trim(), last_name: lastName.trim() },
       },
     });
 
@@ -141,19 +143,34 @@ function SignupForm() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <label htmlFor="fullName" className="flex items-center gap-1.5 text-sm font-medium">
-                  <User className="h-3.5 w-3.5 text-muted-foreground" />
-                  Full name
-                </label>
-                <Input
-                  id="fullName"
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  required
-                  placeholder="Jane Smith"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <label htmlFor="firstName" className="flex items-center gap-1.5 text-sm font-medium">
+                    <User className="h-3.5 w-3.5 text-muted-foreground" />
+                    First name
+                  </label>
+                  <Input
+                    id="firstName"
+                    type="text"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    required
+                    placeholder="Jane"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="lastName" className="text-sm font-medium">
+                    Last name
+                  </label>
+                  <Input
+                    id="lastName"
+                    type="text"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    required
+                    placeholder="Smith"
+                  />
+                </div>
               </div>
 
               <div className="space-y-2">

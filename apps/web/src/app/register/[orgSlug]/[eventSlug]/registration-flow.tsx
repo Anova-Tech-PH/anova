@@ -50,7 +50,15 @@ export function RegistrationFlow({
   eventSlug: string;
 }) {
   const [selectedTicket, setSelectedTicket] = useState<string | null>(initialIntent?.ticket_type_id ?? null);
-  const [name, setName] = useState(initialIntent?.name ?? "");
+  const [firstName, setFirstName] = useState(() => {
+    const parts = (initialIntent?.name ?? "").split(" ");
+    return parts[0] ?? "";
+  });
+  const [lastName, setLastName] = useState(() => {
+    const parts = (initialIntent?.name ?? "").split(" ");
+    return parts.slice(1).join(" ");
+  });
+  const name = `${firstName.trim()} ${lastName.trim()}`.trim();
   const [email, setEmail] = useState(initialIntent?.email ?? "");
   const [customValues, setCustomValues] = useState<Record<string, string | boolean>>(initialIntent?.custom_fields ?? {});
 
@@ -71,7 +79,7 @@ export function RegistrationFlow({
     } catch {
       // Silent fail — intent tracking should never block UX
     }
-  }, [email, selectedTicket, name, eventId]);
+  }, [email, selectedTicket, name, eventId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [loading, setLoading] = useState(false);
   const [confirmation, setConfirmation] = useState<{
@@ -356,15 +364,27 @@ export function RegistrationFlow({
       {selectedTicket && (
         <form onSubmit={handleSubmit} className="space-y-4">
           <h2 className="text-sm font-medium">Your information</h2>
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">Full name *</label>
-            <Input
-              type="text"
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Jane Smith"
-            />
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">First name *</label>
+              <Input
+                type="text"
+                required
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                placeholder="Jane"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Last name *</label>
+              <Input
+                type="text"
+                required
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                placeholder="Smith"
+              />
+            </div>
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Email *</label>
@@ -470,7 +490,7 @@ export function RegistrationFlow({
 
           <Button
             type="submit"
-            disabled={!name || !email}
+            disabled={!firstName.trim() || !lastName.trim() || !email}
             loading={loading}
             className="w-full"
           >
