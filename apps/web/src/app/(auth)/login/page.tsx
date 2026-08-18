@@ -59,8 +59,8 @@ function LoginForm() {
         <div className="absolute bottom-16 left-8 h-32 w-32 rounded-full bg-white/[0.04] blur-xl" />
 
         <div className="max-w-md space-y-8 relative z-10 [text-shadow:0_1px_2px_rgba(0,0,0,0.2)]">
-          <span className="text-[32px] font-[800] tracking-[-0.04em]">
-            EVENTRIV
+          <span className="inline-block rounded-lg bg-black/25 px-5 py-2 text-[72px] font-[800] tracking-[-0.05em] leading-none backdrop-blur-sm">
+            <span>EVEN</span><span className="bg-[image:linear-gradient(100deg,#ff2f92,#ff8a3d)] bg-clip-text text-transparent">TRIV</span>
           </span>
           <div className="space-y-4">
             <h2 className="text-4xl font-[800] leading-tight tracking-[-0.03em]">
