@@ -1,21 +1,27 @@
-import { FileText } from "lucide-react";
-import { ComingSoon } from "@/features/speakers/components/coming-soon";
+import {
+  getConsentForms,
+  getSubmissionCount,
+} from "@/features/consent-forms/queries";
+import { ConsentFormsPageClient } from "@/features/consent-forms/components/consent-forms-page-client";
 
-export default function ReleaseConsentFormsPage() {
+export default async function ReleaseConsentFormsPage({
+  params,
+}: {
+  params: Promise<{ eventId: string }>;
+}) {
+  const { eventId } = await params;
+
+  const forms = await getConsentForms(eventId);
+
+  // Fetch submission counts in parallel
+  const formsWithCounts = await Promise.all(
+    forms.map(async (form) => {
+      const submissionCount = await getSubmissionCount(form.id);
+      return { ...form, submissionCount };
+    })
+  );
+
   return (
-    <div className="space-y-8">
-      <div>
-        <h2 className="text-lg font-semibold">Release & Consent Forms</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Manage release waivers and consent forms for attendees.
-        </p>
-      </div>
-
-      <ComingSoon
-        title="Release & Consent Forms"
-        description="Create and manage photo/video release waivers, liability disclaimers, and consent forms that attendees must sign during registration or check-in."
-        icon={<FileText className="h-7 w-7" />}
-      />
-    </div>
+    <ConsentFormsPageClient eventId={eventId} forms={formsWithCounts} />
   );
 }
