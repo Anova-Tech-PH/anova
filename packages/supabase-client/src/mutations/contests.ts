@@ -15,7 +15,7 @@ export async function submitContestEntry(
       contest_id: params.contestId,
       user_id: params.userId,
       image_url: params.imageUrl,
-      caption: params.caption ?? null,
+      content: params.caption ?? null,
     })
     .select("id")
     .single();
@@ -30,7 +30,7 @@ export async function toggleContestLike(
   userId: string,
 ): Promise<{ liked: boolean }> {
   const { data: existing } = await client
-    .from("contest_entry_likes")
+    .from("contest_likes")
     .select("id")
     .eq("entry_id", entryId)
     .eq("user_id", userId)
@@ -38,14 +38,14 @@ export async function toggleContestLike(
 
   if (existing) {
     await client
-      .from("contest_entry_likes")
+      .from("contest_likes")
       .delete()
       .eq("entry_id", entryId)
       .eq("user_id", userId);
     return { liked: false };
   } else {
     const { error } = await client
-      .from("contest_entry_likes")
+      .from("contest_likes")
       .insert({ entry_id: entryId, user_id: userId });
     if (error) throw new Error(error.message);
     return { liked: true };

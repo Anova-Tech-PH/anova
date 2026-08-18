@@ -24,6 +24,7 @@ export * from "./queries/volunteers";
 export * from "./queries/activity-feed";
 export * from "./queries/rsvp";
 export * from "./queries/my-agenda";
+export * from "./queries/contests";
 
 // Realtime
 export * from "./realtime/messaging";
