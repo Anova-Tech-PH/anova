@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from "react";
+import React, { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -18,6 +18,10 @@ import {
   getScheduleData,
   getUserBookmarks,
   toggleSessionBookmark,
+  getUserRsvps,
+  rsvpToSession,
+  cancelRsvp,
+  getMyNotes,
 } from "@attendly/supabase-client";
 import { supabase } from "../../../src/lib/supabase";
 import { useAuth } from "../../../src/lib/auth-context";
@@ -84,7 +88,34 @@ export default function ScheduleScreen() {
     },
   });
 
+  const { data: userRsvps = [] } = useQuery({
+    queryKey: ["userRsvps", currentEvent?.id, user?.id],
+    queryFn: () => getUserRsvps(supabase, currentEvent!.id, user!.id),
+    enabled: !!currentEvent?.id && !!user?.id,
+  });
+
+  const { data: userNotes = [] } = useQuery({
+    queryKey: ["userNotes", currentEvent?.id, user?.id],
+    queryFn: () => getMyNotes(supabase, currentEvent!.id, user!.id),
+    enabled: !!currentEvent?.id && !!user?.id,
+  });
+
+  const rsvpMutation = useMutation({
+    mutationFn: async ({ sessionId, isRsvpd }: { sessionId: string; isRsvpd: boolean }) => {
+      if (isRsvpd) {
+        await cancelRsvp(supabase, sessionId);
+      } else {
+        await rsvpToSession(supabase, sessionId);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["userRsvps"] });
+    },
+  });
+
   const bookmarkSet = useMemo(() => new Set(bookmarks), [bookmarks]);
+  const rsvpSet = useMemo(() => new Set(userRsvps.map((r: any) => r.session_id)), [userRsvps]);
+  const noteSet = useMemo(() => new Set(userNotes.map((n: any) => n.session_id)), [userNotes]);
 
   const dayTabs = useMemo(() => {
     if (!data?.event) return [];
@@ -123,8 +154,12 @@ export default function ScheduleScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await queryClient.invalidateQueries({ queryKey: ["schedule"] });
-    await queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["schedule"] }),
+      queryClient.invalidateQueries({ queryKey: ["bookmarks"] }),
+      queryClient.invalidateQueries({ queryKey: ["userRsvps"] }),
+      queryClient.invalidateQueries({ queryKey: ["userNotes"] }),
+    ]);
     setRefreshing(false);
   };
 
@@ -148,6 +183,9 @@ export default function ScheduleScreen() {
     const tracks = (item.session_tracks ?? []).map((st: any) => st.tracks).filter(Boolean);
     const speakers = (item.session_speakers ?? []).map((ss: any) => ss.speakers).filter(Boolean);
     const isBookmarked = bookmarkSet.has(item.id);
+    const isRsvpd = rsvpSet.has(item.id);
+    const hasNote = noteSet.has(item.id);
+    const showTypeBadge = item.type && item.type !== "session";
 
     return (
       <TouchableOpacity
@@ -162,13 +200,20 @@ export default function ScheduleScreen() {
         <View style={styles.sessionContent}>
           <Text style={styles.sessionTitle} numberOfLines={2}>{item.title}</Text>
 
-          {/* Track badges */}
-          {tracks.length > 0 && (
+          {/* Description preview */}
+          {item.description && (
+            <Text style={styles.sessionDescription} numberOfLines={2}>
+              {item.description}
+            </Text>
+          )}
+
+          {/* Track & type badges */}
+          {(tracks.length > 0 || showTypeBadge) && (
             <View style={styles.badgeRow}>
               {tracks.map((t: any) => (
                 <Badge key={t.id} label={t.name} color={t.color || colors.primary} backgroundColor={`${t.color || colors.primary}20`} />
               ))}
-              {item.type && item.type !== "session" && (
+              {showTypeBadge && (
                 <Badge label={item.type} />
               )}
             </View>
@@ -193,21 +238,59 @@ export default function ScheduleScreen() {
               <Text style={styles.locationText}>{item.location}</Text>
             </View>
           )}
+
+          {/* RSVP button */}
+          {user && item.rsvp_enabled && (
+            <View style={styles.rsvpRow}>
+              <TouchableOpacity
+                style={[styles.rsvpBtn, isRsvpd && styles.rsvpBtnActive]}
+                onPress={(e) => {
+                  e.stopPropagation?.();
+                  rsvpMutation.mutate({ sessionId: item.id, isRsvpd });
+                }}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name={isRsvpd ? "checkmark-circle" : "add-circle-outline"}
+                  size={14}
+                  color={isRsvpd ? colors.white : colors.primary}
+                />
+                <Text style={[styles.rsvpText, isRsvpd && styles.rsvpTextActive]}>
+                  {isRsvpd ? "RSVP'd" : "RSVP"}
+                </Text>
+              </TouchableOpacity>
+              {item.capacity != null && (
+                <Text style={styles.capacityText}>
+                  {item.capacity - (item.rsvp_count ?? 0)} spots left
+                </Text>
+              )}
+            </View>
+          )}
         </View>
 
-        {/* Bookmark button */}
+        {/* Right column: bookmark + notes indicator */}
         {user && (
-          <TouchableOpacity
-            style={styles.bookmarkBtn}
-            onPress={() => bookmarkMutation.mutate({ sessionId: item.id })}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          >
-            <Ionicons
-              name={isBookmarked ? "bookmark" : "bookmark-outline"}
-              size={20}
-              color={isBookmarked ? colors.primary : colors.textMuted}
-            />
-          </TouchableOpacity>
+          <View style={styles.rightCol}>
+            <TouchableOpacity
+              style={styles.bookmarkBtn}
+              onPress={() => bookmarkMutation.mutate({ sessionId: item.id })}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Ionicons
+                name={isBookmarked ? "bookmark" : "bookmark-outline"}
+                size={20}
+                color={isBookmarked ? colors.primary : colors.textMuted}
+              />
+            </TouchableOpacity>
+            {hasNote && (
+              <Ionicons
+                name="pencil"
+                size={14}
+                color={colors.primary}
+                style={styles.noteIndicator}
+              />
+            )}
+          </View>
         )}
       </TouchableOpacity>
     );
@@ -341,6 +424,13 @@ const styles = StyleSheet.create({
     ...typography.bodyMedium,
     color: colors.textPrimary,
   },
+  sessionDescription: {
+    ...typography.small,
+    color: colors.textMuted,
+    marginTop: 2,
+    fontWeight: "400" as const,
+    lineHeight: 16,
+  },
   badgeRow: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -370,10 +460,48 @@ const styles = StyleSheet.create({
     ...typography.small,
     color: colors.textMuted,
   },
-  bookmarkBtn: {
+  rightCol: {
+    alignItems: "center",
     paddingLeft: spacing.sm,
-    justifyContent: "flex-start",
     paddingTop: 2,
+    gap: spacing.xs,
+  },
+  bookmarkBtn: {
+    justifyContent: "flex-start",
+  },
+  noteIndicator: {
+    marginTop: 2,
+  },
+  rsvpRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  rsvpBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: radius.sm,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  rsvpBtnActive: {
+    backgroundColor: colors.primary,
+  },
+  rsvpText: {
+    ...typography.small,
+    color: colors.primary,
+  },
+  rsvpTextActive: {
+    color: colors.white,
+  },
+  capacityText: {
+    ...typography.small,
+    color: colors.textMuted,
+    fontWeight: "400" as const,
   },
   filterRow: {
     flexDirection: "row",
