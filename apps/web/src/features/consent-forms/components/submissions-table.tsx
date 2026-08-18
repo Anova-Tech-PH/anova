@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   Send,
@@ -8,9 +8,18 @@ import {
   Download,
   FileText,
   Inbox,
+  Plus,
+  Upload,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { Button, Card, CardContent } from "@attendly/ui/components";
+import {
+  Button,
+  Card,
+  CardContent,
+  Input,
+  ModalOverlay,
+} from "@attendly/ui/components";
 import {
   sendConsentFormEmails,
   sendConsentFormReminders,
@@ -33,12 +42,72 @@ export function SubmissionsTable({
 }: SubmissionsTableProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [showSendForm, setShowSendForm] = useState(false);
+  const [contacts, setContacts] = useState<{ email: string; name?: string }[]>(
+    []
+  );
+  const [emailInput, setEmailInput] = useState("");
+  const [nameInput, setNameInput] = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  function addContact() {
+    if (!emailInput.trim() || !emailInput.includes("@")) return;
+    if (contacts.some((c) => c.email === emailInput.trim())) {
+      toast.error("Email already added");
+      return;
+    }
+    setContacts((prev) => [
+      ...prev,
+      { email: emailInput.trim(), name: nameInput.trim() || undefined },
+    ]);
+    setEmailInput("");
+    setNameInput("");
+  }
+
+  function removeContact(email: string) {
+    setContacts((prev) => prev.filter((c) => c.email !== email));
+  }
+
+  function handleCsvUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.name.endsWith(".csv")) {
+      toast.error("Please upload a .csv file");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      const lines = text.split("\n").filter((l) => l.trim());
+      const parsed: { email: string; name?: string }[] = [];
+      for (const line of lines) {
+        const parts = line.split(",").map((p) => p.trim().replace(/^"|"$/g, ""));
+        const email = parts.find((p) => p.includes("@"));
+        if (email) {
+          const name = parts.find((p) => !p.includes("@") && p.length > 0);
+          parsed.push({ email, name: name || undefined });
+        }
+      }
+      setContacts((prev) => {
+        const existing = new Set(prev.map((c) => c.email));
+        const newContacts = parsed.filter((c) => !existing.has(c.email));
+        return [...prev, ...newContacts];
+      });
+      if (parsed.length > 0) toast.success(`Added ${parsed.length} contacts from CSV`);
+      else toast.error("No valid emails found in CSV");
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  }
 
   function handleSendForm() {
+    if (contacts.length === 0) return;
     startTransition(async () => {
       try {
-        const count = await sendConsentFormEmails(eventId, formId, []);
+        const count = await sendConsentFormEmails(eventId, formId, contacts);
         toast.success(`Form sent to ${count} recipient(s)`);
+        setContacts([]);
+        setShowSendForm(false);
         router.refresh();
       } catch (err) {
         toast.error(
@@ -103,7 +172,7 @@ export function SubmissionsTable({
         <Button
           variant="outline"
           size="sm"
-          onClick={handleSendForm}
+          onClick={() => setShowSendForm(true)}
           disabled={isPending || formStatus !== "published"}
         >
           <Send className="mr-2 h-4 w-4" />
@@ -190,6 +259,108 @@ export function SubmissionsTable({
             </tbody>
           </table>
         </div>
+      )}
+
+      {/* Send Form Modal */}
+      {showSendForm && (
+        <ModalOverlay onClose={() => setShowSendForm(false)}>
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Send Consent Form</h3>
+
+            <div className="space-y-2">
+              <div className="flex gap-2">
+                <Input
+                  value={emailInput}
+                  onChange={(e) => setEmailInput(e.target.value)}
+                  placeholder="Email"
+                  className="flex-1"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addContact();
+                    }
+                  }}
+                />
+                <Input
+                  value={nameInput}
+                  onChange={(e) => setNameInput(e.target.value)}
+                  placeholder="Name (optional)"
+                  className="w-40"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addContact();
+                    }
+                  }}
+                />
+                <Button variant="outline" onClick={addContact}>
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => fileRef.current?.click()}
+              >
+                <Upload className="mr-1 h-3.5 w-3.5" />
+                Import CSV
+              </Button>
+              <input
+                ref={fileRef}
+                type="file"
+                accept=".csv"
+                onChange={handleCsvUpload}
+                className="hidden"
+              />
+            </div>
+
+            {contacts.length > 0 && (
+              <div className="max-h-48 overflow-y-auto rounded-lg border">
+                {contacts.map((c) => (
+                  <div
+                    key={c.email}
+                    className="flex items-center justify-between border-b px-3 py-2 last:border-b-0"
+                  >
+                    <div>
+                      <span className="text-sm">{c.email}</span>
+                      {c.name && (
+                        <span className="ml-2 text-xs text-muted-foreground">
+                          ({c.name})
+                        </span>
+                      )}
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeContact(c.email)}
+                    >
+                      <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowSendForm(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSendForm}
+                disabled={isPending || contacts.length === 0}
+              >
+                <Send className="mr-1 h-4 w-4" />
+                {isPending
+                  ? "Sending..."
+                  : `Send to ${contacts.length} Recipient${contacts.length !== 1 ? "s" : ""}`}
+              </Button>
+            </div>
+          </div>
+        </ModalOverlay>
       )}
     </div>
   );
