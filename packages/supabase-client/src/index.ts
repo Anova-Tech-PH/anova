@@ -27,6 +27,9 @@ export * from "./queries/my-agenda";
 export * from "./queries/contests";
 export * from "./queries/trivia";
 export * from "./queries/passport";
+export * from "./queries/polls";
+export * from "./queries/session-chat";
+export * from "./queries/session-likes";
 
 // Realtime
 export * from "./realtime/messaging";
@@ -50,3 +53,6 @@ export * from "./mutations/trivia";
 export * from "./mutations/gamification";
 export * from "./mutations/checkin";
 export * from "./mutations/volunteers";
+export * from "./mutations/polls";
+export * from "./mutations/session-chat";
+export * from "./mutations/session-likes";
