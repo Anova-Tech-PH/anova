@@ -106,7 +106,7 @@ export default function HomePage() {
             <a href="#use-cases" className="transition-colors hover:text-accent-pink">
               Use cases
             </a>
-            <a href="#pricing" className="transition-colors hover:text-accent-pink">
+            <a href={`${APP_URL}/pricing`} className="transition-colors hover:text-accent-pink">
               Pricing
             </a>
             <a href="#faq" className="transition-colors hover:text-accent-pink">
@@ -513,7 +513,7 @@ export default function HomePage() {
             <a href="#use-cases" className="transition-colors hover:text-accent-pink">
               Use cases
             </a>
-            <a href="#pricing" className="transition-colors hover:text-accent-pink">
+            <a href={`${APP_URL}/pricing`} className="transition-colors hover:text-accent-pink">
               Pricing
             </a>
             <a href="#faq" className="transition-colors hover:text-accent-pink">
