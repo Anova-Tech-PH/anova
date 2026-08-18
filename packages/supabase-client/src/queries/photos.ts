@@ -62,6 +62,49 @@ export async function getPhotos(
   };
 }
 
+export async function getPhotoDetail(
+  client: SupabaseClient,
+  photoId: string,
+  userId?: string
+) {
+  const { data: photo, error } = await client
+    .from("event_photos")
+    .select("id, event_id, user_id, image_url, media_type, caption, likes_count, created_at")
+    .eq("id", photoId)
+    .single();
+
+  if (error) throw error;
+  if (!photo) return null;
+
+  // Fetch author profile
+  const { data: profile } = await client
+    .from("attendee_profiles")
+    .select("id, display_name, avatar_url")
+    .eq("event_id", (photo as any).event_id)
+    .eq("id", (photo as any).user_id)
+    .single();
+
+  // Check if liked by current user
+  let isLiked = false;
+  if (userId) {
+    const { data: like } = await client
+      .from("photo_likes")
+      .select("id")
+      .eq("photo_id", photoId)
+      .eq("user_id", userId)
+      .single();
+    isLiked = !!like;
+  }
+
+  return {
+    ...photo,
+    is_liked: isLiked,
+    author: profile
+      ? { display_name: profile.display_name, avatar_url: profile.avatar_url }
+      : { display_name: null, avatar_url: null },
+  };
+}
+
 export async function getPhotoComments(client: SupabaseClient, photoId: string) {
   const { data: comments } = await client
     .from("photo_comments")

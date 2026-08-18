@@ -8,17 +8,26 @@ export async function createTopic(
     title: string;
     description?: string;
     type?: string;
+    meetupDate?: string;
+    meetupLocation?: string;
   },
 ): Promise<{ id: string }> {
+  const row: Record<string, unknown> = {
+    event_id: params.eventId,
+    author_id: params.authorId,
+    title: params.title.trim(),
+    description: params.description?.trim() ?? null,
+    type: params.type ?? "discussion",
+  };
+
+  if (params.type === "meetup") {
+    if (params.meetupDate) row.meetup_date = params.meetupDate;
+    if (params.meetupLocation) row.meetup_location = params.meetupLocation.trim();
+  }
+
   const { data, error } = await client
     .from("community_topics")
-    .insert({
-      event_id: params.eventId,
-      author_id: params.authorId,
-      title: params.title.trim(),
-      description: params.description?.trim() ?? null,
-      type: params.type ?? "discussion",
-    })
+    .insert(row)
     .select("id")
     .single();
 

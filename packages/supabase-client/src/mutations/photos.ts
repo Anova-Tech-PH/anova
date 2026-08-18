@@ -57,3 +57,33 @@ export async function uploadPhoto(
   if (error) throw new Error(error.message);
   return data;
 }
+
+export async function addPhotoComment(
+  client: SupabaseClient,
+  params: { photoId: string; userId: string; content: string },
+): Promise<{ id: string }> {
+  const { data, error } = await client
+    .from("photo_comments")
+    .insert({
+      photo_id: params.photoId,
+      user_id: params.userId,
+      content: params.content,
+    })
+    .select("id")
+    .single();
+
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+export async function deletePhoto(
+  client: SupabaseClient,
+  photoId: string,
+): Promise<void> {
+  const { error } = await client
+    .from("event_photos")
+    .delete()
+    .eq("id", photoId);
+
+  if (error) throw new Error(error.message);
+}

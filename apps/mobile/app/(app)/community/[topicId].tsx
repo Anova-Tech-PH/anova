@@ -24,8 +24,37 @@ import {
 import { supabase } from "../../../src/lib/supabase";
 import { useAuth } from "../../../src/lib/auth-context";
 import { Avatar } from "../../../src/components/avatar";
+import { Badge } from "../../../src/components/badge";
 import { EmptyState } from "../../../src/components/empty-state";
 import { colors, typography, spacing, radius, shadows, shared } from "../../../src/theme";
+
+const TYPE_BADGE_COLORS: Record<string, { color: string; bg: string }> = {
+  discussion: { color: colors.primary, bg: colors.primaryMuted },
+  announcement: { color: colors.warning, bg: colors.warningSoft },
+  meetup: { color: colors.success, bg: colors.successSoft },
+  ask_organizer: { color: colors.brandPink, bg: "rgba(255, 47, 146, 0.08)" },
+};
+
+function typeBadgeLabel(type: string) {
+  switch (type) {
+    case "discussion": return "Discussion";
+    case "announcement": return "Announcement";
+    case "meetup": return "Meetup";
+    case "ask_organizer": return "Ask Organizer";
+    default: return type;
+  }
+}
+
+function formatMeetupDate(dateStr: string) {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
 
 function formatRelativeDate(dateStr: string) {
   const date = new Date(dateStr);
@@ -125,9 +154,19 @@ export default function TopicDetailScreen() {
 
   const posts = (topic as any).posts ?? [];
 
+  const topicType = (topic as any).type ?? "discussion";
+  const badgeColors = TYPE_BADGE_COLORS[topicType] ?? TYPE_BADGE_COLORS.discussion;
+
   const renderHeader = () => (
     <View style={styles.topicHeader}>
-      <Text style={styles.topicTitle}>{(topic as any).title}</Text>
+      <View style={styles.titleWithBadge}>
+        <Text style={styles.topicTitle}>{(topic as any).title}</Text>
+        <Badge
+          label={typeBadgeLabel(topicType)}
+          color={badgeColors.color}
+          backgroundColor={badgeColors.bg}
+        />
+      </View>
 
       {/* Author info */}
       {(topic as any).author && (
@@ -151,6 +190,29 @@ export default function TopicDetailScreen() {
       {(topic as any).description && (
         <Text style={styles.topicBody}>{(topic as any).description}</Text>
       )}
+
+      {/* Meetup details */}
+      {topicType === "meetup" &&
+        ((topic as any).meetup_date || (topic as any).meetup_location) && (
+          <View style={styles.meetupBlock}>
+            {(topic as any).meetup_date && (
+              <View style={styles.meetupRow}>
+                <Ionicons name="calendar-outline" size={16} color={colors.success} />
+                <Text style={styles.meetupText}>
+                  {formatMeetupDate((topic as any).meetup_date)}
+                </Text>
+              </View>
+            )}
+            {(topic as any).meetup_location && (
+              <View style={styles.meetupRow}>
+                <Ionicons name="location-outline" size={16} color={colors.success} />
+                <Text style={styles.meetupText}>
+                  {(topic as any).meetup_location}
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
 
       {/* Follow button */}
       {user && (
@@ -335,10 +397,29 @@ const styles = StyleSheet.create({
   topicHeader: {
     marginBottom: spacing.lg,
   },
+  titleWithBadge: {
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
   topicTitle: {
     ...typography.h1,
     color: colors.textPrimary,
+  },
+  meetupBlock: {
+    backgroundColor: colors.successSoft,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    gap: spacing.sm,
     marginBottom: spacing.md,
+  },
+  meetupRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  meetupText: {
+    ...typography.caption,
+    color: colors.success,
   },
   authorRow: {
     flexDirection: "row",

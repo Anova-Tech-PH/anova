@@ -62,6 +62,7 @@ export default function AppLayout() {
         <Drawer.Screen name="sponsors/[sponsorId]" options={{ ...HIDDEN }} />
         <Drawer.Screen name="contests/[contestId]" options={{ ...HIDDEN }} />
         <Drawer.Screen name="trivia/[gameId]" options={{ ...HIDDEN }} />
+        <Drawer.Screen name="photos/[photoId]" options={{ ...HIDDEN }} />
         <Drawer.Screen name="qa/[sessionId]" options={{ ...HIDDEN }} />
         <Drawer.Screen name="messages/[conversationId]" options={{ ...HIDDEN }} />
       </Drawer>
