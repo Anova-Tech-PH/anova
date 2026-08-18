@@ -77,7 +77,7 @@ export default function SignInScreen() {
             <Ionicons name="calendar" size={32} color={colors.white} />
           </View>
 
-          <Text style={styles.brand}>Evenstry</Text>
+          <Text style={styles.brand}>Eventriv</Text>
           <Text style={styles.heroSubtitle}>
             Your next great event awaits
           </Text>

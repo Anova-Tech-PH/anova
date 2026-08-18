@@ -139,7 +139,7 @@ export default function ActivityStream({
       {/* Footer — full mode only */}
       {!isEmbed && (
         <div className={`border-t px-6 py-3 text-center ${cardBorder}`}>
-          <span className={`text-xs ${mutedText}`}>Powered by Evenstry</span>
+          <span className={`text-xs ${mutedText}`}>Powered by Eventriv</span>
         </div>
       )}
     </div>

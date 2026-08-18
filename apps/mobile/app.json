@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "Evenstry",
-    "slug": "evenstry",
-    "scheme": "evenstry",
+    "name": "Eventriv",
+    "slug": "eventriv",
+    "scheme": "eventriv",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -14,7 +14,7 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.bertwin.evenstry"
+      "bundleIdentifier": "com.bertwin.eventriv"
     },
     "android": {
       "adaptiveIcon": {

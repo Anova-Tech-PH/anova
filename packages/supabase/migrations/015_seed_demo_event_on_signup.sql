@@ -29,7 +29,7 @@ BEGIN
     gen_random_uuid(), _org_id,
     'Sample Conference 2026',
     'sample-conference-2026',
-    'This is a demo event to help you explore Evenstry. Feel free to edit or delete it. '
+    'This is a demo event to help you explore Eventriv. Feel free to edit or delete it. '
     || 'It includes sample speakers, sessions, ticket types, and registrations so you can see how everything works together.',
     (_start || ' 09:00:00')::timestamptz,
     (_start || ' 17:00:00')::timestamptz,

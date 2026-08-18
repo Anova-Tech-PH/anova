@@ -47,7 +47,7 @@ function SvgFallback({ size, variant, className }: LogoProps) {
         <path d="M8.5 14l2 2 5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
       <span className={cn("font-bold tracking-tight font-serif", fontSizes[size!], textColor)}>
-        even<span className={accentColor}>stry</span>
+        even<span className={accentColor}>triv</span>
       </span>
     </div>
   );
@@ -69,7 +69,7 @@ export function Logo({ size = "md", variant = "color", className }: LogoProps) {
       <source srcSet={svgSrc} type="image/svg+xml" />
       <img
         src={pngSrc}
-        alt="Evenstry"
+        alt="Eventriv"
         width={width}
         height={height}
         className={cn("block object-contain", className)}

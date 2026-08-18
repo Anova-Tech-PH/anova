@@ -1,6 +1,6 @@
 import Image from "next/image";
 
-const APP_URL = "https://app.evenstry.com";
+const APP_URL = "https://app.eventriv.com";
 
 function GridIcon({ className }: { className?: string }) {
   return (
@@ -45,7 +45,7 @@ export default function HomePage() {
               href="#"
             >
               <GridIcon className="w-6 h-6 fill-current group-hover:scale-110 transition-transform" />
-              Evenstry
+              Eventriv
             </a>
             <nav className="hidden md:flex space-x-6">
               <a
@@ -448,7 +448,7 @@ export default function HomePage() {
                 Free to start. Free to grow.
               </h3>
               <p className="mt-4 text-lg text-on-surface-variant max-w-xl mx-auto">
-                Evenstry is free during early access. No hidden fees, no credit card, no catch.
+                Eventriv is free during early access. No hidden fees, no credit card, no catch.
               </p>
             </div>
             <div className="max-w-md mx-auto bg-white rounded-3xl p-10 border-2 border-primary/20 shadow-xl shadow-primary/5 relative overflow-hidden">
@@ -519,7 +519,7 @@ export default function HomePage() {
             <div className="space-y-6">
               {[
                 {
-                  q: "Is Evenstry really free?",
+                  q: "Is Eventriv really free?",
                   a: "Yes. During early access, every feature is completely free. No credit card, no trial period. We\u2019ll introduce paid plans later for advanced needs, but the core features will always have a free tier.",
                 },
                 {
@@ -528,7 +528,7 @@ export default function HomePage() {
                 },
                 {
                   q: "Do I need any technical skills?",
-                  a: "Not at all. Evenstry is designed so anyone can create and manage events. If you can fill out a form, you can run an event.",
+                  a: "Not at all. Eventriv is designed so anyone can create and manage events. If you can fill out a form, you can run an event.",
                 },
                 {
                   q: "What types of events can I run?",
@@ -608,7 +608,7 @@ export default function HomePage() {
                 href="#"
               >
                 <GridIcon className="w-6 h-6 fill-current text-primary" />
-                Evenstry
+                Eventriv
               </a>
             </div>
             <div className="flex flex-wrap justify-center gap-6 md:gap-8">
@@ -646,7 +646,7 @@ export default function HomePage() {
           </div>
           <div className="mt-12 pt-8 border-t border-outline-variant/20 flex justify-center md:justify-end">
             <p className="text-sm text-outline">
-              &copy; {new Date().getFullYear()} Evenstry. All rights reserved.
+              &copy; {new Date().getFullYear()} Eventriv. All rights reserved.
             </p>
           </div>
         </div>

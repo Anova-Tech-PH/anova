@@ -208,7 +208,7 @@ function buildFeedbackEmailHtml(
   }
 
   html += `<hr style="margin-top:24px"/>
-    <p style="color:#666;font-size:12px">Sent from ${eventTitle} via Evenstry</p>
+    <p style="color:#666;font-size:12px">Sent from ${eventTitle} via Eventriv</p>
   </div>`;
 
   return html;

@@ -75,7 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signInWithOAuth = useCallback(async (provider: "google" | "apple") => {
-    const redirectTo = AuthSession.makeRedirectUri({ scheme: "evenstry" });
+    const redirectTo = AuthSession.makeRedirectUri({ scheme: "eventriv" });
 
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider,

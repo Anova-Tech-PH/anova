@@ -22,7 +22,7 @@ export default async function RegistrationWidgetsPage({
   const orgSlug = (event as any).organizations?.slug ?? "org";
   const eventSlug = event.slug ?? eventId;
   const baseUrl =
-    process.env.NEXT_PUBLIC_APP_URL || "https://app.evenstry.com";
+    process.env.NEXT_PUBLIC_APP_URL || "https://app.eventriv.com";
   const registrationUrl = `${baseUrl}/register/${orgSlug}/${eventSlug}`;
 
   return (

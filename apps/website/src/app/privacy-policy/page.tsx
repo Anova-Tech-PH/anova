@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy — Evenstry",
-  description: "How Evenstry collects, uses, and protects your personal data.",
+  title: "Privacy Policy — Eventriv",
+  description: "How Eventriv collects, uses, and protects your personal data.",
 };
 
 export default function PrivacyPolicyPage() {
@@ -19,7 +19,7 @@ export default function PrivacyPolicyPage() {
             <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
               <path d="M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z" />
             </svg>
-            Evenstry
+            Eventriv
           </Link>
           <Link
             href="/"
@@ -44,8 +44,8 @@ export default function PrivacyPolicyPage() {
               1. Introduction
             </h2>
             <p>
-              Evenstry (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;)
-              operates the Evenstry platform at evenstry.com. This Privacy
+              Eventriv (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;)
+              operates the Eventriv platform at eventriv.com. This Privacy
               Policy explains how we collect, use, disclose, and safeguard your
               information when you use our service.
             </p>
@@ -87,7 +87,7 @@ export default function PrivacyPolicyPage() {
             </h2>
             <p className="mb-3">We use the information we collect to:</p>
             <ul className="list-disc pl-6 space-y-2">
-              <li>Provide, maintain, and improve the Evenstry platform.</li>
+              <li>Provide, maintain, and improve the Eventriv platform.</li>
               <li>
                 Process event registrations and generate QR codes for check-in.
               </li>
@@ -199,10 +199,10 @@ export default function PrivacyPolicyPage() {
               If you have questions about this Privacy Policy, please contact us
               at{" "}
               <a
-                href="mailto:privacy@evenstry.com"
+                href="mailto:privacy@eventriv.com"
                 className="text-primary hover:text-primary-hover transition-colors underline"
               >
-                privacy@evenstry.com
+                privacy@eventriv.com
               </a>
               .
             </p>
@@ -213,7 +213,7 @@ export default function PrivacyPolicyPage() {
       <footer className="border-t border-outline-variant/30 bg-surface-container-low">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex justify-between items-center">
           <p className="text-sm text-outline">
-            &copy; {new Date().getFullYear()} Evenstry. All rights reserved.
+            &copy; {new Date().getFullYear()} Eventriv. All rights reserved.
           </p>
           <Link
             href="/terms-of-service"

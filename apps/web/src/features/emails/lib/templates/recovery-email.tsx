@@ -73,7 +73,7 @@ export function RecoveryEmail({
             Don&apos;t want these emails? Unsubscribe
           </Link>
           <Text style={{ fontSize: "11px", color: "#d1d5db", marginTop: "8px" }}>
-            Evenstry - Event Management Platform
+            Eventriv - Event Management Platform
           </Text>
         </Container>
       </Body>

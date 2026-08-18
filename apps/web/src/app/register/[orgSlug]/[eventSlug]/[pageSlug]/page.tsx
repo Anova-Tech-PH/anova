@@ -153,7 +153,7 @@ export default async function RegisterByPageSlugPage({
       {/* Trust signal */}
       <div className="mt-8 flex items-center justify-center gap-2 text-xs text-muted-foreground/60">
         <Shield className="h-3.5 w-3.5" />
-        Secured by Evenstry
+        Secured by Eventriv
       </div>
     </div>
   );

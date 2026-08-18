@@ -39,7 +39,7 @@ export function PollPresentationView({ poll }: { poll: PollWithResults }) {
         </div>
 
         <p className="text-center text-xs text-gray-600">
-          Powered by Evenstry
+          Powered by Eventriv
         </p>
       </div>
     </div>

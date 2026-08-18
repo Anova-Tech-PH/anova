@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Terms of Service — Evenstry",
+  title: "Terms of Service — Eventriv",
   description:
-    "Terms and conditions for using the Evenstry event management platform.",
+    "Terms and conditions for using the Eventriv event management platform.",
 };
 
 export default function TermsOfServicePage() {
@@ -20,7 +20,7 @@ export default function TermsOfServicePage() {
             <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
               <path d="M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z" />
             </svg>
-            Evenstry
+            Eventriv
           </Link>
           <Link
             href="/"
@@ -45,7 +45,7 @@ export default function TermsOfServicePage() {
               1. Acceptance of Terms
             </h2>
             <p>
-              By accessing or using Evenstry (&quot;the Service&quot;), you
+              By accessing or using Eventriv (&quot;the Service&quot;), you
               agree to be bound by these Terms of Service. If you do not agree to
               these terms, do not use the Service.
             </p>
@@ -56,7 +56,7 @@ export default function TermsOfServicePage() {
               2. Description of Service
             </h2>
             <p>
-              Evenstry is an event management platform that allows users to
+              Eventriv is an event management platform that allows users to
               create, manage, and run events including conferences, meetups, and
               workshops. The Service includes event creation, ticketing,
               registration, scheduling, attendee check-in, and analytics
@@ -137,7 +137,7 @@ export default function TermsOfServicePage() {
             </h2>
             <p>
               The Service and its original content, features, and functionality
-              are owned by Evenstry and are protected by intellectual property
+              are owned by Eventriv and are protected by intellectual property
               laws. You retain ownership of all content you create or upload to
               the platform, and grant us a limited license to display and
               distribute that content as necessary to provide the Service.
@@ -149,7 +149,7 @@ export default function TermsOfServicePage() {
               7. Pricing and Payment
             </h2>
             <p>
-              Evenstry is currently offered free of charge during the early
+              Eventriv is currently offered free of charge during the early
               access period. We reserve the right to introduce paid plans in the
               future. Any changes to pricing will be communicated in advance, and
               you will not be charged without your consent.
@@ -173,7 +173,7 @@ export default function TermsOfServicePage() {
               9. Limitation of Liability
             </h2>
             <p>
-              To the maximum extent permitted by law, Evenstry shall not be
+              To the maximum extent permitted by law, Eventriv shall not be
               liable for any indirect, incidental, special, consequential, or
               punitive damages, including loss of profits, data, or business
               opportunities, arising from your use of the Service.
@@ -212,10 +212,10 @@ export default function TermsOfServicePage() {
             <p>
               If you have questions about these Terms, please contact us at{" "}
               <a
-                href="mailto:legal@evenstry.com"
+                href="mailto:legal@eventriv.com"
                 className="text-primary hover:text-primary-hover transition-colors underline"
               >
-                legal@evenstry.com
+                legal@eventriv.com
               </a>
               .
             </p>
@@ -226,7 +226,7 @@ export default function TermsOfServicePage() {
       <footer className="border-t border-outline-variant/30 bg-surface-container-low">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex justify-between items-center">
           <p className="text-sm text-outline">
-            &copy; {new Date().getFullYear()} Evenstry. All rights reserved.
+            &copy; {new Date().getFullYear()} Eventriv. All rights reserved.
           </p>
           <Link
             href="/privacy-policy"

@@ -21,7 +21,7 @@ function getServiceClient() {
 }
 
 export async function sendEmail(params: SendEmailParams) {
-  const defaultFrom = process.env.EMAIL_FROM || "Evenstry <onboarding@resend.dev>";
+  const defaultFrom = process.env.EMAIL_FROM || "Eventriv <noreply@eventriv.com>";
   const fromAddress = params.senderName
     ? `${params.senderName} <${defaultFrom.match(/<(.+)>/)?.[1] ?? defaultFrom}>`
     : defaultFrom;

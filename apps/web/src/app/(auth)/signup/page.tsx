@@ -105,7 +105,7 @@ function SignupForm() {
             </div>
             <div>
               <p className="text-sm font-medium text-primary-foreground/90">Join 2,000+ organizers</p>
-              <p className="text-xs text-primary-foreground/60">run their events on Evenstry</p>
+              <p className="text-xs text-primary-foreground/60">run their events on Eventriv</p>
             </div>
           </div>
         </div>

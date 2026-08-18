@@ -15,7 +15,7 @@ port = 54333
 [auth]
 enabled = true
 site_url = "http://localhost:3000"
-additional_redirect_urls = ["http://localhost:3000/auth/callback", "evenstry://auth/callback", "http://localhost:8081"]
+additional_redirect_urls = ["http://localhost:3000/auth/callback", "eventriv://auth/callback", "http://localhost:8081"]
 
 [auth.email]
 enable_signup = true
@@ -30,7 +30,7 @@ redirect_uri = "http://127.0.0.1:54321/auth/v1/callback"
 
 [auth.external.apple]
 enabled = true
-client_id = "com.bertwin.evenstry"
+client_id = "com.bertwin.eventriv"
 secret = "env(APPLE_OAUTH_CLIENT_SECRET)"
 redirect_uri = "http://127.0.0.1:54321/auth/v1/callback"
 

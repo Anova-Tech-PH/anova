@@ -1,4 +1,4 @@
-# Evenstry — Development Notes
+# Eventriv — Development Notes
 
 ## Supabase
 

@@ -46,7 +46,7 @@ export function EventReminder({
           </Button>
           <Hr style={{ margin: "24px 0", borderColor: "#e5e7eb" }} />
           <Text style={{ fontSize: "12px", color: "#9ca3af" }}>
-            Evenstry - Event Management Platform
+            Eventriv - Event Management Platform
           </Text>
         </Container>
       </Body>

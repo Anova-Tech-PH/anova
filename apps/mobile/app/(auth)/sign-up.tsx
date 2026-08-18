@@ -79,7 +79,7 @@ export default function SignUpScreen() {
             <Ionicons name="sparkles" size={32} color={colors.white} />
           </View>
 
-          <Text style={styles.brand}>Evenstry</Text>
+          <Text style={styles.brand}>Eventriv</Text>
           <Text style={styles.heroSubtitle}>
             Join a world of amazing events
           </Text>

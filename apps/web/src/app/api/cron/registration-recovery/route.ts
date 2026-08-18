@@ -50,7 +50,7 @@ export async function GET(request: Request) {
 
     if (!intents || intents.length === 0) continue;
 
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://app.evenstry.com";
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://app.eventriv.com";
     const orgSlug = (event.organizations as any)?.slug ?? "";
 
     for (const intent of intents) {
@@ -124,7 +124,7 @@ export async function GET(request: Request) {
             : `Last chance to register for ${event.title}`;
 
         const { data: sentData, error: sendError } = await getResend().emails.send({
-          from: process.env.EMAIL_FROM || "Evenstry <onboarding@resend.dev>",
+          from: process.env.EMAIL_FROM || "Eventriv <noreply@eventriv.com>",
           to: intent.email,
           subject,
           html,
