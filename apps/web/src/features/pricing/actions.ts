@@ -86,7 +86,7 @@ export async function submitQuoteRequest(input: QuoteRequestInput) {
 
     await getResend().emails.send({
       from: defaultFrom,
-      to: process.env.ADMIN_EMAIL || "admin@eventriv.com",
+      to: process.env.ADMIN_EMAIL || "info@eventriv.com",
       subject: `New Quote Request: ${input.eventName}`,
       html,
     });
