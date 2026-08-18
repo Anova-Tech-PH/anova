@@ -20,6 +20,32 @@ export async function getEventAttendees(client: SupabaseClient, eventId: string)
   return profiles ?? [];
 }
 
+export async function searchAttendees(
+  client: SupabaseClient,
+  eventId: string,
+  query: string,
+) {
+  const { data: registrations } = await client
+    .from("registrations")
+    .select("user_id")
+    .eq("event_id", eventId)
+    .in("status", ["confirmed", "checked_in"])
+    .not("user_id", "is", null);
+
+  const userIds = registrations?.map((r) => r.user_id).filter(Boolean) as string[] ?? [];
+  if (userIds.length === 0) return [];
+
+  const { data: profiles } = await client
+    .from("profiles")
+    .select("id, full_name, avatar_url, title, company")
+    .in("id", userIds)
+    .ilike("full_name", `%${query}%`)
+    .order("full_name")
+    .limit(20);
+
+  return profiles ?? [];
+}
+
 export async function getConnectionsForEvent(
   client: SupabaseClient,
   userId: string,
