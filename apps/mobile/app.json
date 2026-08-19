@@ -14,9 +14,12 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.bertwin.eventriv"
+      "bundleIdentifier": "com.eventriv.mobile",
+      "buildNumber": "1"
     },
     "android": {
+      "package": "com.eventriv.mobile",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
