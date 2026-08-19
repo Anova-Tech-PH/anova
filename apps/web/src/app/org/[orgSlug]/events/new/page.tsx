@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { createClient } from "@attendly/ui/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@attendly/ui/components";
@@ -20,6 +20,8 @@ export default function NewEventPage() {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [creatingFromTemplate, setCreatingFromTemplate] = useState<string | null>(null);
   const router = useRouter();
+  const params = useParams();
+  const orgSlug = params.orgSlug as string;
 
   useEffect(() => {
     async function fetchTemplates() {
@@ -30,18 +32,17 @@ export default function NewEventPage() {
         } = await supabase.auth.getUser();
         if (!user) return;
 
-        const { data: membership } = await supabase
-          .from("organization_members")
-          .select("organization_id")
-          .eq("user_id", user.id)
-          .limit(1)
+        const { data: org } = await supabase
+          .from("organizations")
+          .select("id")
+          .eq("slug", orgSlug)
           .single();
-        if (!membership) return;
+        if (!org) return;
 
         const { data, error } = await supabase
           .from("event_templates")
           .select("id, name, description")
-          .eq("organization_id", membership.organization_id)
+          .eq("organization_id", org.id)
           .order("created_at", { ascending: false });
 
         if (!error && data && data.length > 0) {
@@ -52,7 +53,7 @@ export default function NewEventPage() {
       }
     }
     fetchTemplates();
-  }, []);
+  }, [orgSlug]);
 
   async function handleCreateFromTemplate(templateId: string) {
     setCreatingFromTemplate(templateId);
@@ -64,7 +65,7 @@ export default function NewEventPage() {
         end_date: new Date(Date.now() + 86400000).toISOString(),
       });
       toast.success("Event created from template");
-      router.push(`/events/${result.id}/settings`);
+      router.push(`/org/${orgSlug}/events/${result.id}/settings`);
     } catch (err: unknown) {
       toast.error(
         err instanceof Error ? err.message : "Failed to create from template"
@@ -84,16 +85,14 @@ export default function NewEventPage() {
       return;
     }
 
-    const { data: membership } = await supabase
-      .from("organization_members")
-      .select("organization_id")
-      .eq("user_id", user.id)
-      .eq("role", "owner")
-      .limit(1)
+    const { data: org } = await supabase
+      .from("organizations")
+      .select("id")
+      .eq("slug", orgSlug)
       .single();
 
-    if (!membership) {
-      toast.error("No organization found");
+    if (!org) {
+      toast.error("Organization not found");
       return;
     }
 
@@ -105,7 +104,7 @@ export default function NewEventPage() {
     const { data: event, error } = await supabase
       .from("events")
       .insert({
-        organization_id: membership.organization_id,
+        organization_id: org.id,
         title: data.title,
         slug,
         abbreviation: data.abbreviation || null,
@@ -143,7 +142,7 @@ export default function NewEventPage() {
     }
 
     toast.success("Event created!");
-    router.push(`/events/${event.id}`);
+    router.push(`/org/${orgSlug}/events/${event.id}`);
   }
 
   return (
