@@ -114,19 +114,23 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Allow onboarding page for logged-in users without an org
+  // Allow onboarding page for logged-in users
   if (pathname.startsWith("/onboarding")) {
     if (!user) {
       const url = request.nextUrl.clone();
       url.pathname = "/login";
       return NextResponse.redirect(url);
     }
-    // Check if user already has an org — if so, redirect to org dashboard
-    const slug = await getFirstOrgSlug(supabase, user.id);
-    if (slug) {
-      const url = request.nextUrl.clone();
-      url.pathname = `/org/${slug}/dashboard`;
-      return NextResponse.redirect(url);
+    // Allow if ?new=1 (creating additional org) — skip redirect
+    const isCreatingNew = request.nextUrl.searchParams.get("new") === "1";
+    if (!isCreatingNew) {
+      // Check if user already has an org — if so, redirect to org dashboard
+      const slug = await getFirstOrgSlug(supabase, user.id);
+      if (slug) {
+        const url = request.nextUrl.clone();
+        url.pathname = `/org/${slug}/dashboard`;
+        return NextResponse.redirect(url);
+      }
     }
   }
 

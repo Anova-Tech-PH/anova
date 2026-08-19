@@ -81,7 +81,7 @@ export function OrgSwitcher({
               }}
               onCreate={() => {
                 setOpen(false);
-                router.push("/onboarding");
+                router.push("/onboarding?new=1");
               }}
             />
           </div>
@@ -119,7 +119,7 @@ export function OrgSwitcher({
             }}
             onCreate={() => {
               setOpen(false);
-              router.push("/onboarding");
+              router.push("/onboarding?new=1");
             }}
           />
         </div>
