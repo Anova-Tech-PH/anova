@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 const themeScript = `
 (function(){
   var t = localStorage.getItem('theme');
-  if (!t) t = 'dark';
+  if (!t) t = 'light';
   if (t === 'dark') document.documentElement.classList.add('dark');
 })();
 `;

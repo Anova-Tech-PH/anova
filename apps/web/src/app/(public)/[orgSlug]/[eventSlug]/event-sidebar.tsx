@@ -35,6 +35,8 @@ import {
   MapPin,
   HeartHandshake,
   LayoutDashboard,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { createClient } from "@attendly/ui/supabase/client";
 
@@ -211,6 +213,11 @@ export function EventSidebar({
   const [menuOpen, setMenuOpen] = useState(false);
   const [switcherOpen, setSwitcherOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    setIsDark(document.documentElement.classList.contains("dark"));
+  }, []);
   const [otherEvents, setOtherEvents] = useState<{ title: string; orgSlug: string; eventSlug: string }[]>([]);
   const menuRef = useRef<HTMLDivElement>(null);
   const switcherRef = useRef<HTMLDivElement>(null);
@@ -261,6 +268,13 @@ export function EventSidebar({
   useEffect(() => {
     setMobileOpen(false);
   }, [pathname]);
+
+  function toggleTheme() {
+    const next = isDark ? "light" : "dark";
+    document.documentElement.classList.toggle("dark", next === "dark");
+    localStorage.setItem("theme", next);
+    setIsDark(next === "dark");
+  }
 
   async function handleSignOut() {
     const supabase = createClient();
@@ -602,6 +616,13 @@ export function EventSidebar({
             {menuOpen && (
               <div className="absolute bottom-full left-2 mb-1 w-44 rounded-lg border bg-card p-1 shadow-lg z-50">
                 <button
+                  onClick={toggleTheme}
+                  className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-muted"
+                >
+                  {isDark ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+                  {isDark ? "Light mode" : "Dark mode"}
+                </button>
+                <button
                   onClick={handleSignOut}
                   className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-destructive hover:bg-muted"
                 >
@@ -611,13 +632,22 @@ export function EventSidebar({
             )}
           </div>
         ) : (
-          <Link
-            href={`/login?redirect=${encodeURIComponent(pathname)}`}
-            className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-          >
-            <LogIn className="h-4 w-4" />
-            Sign in
-          </Link>
+          <div className="flex items-center gap-1">
+            <Link
+              href={`/login?redirect=${encodeURIComponent(pathname)}`}
+              className="flex flex-1 items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            >
+              <LogIn className="h-4 w-4" />
+              Sign in
+            </Link>
+            <button
+              onClick={toggleTheme}
+              className="flex items-center justify-center rounded-lg p-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+            >
+              {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
+          </div>
         )}
       </div>
     </>
