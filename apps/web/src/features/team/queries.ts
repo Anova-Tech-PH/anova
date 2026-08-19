@@ -56,25 +56,6 @@ export async function getTeamMembers(orgId: string): Promise<TeamMember[]> {
   });
 }
 
-export async function getCurrentUserOrgId(): Promise<string | null> {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) return null;
-
-  const { data } = await supabase
-    .from("organization_members")
-    .select("organization_id")
-    .eq("user_id", user.id)
-    .limit(1)
-    .single();
-
-  return data?.organization_id ?? null;
-}
-
 export async function getCurrentUserRole(orgId: string): Promise<string | null> {
   const supabase = await createClient();
 
