@@ -1,5 +1,6 @@
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { stripe } from "@/lib/stripe";
+import { sendRegistrationConfirmationEmail } from "@/features/emails/actions";
 import { QrConfirmation } from "../qr-confirmation";
 import { PaymentProcessing } from "./payment-processing";
 
@@ -63,6 +64,27 @@ export default async function ConfirmationPage({
           .from("registrations")
           .update({ status: "confirmed" })
           .eq("id", order.registration_id);
+
+        // Send confirmation email (webhook was missed)
+        const { data: regForEmail } = await supabase
+          .from("registrations")
+          .select("name, email, qr_code, event_id, ticket_types(name)")
+          .eq("id", order.registration_id)
+          .single();
+
+        if (regForEmail) {
+          const ticketType = Array.isArray(regForEmail.ticket_types)
+            ? regForEmail.ticket_types[0]
+            : regForEmail.ticket_types;
+          sendRegistrationConfirmationEmail(regForEmail.event_id, {
+            name: regForEmail.name,
+            email: regForEmail.email,
+            ticketTypeName: ticketType?.name ?? "General",
+            qrCode: regForEmail.qr_code,
+          }).catch((err) =>
+            console.error("[Confirmation Page] Failed to send email:", err)
+          );
+        }
 
         // Fall through to render the confirmation below
       } else {
