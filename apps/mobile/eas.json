@@ -29,6 +29,7 @@
     "production": {
       "ios": {
         "appleId": "bertwinr2@gmail.com",
+        "ascAppId": "6802949753",
         "appleTeamId": "M3DL96CMU9"
       },
       "android": {
