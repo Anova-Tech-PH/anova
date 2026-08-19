@@ -214,8 +214,8 @@ export default async function EventLayout({
     },
   ];
 
-  const orgSlug = (event.organization as unknown as { slug: string })?.slug;
-  const portalUrl = orgSlug && event.slug ? `/${orgSlug}/${event.slug}` : null;
+  const eventOrgSlug = (event.organization as unknown as { slug: string })?.slug;
+  const portalUrl = eventOrgSlug && event.slug ? `/${eventOrgSlug}/${event.slug}` : null;
 
   // Fetch registration pages for Preview dropdown
   const { data: regPages } = await supabase
