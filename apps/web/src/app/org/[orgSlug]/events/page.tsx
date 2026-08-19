@@ -1,26 +1,32 @@
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { createClient } from "@attendly/ui/supabase/server";
 import { EmptyState, Button } from "@attendly/ui/components";
+import { getOrgBySlug } from "@/features/org/queries";
 import { EventsList } from "./events-list";
 
-export default async function EventsPage() {
+export default async function EventsPage({
+  params,
+}: {
+  params: Promise<{ orgSlug: string }>;
+}) {
+  const { orgSlug } = await params;
   const supabase = await createClient();
 
-  const { data: orgs } = await supabase
-    .from("organization_members")
-    .select("organization_id")
-    .eq("user_id", (await supabase.auth.getUser()).data.user?.id ?? "");
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
 
-  const orgIds = orgs?.map((o) => o.organization_id) ?? [];
+  const org = await getOrgBySlug(orgSlug, user.id);
+  if (!org) redirect("/onboarding");
 
-  const { data: events } = orgIds.length
-    ? await supabase
-        .from("events")
-        .select("*")
-        .in("organization_id", orgIds)
-        .order("created_at", { ascending: false })
-    : { data: [] };
+  const { data: events } = await supabase
+    .from("events")
+    .select("*")
+    .eq("organization_id", org.id)
+    .order("created_at", { ascending: false });
 
   // Fetch registration counts per event
   const regCounts: Record<string, number> = {};
@@ -43,7 +49,7 @@ export default async function EventsPage() {
             {events?.length ?? 0} event{events?.length !== 1 ? "s" : ""} total
           </p>
         </div>
-        <Link href="/events/new">
+        <Link href={`/org/${orgSlug}/events/new`}>
           <Button className="gap-2 shadow-sm">
             <Plus className="h-4 w-4" />
             New Event
@@ -57,7 +63,7 @@ export default async function EventsPage() {
           className="py-16"
           action={
             <Link
-              href="/events/new"
+              href={`/org/${orgSlug}/events/new`}
               className="text-sm font-medium text-primary underline"
             >
               Create one now
@@ -65,7 +71,7 @@ export default async function EventsPage() {
           }
         />
       ) : (
-        <EventsList events={events} regCounts={regCounts} />
+        <EventsList events={events} regCounts={regCounts} orgSlug={orgSlug} />
       )}
     </div>
   );

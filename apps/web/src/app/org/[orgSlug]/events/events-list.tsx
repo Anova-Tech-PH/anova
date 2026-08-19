@@ -83,9 +83,11 @@ const STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
 export function EventsList({
   events,
   regCounts,
+  orgSlug,
 }: {
   events: Event[];
   regCounts: Record<string, number>;
+  orgSlug: string;
 }) {
   const [view, setView] = useState<ViewMode>("cards");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
@@ -221,7 +223,7 @@ export function EventsList({
             return (
               <Link
                 key={event.id}
-                href={`/events/${event.id}`}
+                href={`/org/${orgSlug}/events/${event.id}`}
                 className="group overflow-hidden rounded-lg border bg-card transition-colors hover:border-primary/20"
               >
                 <div
@@ -318,7 +320,7 @@ export function EventsList({
                   >
                     <td className="px-4 py-3">
                       <Link
-                        href={`/events/${event.id}`}
+                        href={`/org/${orgSlug}/events/${event.id}`}
                         className="font-medium hover:text-primary transition-colors"
                       >
                         {event.title}
