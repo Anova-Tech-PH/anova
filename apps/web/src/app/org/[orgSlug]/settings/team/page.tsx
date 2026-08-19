@@ -1,12 +1,18 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@attendly/ui/supabase/server";
+import { getOrgBySlug } from "@/features/org/queries";
 import {
   getTeamMembers,
   getCurrentUserRole,
 } from "@/features/team/queries";
 import { TeamManager } from "@/features/team/components/team-manager";
 
-export default async function TeamPage() {
+export default async function TeamPage({
+  params,
+}: {
+  params: Promise<{ orgSlug: string }>;
+}) {
+  const { orgSlug } = await params;
   const supabase = await createClient();
   const {
     data: { user },
@@ -14,17 +20,10 @@ export default async function TeamPage() {
 
   if (!user) redirect("/login");
 
-  // Get the user's organization
-  const { data: membership } = await supabase
-    .from("organization_members")
-    .select("organization_id")
-    .eq("user_id", user.id)
-    .limit(1)
-    .single();
+  const org = await getOrgBySlug(orgSlug, user.id);
+  if (!org) redirect("/onboarding");
 
-  if (!membership) redirect("/onboarding");
-
-  const orgId = membership.organization_id;
+  const orgId = org.id;
   const [members, currentRole] = await Promise.all([
     getTeamMembers(orgId),
     getCurrentUserRole(orgId),

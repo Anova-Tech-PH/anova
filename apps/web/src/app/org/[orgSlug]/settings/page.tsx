@@ -1,11 +1,17 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@attendly/ui/supabase/server";
+import { getOrgBySlug } from "@/features/org/queries";
 import { SignOutButton } from "./sign-out-button";
 import { Card } from "@attendly/ui/components";
 import { User, Building2, LogOut, Mail, Tag, Users, ChevronRight } from "lucide-react";
 
-export default async function SettingsPage() {
+export default async function SettingsPage({
+  params,
+}: {
+  params: Promise<{ orgSlug: string }>;
+}) {
+  const { orgSlug } = await params;
   const supabase = await createClient();
   const {
     data: { user },
@@ -13,14 +19,8 @@ export default async function SettingsPage() {
 
   if (!user) redirect("/login");
 
-  const { data: org } = await supabase
-    .from("organization_members")
-    .select("organizations(id, name, slug)")
-    .eq("user_id", user.id)
-    .eq("role", "owner")
-    .single();
-
-  const organization = (org?.organizations as any) ?? null;
+  const org = await getOrgBySlug(orgSlug, user.id);
+  if (!org) redirect("/onboarding");
 
   return (
     <div className="space-y-6">
@@ -54,33 +54,31 @@ export default async function SettingsPage() {
         </div>
       </Card>
 
-      {organization && (
-        <Card className="p-6">
-          <div className="mb-4 flex items-center gap-2">
-            <Building2 className="h-5 w-5 text-[oklch(0.445_0.107_195)]" />
-            <h2 className="text-lg font-semibold">Organization</h2>
+      <Card className="p-6">
+        <div className="mb-4 flex items-center gap-2">
+          <Building2 className="h-5 w-5 text-[oklch(0.445_0.107_195)]" />
+          <h2 className="text-lg font-semibold">Organization</h2>
+        </div>
+        <div className="divide-y divide-border text-sm">
+          <div className="flex items-center justify-between rounded-lg px-3 py-3 bg-muted/30">
+            <span className="flex items-center gap-2 text-muted-foreground">
+              <Building2 className="h-3.5 w-3.5" />
+              Name
+            </span>
+            <span className="font-medium">{org.name}</span>
           </div>
-          <div className="divide-y divide-border text-sm">
-            <div className="flex items-center justify-between rounded-lg px-3 py-3 bg-muted/30">
-              <span className="flex items-center gap-2 text-muted-foreground">
-                <Building2 className="h-3.5 w-3.5" />
-                Name
-              </span>
-              <span className="font-medium">{organization.name}</span>
-            </div>
-            <div className="flex items-center justify-between rounded-lg px-3 py-3">
-              <span className="flex items-center gap-2 text-muted-foreground">
-                <Tag className="h-3.5 w-3.5" />
-                Slug
-              </span>
-              <span className="font-mono text-xs">{organization.slug}</span>
-            </div>
+          <div className="flex items-center justify-between rounded-lg px-3 py-3">
+            <span className="flex items-center gap-2 text-muted-foreground">
+              <Tag className="h-3.5 w-3.5" />
+              Slug
+            </span>
+            <span className="font-mono text-xs">{org.slug}</span>
           </div>
-        </Card>
-      )}
+        </div>
+      </Card>
 
       <Link
-        href="/settings/team"
+        href={`/org/${orgSlug}/settings/team`}
         className="group block"
       >
         <Card className="p-6 transition-colors hover:bg-muted/30">
