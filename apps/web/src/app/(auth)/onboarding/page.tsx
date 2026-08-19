@@ -58,7 +58,7 @@ export default function OnboardingPage() {
       }
 
       toast.success("You're all set!");
-      router.push("/dashboard");
+      router.push(`/org/${slug}/dashboard`);
       router.refresh();
     } catch (err) {
       toast.error(
