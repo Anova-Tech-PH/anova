@@ -1,24 +1,13 @@
 import { createClient } from "@attendly/ui/supabase/server";
 
-export async function getDashboardStats(userId: string) {
+export async function getDashboardStats(orgId: string) {
   const supabase = await createClient();
 
-  // Get user's org IDs
-  const { data: memberships } = await supabase
-    .from("organization_members")
-    .select("organization_id")
-    .eq("user_id", userId);
-
-  const orgIds = memberships?.map((m) => m.organization_id) ?? [];
-  if (orgIds.length === 0) {
-    return { totalEvents: 0, totalRegistrations: 0, upcomingEvents: 0, checkInRate: 0, recentEvents: [] };
-  }
-
-  // Get all events
+  // Get all events for this org
   const { data: events } = await supabase
     .from("events")
     .select("id, title, slug, status, start_date, end_date, cover_image, created_at")
-    .in("organization_id", orgIds)
+    .eq("organization_id", orgId)
     .order("created_at", { ascending: false });
 
   const allEvents = events ?? [];

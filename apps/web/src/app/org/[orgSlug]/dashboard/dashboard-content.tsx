@@ -39,9 +39,11 @@ function getFormattedDate(): string {
 export function DashboardContent({
   userName,
   stats,
+  orgSlug,
 }: {
   userName?: string;
   stats: Stats;
+  orgSlug: string;
 }) {
   return (
     <div className="space-y-10">
@@ -55,7 +57,7 @@ export function DashboardContent({
             {getGreeting()}{userName ? `, ${userName}` : ""}
           </h1>
         </div>
-        <Link href="/events/new">
+        <Link href={`/org/${orgSlug}/events/new`}>
           <Button size="sm" className="gap-1.5">
             <Plus className="h-3.5 w-3.5" />
             New Event
@@ -88,7 +90,7 @@ export function DashboardContent({
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-sm font-medium text-muted-foreground">Recent Events</h2>
           <Link
-            href="/events"
+            href={`/org/${orgSlug}/events`}
             className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             View all <ArrowRight className="h-3 w-3" />
@@ -98,7 +100,7 @@ export function DashboardContent({
         {stats.recentEvents.length === 0 ? (
           <div className="rounded-lg border border-dashed py-12 text-center">
             <p className="text-sm text-muted-foreground">No events yet</p>
-            <Link href="/events/new" className="mt-2 inline-block text-sm font-medium text-primary hover:underline">
+            <Link href={`/org/${orgSlug}/events/new`} className="mt-2 inline-block text-sm font-medium text-primary hover:underline">
               Create one now
             </Link>
           </div>
@@ -109,7 +111,7 @@ export function DashboardContent({
             {stats.recentEvents.map((event) => (
               <Link
                 key={event.id}
-                href={`/events/${event.id}`}
+                href={`/org/${orgSlug}/events/${event.id}`}
                 className="block rounded-lg border bg-card p-4 transition-colors hover:border-primary/20"
               >
                 <div className="flex items-start justify-between gap-3">
@@ -158,7 +160,7 @@ export function DashboardContent({
                   <tr key={event.id} className="hover:bg-muted/20 transition-colors">
                     <td className="px-4 py-3">
                       <Link
-                        href={`/events/${event.id}`}
+                        href={`/org/${orgSlug}/events/${event.id}`}
                         className="font-medium hover:text-primary transition-colors"
                       >
                         {event.title}
