@@ -16,9 +16,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
-import { getProfile, updateProfileMutation } from "@attendly/supabase-client";
+import { getProfile, getAttendeeContactInfo, updateProfileMutation, updateAttendeeContactInfo } from "@attendly/supabase-client";
 import { supabase } from "../../../src/lib/supabase";
 import { useAuth } from "../../../src/lib/auth-context";
+import { useEventContext } from "../../../src/lib/event-context";
 import { Avatar } from "../../../src/components/avatar";
 import {
   colors,
@@ -53,6 +54,7 @@ const AVATAR_SIZE = 100;
 
 export default function ProfileScreen() {
   const { user, signOut } = useAuth();
+  const { currentEvent } = useEventContext();
   const queryClient = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
 
@@ -65,6 +67,14 @@ export default function ProfileScreen() {
   const [uploading, setUploading] = useState(false);
   const [dirty, setDirty] = useState(false);
 
+  // Contact fields
+  const [phone, setPhone] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
+  const [address, setAddress] = useState("");
+  const [showPhone, setShowPhone] = useState(false);
+  const [showEmail, setShowEmail] = useState(false);
+  const [showAddress, setShowAddress] = useState(false);
+
   const {
     data: profile,
     isLoading,
@@ -73,6 +83,12 @@ export default function ProfileScreen() {
     queryKey: ["profile", user?.id],
     queryFn: () => getProfile(supabase, user!.id),
     enabled: !!user?.id,
+  });
+
+  const { data: contactInfo } = useQuery({
+    queryKey: ["attendee-contact", user?.id, currentEvent?.id],
+    queryFn: () => getAttendeeContactInfo(supabase, user!.id, currentEvent!.id),
+    enabled: !!user?.id && !!currentEvent?.id,
   });
 
   // Sync fetched profile into form state
@@ -87,19 +103,42 @@ export default function ProfileScreen() {
     }
   }, [profile]);
 
+  useEffect(() => {
+    if (contactInfo) {
+      setPhone(contactInfo.phone ?? "");
+      setContactEmail(contactInfo.contact_email ?? "");
+      setAddress(contactInfo.address ?? "");
+      setShowPhone(contactInfo.show_phone ?? false);
+      setShowEmail(contactInfo.show_email ?? false);
+      setShowAddress(contactInfo.show_address ?? false);
+    }
+  }, [contactInfo]);
+
   // Save mutation
   const saveMutation = useMutation({
-    mutationFn: () =>
-      updateProfileMutation(supabase, user!.id, {
+    mutationFn: async () => {
+      await updateProfileMutation(supabase, user!.id, {
         full_name: fullName.trim(),
         avatar_url: avatarUrl ?? undefined,
         bio: bio.trim(),
         company: company.trim(),
         job_title: jobTitle.trim(),
-      }),
+      });
+      if (currentEvent?.id) {
+        await updateAttendeeContactInfo(supabase, user!.id, currentEvent.id, {
+          phone: phone.trim(),
+          contact_email: contactEmail.trim(),
+          address: address.trim(),
+          show_phone: showPhone,
+          show_email: showEmail,
+          show_address: showAddress,
+        });
+      }
+    },
     onSuccess: () => {
       setDirty(false);
       queryClient.invalidateQueries({ queryKey: ["profile", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["attendee-contact", user?.id, currentEvent?.id] });
       Alert.alert("Saved", "Your profile has been updated.");
     },
     onError: (err: Error) => {
@@ -109,7 +148,10 @@ export default function ProfileScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await refetch();
+    await Promise.all([
+      refetch(),
+      queryClient.invalidateQueries({ queryKey: ["attendee-contact", user?.id, currentEvent?.id] }),
+    ]);
     setRefreshing(false);
   };
 
@@ -288,6 +330,101 @@ export default function ProfileScreen() {
             />
           </View>
 
+          {/* ── Contact Information ─────────────────────────────── */}
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Contact Information</Text>
+            <Text style={styles.sectionSubtitle}>
+              Toggle visibility to control what other attendees can see.
+            </Text>
+          </View>
+
+          {/* Phone */}
+          <View style={styles.fieldGroup}>
+            <Text style={styles.fieldLabel}>Phone</Text>
+            <View style={styles.contactRow}>
+              <TextInput
+                style={[styles.input, styles.contactInput]}
+                value={phone}
+                onChangeText={(v) => handleFieldChange(setPhone, v)}
+                placeholder="e.g. +1 (555) 123-4567"
+                placeholderTextColor={colors.textMuted}
+                keyboardType="phone-pad"
+              />
+              <TouchableOpacity
+                style={[styles.visibilityBtn, showPhone && styles.visibilityBtnActive]}
+                onPress={() => { setShowPhone(!showPhone); setDirty(true); }}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name={showPhone ? "eye-outline" : "eye-off-outline"}
+                  size={16}
+                  color={showPhone ? colors.primary : colors.textMuted}
+                />
+                <Text style={[styles.visibilityText, showPhone && styles.visibilityTextActive]}>
+                  {showPhone ? "Visible" : "Hidden"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Email */}
+          <View style={styles.fieldGroup}>
+            <Text style={styles.fieldLabel}>Email</Text>
+            <View style={styles.contactRow}>
+              <TextInput
+                style={[styles.input, styles.contactInput]}
+                value={contactEmail}
+                onChangeText={(v) => handleFieldChange(setContactEmail, v)}
+                placeholder="e.g. you@example.com"
+                placeholderTextColor={colors.textMuted}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+              <TouchableOpacity
+                style={[styles.visibilityBtn, showEmail && styles.visibilityBtnActive]}
+                onPress={() => { setShowEmail(!showEmail); setDirty(true); }}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name={showEmail ? "eye-outline" : "eye-off-outline"}
+                  size={16}
+                  color={showEmail ? colors.primary : colors.textMuted}
+                />
+                <Text style={[styles.visibilityText, showEmail && styles.visibilityTextActive]}>
+                  {showEmail ? "Visible" : "Hidden"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Address */}
+          <View style={styles.fieldGroup}>
+            <Text style={styles.fieldLabel}>Address</Text>
+            <View style={styles.contactRow}>
+              <TextInput
+                style={[styles.input, styles.contactInput]}
+                value={address}
+                onChangeText={(v) => handleFieldChange(setAddress, v)}
+                placeholder="e.g. 123 Main St, City, State"
+                placeholderTextColor={colors.textMuted}
+              />
+              <TouchableOpacity
+                style={[styles.visibilityBtn, showAddress && styles.visibilityBtnActive]}
+                onPress={() => { setShowAddress(!showAddress); setDirty(true); }}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name={showAddress ? "eye-outline" : "eye-off-outline"}
+                  size={16}
+                  color={showAddress ? colors.primary : colors.textMuted}
+                />
+                <Text style={[styles.visibilityText, showAddress && styles.visibilityTextActive]}>
+                  {showAddress ? "Visible" : "Hidden"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
           {/* ── Save Button ────────────────────────────────────── */}
           <TouchableOpacity
             style={[
@@ -411,6 +548,54 @@ const styles = StyleSheet.create({
   textArea: {
     minHeight: 100,
     paddingTop: 14,
+  },
+
+  // Section headers
+  sectionHeader: {
+    marginBottom: spacing.lg,
+    marginTop: spacing.md,
+  },
+  sectionTitle: {
+    ...typography.h3,
+    color: colors.textPrimary,
+    marginBottom: spacing.xs,
+  },
+  sectionSubtitle: {
+    ...typography.caption,
+    color: colors.textMuted,
+  },
+
+  // Contact row
+  contactRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: spacing.sm,
+  },
+  contactInput: {
+    flex: 1,
+  },
+  visibilityBtn: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 4,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 14,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  visibilityBtnActive: {
+    borderColor: colors.primary + "50",
+    backgroundColor: colors.primary + "10",
+  },
+  visibilityText: {
+    fontSize: 13,
+    fontWeight: "600" as const,
+    color: colors.textMuted,
+  },
+  visibilityTextActive: {
+    color: colors.primary,
   },
 
   // Save button

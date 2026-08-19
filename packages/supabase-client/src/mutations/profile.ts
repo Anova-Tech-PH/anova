@@ -33,3 +33,32 @@ export async function updateProfileMutation(
 
   if (error) throw new Error(error.message);
 }
+
+export async function updateAttendeeContactInfo(
+  client: SupabaseClient,
+  userId: string,
+  eventId: string,
+  data: {
+    phone?: string;
+    contact_email?: string;
+    address?: string;
+    show_phone?: boolean;
+    show_email?: boolean;
+    show_address?: boolean;
+  },
+) {
+  const { error } = await client
+    .from("attendee_profiles")
+    .update({
+      phone: data.phone || null,
+      contact_email: data.contact_email || null,
+      address: data.address || null,
+      show_phone: data.show_phone ?? false,
+      show_email: data.show_email ?? false,
+      show_address: data.show_address ?? false,
+    })
+    .eq("id", userId)
+    .eq("event_id", eventId);
+
+  if (error) throw new Error(error.message);
+}
