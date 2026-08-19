@@ -80,7 +80,7 @@ export default function OnboardingPage() {
           </div>
 
           <div className="text-center space-y-2">
-            <h1 className="text-2xl font-bold font-serif">Set up your workspace</h1>
+            <h1 className="text-2xl font-bold">Set up your workspace</h1>
             <p className="text-muted-foreground">
               Name your organization and choose how to start. Takes about 30 seconds.
             </p>

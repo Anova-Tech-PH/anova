@@ -89,6 +89,7 @@ export default function NewEventPage() {
       .select("organization_id")
       .eq("user_id", user.id)
       .eq("role", "owner")
+      .limit(1)
       .single();
 
     if (!membership) {
@@ -153,7 +154,7 @@ export default function NewEventPage() {
             <Sparkles className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold font-serif">Create Event</h1>
+            <h1 className="text-2xl font-bold">Create Event</h1>
             <p className="text-sm text-muted-foreground">
               Fill in your event information below. You can come back and make changes later.
             </p>
