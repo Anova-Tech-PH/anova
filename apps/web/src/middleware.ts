@@ -1,6 +1,19 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+async function getFirstOrgSlug(
+  supabase: any,
+  userId: string
+): Promise<string | null> {
+  const { data } = await supabase
+    .from("organization_members")
+    .select("organizations(slug)")
+    .eq("user_id", userId)
+    .limit(1)
+    .single();
+  return (data?.organizations as any)?.slug ?? null;
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -46,8 +59,28 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Protect organizer routes
-  if (pathname.startsWith("/dashboard") || pathname.startsWith("/events")) {
+  // Redirect old organizer routes to org-scoped ones
+  if (
+    user &&
+    (pathname === "/dashboard" ||
+     pathname === "/events" ||
+     pathname.startsWith("/events/") ||
+     pathname === "/settings" ||
+     pathname.startsWith("/settings/"))
+  ) {
+    const slug = await getFirstOrgSlug(supabase, user.id);
+    if (slug) {
+      const url = request.nextUrl.clone();
+      url.pathname = `/org/${slug}${pathname}`;
+      return NextResponse.redirect(url);
+    }
+    const url = request.nextUrl.clone();
+    url.pathname = "/onboarding";
+    return NextResponse.redirect(url);
+  }
+
+  // Protect /org/* routes — require auth
+  if (pathname.startsWith("/org/")) {
     if (!user) {
       const url = request.nextUrl.clone();
       url.pathname = "/login";
@@ -73,13 +106,10 @@ export async function middleware(request: NextRequest) {
       if (redirect && redirect.startsWith("/") && !redirect.startsWith("//")) {
         return NextResponse.redirect(new URL(redirect, request.url));
       }
-      // Check if user is an organizer (has org membership)
-      const { count } = await supabase
-        .from("organization_members")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", user.id);
+      // Redirect to org-scoped dashboard or my-events
+      const slug = await getFirstOrgSlug(supabase, user.id);
       const url = request.nextUrl.clone();
-      url.pathname = count && count > 0 ? "/dashboard" : "/my-events";
+      url.pathname = slug ? `/org/${slug}/dashboard` : "/my-events";
       return NextResponse.redirect(url);
     }
   }
@@ -91,15 +121,11 @@ export async function middleware(request: NextRequest) {
       url.pathname = "/login";
       return NextResponse.redirect(url);
     }
-    // Check if user already has an org — if so, redirect to dashboard
-    const { count } = await supabase
-      .from("organization_members")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", user.id);
-
-    if (count && count > 0) {
+    // Check if user already has an org — if so, redirect to org dashboard
+    const slug = await getFirstOrgSlug(supabase, user.id);
+    if (slug) {
       const url = request.nextUrl.clone();
-      url.pathname = "/dashboard";
+      url.pathname = `/org/${slug}/dashboard`;
       return NextResponse.redirect(url);
     }
   }
@@ -108,6 +134,7 @@ export async function middleware(request: NextRequest) {
   const portalPattern = /^\/[^/]+\/[^/]+/;
   const isPortalRoute =
     portalPattern.test(pathname) &&
+    !pathname.startsWith("/org/") &&
     !pathname.startsWith("/dashboard") &&
     !pathname.startsWith("/events") &&
     !pathname.startsWith("/login") &&
@@ -127,23 +154,6 @@ export async function middleware(request: NextRequest) {
     url.pathname = "/login";
     url.searchParams.set("redirect", pathname);
     return NextResponse.redirect(url);
-  }
-
-  // Redirect users without an org to onboarding (for protected organizer routes)
-  if (
-    user &&
-    (pathname.startsWith("/dashboard") || pathname.startsWith("/events"))
-  ) {
-    const { count } = await supabase
-      .from("organization_members")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", user.id);
-
-    if (!count || count === 0) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/my-events";
-      return NextResponse.redirect(url);
-    }
   }
 
   return supabaseResponse;
