@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import { Button } from "@attendly/ui/components";
 import { Input } from "@attendly/ui/components";
 import { PageTransition } from "@attendly/ui/components";
-import { Logo } from "@attendly/ui/logo";
 import {
   Building2,
   Sparkles,
@@ -74,7 +73,10 @@ export default function OnboardingPage() {
       <PageTransition>
         <div className="w-full max-w-lg space-y-8">
           <div className="flex justify-center">
-            <Logo size="lg" />
+            <span className="text-[28px] font-[800] tracking-[-0.04em]">
+              <span className="text-foreground">EVEN</span>
+              <span className="gradient-brand-text">TRIV</span>
+            </span>
           </div>
 
           <div className="text-center space-y-2">
