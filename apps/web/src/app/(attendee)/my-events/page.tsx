@@ -43,8 +43,9 @@ export default async function MyEventsPage() {
     .order("created_at", { ascending: false });
 
   // Deduplicate by event — keep most recent registration per event
-  const seen = new Map<string, (typeof registrations)[number]>();
-  for (const reg of registrations ?? []) {
+  const regList = registrations ?? [];
+  const seen = new Map<string, (typeof regList)[number]>();
+  for (const reg of regList) {
     const event = reg.events as unknown as { id: string };
     if (!event) continue;
     if (!seen.has(event.id)) {
