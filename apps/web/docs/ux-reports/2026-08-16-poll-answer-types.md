@@ -38,7 +38,7 @@ All major issues were fixed during testing.
 - All 5 answer types create successfully with proper validation
 - Star rating results display shows average + distribution breakdown clearly
 - Poll type badges appear next to question text in the table, making types immediately identifiable
-- Presentation view renders clean full-screen with dark background and "Powered by Evenstry" branding
+- Presentation view renders clean full-screen with dark background and "Powered by Eventriv" branding
 - Presentation view auto-refreshes every 5 seconds via WallRefreshWrapper
 - Present button correctly opens in a new tab
 - CSV download works for all answer types

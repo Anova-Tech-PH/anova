@@ -1,5 +1,7 @@
 import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { stripe } from "@/lib/stripe";
 import { QrConfirmation } from "../qr-confirmation";
+import { PaymentProcessing } from "./payment-processing";
 
 export default async function ConfirmationPage({
   params,
@@ -44,14 +46,32 @@ export default async function ConfirmationPage({
   }
 
   if (order.status === "pending") {
-    return (
-      <div className="mx-auto max-w-lg px-4 py-12 text-center">
-        <p className="text-lg font-semibold">Payment processing...</p>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Your payment is being confirmed. You&apos;ll receive a confirmation email shortly.
-        </p>
-      </div>
-    );
+    // Webhook may not have arrived yet — check Stripe directly
+    try {
+      const session = await stripe.checkout.sessions.retrieve(session_id);
+      if (session.payment_status === "paid") {
+        // Webhook was missed — update order and registration inline
+        await supabase
+          .from("orders")
+          .update({
+            status: "completed",
+            stripe_payment_intent_id: session.payment_intent as string,
+          })
+          .eq("id", order.id);
+
+        await supabase
+          .from("registrations")
+          .update({ status: "confirmed" })
+          .eq("id", order.registration_id);
+
+        // Fall through to render the confirmation below
+      } else {
+        // Payment genuinely not complete yet — show polling UI
+        return <PaymentProcessing />;
+      }
+    } catch {
+      return <PaymentProcessing />;
+    }
   }
 
   // Fetch registration details separately

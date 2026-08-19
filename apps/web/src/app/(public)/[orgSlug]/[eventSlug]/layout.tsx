@@ -61,7 +61,8 @@ export default async function PublicEventLayout({
         .from("attendee_profiles")
         .select("id", { count: "exact", head: true })
         .eq("event_id", event.id)
-        .eq("is_visible_in_directory", true),
+        .eq("is_visible_in_directory", true)
+        .neq("id", user?.id ?? ""),
       supabase
         .from("community_topics")
         .select("id", { count: "exact", head: true })

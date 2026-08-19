@@ -42,7 +42,16 @@ export default async function MyEventsPage() {
     .neq("status", "cancelled")
     .order("created_at", { ascending: false });
 
-  const items = registrations ?? [];
+  // Deduplicate by event — keep most recent registration per event
+  const seen = new Map<string, (typeof registrations)[number]>();
+  for (const reg of registrations ?? []) {
+    const event = reg.events as unknown as { id: string };
+    if (!event) continue;
+    if (!seen.has(event.id)) {
+      seen.set(event.id, reg);
+    }
+  }
+  const items = Array.from(seen.values());
 
   return (
     <div className="space-y-8">

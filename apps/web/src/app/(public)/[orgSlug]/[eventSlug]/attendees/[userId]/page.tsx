@@ -98,6 +98,9 @@ export default async function AttendeeProfilePage({
         affiliations,
         education,
         links: (profile.links as { type: string; url: string; label?: string }[] | null) ?? [],
+        phone: profile.show_phone ? profile.phone : null,
+        contact_email: profile.show_email ? profile.contact_email : null,
+        address: profile.show_address ? profile.address : null,
       }}
       eventId={event.id}
       basePath={basePath}

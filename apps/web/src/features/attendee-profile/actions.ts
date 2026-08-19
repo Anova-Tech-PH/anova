@@ -13,6 +13,12 @@ export async function updateProfile(
     location?: string;
     bio?: string;
     is_visible_in_directory?: boolean;
+    phone?: string;
+    contact_email?: string;
+    address?: string;
+    show_phone?: boolean;
+    show_email?: boolean;
+    show_address?: boolean;
   }
 ) {
   const supabase = await createClient();
@@ -31,6 +37,12 @@ export async function updateProfile(
       location: data.location ?? null,
       bio: data.bio ?? null,
       is_visible_in_directory: data.is_visible_in_directory ?? true,
+      phone: data.phone ?? null,
+      contact_email: data.contact_email ?? null,
+      address: data.address ?? null,
+      show_phone: data.show_phone ?? false,
+      show_email: data.show_email ?? false,
+      show_address: data.show_address ?? false,
       updated_at: new Date().toISOString(),
     }, { onConflict: "id,event_id" });
 

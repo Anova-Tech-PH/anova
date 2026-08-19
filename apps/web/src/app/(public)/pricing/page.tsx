@@ -151,6 +151,27 @@ function FAQItem({
 export default function PricingPage() {
   return (
     <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-sm">
+        <div className="mx-auto flex h-16 max-w-7xl items-center gap-9 px-4 sm:px-6 lg:px-8">
+          <a href="https://eventriv.com" className="text-[20px] font-[800] tracking-[-0.04em] text-foreground">
+            EVEN<span className="bg-[image:linear-gradient(100deg,#8b3dff,#ff2f92_60%,#ff8a3d)] bg-clip-text text-transparent">TRIV</span>
+          </a>
+          <nav className="mr-auto hidden items-center gap-[30px] text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground md:flex">
+            <a href="https://eventriv.com/#product" className="transition-colors hover:text-foreground">Product</a>
+            <a href="https://eventriv.com/#use-cases" className="transition-colors hover:text-foreground">Use cases</a>
+            <a href="/pricing" className="text-foreground">Pricing</a>
+            <a href="https://eventriv.com/#faq" className="transition-colors hover:text-foreground">FAQ</a>
+          </nav>
+          <a href="/login" className="hidden text-[13px] font-semibold text-muted-foreground transition-colors hover:text-foreground sm:block">
+            Log in
+          </a>
+          <a href="/signup" className="rounded-[2px] px-5 py-[11px] text-[13px] font-bold text-white [background:linear-gradient(100deg,#8b3dff,#ff2f92_62%,#ff8a3d)] hover:brightness-[0.94] transition-[filter]">
+            Get started
+          </a>
+        </div>
+      </header>
+
       {/* Section 1: Hero + Form + Social Proof */}
       <section className="border-b border-border">
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">

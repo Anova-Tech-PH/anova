@@ -14,6 +14,8 @@ import {
   Loader2,
   Check,
   Globe,
+  Phone,
+  Mail,
 } from "lucide-react";
 import { Avatar, Badge, Button } from "@attendly/ui/components";
 import { toggleAttendeeBookmark, saveAttendeeNote } from "@/features/attendee-profile/actions";
@@ -37,6 +39,9 @@ interface AttendeeProfileViewProps {
     affiliations: { id: string; organization: string; role: string | null; start_date: string | null; end_date: string | null }[];
     education: { id: string; school: string; degree: string | null; field_of_study: string | null; start_year: number | null; end_year: number | null }[];
     links: { type: string; url: string; label?: string }[];
+    phone: string | null;
+    contact_email: string | null;
+    address: string | null;
   };
   eventId: string;
   basePath: string;
@@ -300,6 +305,36 @@ export function AttendeeProfileView({
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground whitespace-pre-line">
               {profile.bio}
             </p>
+          </div>
+        )}
+
+        {/* Contact */}
+        {(profile.phone || profile.contact_email || profile.address) && (
+          <div className="mt-6">
+            <h2 className="text-sm font-semibold text-foreground">Contact</h2>
+            <div className="mt-2 space-y-1.5">
+              {profile.phone && (
+                <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Phone className="h-3.5 w-3.5 shrink-0" />
+                  {profile.phone}
+                </p>
+              )}
+              {profile.contact_email && (
+                <a
+                  href={`mailto:${profile.contact_email}`}
+                  className="flex items-center gap-2 text-sm text-primary hover:underline"
+                >
+                  <Mail className="h-3.5 w-3.5 shrink-0" />
+                  {profile.contact_email}
+                </a>
+              )}
+              {profile.address && (
+                <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <MapPin className="h-3.5 w-3.5 shrink-0" />
+                  {profile.address}
+                </p>
+              )}
+            </div>
           </div>
         )}
 

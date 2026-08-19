@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { Camera, Loader2, Plus, Trash2 } from "lucide-react";
+import { Camera, Loader2, Plus, Trash2, Eye, EyeOff } from "lucide-react";
 import { Avatar, Button, Input, Textarea } from "@attendly/ui/components";
 import { createClient } from "@attendly/ui/supabase/client";
 import { toast } from "sonner";
@@ -17,6 +17,12 @@ type Profile = {
   location: string | null;
   bio: string | null;
   is_visible_in_directory: boolean;
+  phone: string | null;
+  contact_email: string | null;
+  address: string | null;
+  show_phone: boolean;
+  show_email: boolean;
+  show_address: boolean;
 };
 
 type Interest = {
@@ -71,6 +77,12 @@ export function ProfileEditor({
   const [isVisible, setIsVisible] = useState(
     profile?.is_visible_in_directory ?? true
   );
+  const [phone, setPhone] = useState(profile?.phone ?? "");
+  const [contactEmail, setContactEmail] = useState(profile?.contact_email ?? "");
+  const [address, setAddress] = useState(profile?.address ?? "");
+  const [showPhone, setShowPhone] = useState(profile?.show_phone ?? false);
+  const [showEmail, setShowEmail] = useState(profile?.show_email ?? false);
+  const [showAddress, setShowAddress] = useState(profile?.show_address ?? false);
   const [checkedInterests, setCheckedInterests] = useState<Set<string>>(
     new Set(selectedInterestIds)
   );
@@ -273,6 +285,12 @@ export function ProfileEditor({
           location: location.trim() || undefined,
           bio: bio.trim() || undefined,
           is_visible_in_directory: isVisible,
+          phone: phone.trim() || undefined,
+          contact_email: contactEmail.trim() || undefined,
+          address: address.trim() || undefined,
+          show_phone: showPhone,
+          show_email: showEmail,
+          show_address: showAddress,
         });
 
         await updateProfileInterests(eventId, Array.from(checkedInterests));
@@ -383,6 +401,89 @@ export function ProfileEditor({
             placeholder="Tell other attendees about yourself..."
             rows={4}
           />
+        </div>
+      </div>
+
+      {/* Contact Information */}
+      <div>
+        <label className="mb-3 block text-sm font-medium">Contact Information</label>
+        <p className="mb-4 text-xs text-muted-foreground">
+          Toggle visibility to control what other attendees can see.
+        </p>
+        <div className="space-y-4">
+          <div className="flex items-start gap-3">
+            <div className="flex-1">
+              <label className="mb-1.5 block text-sm font-medium">Phone</label>
+              <Input
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="e.g. +1 (555) 123-4567"
+                type="tel"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowPhone(!showPhone)}
+              className={`mt-7 flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
+                showPhone
+                  ? "border-primary/30 bg-primary/10 text-primary"
+                  : "border-border text-muted-foreground hover:bg-accent"
+              }`}
+              title={showPhone ? "Visible to attendees" : "Hidden from attendees"}
+            >
+              {showPhone ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+              {showPhone ? "Visible" : "Hidden"}
+            </button>
+          </div>
+
+          <div className="flex items-start gap-3">
+            <div className="flex-1">
+              <label className="mb-1.5 block text-sm font-medium">Email</label>
+              <Input
+                value={contactEmail}
+                onChange={(e) => setContactEmail(e.target.value)}
+                placeholder="e.g. you@example.com"
+                type="email"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowEmail(!showEmail)}
+              className={`mt-7 flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
+                showEmail
+                  ? "border-primary/30 bg-primary/10 text-primary"
+                  : "border-border text-muted-foreground hover:bg-accent"
+              }`}
+              title={showEmail ? "Visible to attendees" : "Hidden from attendees"}
+            >
+              {showEmail ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+              {showEmail ? "Visible" : "Hidden"}
+            </button>
+          </div>
+
+          <div className="flex items-start gap-3">
+            <div className="flex-1">
+              <label className="mb-1.5 block text-sm font-medium">Address</label>
+              <Input
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="e.g. 123 Main St, City, State"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowAddress(!showAddress)}
+              className={`mt-7 flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
+                showAddress
+                  ? "border-primary/30 bg-primary/10 text-primary"
+                  : "border-border text-muted-foreground hover:bg-accent"
+              }`}
+              title={showAddress ? "Visible to attendees" : "Hidden from attendees"}
+            >
+              {showAddress ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+              {showAddress ? "Visible" : "Hidden"}
+            </button>
+          </div>
         </div>
       </div>
 
