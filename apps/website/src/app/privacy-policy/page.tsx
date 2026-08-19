@@ -196,10 +196,10 @@ export default function PrivacyPolicyPage() {
               If you have questions about this Privacy Policy, please contact us
               at{" "}
               <a
-                href="mailto:privacy@eventriv.com"
+                href="mailto:info@eventriv.com"
                 className="text-accent-pink transition-colors hover:text-accent-pink-soft underline"
               >
-                privacy@eventriv.com
+                info@eventriv.com
               </a>
               .
             </p>
