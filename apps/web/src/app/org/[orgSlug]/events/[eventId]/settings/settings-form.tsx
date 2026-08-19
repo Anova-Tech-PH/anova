@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { toast } from "sonner";
 import { Copy, FileDown } from "lucide-react";
 import { createClient } from "@attendly/ui/supabase/client";
@@ -15,6 +15,7 @@ export function EventSettingsForm({
   event: Record<string, unknown> & { id: string; status: string };
 }) {
   const router = useRouter();
+  const { orgSlug } = useParams() as { orgSlug: string };
   const [status, setStatus] = useState(event.status);
   const [duplicating, setDuplicating] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -56,7 +57,7 @@ export function EventSettingsForm({
       setDeleting(false);
     } else {
       toast.success("Event deleted");
-      router.push("/events");
+      router.push(`/org/${orgSlug}/events`);
     }
   }
 
@@ -83,7 +84,7 @@ export function EventSettingsForm({
     try {
       const result = await duplicateEvent(event.id);
       toast.success("Event duplicated");
-      router.push(`/events/${result.id}`);
+      router.push(`/org/${orgSlug}/events/${result.id}`);
     } catch (err: unknown) {
       toast.error(
         err instanceof Error ? err.message : "Failed to duplicate event"

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 import { ArrowLeft, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@attendly/ui/cn";
@@ -62,6 +63,7 @@ export function EventSubSidebar({
   eventTitle: string;
   groups: TopTabGroup[];
 }) {
+  const { orgSlug } = useParams() as { orgSlug: string };
   const { activePathname, navigate } = useEventNav();
 
   const activeGroup =
@@ -108,7 +110,7 @@ export function EventSubSidebar({
       {/* Event header */}
       <div className="flex h-14 flex-col justify-center border-b px-4">
         <Link
-          href="/events"
+          href={`/org/${orgSlug}/events`}
           className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="h-3 w-3" />

@@ -14,9 +14,9 @@ export default async function EventLayout({
   params,
 }: {
   children: React.ReactNode;
-  params: Promise<{ eventId: string }>;
+  params: Promise<{ orgSlug: string; eventId: string }>;
 }) {
-  const { eventId } = await params;
+  const { orgSlug, eventId } = await params;
   const supabase = await createClient();
 
   const { data: event } = await supabase
@@ -251,7 +251,7 @@ export default async function EventLayout({
         {/* Mobile: back link + event header + nav */}
         <div className="mb-6 space-y-3 lg:hidden">
           <Link
-            href="/events"
+            href={`/org/${orgSlug}/events`}
             className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
