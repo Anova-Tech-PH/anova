@@ -120,7 +120,7 @@ function AddressAutocomplete({
   }
 
   return (
-    <div ref={containerRef} className="relative">
+    <div ref={containerRef} className="relative z-[9999]">
       <div className="relative">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <input
@@ -139,7 +139,7 @@ function AddressAutocomplete({
       </div>
 
       {showDropdown && (
-        <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover shadow-lg">
+        <div className="absolute z-[9999] mt-1 w-full rounded-md border bg-popover shadow-lg">
           {results.map((result) => (
             <button
               key={result.place_id}
