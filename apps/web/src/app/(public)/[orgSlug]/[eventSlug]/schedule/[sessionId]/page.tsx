@@ -457,9 +457,10 @@ export default async function SessionDetailPage({
           {session.description && (
             <div className="mt-8">
               <h2 className="text-base font-semibold">Description</h2>
-              <div className="mt-2 text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap">
-                {session.description}
-              </div>
+              <div
+                className="mt-2 text-sm leading-relaxed text-muted-foreground [&_p]:mb-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_a]:text-primary [&_a]:underline"
+                dangerouslySetInnerHTML={{ __html: session.description }}
+              />
             </div>
           )}
 

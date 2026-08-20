@@ -291,9 +291,10 @@ export default async function PublicEventPage({
               <div className="h-6 w-1 rounded-full bg-primary" />
               <h2 className="text-xl font-semibold">About the Event</h2>
             </div>
-            <p className="mt-4 text-muted-foreground leading-relaxed whitespace-pre-wrap max-w-2xl">
-              {event.description}
-            </p>
+            <div
+              className="mt-4 text-muted-foreground leading-relaxed max-w-2xl [&_p]:mb-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_a]:text-primary [&_a]:underline"
+              dangerouslySetInnerHTML={{ __html: event.description }}
+            />
           </section>
         )}
 
@@ -386,7 +387,7 @@ export default async function PublicEventPage({
                             </h4>
                             {session.description && (
                               <p className="mt-1 text-xs text-muted-foreground line-clamp-2">
-                                {session.description}
+                                {session.description.replace(/<[^>]*>/g, "")}
                               </p>
                             )}
                             {session.session_speakers.length > 0 && (

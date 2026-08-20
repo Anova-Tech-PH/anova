@@ -410,7 +410,7 @@ export default async function PublicSchedulePage({
                     </Link>
                     {session.description && (
                       <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
-                        {session.description}
+                        {session.description.replace(/<[^>]*>/g, "")}
                       </p>
                     )}
                     <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
