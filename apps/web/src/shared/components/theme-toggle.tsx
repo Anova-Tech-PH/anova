@@ -5,8 +5,8 @@ import { Sun, Moon } from "lucide-react";
 import { cn } from "@attendly/ui/cn";
 
 function getStoredTheme(): "light" | "dark" {
-  if (typeof window === "undefined") return "dark";
-  return (localStorage.getItem("theme") as "light" | "dark") ?? "dark";
+  if (typeof window === "undefined") return "light";
+  return (localStorage.getItem("theme") as "light" | "dark") ?? "light";
 }
 
 function applyTheme(theme: "light" | "dark") {
@@ -15,7 +15,7 @@ function applyTheme(theme: "light" | "dark") {
 }
 
 export function ThemeToggle({ collapsed }: { collapsed?: boolean }) {
-  const [theme, setTheme] = useState<"light" | "dark">("dark");
+  const [theme, setTheme] = useState<"light" | "dark">("light");
 
   useEffect(() => {
     const stored = getStoredTheme();
