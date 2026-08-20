@@ -55,28 +55,28 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       ? registration.ticket_types[0]
       : registration.ticket_types;
 
-    // Fire-and-forget confirmation email
-    sendRegistrationConfirmationEmail(event_id, {
-      name: registration.name,
-      email: registration.email,
-      ticketTypeName: ticketType?.name ?? "General",
-      qrCode: registration.qr_code,
-    }).catch((err) =>
-      console.error("[Stripe Webhook] Failed to send confirmation email:", err)
-    );
+    try {
+      await sendRegistrationConfirmationEmail(event_id, {
+        name: registration.name,
+        email: registration.email,
+        ticketTypeName: ticketType?.name ?? "General",
+        qrCode: registration.qr_code,
+      });
+    } catch (err) {
+      console.error("[Stripe Webhook] Failed to send confirmation email:", err);
+    }
   }
 
-  // Fire-and-forget: mark registration_intents as converted
-  supabase
+  // Mark registration_intents as converted
+  const { error: intentError } = await supabase
     .from("registration_intents")
     .update({ status: "converted" })
     .eq("event_id", event_id)
-    .eq("email", registration?.email ?? "")
-    .then(({ error }) => {
-      if (error) {
-        console.error("[Stripe Webhook] Failed to update registration_intents:", error);
-      }
-    });
+    .eq("email", registration?.email ?? "");
+
+  if (intentError) {
+    console.error("[Stripe Webhook] Failed to update registration_intents:", intentError);
+  }
 }
 
 async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
@@ -107,6 +107,16 @@ async function handleCheckoutExpired(session: Stripe.Checkout.Session) {
   if (regError) {
     console.error("[Stripe Webhook] Failed to delete pending registration:", regError);
   }
+}
+
+async function handleAccountUpdated(account: Stripe.Account) {
+  // When a connected account completes onboarding or status changes,
+  // we don't need to do anything in the DB — we check charges_enabled
+  // live via stripe.accounts.retrieve() in getStripeConnectionStatus().
+  // This handler exists so Stripe doesn't flag unhandled events.
+  console.log(
+    `[Stripe Webhook] Account ${account.id} updated: charges_enabled=${account.charges_enabled}`
+  );
 }
 
 async function handleChargeRefunded(charge: Stripe.Charge) {
@@ -190,6 +200,9 @@ export async function POST(request: Request) {
         break;
       case "charge.refunded":
         await handleChargeRefunded(event.data.object as Stripe.Charge);
+        break;
+      case "account.updated":
+        await handleAccountUpdated(event.data.object as Stripe.Account);
         break;
       default:
         // Unhandled event type — acknowledge silently
