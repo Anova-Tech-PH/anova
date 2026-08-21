@@ -116,7 +116,8 @@ export async function seedBuiltInTopics(eventId: string) {
 
   const { error } = await supabase.from("discussion_topics").insert(rows);
 
-  if (error) throw new Error(error.message);
+  // Ignore duplicate key errors (race condition from concurrent page loads)
+  if (error && !error.message.includes("duplicate key")) throw new Error(error.message);
 }
 
 export async function importTopics(
