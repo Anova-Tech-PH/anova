@@ -444,7 +444,7 @@ export default async function PublicEventPage({
         )}
 
         {/* ── Register CTA ── */}
-        {!isRegistered && (
+        {!user && !isRegistered && (
           <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-info/5 border p-10 text-center">
             <div className="absolute top-0 right-0 h-32 w-32 rounded-full bg-primary/5 blur-2xl" />
             <div className="absolute bottom-0 left-0 h-24 w-24 rounded-full bg-info/5 blur-2xl" />
