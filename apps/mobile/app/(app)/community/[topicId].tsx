@@ -305,7 +305,7 @@ export default function TopicDetailScreen() {
             if (returnTo) {
               router.replace(`/(app)${returnTo}` as any);
             } else {
-              router.back();
+              router.replace('/(app)/community' as any);
             }
           }}
           style={styles.backBtn}

@@ -128,9 +128,18 @@ export function CommunityBoard({
           <p className="mt-3 text-sm text-muted-foreground">
             {currentSearch
               ? "No topics match your search."
-              : "No topics yet. Be the first to start a conversation!"}
+              : currentTab === "following"
+                ? "Not following any topics yet."
+                : "No topics yet. Be the first to start a conversation!"}
           </p>
-          {!currentSearch && (
+          <p className="mt-1 text-xs text-muted-foreground">
+            {currentSearch
+              ? "Try a different search term."
+              : currentTab === "following"
+                ? "Follow topics to see them here."
+                : null}
+          </p>
+          {!currentSearch && currentTab !== "following" && (
             <Button
               onClick={() => setShowCreate(true)}
               variant="outline"
