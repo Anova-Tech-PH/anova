@@ -229,6 +229,7 @@ export function TicketList({
                     <Button
                       variant="ghost"
                       size="icon"
+                      title="Edit ticket type"
                       onClick={() => setEditingTicket(ticket)}
                     >
                       <Pencil className="h-4 w-4" />
@@ -236,6 +237,7 @@ export function TicketList({
                     <Button
                       variant="ghost"
                       size="icon"
+                      title="Delete ticket type"
                       onClick={() => handleDelete(ticket)}
                       disabled={isPending}
                       className="hover:bg-destructive/10 hover:text-destructive"

@@ -5,6 +5,7 @@ import {
   getFloormapWithMarkers,
 } from "@/features/floormap/queries";
 import { FloormapViewer } from "@/features/floormap/components/floormap-viewer";
+import { FloormapSelect } from "@/features/floormap/components/floormap-select";
 
 export default async function PublicFloormapPage({
   params,
@@ -49,21 +50,11 @@ export default async function PublicFloormapPage({
       <h1 className="text-2xl font-bold">Floor Maps</h1>
 
       {floormaps.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto">
-          {floormaps.map((fm) => (
-            <a
-              key={fm.id}
-              href={`/${orgSlug}/${eventSlug}/floormap?map=${fm.id}`}
-              className={`shrink-0 rounded-lg border px-3 py-1.5 text-sm transition-colors ${
-                fm.id === targetId
-                  ? "border-primary bg-primary/10 text-primary font-medium"
-                  : "hover:bg-muted"
-              }`}
-            >
-              {fm.name}
-            </a>
-          ))}
-        </div>
+        <FloormapSelect
+          floormaps={floormaps.map((fm) => ({ id: fm.id, name: fm.name }))}
+          activeId={targetId}
+          basePath={`/${orgSlug}/${eventSlug}/floormap`}
+        />
       )}
 
       <FloormapViewer floormap={floormap} highlightLabel={highlight} />

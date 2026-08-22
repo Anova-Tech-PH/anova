@@ -3,8 +3,8 @@ import { redirect } from "next/navigation";
 export default async function VolunteerConsentFormsPage({
   params,
 }: {
-  params: Promise<{ eventId: string }>;
+  params: Promise<{ orgSlug: string; eventId: string }>;
 }) {
-  const { eventId } = await params;
-  redirect(`/events/${eventId}/release-consent-forms`);
+  const { orgSlug, eventId } = await params;
+  redirect(`/org/${orgSlug}/events/${eventId}/release-consent-forms`);
 }

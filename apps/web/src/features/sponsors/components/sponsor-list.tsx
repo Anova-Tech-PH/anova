@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { usePathname } from "next/navigation";
 import { Plus, Pencil, Trash2, Upload, Award } from "lucide-react";
 import { toast } from "sonner";
 import { Button, Badge, Avatar, EmptyState, useConfirm } from "@attendly/ui/components";
@@ -23,6 +24,7 @@ export function SponsorList({
   const [editingSponsor, setEditingSponsor] = useState<Sponsor | null>(null);
   const [isPending, startTransition] = useTransition();
   const { confirm, dialog: confirmDialog } = useConfirm();
+  const pathname = usePathname();
 
   async function handleCreate(data: {
     name: string;
@@ -179,7 +181,7 @@ export function SponsorList({
                   </td>
                   <td className="px-4 py-3">
                     <a
-                      href={`/events/${eventId}/sponsors/${sponsor.id}`}
+                      href={`${pathname}/${sponsor.id}`}
                       className="font-medium hover:underline"
                     >
                       {sponsor.name}

@@ -7,30 +7,42 @@ import {
   ActivityIndicator,
   RefreshControl,
   TouchableOpacity,
+  TextInput,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useRouter, useNavigation } from "expo-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Ionicons } from "@expo/vector-icons";
+import { DrawerActions } from "@react-navigation/native";
 import { getSessionsWithQA } from "@attendly/supabase-client";
 import { supabase } from "../../../src/lib/supabase";
 import { useEventContext } from "../../../src/lib/event-context";
-import { SearchBar } from "../../../src/components/search-bar";
-import { CountBadge } from "../../../src/components/badge";
 import { EmptyState } from "../../../src/components/empty-state";
-import { colors, typography, spacing, radius, shadows, shared } from "../../../src/theme";
+import { colors, typography, spacing, radius, shared } from "../../../src/theme";
 
-function formatTime(iso: string) {
-  return new Date(iso).toLocaleTimeString("en-US", {
+function formatSessionTime(startIso: string, endIso: string) {
+  const start = new Date(startIso);
+  const end = new Date(endIso);
+  const dateStr = start.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
+  const startTime = start.toLocaleTimeString("en-US", {
     hour: "numeric",
     minute: "2-digit",
   });
+  const endTime = end.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+  return `${dateStr} ${startTime} - ${endTime}`;
 }
 
 export default function SessionQAListScreen() {
   const { currentEvent } = useEventContext();
   const queryClient = useQueryClient();
   const router = useRouter();
+  const navigation = useNavigation();
   const [search, setSearch] = useState("");
   const [refreshing, setRefreshing] = useState(false);
 
@@ -49,25 +61,51 @@ export default function SessionQAListScreen() {
     setRefreshing(false);
   };
 
+  const header = (
+    <View style={styles.headerSection}>
+      <View style={styles.headerRow}>
+        <TouchableOpacity
+          onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
+          style={styles.menuBtn}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="menu" size={24} color={colors.textPrimary} />
+        </TouchableOpacity>
+      </View>
+      <Text style={styles.pageTitle}>{currentEvent?.title ?? "Q&A"} — Q&A</Text>
+      <Text style={styles.pageSubtitle}>
+        Ask questions and upvote the ones you want answered.
+      </Text>
+    </View>
+  );
+
   if (!currentEvent) {
     return (
-      <SafeAreaView style={shared.centered} edges={["bottom"]}>
-        <EmptyState
-          icon="calendar-outline"
-          title="Select an event"
-          subtitle="Go to My Events to choose an event"
-        />
+      <SafeAreaView style={shared.screen} edges={["bottom"]}>
+        {header}
+        <View style={shared.centered}>
+          <EmptyState
+            icon="calendar-outline"
+            title="Select an event"
+            subtitle="Go to My Events to choose an event"
+          />
+        </View>
       </SafeAreaView>
     );
   }
 
   if (isLoading) {
     return (
-      <SafeAreaView style={shared.centered} edges={["bottom"]}>
-        <ActivityIndicator size="large" color={colors.primary} />
+      <SafeAreaView style={shared.screen} edges={["bottom"]}>
+        {header}
+        <View style={shared.centered}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
       </SafeAreaView>
     );
   }
+
+  const items = sessions ?? [];
 
   const renderSession = ({ item }: { item: any }) => (
     <TouchableOpacity
@@ -75,40 +113,54 @@ export default function SessionQAListScreen() {
       onPress={() => router.push(`/(app)/qa/${item.id}` as any)}
       activeOpacity={0.7}
     >
-      <View style={styles.iconCol}>
-        <Ionicons name="chatbubbles-outline" size={24} color={colors.primary} />
+      <View style={styles.sessionRow}>
+        <View style={styles.sessionContent}>
+          <Text style={styles.sessionTitle} numberOfLines={1}>
+            {item.title}
+          </Text>
+          <Text style={styles.sessionTime}>
+            {formatSessionTime(item.start_time, item.end_time)}
+          </Text>
+        </View>
+        <View style={styles.countCol}>
+          <Ionicons name="help-circle-outline" size={14} color={colors.textMuted} />
+          <Text style={styles.questionCount}>{item.question_count}</Text>
+        </View>
       </View>
-      <View style={styles.sessionContent}>
-        <Text style={styles.sessionTitle} numberOfLines={2}>
-          {item.title}
-        </Text>
-        <Text style={styles.sessionTime}>
-          {formatTime(item.start_time)} - {formatTime(item.end_time)}
-        </Text>
-      </View>
-      <View style={styles.countCol}>
-        <Text style={styles.questionCount}>{item.question_count}</Text>
-        <Text style={styles.questionLabel}>
-          {item.question_count === 1 ? "question" : "questions"}
-        </Text>
-      </View>
-      <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
     </TouchableOpacity>
   );
 
   return (
     <SafeAreaView style={shared.screen} edges={["bottom"]}>
-      <SearchBar
-        value={search}
-        onChangeText={setSearch}
-        placeholder="Search sessions..."
-      />
+      {header}
+
+      {/* Search */}
+      <View style={styles.searchRow}>
+        <View style={styles.searchInputWrapper}>
+          <Ionicons name="search" size={16} color={colors.textMuted} style={{ marginRight: 6 }} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search sessions..."
+            placeholderTextColor={colors.textMuted}
+            value={search}
+            onChangeText={setSearch}
+            returnKeyType="search"
+          />
+        </View>
+      </View>
+
+      {/* Section header */}
+      {items.length > 0 && (
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionHeader}>All Sessions</Text>
+        </View>
+      )}
 
       <FlatList
-        data={sessions ?? []}
+        data={items}
         keyExtractor={(item: any) => item.id}
         renderItem={renderSession}
-        contentContainerStyle={shared.listContent}
+        contentContainerStyle={styles.listContent}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -119,8 +171,8 @@ export default function SessionQAListScreen() {
         ListEmptyComponent={
           <EmptyState
             icon="help-circle-outline"
-            title="No Q&A sessions"
-            subtitle="Sessions with Q&A enabled will appear here"
+            title={search ? "No sessions found" : "No Q&A sessions"}
+            subtitle={search ? "Try a different search term" : "Sessions with Q&A enabled will appear here"}
           />
         }
       />
@@ -129,47 +181,107 @@ export default function SessionQAListScreen() {
 }
 
 const styles = StyleSheet.create({
-  sessionCard: {
+  // Header
+  headerSection: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.md,
+  },
+  headerRow: {
     flexDirection: "row",
     alignItems: "center",
+    marginBottom: spacing.sm,
+  },
+  menuBtn: {
+    padding: 4,
+  },
+  pageTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: colors.textPrimary,
+  },
+  pageSubtitle: {
+    fontSize: 14,
+    color: colors.textMuted,
+    marginTop: 4,
+  },
+
+  // Search
+  searchRow: {
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+  },
+  searchInputWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.sm,
+  },
+  searchInput: {
+    flex: 1,
+    ...typography.body,
+    color: colors.textPrimary,
+    paddingVertical: 8,
+  },
+
+  // Section header
+  sectionHeaderRow: {
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.sm,
+  },
+  sectionHeader: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.textMuted,
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
+
+  // List
+  listContent: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xl,
+  },
+
+  // Session card
+  sessionCard: {
     backgroundColor: colors.surface,
     borderRadius: radius.md,
     padding: spacing.md,
     marginBottom: spacing.sm,
     borderWidth: 1,
     borderColor: colors.borderLight,
-    gap: spacing.md,
-    ...shadows.sm,
   },
-  iconCol: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.sm,
-    backgroundColor: colors.primaryMuted,
+  sessionRow: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "space-between",
   },
   sessionContent: {
     flex: 1,
+    minWidth: 0,
   },
   sessionTitle: {
-    ...typography.bodyMedium,
+    fontSize: 14,
+    fontWeight: "500",
     color: colors.textPrimary,
   },
   sessionTime: {
-    ...typography.small,
+    fontSize: 12,
     color: colors.textMuted,
     marginTop: 2,
   },
   countCol: {
+    flexDirection: "row",
     alignItems: "center",
+    gap: 4,
+    marginLeft: spacing.md,
   },
   questionCount: {
-    ...typography.h3,
-    color: colors.primary,
-  },
-  questionLabel: {
-    ...typography.small,
+    fontSize: 12,
     color: colors.textMuted,
   },
 });

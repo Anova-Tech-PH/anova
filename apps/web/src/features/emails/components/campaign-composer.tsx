@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useCallback } from "react";
 import { useConfirm } from "@attendly/ui/components";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { Send, Save, FlaskConical, ArrowLeft, Copy, Loader2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -50,6 +50,8 @@ export function CampaignComposer({
   userEmail?: string;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const basePath = pathname.slice(0, pathname.indexOf(`/events/${eventId}`) + `/events/${eventId}`.length);
   const [isPending, startTransition] = useTransition();
   const { confirm, dialog: confirmDialog } = useConfirm();
 
@@ -108,7 +110,7 @@ export function CampaignComposer({
           });
           setCampaignId(camp.id);
           toast.success("Draft created");
-          router.replace(`/events/${eventId}/emails/campaigns/${camp.id}`);
+          router.replace(`${basePath}/emails/campaigns/${camp.id}`);
         }
       } catch (err) {
         toast.error(err instanceof Error ? err.message : "Failed to save");
@@ -155,7 +157,7 @@ export function CampaignComposer({
           const result = await sendCampaign(campaignId);
           toast.success(`Sent to ${result.sentCount} recipients (${result.failedCount} failed)`);
         }
-        router.push(`/events/${eventId}/emails`);
+        router.push(`${basePath}/emails`);
       } catch (err) {
         toast.error(err instanceof Error ? err.message : "Failed to send");
       }
@@ -184,7 +186,7 @@ export function CampaignComposer({
   return (
     <div className="space-y-6">
       <Link
-        href={`/events/${eventId}/emails`}
+        href={`${basePath}/emails`}
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" /> Back to Emails
@@ -210,7 +212,7 @@ export function CampaignComposer({
               </p>
               <button
                 onClick={() => {
-                  router.push(`/events/${eventId}/emails/campaigns/new?reuse=${campaignId}`);
+                  router.push(`${basePath}/emails/campaigns/new?reuse=${campaignId}`);
                 }}
                 className="mt-3 inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium hover:bg-white dark:hover:bg-emerald-900"
               >

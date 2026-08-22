@@ -9,7 +9,6 @@ import {
   TouchableOpacity,
   TextInput,
   Alert,
-  Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter, useNavigation } from "expo-router";
@@ -27,12 +26,15 @@ import { supabase } from "../../../src/lib/supabase";
 import { useAuth } from "../../../src/lib/auth-context";
 import { useEventContext } from "../../../src/lib/event-context";
 import { Avatar } from "../../../src/components/avatar";
-import { Badge } from "../../../src/components/badge";
 import { EmptyState } from "../../../src/components/empty-state";
 import { colors, typography, spacing, radius, shadows, shared } from "../../../src/theme";
 
-function formatTime(iso: string) {
-  return new Date(iso).toLocaleTimeString("en-US", {
+function formatDateTime(dateStr: string | null) {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
     hour: "numeric",
     minute: "2-digit",
   });
@@ -46,10 +48,15 @@ export default function SpeakerDetailScreen() {
   const router = useRouter();
   const navigation = useNavigation();
   const [refreshing, setRefreshing] = useState(false);
-  const [notesExpanded, setNotesExpanded] = useState(false);
+
+  // Notes state
+  const [showNotes, setShowNotes] = useState(false);
   const [noteText, setNoteText] = useState("");
-  const [noteSaving, setNoteSaving] = useState(false);
-  const [sayHiText, setSayHiText] = useState("");
+
+  // Message state
+  const [showMessage, setShowMessage] = useState(false);
+  const [messageText, setMessageText] = useState("");
+  const [messageSent, setMessageSent] = useState(false);
 
   const { data: speaker, isLoading, error } = useQuery({
     queryKey: ["speaker-detail", speakerId],
@@ -72,7 +79,6 @@ export default function SpeakerDetailScreen() {
     enabled: !!speakerId && !!user?.id,
   });
 
-  // Initialize note text from existing note
   React.useEffect(() => {
     if (existingNote !== undefined && !noteText) {
       setNoteText(existingNote);
@@ -89,21 +95,26 @@ export default function SpeakerDetailScreen() {
     },
   });
 
-  // Try to find the speaker's user account via attendee_profiles
+  const saveNoteMutation = useMutation({
+    mutationFn: () => saveSpeakerNote(supabase, user!.id, speakerId!, noteText),
+    onSuccess: () => {
+      setShowNotes(false);
+      queryClient.invalidateQueries({ queryKey: ["speaker-note", speakerId] });
+    },
+  });
+
+  // Look up speaker's user account for messaging
   const { data: speakerUserId } = useQuery({
     queryKey: ["speaker-user-lookup", speakerId, currentEvent?.id],
     queryFn: async () => {
       const speakerName = (speaker as any)?.name;
       if (!speakerName || !currentEvent?.id) return null;
-
-      // Look up attendee_profiles matching the speaker name in the same event
       const { data: profiles } = await supabase
         .from("attendee_profiles")
         .select("id")
         .eq("event_id", currentEvent.id)
         .ilike("display_name", speakerName)
         .limit(1);
-
       return profiles?.[0]?.id ?? null;
     },
     enabled: !!speaker && !!currentEvent?.id,
@@ -113,30 +124,24 @@ export default function SpeakerDetailScreen() {
 
   const dmMutation = useMutation({
     mutationFn: async () => {
-      if (!speakerUserId) {
-        throw new Error("Speaker is not registered as an attendee");
-      }
-
-      const result = await createDmConversationMutation(
-        supabase,
-        currentEvent!.id,
-        speakerUserId
-      );
-
-      // If there's a "say hi" message, send it
-      if (sayHiText.trim()) {
+      if (!speakerUserId) throw new Error("Speaker is not registered as an attendee");
+      const result = await createDmConversationMutation(supabase, currentEvent!.id, speakerUserId);
+      if (messageText.trim()) {
         await supabase.from("messages").insert({
           conversation_id: result.id,
           sender_id: user!.id,
-          content: sayHiText.trim(),
+          content: messageText.trim(),
         });
-        setSayHiText("");
       }
-
       return result;
     },
-    onSuccess: (data) => {
-      router.push(`/(app)/messages/${data.id}` as any);
+    onSuccess: () => {
+      setMessageSent(true);
+      setMessageText("");
+      setTimeout(() => {
+        setShowMessage(false);
+        setMessageSent(false);
+      }, 2000);
     },
     onError: (err: Error) => {
       Alert.alert("Cannot message", err.message);
@@ -144,16 +149,10 @@ export default function SpeakerDetailScreen() {
   });
 
   React.useEffect(() => {
-    const name = (speaker as any)?.name;
     navigation.setOptions({
-      title: name ?? "Speaker",
-      headerLeft: () => (
-        <TouchableOpacity onPress={() => router.back()} style={{ paddingRight: 8 }}>
-          <Ionicons name="arrow-back" size={24} color={colors.white} />
-        </TouchableOpacity>
-      ),
+      headerShown: false,
     });
-  }, [speaker, navigation]);
+  }, [navigation]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -165,21 +164,9 @@ export default function SpeakerDetailScreen() {
     setRefreshing(false);
   };
 
-  const handleSaveNote = async () => {
-    if (!user || !speakerId) return;
-    setNoteSaving(true);
-    try {
-      await saveSpeakerNote(supabase, user.id, speakerId, noteText);
-      queryClient.invalidateQueries({ queryKey: ["speaker-note", speakerId] });
-    } catch {
-      Alert.alert("Error", "Could not save note");
-    }
-    setNoteSaving(false);
-  };
-
   if (isLoading) {
     return (
-      <SafeAreaView style={shared.centered} edges={["bottom"]}>
+      <SafeAreaView style={shared.centered} edges={["top", "bottom"]}>
         <ActivityIndicator size="large" color={colors.primary} />
       </SafeAreaView>
     );
@@ -187,215 +174,191 @@ export default function SpeakerDetailScreen() {
 
   if (error || !speaker) {
     return (
-      <SafeAreaView style={shared.centered} edges={["bottom"]}>
+      <SafeAreaView style={shared.centered} edges={["top", "bottom"]}>
         <EmptyState icon="alert-circle-outline" title="Speaker not found" />
       </SafeAreaView>
     );
   }
 
-  const sessions = ((speaker as any).session_speakers ?? [])
+  const speakerData = speaker as any;
+  const sessions = (speakerData.session_speakers ?? [])
     .map((ss: any) => ss.sessions)
     .filter(Boolean);
 
-  const speakerData = speaker as any;
+  const titleCompany = [speakerData.title, speakerData.company]
+    .filter(Boolean)
+    .join(" at ");
 
   return (
-    <SafeAreaView style={shared.screen} edges={["bottom"]}>
+    <SafeAreaView style={shared.screen} edges={["top", "bottom"]}>
+      {/* Custom Header */}
+      <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.headerBackBtn}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle} numberOfLines={1}>{speakerData.name ?? "Speaker"}</Text>
+      </View>
       <ScrollView
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
         }
       >
-        {/* Profile header */}
-        <View style={styles.profileHeader}>
-          <Avatar name={speakerData.name} size={96} uri={speakerData.photo} />
-          <Text style={styles.name}>{speakerData.name}</Text>
-          {speakerData.title && (
-            <Text style={styles.title}>{speakerData.title}</Text>
-          )}
-          {speakerData.company && (
-            <Text style={styles.company}>{speakerData.company}</Text>
-          )}
+        {/* Header: Avatar + Name + Title at Company + Badge (horizontal) */}
+        <View style={styles.headerRow}>
+          <Avatar name={speakerData.name} size={64} uri={speakerData.photo} />
+          <View style={styles.headerInfo}>
+            <Text style={styles.name}>{speakerData.name}</Text>
+            {titleCompany ? (
+              <Text style={styles.titleCompany}>{titleCompany}</Text>
+            ) : null}
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>Speaker</Text>
+            </View>
+          </View>
         </View>
 
-        {/* Action buttons row */}
+        {/* Action buttons */}
         {user && currentEvent && (
           <View style={styles.actionRow}>
-            {/* Bookmark button */}
             <TouchableOpacity
-              style={[styles.actionBtn, isBookmarked && styles.actionBtnActive]}
+              style={styles.actionBtn}
+              onPress={() => setShowNotes(!showNotes)}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="pencil-outline" size={16} color={colors.textPrimary} />
+              <Text style={styles.actionBtnText}>Take Notes</Text>
+            </TouchableOpacity>
+
+            {canMessage && (
+              <TouchableOpacity
+                style={styles.actionBtn}
+                onPress={() => setShowMessage(!showMessage)}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="chatbubble-outline" size={16} color={colors.textPrimary} />
+                <Text style={styles.actionBtnText}>Say Hi!</Text>
+              </TouchableOpacity>
+            )}
+
+            <TouchableOpacity
+              style={[styles.actionBtn, isBookmarked && styles.actionBtnBookmarked]}
               onPress={() => bookmarkMutation.mutate()}
               activeOpacity={0.7}
               disabled={bookmarkMutation.isPending}
             >
-              <Ionicons
-                name={isBookmarked ? "star" : "star-outline"}
-                size={20}
-                color={isBookmarked ? colors.warning : colors.textSecondary}
-              />
-              <Text style={[styles.actionBtnText, isBookmarked && styles.actionBtnTextActive]}>
-                {isBookmarked ? "Saved" : "Save"}
+              {bookmarkMutation.isPending ? (
+                <ActivityIndicator size="small" color={colors.textMuted} />
+              ) : (
+                <Ionicons
+                  name={isBookmarked ? "checkmark" : "bookmark-outline"}
+                  size={16}
+                  color={isBookmarked ? "#a16207" : colors.textPrimary}
+                />
+              )}
+              <Text style={[styles.actionBtnText, isBookmarked && { color: "#a16207" }]}>
+                {isBookmarked ? "Bookmarked" : "Bookmark"}
               </Text>
             </TouchableOpacity>
           </View>
         )}
 
-        {/* Social links */}
-        {(speakerData.linkedin_url || speakerData.twitter_handle || speakerData.website_url) && (
-          <View style={styles.socialRow}>
-            {speakerData.linkedin_url && (
+        {/* Inline Notes (toggled by Take Notes button) */}
+        {showNotes && (
+          <View style={styles.inlineSection}>
+            <TextInput
+              style={styles.noteInput}
+              placeholder="Write your notes about this speaker..."
+              placeholderTextColor={colors.textMuted}
+              value={noteText}
+              onChangeText={setNoteText}
+              multiline
+              textAlignVertical="top"
+            />
+            <View style={styles.inlineActions}>
               <TouchableOpacity
-                style={styles.socialBtn}
-                onPress={() => Linking.openURL(speakerData.linkedin_url)}
+                style={styles.saveBtnPrimary}
+                onPress={() => saveNoteMutation.mutate()}
+                disabled={saveNoteMutation.isPending}
                 activeOpacity={0.7}
               >
-                <Ionicons name="logo-linkedin" size={20} color="#0A66C2" />
+                <Text style={styles.saveBtnText}>
+                  {saveNoteMutation.isPending ? "Saving..." : "Save"}
+                </Text>
               </TouchableOpacity>
-            )}
-            {speakerData.twitter_handle && (
               <TouchableOpacity
-                style={styles.socialBtn}
-                onPress={() => Linking.openURL(`https://twitter.com/${speakerData.twitter_handle}`)}
+                style={styles.cancelBtn}
+                onPress={() => setShowNotes(false)}
                 activeOpacity={0.7}
               >
-                <Ionicons name="logo-twitter" size={20} color="#1DA1F2" />
-              </TouchableOpacity>
-            )}
-            {speakerData.website_url && (
-              <TouchableOpacity
-                style={styles.socialBtn}
-                onPress={() => Linking.openURL(speakerData.website_url)}
-                activeOpacity={0.7}
-              >
-                <Ionicons name="globe-outline" size={20} color={colors.primary} />
-              </TouchableOpacity>
-            )}
-          </View>
-        )}
-
-        {/* Bio */}
-        {speakerData.bio && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>About</Text>
-            <Text style={styles.bio}>{speakerData.bio}</Text>
-          </View>
-        )}
-
-        {/* Say Hi / Message section */}
-        {user && currentEvent && canMessage && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Say Hi</Text>
-            <View style={styles.sayHiContainer}>
-              <TextInput
-                style={styles.sayHiInput}
-                placeholder="Write a quick message..."
-                placeholderTextColor={colors.textMuted}
-                value={sayHiText}
-                onChangeText={setSayHiText}
-                multiline
-              />
-              <TouchableOpacity
-                style={[styles.sendBtn, !sayHiText.trim() && styles.sendBtnDisabled]}
-                onPress={() => dmMutation.mutate()}
-                disabled={dmMutation.isPending || !sayHiText.trim()}
-                activeOpacity={0.7}
-              >
-                {dmMutation.isPending ? (
-                  <ActivityIndicator size="small" color={colors.white} />
-                ) : (
-                  <Ionicons name="send" size={18} color={colors.white} />
-                )}
+                <Text style={styles.cancelBtnText}>Cancel</Text>
               </TouchableOpacity>
             </View>
           </View>
         )}
 
-        {/* Notes section */}
-        {user && (
-          <View style={styles.section}>
-            <TouchableOpacity
-              style={styles.notesHeader}
-              onPress={() => setNotesExpanded(!notesExpanded)}
-              activeOpacity={0.7}
-            >
-              <View style={styles.notesHeaderLeft}>
-                <Ionicons name="document-text-outline" size={18} color={colors.textPrimary} />
-                <Text style={styles.sectionTitle}>My Notes</Text>
+        {/* Inline Message (toggled by Say Hi! button) */}
+        {showMessage && (
+          <View style={styles.inlineSection}>
+            {messageSent ? (
+              <View style={styles.messageSentRow}>
+                <Ionicons name="checkmark" size={16} color={colors.success} />
+                <Text style={styles.messageSentText}>Message sent!</Text>
               </View>
-              <Ionicons
-                name={notesExpanded ? "chevron-up" : "chevron-down"}
-                size={18}
-                color={colors.textMuted}
-              />
-            </TouchableOpacity>
-            {notesExpanded && (
-              <View style={styles.notesBody}>
+            ) : (
+              <View style={styles.messageInputRow}>
                 <TextInput
-                  style={styles.noteInput}
-                  placeholder="Write notes about this speaker..."
+                  style={styles.messageInput}
+                  placeholder="Say something nice..."
                   placeholderTextColor={colors.textMuted}
-                  value={noteText}
-                  onChangeText={setNoteText}
-                  multiline
-                  textAlignVertical="top"
+                  value={messageText}
+                  onChangeText={setMessageText}
                 />
                 <TouchableOpacity
-                  style={[styles.saveNoteBtn, noteSaving && { opacity: 0.6 }]}
-                  onPress={handleSaveNote}
-                  disabled={noteSaving}
+                  style={[styles.sendBtn, (!messageText.trim() || dmMutation.isPending) && { opacity: 0.5 }]}
+                  onPress={() => dmMutation.mutate()}
+                  disabled={dmMutation.isPending || !messageText.trim()}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.saveNoteBtnText}>
-                    {noteSaving ? "Saving..." : "Save Note"}
-                  </Text>
+                  {dmMutation.isPending ? (
+                    <ActivityIndicator size="small" color={colors.white} />
+                  ) : (
+                    <Ionicons name="send" size={14} color={colors.white} />
+                  )}
                 </TouchableOpacity>
               </View>
             )}
           </View>
         )}
 
-        {/* Sessions */}
+        {/* Speaking at */}
         {sessions.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Sessions</Text>
-            {sessions.map((s: any) => {
-              const trackList = (s.tracks ?? []).filter(Boolean);
-              return (
-                <TouchableOpacity
-                  key={s.id}
-                  style={styles.sessionCard}
-                  onPress={() => router.push(`/(app)/schedule/${s.id}` as any)}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.sessionTimeCol}>
-                    <Text style={styles.sessionTime}>{formatTime(s.start_time)}</Text>
-                    <Text style={styles.sessionEndTime}>{formatTime(s.end_time)}</Text>
-                  </View>
-                  <View style={styles.sessionInfo}>
-                    <Text style={styles.sessionTitle} numberOfLines={2}>{s.title}</Text>
-                    {trackList.length > 0 && (
-                      <View style={styles.trackRow}>
-                        {trackList.map((t: any) => (
-                          <Badge
-                            key={t.name}
-                            label={t.name}
-                            color={t.color || colors.primary}
-                            backgroundColor={`${t.color || colors.primary}20`}
-                          />
-                        ))}
-                      </View>
-                    )}
-                    {s.location && (
-                      <View style={styles.locationRow}>
-                        <Ionicons name="location-outline" size={12} color={colors.textMuted} />
-                        <Text style={styles.locationText}>{s.location}</Text>
-                      </View>
-                    )}
-                  </View>
-                  <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
-                </TouchableOpacity>
-              );
-            })}
+            <Text style={styles.sectionTitle}>Speaking at</Text>
+            {sessions.map((s: any) => (
+              <TouchableOpacity
+                key={s.id}
+                style={styles.sessionRow}
+                onPress={() => router.push(`/(app)/schedule/${s.id}` as any)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.sessionLink}>{s.title}</Text>
+                {s.start_time && (
+                  <Text style={styles.sessionDate}>{formatDateTime(s.start_time)}</Text>
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+
+        {/* About */}
+        {speakerData.bio && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>About</Text>
+            <Text style={styles.bio}>{speakerData.bio}</Text>
           </View>
         )}
 
@@ -406,196 +369,186 @@ export default function SpeakerDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  profileHeader: {
+  header: {
+    flexDirection: "row",
     alignItems: "center",
-    padding: spacing.xl,
-    paddingTop: spacing.xxxl,
-    gap: spacing.xs,
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderLight,
+    backgroundColor: colors.surface,
+  },
+  headerBackBtn: {
+    padding: 4,
+    marginRight: 4,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: colors.textPrimary,
+    flex: 1,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.lg,
+  },
+  headerInfo: {
+    flex: 1,
+    minWidth: 0,
   },
   name: {
-    ...typography.h1,
+    fontSize: 20,
+    fontWeight: "600",
     color: colors.textPrimary,
-    marginTop: spacing.md,
-    textAlign: "center",
   },
-  title: {
-    ...typography.body,
+  titleCompany: {
+    fontSize: 14,
     color: colors.textSecondary,
-    textAlign: "center",
+    marginTop: 2,
   },
-  company: {
-    ...typography.caption,
-    color: colors.textMuted,
-    textAlign: "center",
+  badge: {
+    backgroundColor: "rgba(59, 130, 246, 0.1)",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 999,
+    alignSelf: "flex-start",
+    marginTop: 6,
+  },
+  badgeText: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: "#3b82f6",
   },
   actionRow: {
     flexDirection: "row",
-    justifyContent: "center",
+    flexWrap: "wrap",
+    gap: spacing.sm,
     paddingHorizontal: spacing.lg,
-    gap: spacing.md,
-    marginTop: spacing.sm,
+    marginBottom: spacing.lg,
   },
   actionBtn: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.xs,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.md,
-    backgroundColor: colors.surface,
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: colors.border,
-    ...shadows.sm,
+    backgroundColor: colors.white,
   },
-  actionBtnActive: {
-    borderColor: colors.warning,
-    backgroundColor: `${colors.warning}10`,
+  actionBtnBookmarked: {
+    backgroundColor: "#fefce8",
+    borderColor: "#fde68a",
   },
   actionBtnText: {
-    ...typography.captionBold,
-    color: colors.textSecondary,
+    fontSize: 14,
+    color: colors.textPrimary,
   },
-  actionBtnTextActive: {
-    color: colors.warning,
-  },
-  socialRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: spacing.md,
-    marginTop: spacing.md,
-  },
-  socialBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
-    justifyContent: "center",
-    alignItems: "center",
-    ...shadows.sm,
-  },
-  section: {
+  inlineSection: {
     paddingHorizontal: spacing.lg,
-    marginTop: spacing.xl,
-  },
-  sectionTitle: {
-    ...typography.h3,
-    color: colors.textPrimary,
-    marginBottom: spacing.md,
-  },
-  bio: {
-    ...typography.body,
-    color: colors.textSecondary,
-    lineHeight: 24,
-  },
-  sayHiContainer: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    gap: spacing.sm,
-  },
-  sayHiInput: {
-    flex: 1,
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.md,
-    ...typography.body,
-    color: colors.textPrimary,
-    minHeight: 44,
-    maxHeight: 100,
-  },
-  sendBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.primary,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  sendBtnDisabled: {
-    opacity: 0.5,
-  },
-  notesHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 0,
-  },
-  notesHeaderLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  notesBody: {
-    marginTop: spacing.md,
-    gap: spacing.sm,
+    marginBottom: spacing.lg,
   },
   noteInput: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.border,
-    padding: spacing.md,
-    ...typography.body,
+    borderRadius: 8,
+    padding: 10,
+    fontSize: 14,
     color: colors.textPrimary,
-    minHeight: 100,
+    minHeight: 80,
+    textAlignVertical: "top",
   },
-  saveNoteBtn: {
-    alignSelf: "flex-end",
-    backgroundColor: colors.primary,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
+  inlineActions: {
+    flexDirection: "row",
+    gap: spacing.sm,
+    marginTop: spacing.sm,
   },
-  saveNoteBtnText: {
-    ...typography.button,
+  saveBtnPrimary: {
+    backgroundColor: "#2563eb",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  saveBtnText: {
+    fontSize: 14,
     color: colors.white,
   },
-  sessionCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
+  cancelBtn: {
     borderWidth: 1,
-    borderColor: colors.borderLight,
-    ...shadows.sm,
+    borderColor: colors.border,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
-  sessionTimeCol: {
-    width: 56,
-  },
-  sessionTime: {
-    ...typography.captionBold,
-    color: colors.primary,
-  },
-  sessionEndTime: {
-    ...typography.small,
-    color: colors.textMuted,
-    marginTop: 2,
-  },
-  sessionInfo: {
-    flex: 1,
-    gap: spacing.xs,
-  },
-  sessionTitle: {
-    ...typography.bodyMedium,
+  cancelBtnText: {
+    fontSize: 14,
     color: colors.textPrimary,
   },
-  trackRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.xs,
-  },
-  locationRow: {
+  messageSentRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
   },
-  locationText: {
-    ...typography.small,
+  messageSentText: {
+    fontSize: 14,
+    color: colors.success,
+  },
+  messageInputRow: {
+    flexDirection: "row",
+    gap: spacing.sm,
+  },
+  messageInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 14,
+    color: colors.textPrimary,
+  },
+  sendBtn: {
+    backgroundColor: "#2563eb",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  section: {
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.lg,
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.textPrimary,
+    marginBottom: spacing.sm,
+  },
+  sessionRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 6,
+  },
+  sessionLink: {
+    fontSize: 14,
+    color: "#2563eb",
+  },
+  sessionDate: {
+    fontSize: 12,
     color: colors.textMuted,
+  },
+  bio: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    lineHeight: 22,
   },
 });

@@ -11,9 +11,10 @@ import {
   TextInput,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useRouter, useNavigation } from "expo-router";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { Ionicons } from "@expo/vector-icons";
+import { DrawerActions } from "@react-navigation/native";
 import {
   getConversations,
   searchAttendees,
@@ -22,7 +23,7 @@ import {
 import { supabase } from "../../../src/lib/supabase";
 import { useAuth } from "../../../src/lib/auth-context";
 import { useEventContext } from "../../../src/lib/event-context";
-import { SearchBar } from "../../../src/components/search-bar";
+// SearchBar replaced with inline custom header + search
 import { Avatar } from "../../../src/components/avatar";
 import { CountBadge } from "../../../src/components/badge";
 import { EmptyState } from "../../../src/components/empty-state";
@@ -48,6 +49,7 @@ export default function MessagesScreen() {
   const { currentEvent } = useEventContext();
   const queryClient = useQueryClient();
   const router = useRouter();
+  const navigation = useNavigation();
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [composeVisible, setComposeVisible] = useState(false);
@@ -112,22 +114,43 @@ export default function MessagesScreen() {
     [conversations, createDmMutation, router],
   );
 
+  const header = (
+    <View style={styles.headerSection}>
+      <View style={styles.headerRow}>
+        <TouchableOpacity
+          onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
+          style={styles.menuBtn}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="menu" size={24} color={colors.textPrimary} />
+        </TouchableOpacity>
+      </View>
+      <Text style={styles.pageTitle}>Messages</Text>
+    </View>
+  );
+
   if (!user) {
     return (
-      <SafeAreaView style={shared.centered} edges={["bottom"]}>
-        <EmptyState
-          icon="log-in-outline"
-          title="Sign in required"
-          subtitle="Sign in to view your messages"
-        />
+      <SafeAreaView style={shared.screen} edges={["bottom"]}>
+        {header}
+        <View style={shared.centered}>
+          <EmptyState
+            icon="log-in-outline"
+            title="Sign in required"
+            subtitle="Sign in to view your messages"
+          />
+        </View>
       </SafeAreaView>
     );
   }
 
   if (isLoading) {
     return (
-      <SafeAreaView style={shared.centered} edges={["bottom"]}>
-        <ActivityIndicator size="large" color={colors.primary} />
+      <SafeAreaView style={shared.screen} edges={["bottom"]}>
+        {header}
+        <View style={shared.centered}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
       </SafeAreaView>
     );
   }
@@ -199,11 +222,27 @@ export default function MessagesScreen() {
 
   return (
     <SafeAreaView style={shared.screen} edges={["bottom"]}>
-      <SearchBar
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-        placeholder="Search conversations..."
-      />
+      {header}
+
+      {/* Search */}
+      <View style={styles.searchRow}>
+        <View style={styles.searchInputWrapper}>
+          <Ionicons
+            name="search"
+            size={16}
+            color={colors.textMuted}
+            style={{ marginRight: 6 }}
+          />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search conversations..."
+            placeholderTextColor={colors.textMuted}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            returnKeyType="search"
+          />
+        </View>
+      </View>
       <FlatList
         data={filteredConversations}
         keyExtractor={(item: any) => item.id}
@@ -327,6 +366,47 @@ export default function MessagesScreen() {
 }
 
 const styles = StyleSheet.create({
+  // Header
+  headerSection: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.md,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: spacing.sm,
+  },
+  menuBtn: {
+    padding: 4,
+  },
+  pageTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: colors.textPrimary,
+  },
+
+  // Search
+  searchRow: {
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+  },
+  searchInputWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.sm,
+  },
+  searchInput: {
+    flex: 1,
+    ...typography.body,
+    color: colors.textPrimary,
+    paddingVertical: 8,
+  },
+
   conversationCard: {
     flexDirection: "row",
     alignItems: "center",

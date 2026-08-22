@@ -31,5 +31,6 @@ export async function disconnectStripe(organizationId: string, eventId: string) 
     .update({ stripe_account_id: null, updated_at: new Date().toISOString() })
     .eq("id", organizationId);
 
-  revalidatePath(`/events/${eventId}/payout`);
+  // Revalidate all paths that might show Stripe status
+  revalidatePath("/", "layout");
 }

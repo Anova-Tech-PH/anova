@@ -14,9 +14,9 @@ import { Plus } from "lucide-react";
 export default async function EmailsPage({
   params,
 }: {
-  params: Promise<{ eventId: string }>;
+  params: Promise<{ orgSlug: string; eventId: string }>;
 }) {
-  const { eventId } = await params;
+  const { orgSlug, eventId } = await params;
   const supabase = await createClient();
 
   const { data: event } = await supabase
@@ -43,7 +43,7 @@ export default async function EmailsPage({
         <div className="flex gap-2">
           <EmailsPageClient eventId={eventId} ticketTypes={ticketTypes} />
           <Link
-            href={`/events/${eventId}/emails/campaigns/new`}
+            href={`/org/${orgSlug}/events/${eventId}/emails/campaigns/new`}
             className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
           >
             <Plus className="h-4 w-4" /> New Campaign

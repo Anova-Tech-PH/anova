@@ -62,16 +62,9 @@ export default function ConversationScreen() {
     enabled: !!conversationId,
   });
 
-  React.useEffect(() => {
-    navigation.setOptions({
-      title: "Messages",
-      headerLeft: () => (
-        <TouchableOpacity onPress={() => router.back()} style={{ paddingRight: 8 }}>
-          <Ionicons name="arrow-back" size={24} color={colors.white} />
-        </TouchableOpacity>
-      ),
-    });
-  }, [navigation]);
+  // Derive the other person's name from messages
+  const otherPerson = messages.find((m: any) => m.sender_id !== user?.id);
+  const otherName = otherPerson?.profiles?.full_name ?? "Messages";
 
   // Mark conversation as read on mount
   useEffect(() => {
@@ -172,7 +165,28 @@ export default function ConversationScreen() {
   };
 
   return (
-    <SafeAreaView style={shared.screen} edges={["bottom"]}>
+    <SafeAreaView style={shared.screen} edges={["top", "bottom"]}>
+      {/* Custom Header */}
+      <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => router.navigate("/(app)/messages" as any)}
+          style={styles.backBtn}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
+        </TouchableOpacity>
+        {otherPerson?.profiles && (
+          <Avatar
+            name={otherPerson.profiles.full_name}
+            size={32}
+            uri={otherPerson.profiles.avatar_url}
+          />
+        )}
+        <Text style={styles.headerTitle} numberOfLines={1}>
+          {otherName}
+        </Text>
+      </View>
+
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -236,6 +250,25 @@ export default function ConversationScreen() {
 }
 
 const styles = StyleSheet.create({
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderLight,
+    backgroundColor: colors.surface,
+  },
+  backBtn: {
+    padding: 4,
+    marginRight: 4,
+  },
+  headerTitle: {
+    ...typography.h3,
+    color: colors.textPrimary,
+    flex: 1,
+  },
   messagesList: {
     padding: spacing.lg,
     paddingBottom: spacing.sm,

@@ -9,7 +9,8 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useRouter, useNavigation } from "expo-router";
+import { DrawerActions } from "@react-navigation/native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Ionicons } from "@expo/vector-icons";
 import { getTriviaGames, getUserTriviaAttempt } from "@attendly/supabase-client";
@@ -162,6 +163,7 @@ function TriviaGameCard({
 
 // ── Main Screen ──────────────────────────────────────────────────
 export default function TriviaScreen() {
+  const navigation = useNavigation();
   const { currentEvent } = useEventContext();
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -191,22 +193,43 @@ export default function TriviaScreen() {
     setRefreshing(false);
   };
 
+  const headerBlock = (
+    <View style={styles.headerSection}>
+      <View style={styles.headerRow}>
+        <TouchableOpacity
+          onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
+          style={styles.menuBtn}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="menu" size={24} color={colors.textPrimary} />
+        </TouchableOpacity>
+      </View>
+      <Text style={styles.pageTitle}>Trivia</Text>
+    </View>
+  );
+
   if (!currentEvent) {
     return (
-      <SafeAreaView style={shared.centered} edges={["bottom"]}>
-        <EmptyState
-          icon="calendar-outline"
-          title="Select an event"
-          subtitle="Go to My Events to choose an event"
-        />
+      <SafeAreaView style={shared.screen} edges={["bottom"]}>
+        {headerBlock}
+        <View style={shared.centered}>
+          <EmptyState
+            icon="calendar-outline"
+            title="Select an event"
+            subtitle="Go to My Events to choose an event"
+          />
+        </View>
       </SafeAreaView>
     );
   }
 
   if (isLoading) {
     return (
-      <SafeAreaView style={shared.centered} edges={["bottom"]}>
-        <ActivityIndicator size="large" color={colors.primary} />
+      <SafeAreaView style={shared.screen} edges={["bottom"]}>
+        {headerBlock}
+        <View style={shared.centered}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
       </SafeAreaView>
     );
   }
@@ -220,6 +243,7 @@ export default function TriviaScreen() {
 
   return (
     <SafeAreaView style={shared.screen} edges={["bottom"]}>
+      {headerBlock}
       <SearchBar
         value={search}
         onChangeText={setSearch}
@@ -255,6 +279,24 @@ export default function TriviaScreen() {
 
 // ── Styles ───────────────────────────────────────────────────────
 const styles = StyleSheet.create({
+  headerSection: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.md,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: spacing.sm,
+  },
+  menuBtn: {
+    padding: 4,
+  },
+  pageTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: colors.textPrimary,
+  },
   gameCard: {
     backgroundColor: colors.surface,
     borderRadius: radius.md,

@@ -58,3 +58,4 @@ export * from "./mutations/polls";
 export * from "./mutations/session-chat";
 export * from "./mutations/session-likes";
 export * from "./mutations/attendees";
+export * from "./mutations/registration";

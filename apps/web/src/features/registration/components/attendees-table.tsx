@@ -16,14 +16,17 @@ import {
   Mail,
   UserCheck,
   MoreVertical,
+  Pencil,
+  Trash2,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@attendly/ui/components";
 import { Card } from "@attendly/ui/components";
 import { Input } from "@attendly/ui/components";
+import { ConfirmDialog } from "@attendly/ui/components";
 import { cn } from "@attendly/ui/cn";
-import { addAttendee, importAttendees } from "../attendees-actions";
+import { addAttendee, importAttendees, updateAttendee, deleteAttendee } from "../attendees-actions";
 
 type Attendee = {
   id: string;
@@ -73,6 +76,9 @@ export function AttendeesTable({
   const [search, setSearch] = useState(searchParams.get("search") ?? "");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [editingAttendee, setEditingAttendee] = useState<Attendee | null>(null);
+  const [deletingAttendee, setDeletingAttendee] = useState<Attendee | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
@@ -173,7 +179,11 @@ export function AttendeesTable({
         <Button
           variant="outline"
           className="gap-2"
-          onClick={() => router.push(`/events/${eventId}/announcements`)}
+          onClick={() => {
+            // Navigate to announcements using current org-scoped path
+            const base = pathname.replace(/\/registrations$/, "");
+            router.push(`${base}/announcements`);
+          }}
         >
           <Megaphone className="h-4 w-4" />
           Send announcement
@@ -218,10 +228,21 @@ export function AttendeesTable({
       {attendees.length === 0 && (
         <div className="flex flex-col items-center gap-2 rounded-xl border py-12 text-center shadow-sm">
           <Users className="h-8 w-8 text-muted-foreground/40" />
-          <p className="font-medium text-muted-foreground">No attendees yet</p>
-          <p className="text-xs text-muted-foreground">
-            Import or add attendees to get started.
-          </p>
+          {search || searchParams.get("category_id") ? (
+            <>
+              <p className="font-medium text-muted-foreground">No results found</p>
+              <p className="text-xs text-muted-foreground">
+                Try adjusting your search or filter criteria.
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="font-medium text-muted-foreground">No attendees yet</p>
+              <p className="text-xs text-muted-foreground">
+                Import or add attendees to get started.
+              </p>
+            </>
+          )}
         </div>
       )}
 
@@ -315,9 +336,13 @@ export function AttendeesTable({
                       )}
                     </td>
                     <td className="px-3 py-3">
-                      <button className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
-                        <MoreVertical className="h-4 w-4" />
-                      </button>
+                      <RowActionMenu
+                        attendee={attendee}
+                        isOpen={openMenuId === attendee.id}
+                        onToggle={() => setOpenMenuId(openMenuId === attendee.id ? null : attendee.id)}
+                        onEdit={() => { setOpenMenuId(null); setEditingAttendee(attendee); }}
+                        onDelete={() => { setOpenMenuId(null); setDeletingAttendee(attendee); }}
+                      />
                     </td>
                   </tr>
                 ))}
@@ -417,6 +442,23 @@ export function AttendeesTable({
           onClose={() => setShowImportModal(false)}
         />
       )}
+
+      {/* Edit Attendee Modal */}
+      {editingAttendee && (
+        <EditAttendeeModal
+          eventId={eventId}
+          attendee={editingAttendee}
+          categories={categories}
+          onClose={() => setEditingAttendee(null)}
+        />
+      )}
+
+      {/* Delete Confirmation */}
+      <DeleteAttendeeDialog
+        eventId={eventId}
+        attendee={deletingAttendee}
+        onClose={() => setDeletingAttendee(null)}
+      />
     </div>
   );
 }
@@ -612,5 +654,209 @@ function ImportAttendeesModal({
         </form>
       </div>
     </div>
+  );
+}
+
+function RowActionMenu({
+  attendee,
+  isOpen,
+  onToggle,
+  onEdit,
+  onDelete,
+}: {
+  attendee: Attendee;
+  isOpen: boolean;
+  onToggle: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    function handleClick(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        onToggle();
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [isOpen, onToggle]);
+
+  return (
+    <div ref={menuRef} className="relative">
+      <button
+        onClick={onToggle}
+        className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+      >
+        <MoreVertical className="h-4 w-4" />
+      </button>
+      {isOpen && (
+        <div className="absolute right-0 top-full z-50 mt-1 w-36 rounded-lg border bg-background py-1 shadow-lg">
+          <button
+            onClick={onEdit}
+            className="flex w-full items-center gap-2 px-3 py-1.5 text-sm hover:bg-muted transition-colors"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+            Edit
+          </button>
+          <button
+            onClick={onDelete}
+            className="flex w-full items-center gap-2 px-3 py-1.5 text-sm text-destructive hover:bg-muted transition-colors"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            Delete
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function EditAttendeeModal({
+  eventId,
+  attendee,
+  categories,
+  onClose,
+}: {
+  eventId: string;
+  attendee: Attendee;
+  categories: AttendeeCategory[];
+  onClose: () => void;
+}) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    startTransition(async () => {
+      try {
+        await updateAttendee(eventId, attendee.id, {
+          name: formData.get("name") as string,
+          email: formData.get("email") as string,
+          title: (formData.get("title") as string) || undefined,
+          company: (formData.get("company") as string) || undefined,
+          category_id: (formData.get("category_id") as string) || undefined,
+        });
+        toast.success("Attendee updated");
+        router.refresh();
+        onClose();
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Failed to update attendee");
+      }
+    });
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={onClose}>
+      <div
+        className="w-full max-w-md rounded-xl border bg-background p-6 shadow-lg"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Edit Attendee</h2>
+          <button onClick={onClose} className="rounded-md p-1 hover:bg-muted">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="edit-name" className="mb-1 block text-sm font-medium">
+              Name
+            </label>
+            <Input id="edit-name" name="name" required placeholder="Full name" defaultValue={attendee.name} />
+          </div>
+          <div>
+            <label htmlFor="edit-email" className="mb-1 block text-sm font-medium">
+              Email
+            </label>
+            <Input id="edit-email" name="email" type="email" required placeholder="email@example.com" defaultValue={attendee.email} />
+          </div>
+          <div>
+            <label htmlFor="edit-title" className="mb-1 block text-sm font-medium">
+              Title
+            </label>
+            <Input id="edit-title" name="title" placeholder="Job title (optional)" defaultValue={attendee.title ?? ""} />
+          </div>
+          <div>
+            <label htmlFor="edit-company" className="mb-1 block text-sm font-medium">
+              Company
+            </label>
+            <Input id="edit-company" name="company" placeholder="Organization (optional)" defaultValue={attendee.company ?? ""} />
+          </div>
+          <div>
+            <label htmlFor="edit-category" className="mb-1 block text-sm font-medium">
+              Category
+            </label>
+            <select
+              id="edit-category"
+              name="category_id"
+              defaultValue={attendee.category_id ?? ""}
+              className={cn(
+                "w-full h-9 appearance-none rounded-lg border bg-background pl-3 pr-9 text-sm",
+                "outline-none transition-colors",
+                "focus:ring-2 focus:ring-ring focus:ring-offset-1",
+                "hover:border-foreground/30"
+              )}
+            >
+              <option value="">No category</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isPending}>
+              {isPending ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function DeleteAttendeeDialog({
+  eventId,
+  attendee,
+  onClose,
+}: {
+  eventId: string;
+  attendee: Attendee | null;
+  onClose: () => void;
+}) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+
+  function handleConfirm() {
+    if (!attendee) return;
+    startTransition(async () => {
+      try {
+        await deleteAttendee(eventId, attendee.id);
+        toast.success("Attendee removed");
+        router.refresh();
+        onClose();
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Failed to delete attendee");
+      }
+    });
+  }
+
+  return (
+    <ConfirmDialog
+      open={!!attendee}
+      title="Remove Attendee"
+      description={attendee ? `Are you sure you want to remove ${attendee.name} (${attendee.email})? This action cannot be undone.` : ""}
+      confirmLabel={isPending ? "Removing..." : "Remove"}
+      variant="destructive"
+      onConfirm={handleConfirm}
+      onCancel={onClose}
+    />
   );
 }

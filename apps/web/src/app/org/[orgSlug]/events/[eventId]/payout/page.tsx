@@ -5,9 +5,9 @@ import { StripeConnectCard } from "@/features/payments/components/stripe-connect
 export default async function PayoutPage({
   params,
 }: {
-  params: Promise<{ eventId: string }>;
+  params: Promise<{ orgSlug: string; eventId: string }>;
 }) {
-  const { eventId } = await params;
+  const { orgSlug, eventId } = await params;
   const supabase = await createClient();
 
   const { data: event } = await supabase
@@ -30,6 +30,7 @@ export default async function PayoutPage({
       </div>
       <StripeConnectCard
         organizationId={event.organization_id}
+        orgSlug={orgSlug}
         eventId={eventId}
         status={status}
       />

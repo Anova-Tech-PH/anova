@@ -37,19 +37,11 @@ export async function issueRefund(data: {
     );
   if (data.amount <= 0) throw new Error("Refund amount must be positive");
 
-  // Get Stripe account
-  const stripeAccountId =
-    (order as any).events?.stripe_account_id ||
-    (order as any).events?.organizations?.stripe_account_id;
-
-  // Issue refund via Stripe
-  const refund = await stripe.refunds.create(
-    {
-      payment_intent: order.stripe_payment_intent_id,
-      amount: data.amount,
-    },
-    stripeAccountId ? { stripeAccount: stripeAccountId } : undefined,
-  );
+  // Issue refund via Stripe (destination charges: PI is on the platform account)
+  const refund = await stripe.refunds.create({
+    payment_intent: order.stripe_payment_intent_id,
+    amount: data.amount,
+  });
 
   // Record refund in our DB using service role client
   const adminSupabase = createAdminClient(
@@ -86,5 +78,5 @@ export async function issueRefund(data: {
       .eq("id", (order.registrations as any).id);
   }
 
-  revalidatePath(`/events/${data.eventId}/orders`);
+  revalidatePath("/", "layout");
 }

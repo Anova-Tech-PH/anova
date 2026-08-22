@@ -8,9 +8,9 @@ import { createClient } from "@attendly/ui/supabase/server";
 export default async function SponsorDetailPage({
   params,
 }: {
-  params: Promise<{ eventId: string; sponsorId: string }>;
+  params: Promise<{ orgSlug: string; eventId: string; sponsorId: string }>;
 }) {
-  const { eventId, sponsorId } = await params;
+  const { orgSlug, eventId, sponsorId } = await params;
 
   const [sponsor, leads, tiers] = await Promise.all([
     getSponsorById(sponsorId),
@@ -36,7 +36,7 @@ export default async function SponsorDetailPage({
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Link
-          href={`/events/${eventId}/sponsors`}
+          href={`/org/${orgSlug}/events/${eventId}/sponsors`}
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />

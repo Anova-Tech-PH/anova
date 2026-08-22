@@ -84,6 +84,9 @@ export function CustomDrawerContent(props: any) {
   const { sidebarData } = useSidebarData();
   const [switcherOpen, setSwitcherOpen] = useState(false);
 
+  const isOnMyEvents = pathname === "/(app)/my-events" || pathname === "/my-events";
+  const showEventNav = !!currentEvent && !isOnMyEvents;
+
   const navigate = (route: string) => {
     router.push(route as any);
   };
@@ -169,223 +172,229 @@ export function CustomDrawerContent(props: any) {
 
       {/* Navigation */}
       <ScrollView style={styles.nav} showsVerticalScrollIndicator={false}>
-        {/* Home */}
+        {/* My Events - always visible */}
         <NavItem
-          icon="home-outline"
-          label="Home"
-          route="/(app)/home"
-          isActive={isActive("/(app)/home")}
-          onPress={() => navigate("/(app)/home")}
+          icon="calendar-outline"
+          label="My Events"
+          route="/(app)/my-events"
+          isActive={isActive("/(app)/my-events")}
+          onPress={() => navigate("/(app)/my-events")}
         />
 
-        {/* Agenda */}
-        <CollapsibleSection label="Agenda" icon="calendar-outline">
-          <NavItem
-            icon="calendar-outline"
-            label="Sessions"
-            route="/(app)/schedule"
-            isActive={isActive("/(app)/schedule")}
-            onPress={() => navigate("/(app)/schedule")}
-            indent
-          />
-          <NavItem
-            icon="mic-outline"
-            label="Speakers"
-            route="/(app)/speakers"
-            isActive={isActive("/(app)/speakers")}
-            onPress={() => navigate("/(app)/speakers")}
-            indent
-          />
-        </CollapsibleSection>
-
-        {/* Attendees */}
-        <NavItem
-          icon="people-outline"
-          label="Attendees"
-          route="/(app)/attendees"
-          isActive={isActive("/(app)/attendees")}
-          badge={sidebarData.attendeeCount}
-          badgeVariant="muted"
-          onPress={() => navigate("/(app)/attendees")}
-        />
-
-        {/* Community */}
-        <NavItem
-          icon="chatbubbles-outline"
-          label="Community"
-          route="/(app)/community"
-          isActive={isActive("/(app)/community")}
-          badge={sidebarData.communityCount}
-          badgeVariant="muted"
-          onPress={() => navigate("/(app)/community")}
-        />
-
-        {/* Photos */}
-        <NavItem
-          icon="camera-outline"
-          label="Photos"
-          route="/(app)/photos"
-          isActive={isActive("/(app)/photos")}
-          onPress={() => navigate("/(app)/photos")}
-        />
-
-        {/* Sponsors */}
-        <NavItem
-          icon="business-outline"
-          label="Sponsors"
-          route="/(app)/sponsors"
-          isActive={isActive("/(app)/sponsors")}
-          onPress={() => navigate("/(app)/sponsors")}
-        />
-
-        {/* Announcements */}
-        <NavItem
-          icon="megaphone-outline"
-          label="Announcements"
-          route="/(app)/announcements"
-          isActive={isActive("/(app)/announcements")}
-          onPress={() => navigate("/(app)/announcements")}
-        />
-
-        {/* Volunteer (conditional) */}
-        {sidebarData.hasVolunteer && (
-          <NavItem
-            icon="heart-outline"
-            label="Volunteer"
-            route="/(app)/volunteer"
-            isActive={isActive("/(app)/volunteer")}
-            onPress={() => navigate("/(app)/volunteer")}
-          />
-        )}
-
-        {/* Engagement separator */}
-        {(sidebarData.hasLeaderboard || sidebarData.hasContests || sidebarData.hasTrivia || sidebarData.hasPassport) && (
-          <Separator />
-        )}
-
-        {/* Leaderboard (conditional) */}
-        {sidebarData.hasLeaderboard && (
-          <NavItem
-            icon="trophy-outline"
-            label="Leaderboard"
-            route="/(app)/leaderboard"
-            isActive={isActive("/(app)/leaderboard")}
-            onPress={() => navigate("/(app)/leaderboard")}
-          />
-        )}
-
-        {/* Win a Prize */}
-        {(sidebarData.hasContests || sidebarData.hasTrivia || sidebarData.hasPassport) && (
-          <CollapsibleSection
-            label="Win a Prize"
-            icon="gift-outline"
-            defaultOpen={
-              isActive("/(app)/contests") || isActive("/(app)/trivia") || isActive("/(app)/passport")
-            }
-          >
-            {sidebarData.hasContests && (
-              <NavItem
-                icon="camera-outline"
-                label="Contests"
-                route="/(app)/contests"
-                isActive={isActive("/(app)/contests")}
-                onPress={() => navigate("/(app)/contests")}
-                indent
-              />
-            )}
-            {sidebarData.hasTrivia && (
-              <NavItem
-                icon="bulb-outline"
-                label="Trivia"
-                route="/(app)/trivia"
-                isActive={isActive("/(app)/trivia")}
-                onPress={() => navigate("/(app)/trivia")}
-                indent
-              />
-            )}
-            {sidebarData.hasPassport && (
-              <NavItem
-                icon="stamp-outline"
-                label="Passport"
-                route="/(app)/passport"
-                isActive={isActive("/(app)/passport")}
-                onPress={() => navigate("/(app)/passport")}
-                indent
-              />
-            )}
-          </CollapsibleSection>
-        )}
-
-        {/* Resources separator */}
-        <Separator />
-
-        {/* Resources */}
-        <CollapsibleSection
-          label="Resources"
-          icon="document-text-outline"
-          defaultOpen={
-            isActive("/(app)/qa") || isActive("/(app)/resources") ||
-            isActive("/(app)/logistics") || isActive("/(app)/rooms") ||
-            isActive("/(app)/floormap") || isActive("/(app)/feedback")
-          }
-        >
-          <NavItem
-            icon="help-circle-outline"
-            label="Session Q&A"
-            route="/(app)/qa"
-            isActive={isActive("/(app)/qa")}
-            onPress={() => navigate("/(app)/qa")}
-            indent
-          />
-          {sidebarData.hasResources && (
+        {/* Event-specific navigation - only show when an event is selected and not on My Events */}
+        {showEventNav && (
+          <>
+            {/* Home - event overview */}
             <NavItem
+              icon="home-outline"
+              label="Home"
+              route="/(app)/home"
+              isActive={isActive("/(app)/home")}
+              onPress={() => navigate("/(app)/home")}
+            />
+
+            <Separator />
+
+            {/* Agenda */}
+            <CollapsibleSection label="Agenda" icon="calendar-outline">
+              <NavItem
+                icon="calendar-outline"
+                label="Sessions"
+                route="/(app)/schedule"
+                isActive={isActive("/(app)/schedule")}
+                onPress={() => navigate("/(app)/schedule")}
+                indent
+              />
+              <NavItem
+                icon="mic-outline"
+                label="Speakers"
+                route="/(app)/speakers"
+                isActive={isActive("/(app)/speakers")}
+                onPress={() => navigate("/(app)/speakers")}
+                indent
+              />
+            </CollapsibleSection>
+
+            {/* Attendees */}
+            <NavItem
+              icon="people-outline"
+              label="Attendees"
+              route="/(app)/attendees"
+              isActive={isActive("/(app)/attendees")}
+              badge={sidebarData.attendeeCount}
+              badgeVariant="muted"
+              onPress={() => navigate("/(app)/attendees")}
+            />
+
+            {/* Community */}
+            <NavItem
+              icon="chatbubbles-outline"
+              label="Community"
+              route="/(app)/community"
+              isActive={isActive("/(app)/community")}
+              badge={sidebarData.communityCount}
+              badgeVariant="muted"
+              onPress={() => navigate("/(app)/community")}
+            />
+
+            {/* Photos */}
+            <NavItem
+              icon="camera-outline"
+              label="Photos"
+              route="/(app)/photos"
+              isActive={isActive("/(app)/photos")}
+              onPress={() => navigate("/(app)/photos")}
+            />
+
+            {/* Sponsors */}
+            <NavItem
+              icon="business-outline"
+              label="Sponsors"
+              route="/(app)/sponsors"
+              isActive={isActive("/(app)/sponsors")}
+              onPress={() => navigate("/(app)/sponsors")}
+            />
+
+            {/* Announcements */}
+            <NavItem
+              icon="megaphone-outline"
+              label="Announcements"
+              route="/(app)/announcements"
+              isActive={isActive("/(app)/announcements")}
+              onPress={() => navigate("/(app)/announcements")}
+            />
+
+            {/* Volunteer (conditional) */}
+            {sidebarData.hasVolunteer && (
+              <NavItem
+                icon="heart-outline"
+                label="Volunteer"
+                route="/(app)/volunteer"
+                isActive={isActive("/(app)/volunteer")}
+                onPress={() => navigate("/(app)/volunteer")}
+              />
+            )}
+
+            {/* Engagement separator */}
+            {(sidebarData.hasLeaderboard || sidebarData.hasContests || sidebarData.hasTrivia || sidebarData.hasPassport) && (
+              <Separator />
+            )}
+
+            {/* Leaderboard (conditional) */}
+            {sidebarData.hasLeaderboard && (
+              <NavItem
+                icon="trophy-outline"
+                label="Leaderboard"
+                route="/(app)/leaderboard"
+                isActive={isActive("/(app)/leaderboard")}
+                onPress={() => navigate("/(app)/leaderboard")}
+              />
+            )}
+
+            {/* Win a Prize */}
+            {(sidebarData.hasContests || sidebarData.hasTrivia || sidebarData.hasPassport) && (
+              <CollapsibleSection
+                label="Win a Prize"
+                icon="gift-outline"
+                defaultOpen={
+                  isActive("/(app)/contests") || isActive("/(app)/trivia") || isActive("/(app)/passport")
+                }
+              >
+                {sidebarData.hasContests && (
+                  <NavItem
+                    icon="camera-outline"
+                    label="Contests"
+                    route="/(app)/contests"
+                    isActive={isActive("/(app)/contests")}
+                    onPress={() => navigate("/(app)/contests")}
+                    indent
+                  />
+                )}
+                {sidebarData.hasTrivia && (
+                  <NavItem
+                    icon="bulb-outline"
+                    label="Trivia"
+                    route="/(app)/trivia"
+                    isActive={isActive("/(app)/trivia")}
+                    onPress={() => navigate("/(app)/trivia")}
+                    indent
+                  />
+                )}
+                {sidebarData.hasPassport && (
+                  <NavItem
+                    icon="stamp-outline"
+                    label="Passport"
+                    route="/(app)/passport"
+                    isActive={isActive("/(app)/passport")}
+                    onPress={() => navigate("/(app)/passport")}
+                    indent
+                  />
+                )}
+              </CollapsibleSection>
+            )}
+
+            {/* Resources separator */}
+            <Separator />
+
+            {/* Resources */}
+            <CollapsibleSection
+              label="Resources"
               icon="document-text-outline"
-              label="Documents"
-              route="/(app)/resources"
-              isActive={isActive("/(app)/resources")}
-              onPress={() => navigate("/(app)/resources")}
-              indent
-            />
-          )}
-          {sidebarData.hasLogistics && (
-            <NavItem
-              icon="clipboard-outline"
-              label="Logistics"
-              route="/(app)/logistics"
-              isActive={isActive("/(app)/logistics")}
-              onPress={() => navigate("/(app)/logistics")}
-              indent
-            />
-          )}
-          {sidebarData.hasRooms && (
-            <NavItem
-              icon="grid-outline"
-              label="Rooms"
-              route="/(app)/rooms"
-              isActive={isActive("/(app)/rooms")}
-              onPress={() => navigate("/(app)/rooms")}
-              indent
-            />
-          )}
-          <NavItem
-            icon="map-outline"
-            label="Floormap"
-            route="/(app)/floormap"
-            isActive={isActive("/(app)/floormap")}
-            onPress={() => navigate("/(app)/floormap")}
-            indent
-          />
-          {sidebarData.hasFeedback && (
-            <NavItem
-              icon="chatbox-ellipses-outline"
-              label="Feedback"
-              route="/(app)/feedback"
-              isActive={isActive("/(app)/feedback")}
-              onPress={() => navigate("/(app)/feedback")}
-              indent
-            />
-          )}
-        </CollapsibleSection>
+              defaultOpen={
+                isActive("/(app)/qa") || isActive("/(app)/resources") ||
+                isActive("/(app)/logistics") ||
+                isActive("/(app)/floormap") || isActive("/(app)/feedback")
+              }
+            >
+              <NavItem
+                icon="help-circle-outline"
+                label="Session Q&A"
+                route="/(app)/qa"
+                isActive={isActive("/(app)/qa")}
+                onPress={() => navigate("/(app)/qa")}
+                indent
+              />
+              {sidebarData.hasResources && (
+                <NavItem
+                  icon="document-text-outline"
+                  label="Documents"
+                  route="/(app)/resources"
+                  isActive={isActive("/(app)/resources")}
+                  onPress={() => navigate("/(app)/resources")}
+                  indent
+                />
+              )}
+              {sidebarData.hasLogistics && (
+                <NavItem
+                  icon="clipboard-outline"
+                  label="Logistics"
+                  route="/(app)/logistics"
+                  isActive={isActive("/(app)/logistics")}
+                  onPress={() => navigate("/(app)/logistics")}
+                  indent
+                />
+              )}
+              <NavItem
+                icon="map-outline"
+                label="Floormap"
+                route="/(app)/floormap"
+                isActive={isActive("/(app)/floormap")}
+                onPress={() => navigate("/(app)/floormap")}
+                indent
+              />
+              {sidebarData.hasFeedback && (
+                <NavItem
+                  icon="chatbox-ellipses-outline"
+                  label="Feedback"
+                  route="/(app)/feedback"
+                  isActive={isActive("/(app)/feedback")}
+                  onPress={() => navigate("/(app)/feedback")}
+                  indent
+                />
+              )}
+            </CollapsibleSection>
+          </>
+        )}
 
         {/* My Stuff separator (auth-only) */}
         {user && (

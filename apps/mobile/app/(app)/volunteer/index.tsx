@@ -11,6 +11,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { useNavigation } from "expo-router";
+import { DrawerActions } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { getPublicVolunteerInfo, applyAsVolunteer } from "@attendly/supabase-client";
 import { supabase } from "../../../src/lib/supabase";
@@ -21,6 +23,7 @@ import { Badge } from "../../../src/components/badge";
 import { colors, typography, spacing, radius, shadows, shared } from "../../../src/theme";
 
 export default function VolunteerScreen() {
+  const navigation = useNavigation();
   const { user } = useAuth();
   const { currentEvent } = useEventContext();
   const queryClient = useQueryClient();
@@ -64,46 +67,73 @@ export default function VolunteerScreen() {
     setRefreshing(false);
   };
 
+  const headerBlock = (
+    <View style={styles.headerSection}>
+      <View style={styles.headerRow}>
+        <TouchableOpacity
+          onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
+          style={styles.menuBtn}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="menu" size={24} color={colors.textPrimary} />
+        </TouchableOpacity>
+      </View>
+      <Text style={styles.pageTitle}>Volunteer</Text>
+    </View>
+  );
+
   if (!currentEvent) {
     return (
-      <SafeAreaView style={shared.centered} edges={["bottom"]}>
-        <EmptyState
-          icon="calendar-outline"
-          title="Select an event"
-          subtitle="Go to My Events to choose an event"
-        />
+      <SafeAreaView style={shared.screen} edges={["bottom"]}>
+        {headerBlock}
+        <View style={shared.centered}>
+          <EmptyState
+            icon="calendar-outline"
+            title="Select an event"
+            subtitle="Go to My Events to choose an event"
+          />
+        </View>
       </SafeAreaView>
     );
   }
 
   if (isLoading) {
     return (
-      <SafeAreaView style={shared.centered} edges={["bottom"]}>
-        <ActivityIndicator size="large" color={colors.primary} />
+      <SafeAreaView style={shared.screen} edges={["bottom"]}>
+        {headerBlock}
+        <View style={shared.centered}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
       </SafeAreaView>
     );
   }
 
   if (!volunteerInfo) {
     return (
-      <SafeAreaView style={shared.centered} edges={["bottom"]}>
-        <EmptyState
-          icon="heart-outline"
-          title="Volunteering not available"
-          subtitle="Volunteer signups have not been enabled for this event"
-        />
+      <SafeAreaView style={shared.screen} edges={["bottom"]}>
+        {headerBlock}
+        <View style={shared.centered}>
+          <EmptyState
+            icon="heart-outline"
+            title="Volunteering not available"
+            subtitle="Volunteer signups have not been enabled for this event"
+          />
+        </View>
       </SafeAreaView>
     );
   }
 
   if (submitted) {
     return (
-      <SafeAreaView style={shared.centered} edges={["bottom"]}>
-        <Ionicons name="checkmark-circle" size={80} color={colors.success} />
-        <Text style={styles.successTitle}>Application Submitted!</Text>
-        <Text style={styles.successSubtitle}>
-          Thank you for volunteering. The event organizers will review your application and get back to you.
-        </Text>
+      <SafeAreaView style={shared.screen} edges={["bottom"]}>
+        {headerBlock}
+        <View style={shared.centered}>
+          <Ionicons name="checkmark-circle" size={80} color={colors.success} />
+          <Text style={styles.successTitle}>Application Submitted!</Text>
+          <Text style={styles.successSubtitle}>
+            Thank you for volunteering. The event organizers will review your application and get back to you.
+          </Text>
+        </View>
       </SafeAreaView>
     );
   }
@@ -118,6 +148,7 @@ export default function VolunteerScreen() {
 
   return (
     <SafeAreaView style={shared.screen} edges={["bottom"]}>
+      {headerBlock}
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         refreshControl={
@@ -294,6 +325,24 @@ export default function VolunteerScreen() {
 }
 
 const styles = StyleSheet.create({
+  headerSection: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.md,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: spacing.sm,
+  },
+  menuBtn: {
+    padding: 4,
+  },
+  pageTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: colors.textPrimary,
+  },
   scrollContent: {
     padding: spacing.lg,
   },

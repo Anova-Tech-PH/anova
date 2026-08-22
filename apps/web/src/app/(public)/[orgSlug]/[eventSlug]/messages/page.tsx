@@ -88,8 +88,20 @@ async function MessagesContent({
         .single(),
     ]);
     initialMessages = messages;
-    selectedUserName = profileResult.data?.display_name ?? "Unknown";
-    selectedUserAvatarUrl = profileResult.data?.avatar_url ?? null;
+
+    if (profileResult.data?.display_name) {
+      selectedUserName = profileResult.data.display_name;
+      selectedUserAvatarUrl = profileResult.data.avatar_url ?? null;
+    } else {
+      // Fallback to global profiles table
+      const { data: globalProfile } = await supabase
+        .from("profiles")
+        .select("full_name, avatar_url")
+        .eq("id", selectedUserId)
+        .single();
+      selectedUserName = globalProfile?.full_name ?? "Attendee";
+      selectedUserAvatarUrl = globalProfile?.avatar_url ?? null;
+    }
   }
 
   return (

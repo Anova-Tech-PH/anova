@@ -1,29 +1,32 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "expo-router";
+import { DrawerActions } from "@react-navigation/native";
 
 import { useEventContext } from "../../../src/lib/event-context";
 import { EmptyState } from "../../../src/components/empty-state";
 import { colors, typography, spacing, radius, shadows, shared } from "../../../src/theme";
 
 export default function CertificateScreen() {
+  const navigation = useNavigation();
   const { currentEvent } = useEventContext();
 
-  if (!currentEvent) {
-    return (
-      <SafeAreaView style={shared.centered} edges={["bottom"]}>
-        <EmptyState
-          icon="calendar-outline"
-          title="Select an event"
-          subtitle="Go to My Events to choose an event"
-        />
-      </SafeAreaView>
-    );
-  }
+  const renderContent = () => {
+    if (!currentEvent) {
+      return (
+        <View style={shared.centered}>
+          <EmptyState
+            icon="calendar-outline"
+            title="Select an event"
+            subtitle="Go to My Events to choose an event"
+          />
+        </View>
+      );
+    }
 
-  return (
-    <SafeAreaView style={shared.screen} edges={["bottom"]}>
+    return (
       <View style={styles.container}>
         {/* Certificate preview card */}
         <View style={styles.certificateCard}>
@@ -55,6 +58,25 @@ export default function CertificateScreen() {
           </View>
         </View>
       </View>
+    );
+  };
+
+  return (
+    <SafeAreaView style={shared.screen} edges={["bottom"]}>
+      {/* Custom Header */}
+      <View style={styles.headerSection}>
+        <View style={styles.headerRow}>
+          <TouchableOpacity
+            onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
+            style={styles.menuBtn}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="menu" size={24} color={colors.textPrimary} />
+          </TouchableOpacity>
+        </View>
+        <Text style={styles.pageTitle}>Certificate</Text>
+      </View>
+      {renderContent()}
     </SafeAreaView>
   );
 }
@@ -121,5 +143,23 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: colors.textSecondary,
     flex: 1,
+  },
+  headerSection: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.md,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: spacing.sm,
+  },
+  menuBtn: {
+    padding: 4,
+  },
+  pageTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: colors.textPrimary,
   },
 });

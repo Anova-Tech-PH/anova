@@ -11,7 +11,7 @@ export interface ReadinessCheck {
   fixHref: string;
 }
 
-export async function getPublishReadiness(eventId: string): Promise<{
+export async function getPublishReadiness(eventId: string, basePath?: string): Promise<{
   checks: ReadinessCheck[];
   requiredPassed: number;
   requiredTotal: number;
@@ -62,7 +62,7 @@ export async function getPublishReadiness(eventId: string): Promise<{
       description: basicsDescription,
       status: basicsComplete ? "pass" : "fail",
       required: true,
-      fixHref: `/events/${eventId}`,
+      fixHref: `${basePath ?? `/events/${eventId}`}`,
     },
     {
       id: "not-started",
@@ -72,7 +72,7 @@ export async function getPublishReadiness(eventId: string): Promise<{
         : "This event has already started or ended.",
       status: eventNotStarted ? "pass" : "fail",
       required: true,
-      fixHref: `/events/${eventId}`,
+      fixHref: `${basePath ?? `/events/${eventId}`}`,
     },
     {
       id: "sessions",
@@ -80,7 +80,7 @@ export async function getPublishReadiness(eventId: string): Promise<{
       description: "Your agenda has at least one session scheduled.",
       status: sessionCount > 0 ? "pass" : "fail",
       required: true,
-      fixHref: `/events/${eventId}/schedule`,
+      fixHref: `${basePath ?? `/events/${eventId}`}/schedule`,
     },
     {
       id: "speakers",
@@ -88,7 +88,7 @@ export async function getPublishReadiness(eventId: string): Promise<{
       description: "At least one speaker is linked to a session.",
       status: speakerCount > 0 ? "pass" : "warning",
       required: false,
-      fixHref: `/events/${eventId}/speakers`,
+      fixHref: `${basePath ?? `/events/${eventId}`}/speakers`,
     },
     {
       id: "tickets",
@@ -96,7 +96,7 @@ export async function getPublishReadiness(eventId: string): Promise<{
       description: "At least one ticket type is set up for registration.",
       status: ticketCount > 0 ? "pass" : "warning",
       required: false,
-      fixHref: `/events/${eventId}/tickets`,
+      fixHref: `${basePath ?? `/events/${eventId}`}/tickets`,
     },
     {
       id: "survey",
@@ -104,7 +104,7 @@ export async function getPublishReadiness(eventId: string): Promise<{
       description: "A post-event survey is ready to collect feedback.",
       status: surveyCount > 0 ? "pass" : "warning",
       required: false,
-      fixHref: `/events/${eventId}/survey`,
+      fixHref: `${basePath ?? `/events/${eventId}`}/survey`,
     },
     {
       id: "website",
@@ -112,7 +112,7 @@ export async function getPublishReadiness(eventId: string): Promise<{
       description: "Your event website is configured and enabled.",
       status: websiteEnabled ? "pass" : "warning",
       required: false,
-      fixHref: `/events/${eventId}/website`,
+      fixHref: `${basePath ?? `/events/${eventId}`}/website`,
     },
   ];
 
@@ -135,7 +135,7 @@ export interface RecommendationCard {
   href: string;
 }
 
-export async function getPostPublishRecommendations(eventId: string): Promise<RecommendationCard[]> {
+export async function getPostPublishRecommendations(eventId: string, basePath?: string): Promise<RecommendationCard[]> {
   const supabase = await createClient();
 
   const [
@@ -168,70 +168,70 @@ export async function getPostPublishRecommendations(eventId: string): Promise<Re
       name: "Send Announcement",
       description: "Make your efforts pay off! Announce the event to your attendees so they can start engaging.",
       configured: (announcementsResult.count ?? 0) > 0,
-      href: `/events/${eventId}/announcements`,
+      href: `${basePath ?? `/events/${eventId}`}/announcements`,
     },
     {
       id: "check-in",
       name: "Set Up Check-in",
       description: "Easily check in attendees using smartphones or tablets. Supports event, day, and session check-in.",
       configured: (checkInsResult.count ?? 0) > 0,
-      href: `/events/${eventId}/check-in`,
+      href: `${basePath ?? `/events/${eventId}`}/check-in`,
     },
     {
       id: "badges",
       name: "Configure Name Badges",
       description: "Customize and print branded name badges for attendees.",
       configured: false,
-      href: `/events/${eventId}/badges`,
+      href: `${basePath ?? `/events/${eventId}`}/badges`,
     },
     {
       id: "survey",
       name: "Create a Survey",
       description: "Collect attendee feedback and satisfaction data. 2X your response rate with in-app prompts.",
       configured: (surveysResult.count ?? 0) > 0,
-      href: `/events/${eventId}/survey`,
+      href: `${basePath ?? `/events/${eventId}`}/survey`,
     },
     {
       id: "rsvp",
       name: "Enable Session RSVP",
       description: "Get accurate session headcounts so you can match room sizes to expected attendance.",
       configured: (rsvpResult.count ?? 0) > 0,
-      href: `/events/${eventId}/rsvp`,
+      href: `${basePath ?? `/events/${eventId}`}/rsvp`,
     },
     {
       id: "email-campaign",
       name: "Send Email Campaign",
       description: "Promote your event and keep attendees informed with targeted email campaigns.",
       configured: (campaignsResult.count ?? 0) > 0,
-      href: `/events/${eventId}/emails/campaigns`,
+      href: `${basePath ?? `/events/${eventId}`}/emails/campaigns`,
     },
     {
       id: "polls",
       name: "Set Up Live Polls",
       description: "Create interactive polls for sessions to boost engagement.",
       configured: (pollsResult.count ?? 0) > 0,
-      href: `/events/${eventId}/polls`,
+      href: `${basePath ?? `/events/${eventId}`}/polls`,
     },
     {
       id: "documents",
       name: "Upload Documents",
       description: "Share resources, handouts, and materials with your attendees.",
       configured: (documentsResult.count ?? 0) > 0,
-      href: `/events/${eventId}/documents`,
+      href: `${basePath ?? `/events/${eventId}`}/documents`,
     },
     {
       id: "meetups",
       name: "Create Meetups",
       description: "Let attendees organize social meetups and networking activities.",
       configured: (meetupsResult.count ?? 0) > 0,
-      href: `/events/${eventId}/meetups`,
+      href: `${basePath ?? `/events/${eventId}`}/meetups`,
     },
     {
       id: "website",
       name: "Enable Website",
       description: "Publish an event website to showcase your agenda, speakers, and registration.",
       configured: websiteEnabled,
-      href: `/events/${eventId}/website`,
+      href: `${basePath ?? `/events/${eventId}`}/website`,
     },
   ];
 

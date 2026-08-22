@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { CheckCircle, AlertCircle, XCircle, Search, QrCode, ArrowLeft, AlertTriangle } from "lucide-react";
 import { checkInByQrCode, checkInByRegistrationId, searchRegistrations } from "../actions";
 import { fetchPendingConsentForms } from "@/features/consent-forms/actions";
@@ -31,6 +32,8 @@ export function KioskMode({
   eventTitle: string;
   sessions: CheckInSession[];
 }) {
+  const pathname = usePathname();
+  const basePath = pathname.slice(0, pathname.indexOf(`/events/${eventId}`) + `/events/${eventId}`.length);
   const [sessionId, setSessionId] = useState(sessions[0]?.id ?? "");
   const [state, setState] = useState<KioskState>({ mode: "idle" });
   const [searchQuery, setSearchQuery] = useState("");
@@ -167,7 +170,7 @@ export function KioskMode({
             ))}
           </select>
           <a
-            href={`/events/${eventId}/check-in`}
+            href={`${basePath}/check-in`}
             className="flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm hover:bg-muted"
           >
             <ArrowLeft className="h-4 w-4" /> Exit Kiosk

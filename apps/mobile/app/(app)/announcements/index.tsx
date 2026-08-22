@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -6,11 +6,14 @@ import {
   StyleSheet,
   ActivityIndicator,
   RefreshControl,
+  TouchableOpacity,
   ViewToken,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { Ionicons } from "@expo/vector-icons";
+import { DrawerActions } from "@react-navigation/native";
+import { useNavigation } from "expo-router";
 import {
   getAnnouncementsForAttendee,
   markAnnouncementRead,
@@ -21,10 +24,22 @@ import { useEventContext } from "../../../src/lib/event-context";
 import { EmptyState } from "../../../src/components/empty-state";
 import { colors, typography, spacing, radius, shadows, shared } from "../../../src/theme";
 
+function timeAgo(dateStr: string) {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+
 export default function AnnouncementsScreen() {
   const { user } = useAuth();
   const { currentEvent } = useEventContext();
   const queryClient = useQueryClient();
+  const navigation = useNavigation();
   const [refreshing, setRefreshing] = useState(false);
   const readIdsRef = useRef<Set<string>>(new Set());
 
@@ -34,7 +49,6 @@ export default function AnnouncementsScreen() {
     enabled: !!currentEvent?.id,
   });
 
-  // Track which announcements the user has read in this session
   const { data: readAnnouncements = [] } = useQuery({
     queryKey: ["announcement-reads", currentEvent?.id, user?.id],
     queryFn: async () => {
@@ -85,68 +99,96 @@ export default function AnnouncementsScreen() {
     setRefreshing(false);
   }, [queryClient]);
 
+  const header = (
+    <View style={styles.headerSection}>
+      <View style={styles.headerRow}>
+        <TouchableOpacity
+          onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
+          style={styles.menuBtn}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="menu" size={24} color={colors.textPrimary} />
+        </TouchableOpacity>
+      </View>
+      <Text style={styles.pageTitle}>Announcements</Text>
+      <Text style={styles.pageSubtitle}>
+        Updates from the {currentEvent?.title ?? "event"} organizers.
+      </Text>
+    </View>
+  );
+
   if (!currentEvent) {
     return (
-      <SafeAreaView style={shared.centered} edges={["bottom"]}>
-        <EmptyState
-          icon="calendar-outline"
-          title="Select an event"
-          subtitle="Go to My Events to choose an event"
-        />
+      <SafeAreaView style={shared.screen} edges={["bottom"]}>
+        {header}
+        <View style={shared.centered}>
+          <EmptyState
+            icon="calendar-outline"
+            title="Select an event"
+            subtitle="Go to My Events to choose an event"
+          />
+        </View>
       </SafeAreaView>
     );
   }
 
   if (isLoading) {
     return (
-      <SafeAreaView style={shared.centered} edges={["bottom"]}>
-        <ActivityIndicator size="large" color={colors.primary} />
+      <SafeAreaView style={shared.screen} edges={["bottom"]}>
+        {header}
+        <View style={shared.centered}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
       </SafeAreaView>
     );
   }
 
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    });
-  };
+  const items = announcements ?? [];
 
   const renderAnnouncement = ({ item }: { item: any }) => {
-    const isRead = readSet.has(item.id);
+    const isUnread = !readSet.has(item.id);
 
     return (
-      <View style={[styles.card, !isRead && styles.cardUnread]}>
-        <View style={styles.cardHeader}>
-          {!isRead && <View style={styles.unreadDot} />}
-          <View style={styles.cardHeaderContent}>
-            <Text style={[styles.title, !isRead && styles.titleUnread]} numberOfLines={2}>
-              {item.title}
-            </Text>
-            <Text style={styles.date}>
-              {item.sent_at ? formatDate(item.sent_at) : ""}
-            </Text>
+      <View style={[styles.card, isUnread && styles.cardUnread]}>
+        <View style={styles.cardRow}>
+          {/* Megaphone icon */}
+          <View style={styles.iconCircle}>
+            <Ionicons name="megaphone-outline" size={16} color={colors.primary} />
+          </View>
+
+          {/* Content */}
+          <View style={styles.cardContent}>
+            <View style={styles.titleTimeRow}>
+              <View style={styles.titleRow}>
+                {isUnread && <View style={styles.unreadDot} />}
+                <Text style={styles.title} numberOfLines={2}>
+                  {item.subject}
+                </Text>
+              </View>
+              {item.sent_at && (
+                <Text style={styles.time}>{timeAgo(item.sent_at)}</Text>
+              )}
+            </View>
+            {item.body && (
+              <Text style={styles.body} numberOfLines={4}>
+                {item.body}
+              </Text>
+            )}
           </View>
         </View>
-        {item.body && (
-          <Text style={styles.body} numberOfLines={3}>
-            {item.body}
-          </Text>
-        )}
       </View>
     );
   };
 
   return (
     <SafeAreaView style={shared.screen} edges={["bottom"]}>
+      {header}
+
       <FlatList
-        data={announcements ?? []}
+        data={items}
         keyExtractor={(item: any) => item.id}
         renderItem={renderAnnouncement}
-        contentContainerStyle={shared.listContent}
+        contentContainerStyle={styles.listContent}
         onViewableItemsChanged={onViewableItemsChanged}
         viewabilityConfig={viewabilityConfig}
         refreshControl={
@@ -159,7 +201,7 @@ export default function AnnouncementsScreen() {
         ListEmptyComponent={
           <EmptyState
             icon="megaphone-outline"
-            title="No announcements"
+            title="No announcements yet"
             subtitle="Announcements from organizers will appear here"
           />
         }
@@ -169,50 +211,104 @@ export default function AnnouncementsScreen() {
 }
 
 const styles = StyleSheet.create({
+  // Header
+  headerSection: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.md,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: spacing.sm,
+  },
+  menuBtn: {
+    padding: 4,
+  },
+  pageTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: colors.textPrimary,
+  },
+  pageSubtitle: {
+    fontSize: 14,
+    color: colors.textMuted,
+    marginTop: 4,
+  },
+
+  // List
+  listContent: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xl,
+  },
+
+  // Card
   card: {
     backgroundColor: colors.surface,
     borderRadius: radius.md,
-    padding: spacing.lg,
-    marginBottom: spacing.sm,
+    padding: spacing.md,
+    marginBottom: spacing.md,
     borderWidth: 1,
     borderColor: colors.borderLight,
-    ...shadows.sm,
   },
   cardUnread: {
-    borderLeftWidth: 3,
-    borderLeftColor: colors.primary,
-    backgroundColor: colors.primaryMuted,
+    borderColor: "rgba(139, 61, 255, 0.3)",
+    backgroundColor: "rgba(139, 61, 255, 0.04)",
   },
-  cardHeader: {
+  cardRow: {
     flexDirection: "row",
     alignItems: "flex-start",
     gap: spacing.sm,
   },
-  unreadDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.primary,
-    marginTop: 6,
-  },
-  cardHeaderContent: {
-    flex: 1,
-  },
-  title: {
-    ...typography.bodyMedium,
-    color: colors.textPrimary,
-  },
-  titleUnread: {
-    fontWeight: "700",
-  },
-  date: {
-    ...typography.small,
-    color: colors.textMuted,
+  iconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.primaryMuted,
+    justifyContent: "center",
+    alignItems: "center",
     marginTop: 2,
   },
+  cardContent: {
+    flex: 1,
+    minWidth: 0,
+  },
+  titleTimeRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: spacing.sm,
+  },
+  titleRow: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    minWidth: 0,
+  },
+  unreadDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: colors.primary,
+    marginRight: 6,
+    flexShrink: 0,
+  },
+  title: {
+    fontSize: 15,
+    fontWeight: "500",
+    color: colors.textPrimary,
+    lineHeight: 20,
+    flex: 1,
+  },
+  time: {
+    fontSize: 12,
+    color: colors.textMuted,
+    flexShrink: 0,
+  },
   body: {
-    ...typography.body,
-    color: colors.textSecondary,
-    marginTop: spacing.sm,
+    fontSize: 14,
+    color: colors.textMuted,
+    lineHeight: 20,
+    marginTop: 4,
   },
 });

@@ -28,6 +28,7 @@ export const colors = {
   border: "#e4e4e7",
   borderLight: "#f0f0f2",
   divider: "#f4f4f5",
+  muted: "#f4f4f5",
 
   // Status
   success: "#16a34a",

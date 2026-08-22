@@ -32,18 +32,19 @@ export async function generateMetadata({
 export default async function PublishPage({
   params,
 }: {
-  params: Promise<{ eventId: string }>;
+  params: Promise<{ orgSlug: string; eventId: string }>;
 }) {
-  const { eventId } = await params;
+  const { orgSlug, eventId } = await params;
   const event = await getEvent(eventId);
 
   if (!event) notFound();
 
+  const basePath = `/org/${orgSlug}/events/${eventId}`;
   const isPublished = event.status === "published" || event.status === "completed";
   const isCompleted = event.status === "completed";
 
   if (isPublished) {
-    const cards = await getPostPublishRecommendations(eventId);
+    const cards = await getPostPublishRecommendations(eventId, basePath);
     const notConfiguredCount = cards.filter((c) => !c.configured).length;
 
     return (
@@ -91,7 +92,7 @@ export default async function PublishPage({
     );
   }
 
-  const readiness = await getPublishReadiness(eventId);
+  const readiness = await getPublishReadiness(eventId, basePath);
   const warnings = readiness.checks.filter(
     (c) => !c.required && c.status === "warning"
   );

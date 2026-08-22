@@ -8,7 +8,7 @@ export async function getMyEvents(client: SupabaseClient, userId: string) {
     .from("registrations")
     .select(`
       id, status, qr_code, created_at,
-      events(id, title, slug, start_date, end_date, venue_name, is_virtual, cover_image, status,
+      events(id, title, slug, description, start_date, end_date, venue_name, is_virtual, cover_image, status,
         organizations(slug, name)
       ),
       ticket_types(name)
@@ -110,4 +110,29 @@ export async function getEventAttendeeCount(client: SupabaseClient, eventId: str
 
   if (error) throw new Error(error.message);
   return count ?? 0;
+}
+
+/**
+ * Look up a published event by its join code.
+ * Returns the event with org info and first free ticket type, or null.
+ */
+export async function lookupEventByJoinCode(
+  client: SupabaseClient,
+  joinCode: string,
+) {
+  const code = joinCode.trim().toUpperCase();
+  const { data, error } = await client
+    .from("events")
+    .select(`
+      id, title, slug, start_date, end_date, venue_name, is_virtual, cover_image, status,
+      organizations(slug, name),
+      ticket_types(id, name, type, price)
+    `)
+    .eq("join_code", code)
+    .eq("status", "published")
+    .single();
+
+  if (error && error.code === "PGRST116") return null; // not found
+  if (error) throw new Error(error.message);
+  return data;
 }

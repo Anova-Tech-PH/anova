@@ -204,23 +204,43 @@ export default function ContestDetailScreen() {
     }
   };
 
+  // ── Header (back arrow) ─────────────────────────────────────
+  const header = (
+    <View style={styles.customHeader}>
+      <TouchableOpacity
+        onPress={() => router.back()}
+        style={styles.backBtn}
+        activeOpacity={0.7}
+      >
+        <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
+      </TouchableOpacity>
+      <Text style={styles.headerTitle} numberOfLines={1}>Contest</Text>
+    </View>
+  );
+
   // ── Loading state ────────────────────────────────────────────
   if (loadingContest || loadingEntries) {
     return (
-      <SafeAreaView style={shared.centered} edges={["bottom"]}>
-        <ActivityIndicator size="large" color={colors.primary} />
+      <SafeAreaView style={shared.screen} edges={["top", "bottom"]}>
+        {header}
+        <View style={shared.centered}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
       </SafeAreaView>
     );
   }
 
   if (!contest) {
     return (
-      <SafeAreaView style={shared.centered} edges={["bottom"]}>
-        <EmptyState
-          icon="alert-circle-outline"
-          title="Contest not found"
-          subtitle="This contest may have been removed"
-        />
+      <SafeAreaView style={shared.screen} edges={["top", "bottom"]}>
+        {header}
+        <View style={shared.centered}>
+          <EmptyState
+            icon="alert-circle-outline"
+            title="Contest not found"
+            subtitle="This contest may have been removed"
+          />
+        </View>
       </SafeAreaView>
     );
   }
@@ -304,7 +324,18 @@ export default function ContestDetailScreen() {
 
   // ── Main render ──────────────────────────────────────────────
   return (
-    <SafeAreaView style={shared.screen} edges={["bottom"]}>
+    <SafeAreaView style={shared.screen} edges={["top", "bottom"]}>
+      {/* Custom Header — reuse header but with contest title */}
+      <View style={styles.customHeader}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.backBtn}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle} numberOfLines={1}>{contest.title}</Text>
+      </View>
       <FlatList
         data={entries}
         keyExtractor={(item: any) => item.id}
@@ -400,6 +431,26 @@ export default function ContestDetailScreen() {
 // ── Styles ─────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
+  customHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderLight,
+    backgroundColor: colors.surface,
+  },
+  backBtn: {
+    padding: 4,
+    marginRight: 4,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: colors.textPrimary,
+    flex: 1,
+  },
   listContent: {
     padding: spacing.lg,
     paddingBottom: 80,

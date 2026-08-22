@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 
 type Campaign = {
@@ -20,6 +21,9 @@ const statusColors: Record<string, string> = {
 };
 
 export function CampaignList({ campaigns, eventId }: { campaigns: Campaign[]; eventId: string }) {
+  const pathname = usePathname();
+  const basePath = pathname.slice(0, pathname.indexOf(`/events/${eventId}`) + `/events/${eventId}`.length);
+
   if (campaigns.length === 0) {
     return (
       <p className="py-4 text-center text-sm text-muted-foreground">
@@ -45,7 +49,7 @@ export function CampaignList({ campaigns, eventId }: { campaigns: Campaign[]; ev
             <tr key={c.id} className="border-b last:border-0 hover:bg-muted/30">
               <td className="px-4 py-2.5">
                 <Link
-                  href={`/events/${eventId}/emails/campaigns/${c.id}`}
+                  href={`${basePath}/emails/campaigns/${c.id}`}
                   className="font-medium hover:underline"
                 >
                   {c.subject?.replace(/\{\{[^}]+\}\}/g, "...") || "(No subject)"}

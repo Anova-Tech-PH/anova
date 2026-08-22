@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@attendly/ui/components";
 import type { OrderRow } from "../queries";
@@ -20,6 +21,8 @@ export function OrdersTable({
   eventId: string;
 }) {
   const [refundingOrder, setRefundingOrder] = useState<OrderRow | null>(null);
+  const pathname = usePathname();
+  const basePath = pathname.slice(0, pathname.indexOf(`/events/${eventId}`) + `/events/${eventId}`.length);
 
   if (orders.length === 0) {
     return (
@@ -27,13 +30,13 @@ export function OrdersTable({
         <p>No orders yet. Orders will appear here when attendees purchase paid tickets.</p>
         <div className="mt-4 flex justify-center gap-3">
           <Link
-            href={`/events/${eventId}/tickets`}
+            href={`${basePath}/tickets`}
             className="inline-flex items-center rounded-md border px-3 py-1.5 text-sm font-medium hover:bg-muted"
           >
             Set up paid tickets
           </Link>
           <Link
-            href={`/events/${eventId}/payout`}
+            href={`${basePath}/payout`}
             className="inline-flex items-center rounded-md border px-3 py-1.5 text-sm font-medium hover:bg-muted"
           >
             Connect Stripe

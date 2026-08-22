@@ -12,6 +12,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "expo-router";
+import { DrawerActions } from "@react-navigation/native";
 import { getEventDocuments } from "@attendly/supabase-client";
 import { supabase } from "../../../src/lib/supabase";
 import { useEventContext } from "../../../src/lib/event-context";
@@ -40,6 +42,7 @@ function formatFileSize(bytes?: number | null): string {
 }
 
 export default function DocumentsScreen() {
+  const navigation = useNavigation();
   const { currentEvent } = useEventContext();
   const queryClient = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
@@ -55,26 +58,6 @@ export default function DocumentsScreen() {
     await queryClient.invalidateQueries({ queryKey: ["documents"] });
     setRefreshing(false);
   }, [queryClient]);
-
-  if (!currentEvent) {
-    return (
-      <SafeAreaView style={shared.centered} edges={["bottom"]}>
-        <EmptyState
-          icon="calendar-outline"
-          title="Select an event"
-          subtitle="Go to My Events to choose an event"
-        />
-      </SafeAreaView>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <SafeAreaView style={shared.centered} edges={["bottom"]}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </SafeAreaView>
-    );
-  }
 
   const renderDocument = ({ item }: { item: any }) => {
     const icon = getFileIcon(item.file_type);
@@ -109,8 +92,28 @@ export default function DocumentsScreen() {
     );
   };
 
-  return (
-    <SafeAreaView style={shared.screen} edges={["bottom"]}>
+  const renderContent = () => {
+    if (!currentEvent) {
+      return (
+        <View style={shared.centered}>
+          <EmptyState
+            icon="calendar-outline"
+            title="Select an event"
+            subtitle="Go to My Events to choose an event"
+          />
+        </View>
+      );
+    }
+
+    if (isLoading) {
+      return (
+        <View style={shared.centered}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      );
+    }
+
+    return (
       <FlatList
         data={documents ?? []}
         keyExtractor={(item: any) => item.id}
@@ -131,6 +134,25 @@ export default function DocumentsScreen() {
           />
         }
       />
+    );
+  };
+
+  return (
+    <SafeAreaView style={shared.screen} edges={["bottom"]}>
+      {/* Custom Header */}
+      <View style={styles.headerSection}>
+        <View style={styles.headerRow}>
+          <TouchableOpacity
+            onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
+            style={styles.menuBtn}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="menu" size={24} color={colors.textPrimary} />
+          </TouchableOpacity>
+        </View>
+        <Text style={styles.pageTitle}>Resources</Text>
+      </View>
+      {renderContent()}
     </SafeAreaView>
   );
 }
@@ -176,5 +198,23 @@ const styles = StyleSheet.create({
   docSize: {
     ...typography.small,
     color: colors.textMuted,
+  },
+  headerSection: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.md,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: spacing.sm,
+  },
+  menuBtn: {
+    padding: 4,
+  },
+  pageTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: colors.textPrimary,
   },
 });

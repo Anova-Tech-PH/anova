@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -28,6 +29,8 @@ export function GroupDetailPageClient({
 }: GroupDetailPageClientProps) {
   const [isPending, startTransition] = useTransition();
   const { confirm, dialog: confirmDialog } = useConfirm();
+  const pathname = usePathname();
+  const basePath = pathname.slice(0, pathname.indexOf(`/events/${eventId}`) + `/events/${eventId}`.length);
 
   async function handleDeletePost(postId: string) {
     const ok = await confirm({
@@ -50,7 +53,7 @@ export function GroupDetailPageClient({
     <div className="space-y-8">
       <div>
         <Link
-          href={`/events/${eventId}/social-groups`}
+          href={`${basePath}/social-groups`}
           className="mb-3 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />

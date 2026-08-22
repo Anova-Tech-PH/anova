@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { Camera, Loader2, Plus, Trash2, Eye, EyeOff } from "lucide-react";
+import { Camera, Loader2, Plus, Trash2, Eye, EyeOff, User, Phone, Briefcase, GraduationCap, Link2, Globe } from "lucide-react";
 import { Avatar, Button, Input, Textarea } from "@attendly/ui/components";
 import { createClient } from "@attendly/ui/supabase/client";
 import { toast } from "sonner";
@@ -52,6 +52,33 @@ type ProfileLink = {
   url: string;
   label?: string;
 };
+
+function SectionCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div className={`rounded-xl border bg-card p-5 sm:p-6 ${className}`}>
+      {children}
+    </div>
+  );
+}
+
+function SectionHeader({ icon: Icon, title, subtitle }: { icon: React.ElementType; title: string; subtitle?: string }) {
+  return (
+    <div className="mb-5">
+      <div className="flex items-center gap-2 mb-1">
+        <Icon className="h-4 w-4 text-primary" />
+        <h3 className="text-sm font-semibold">{title}</h3>
+      </div>
+      {subtitle && <p className="text-xs text-muted-foreground ml-6">{subtitle}</p>}
+    </div>
+  );
+}
+
+function LinkTypeIcon({ type }: { type: string }) {
+  switch (type) {
+    case "website": return <Globe className="h-4 w-4 text-muted-foreground" />;
+    default: return <Link2 className="h-4 w-4 text-muted-foreground" />;
+  }
+}
 
 export function ProfileEditor({
   profile,
@@ -305,7 +332,8 @@ export function ProfileEditor({
   }
 
   return (
-    <div className="mx-auto max-w-xl space-y-8 py-6">
+    <div className="mx-auto max-w-xl space-y-5 py-6">
+      {/* Header */}
       <div>
         <h1 className="text-2xl font-bold">Edit Profile</h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -313,107 +341,122 @@ export function ProfileEditor({
         </p>
       </div>
 
-      {/* Avatar */}
-      <div className="flex flex-col items-center gap-3">
-        <div className="relative">
-          <Avatar
-            src={avatarUrl || null}
-            name={displayName || "?"}
-            size="xl"
-            className="h-20 w-20 text-xl"
-          />
-          <button
-            type="button"
-            disabled={uploading}
-            onClick={() => fileRef.current?.click()}
-            className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-colors disabled:opacity-50"
-          >
-            {uploading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Camera className="h-4 w-4" />
+      {/* Avatar Card */}
+      <SectionCard>
+        <div className="flex items-center gap-5">
+          <div className="relative shrink-0">
+            <Avatar
+              src={avatarUrl || null}
+              name={displayName || "?"}
+              size="xl"
+              className="h-20 w-20 text-xl"
+            />
+            <button
+              type="button"
+              disabled={uploading}
+              onClick={() => fileRef.current?.click()}
+              className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-colors disabled:opacity-50"
+            >
+              {uploading ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Camera className="h-3.5 w-3.5" />
+              )}
+            </button>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleAvatarUpload}
+            />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-base font-semibold truncate">{displayName || "Your Name"}</p>
+            {(title || company) && (
+              <p className="text-sm text-muted-foreground truncate">
+                {[title, company].filter(Boolean).join(" at ")}
+              </p>
             )}
-          </button>
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handleAvatarUpload}
-          />
+            <button
+              type="button"
+              disabled={uploading}
+              onClick={() => fileRef.current?.click()}
+              className="mt-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors disabled:opacity-50"
+            >
+              Change photo
+            </button>
+          </div>
         </div>
-        <button
-          type="button"
-          disabled={uploading}
-          onClick={() => fileRef.current?.click()}
-          className="text-sm font-medium text-primary hover:text-primary/80 transition-colors disabled:opacity-50"
-        >
-          Change photo
-        </button>
-      </div>
+      </SectionCard>
 
-      {/* Form fields */}
-      <div className="space-y-5">
-        <div>
-          <label className="mb-1.5 block text-sm font-medium">
-            Display Name <span className="text-destructive">*</span>
-          </label>
-          <Input
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-            placeholder="Your name"
-            required
-          />
-        </div>
+      {/* Basic Information */}
+      <SectionCard>
+        <SectionHeader icon={User} title="Basic Information" />
+        <div className="space-y-4">
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Display Name <span className="text-destructive">*</span>
+            </label>
+            <Input
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              placeholder="Your name"
+              required
+            />
+          </div>
 
-        <div>
-          <label className="mb-1.5 block text-sm font-medium">Title</label>
-          <Input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="e.g. Software Engineer"
-          />
-        </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-muted-foreground uppercase tracking-wide">Title</label>
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="e.g. Software Engineer"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-muted-foreground uppercase tracking-wide">Company</label>
+              <Input
+                value={company}
+                onChange={(e) => setCompany(e.target.value)}
+                placeholder="e.g. Acme Corp"
+              />
+            </div>
+          </div>
 
-        <div>
-          <label className="mb-1.5 block text-sm font-medium">Company</label>
-          <Input
-            value={company}
-            onChange={(e) => setCompany(e.target.value)}
-            placeholder="e.g. Acme Corp"
-          />
-        </div>
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-muted-foreground uppercase tracking-wide">Location</label>
+            <Input
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="e.g. San Francisco, CA"
+            />
+          </div>
 
-        <div>
-          <label className="mb-1.5 block text-sm font-medium">Location</label>
-          <Input
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            placeholder="e.g. San Francisco, CA"
-          />
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-muted-foreground uppercase tracking-wide">Bio</label>
+            <Textarea
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              placeholder="Tell other attendees about yourself..."
+              rows={3}
+            />
+          </div>
         </div>
-
-        <div>
-          <label className="mb-1.5 block text-sm font-medium">Bio</label>
-          <Textarea
-            value={bio}
-            onChange={(e) => setBio(e.target.value)}
-            placeholder="Tell other attendees about yourself..."
-            rows={4}
-          />
-        </div>
-      </div>
+      </SectionCard>
 
       {/* Contact Information */}
-      <div>
-        <label className="mb-3 block text-sm font-medium">Contact Information</label>
-        <p className="mb-4 text-xs text-muted-foreground">
-          Toggle visibility to control what other attendees can see.
-        </p>
-        <div className="space-y-4">
-          <div className="flex items-start gap-3">
+      <SectionCard>
+        <SectionHeader
+          icon={Phone}
+          title="Contact Information"
+          subtitle="Toggle visibility to control what other attendees can see."
+        />
+        <div className="space-y-3">
+          <div className="flex items-end gap-2">
             <div className="flex-1">
-              <label className="mb-1.5 block text-sm font-medium">Phone</label>
+              <label className="mb-1.5 block text-xs font-medium text-muted-foreground uppercase tracking-wide">Phone</label>
               <Input
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
@@ -424,7 +467,7 @@ export function ProfileEditor({
             <button
               type="button"
               onClick={() => setShowPhone(!showPhone)}
-              className={`mt-7 flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
+              className={`flex h-9 items-center gap-1.5 rounded-lg border px-3 text-xs font-medium transition-colors shrink-0 ${
                 showPhone
                   ? "border-primary/30 bg-primary/10 text-primary"
                   : "border-border text-muted-foreground hover:bg-accent"
@@ -436,9 +479,9 @@ export function ProfileEditor({
             </button>
           </div>
 
-          <div className="flex items-start gap-3">
+          <div className="flex items-end gap-2">
             <div className="flex-1">
-              <label className="mb-1.5 block text-sm font-medium">Email</label>
+              <label className="mb-1.5 block text-xs font-medium text-muted-foreground uppercase tracking-wide">Email</label>
               <Input
                 value={contactEmail}
                 onChange={(e) => setContactEmail(e.target.value)}
@@ -449,7 +492,7 @@ export function ProfileEditor({
             <button
               type="button"
               onClick={() => setShowEmail(!showEmail)}
-              className={`mt-7 flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
+              className={`flex h-9 items-center gap-1.5 rounded-lg border px-3 text-xs font-medium transition-colors shrink-0 ${
                 showEmail
                   ? "border-primary/30 bg-primary/10 text-primary"
                   : "border-border text-muted-foreground hover:bg-accent"
@@ -461,9 +504,9 @@ export function ProfileEditor({
             </button>
           </div>
 
-          <div className="flex items-start gap-3">
+          <div className="flex items-end gap-2">
             <div className="flex-1">
-              <label className="mb-1.5 block text-sm font-medium">Address</label>
+              <label className="mb-1.5 block text-xs font-medium text-muted-foreground uppercase tracking-wide">Address</label>
               <Input
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
@@ -473,7 +516,7 @@ export function ProfileEditor({
             <button
               type="button"
               onClick={() => setShowAddress(!showAddress)}
-              className={`mt-7 flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
+              className={`flex h-9 items-center gap-1.5 rounded-lg border px-3 text-xs font-medium transition-colors shrink-0 ${
                 showAddress
                   ? "border-primary/30 bg-primary/10 text-primary"
                   : "border-border text-muted-foreground hover:bg-accent"
@@ -485,15 +528,15 @@ export function ProfileEditor({
             </button>
           </div>
         </div>
-      </div>
+      </SectionCard>
 
       {/* Affiliations */}
-      <div>
-        <label className="mb-3 block text-sm font-medium">Affiliations</label>
+      <SectionCard>
+        <SectionHeader icon={Briefcase} title="Affiliations" />
         {affiliations.length > 0 && (
-          <div className="space-y-2 mb-3">
+          <div className="space-y-2 mb-4">
             {affiliations.map((aff) => (
-              <div key={aff.id} className="flex items-center justify-between rounded-lg border p-3">
+              <div key={aff.id} className="flex items-center justify-between rounded-lg border bg-muted/30 p-3">
                 <div>
                   <p className="text-sm font-medium">{aff.organization}</p>
                   <p className="text-xs text-muted-foreground">
@@ -505,16 +548,16 @@ export function ProfileEditor({
                 <button
                   type="button"
                   onClick={() => handleRemoveAffiliation(aff.id)}
-                  className="text-xs text-destructive hover:underline"
+                  className="rounded-md p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                 >
-                  Remove
+                  <Trash2 className="h-3.5 w-3.5" />
                 </button>
               </div>
             ))}
           </div>
         )}
         {showAddAffiliation ? (
-          <div className="space-y-3 rounded-lg border p-4">
+          <div className="space-y-3 rounded-lg border border-dashed p-4">
             <Input value={affOrg} onChange={(e) => setAffOrg(e.target.value)} placeholder="Organization *" maxLength={200} />
             <Input value={affRole} onChange={(e) => setAffRole(e.target.value)} placeholder="Role" maxLength={200} />
             <div className="flex gap-3">
@@ -522,7 +565,7 @@ export function ProfileEditor({
               <Input type="month" value={affEnd} onChange={(e) => setAffEnd(e.target.value)} disabled={affPresent} className="flex-1" />
             </div>
             <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={affPresent} onChange={(e) => { setAffPresent(e.target.checked); if (e.target.checked) setAffEnd(""); }} />
+              <input type="checkbox" checked={affPresent} onChange={(e) => { setAffPresent(e.target.checked); if (e.target.checked) setAffEnd(""); }} className="rounded" />
               Present
             </label>
             <div className="flex gap-2">
@@ -531,19 +574,20 @@ export function ProfileEditor({
             </div>
           </div>
         ) : (
-          <button type="button" onClick={() => setShowAddAffiliation(true)} className="text-sm font-medium text-primary hover:text-primary/80">
-            + Add affiliation
+          <button type="button" onClick={() => setShowAddAffiliation(true)} className="flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 transition-colors">
+            <Plus className="h-3.5 w-3.5" />
+            Add affiliation
           </button>
         )}
-      </div>
+      </SectionCard>
 
       {/* Education */}
-      <div>
-        <label className="mb-3 block text-sm font-medium">Education</label>
+      <SectionCard>
+        <SectionHeader icon={GraduationCap} title="Education" />
         {education.length > 0 && (
-          <div className="space-y-2 mb-3">
+          <div className="space-y-2 mb-4">
             {education.map((edu) => (
-              <div key={edu.id} className="flex items-center justify-between rounded-lg border p-3">
+              <div key={edu.id} className="flex items-center justify-between rounded-lg border bg-muted/30 p-3">
                 <div>
                   <p className="text-sm font-medium">{edu.school}</p>
                   <p className="text-xs text-muted-foreground">
@@ -553,15 +597,15 @@ export function ProfileEditor({
                     ].filter(Boolean).join(" · ")}
                   </p>
                 </div>
-                <button type="button" onClick={() => handleRemoveEducation(edu.id)} className="text-xs text-destructive hover:underline">
-                  Remove
+                <button type="button" onClick={() => handleRemoveEducation(edu.id)} className="rounded-md p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors">
+                  <Trash2 className="h-3.5 w-3.5" />
                 </button>
               </div>
             ))}
           </div>
         )}
         {showAddEducation ? (
-          <div className="space-y-3 rounded-lg border p-4">
+          <div className="space-y-3 rounded-lg border border-dashed p-4">
             <Input value={eduSchool} onChange={(e) => setEduSchool(e.target.value)} placeholder="School *" maxLength={200} />
             <Input value={eduDegree} onChange={(e) => setEduDegree(e.target.value)} placeholder="Degree" maxLength={200} />
             <Input value={eduField} onChange={(e) => setEduField(e.target.value)} placeholder="Field of study" maxLength={200} />
@@ -570,7 +614,7 @@ export function ProfileEditor({
               <Input value={eduEndYear} onChange={(e) => setEduEndYear(e.target.value)} placeholder="End year" type="number" min={1950} max={2030} disabled={eduPresent} className="flex-1" />
             </div>
             <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={eduPresent} onChange={(e) => { setEduPresent(e.target.checked); if (e.target.checked) setEduEndYear(""); }} />
+              <input type="checkbox" checked={eduPresent} onChange={(e) => { setEduPresent(e.target.checked); if (e.target.checked) setEduEndYear(""); }} className="rounded" />
               Present
             </label>
             <div className="flex gap-2">
@@ -579,26 +623,27 @@ export function ProfileEditor({
             </div>
           </div>
         ) : (
-          <button type="button" onClick={() => setShowAddEducation(true)} className="text-sm font-medium text-primary hover:text-primary/80">
-            + Add education
+          <button type="button" onClick={() => setShowAddEducation(true)} className="flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 transition-colors">
+            <Plus className="h-3.5 w-3.5" />
+            Add education
           </button>
         )}
-      </div>
+      </SectionCard>
 
       {/* Interests */}
       {interests.length > 0 && (
-        <div>
-          <label className="mb-3 block text-sm font-medium">Interests</label>
+        <SectionCard>
+          <SectionHeader icon={Globe} title="Interests" subtitle="Select topics you're interested in to help with networking." />
           <div className="flex flex-wrap gap-2">
             {interests.map((interest) => {
               const checked = checkedInterests.has(interest.id);
               return (
                 <label
                   key={interest.id}
-                  className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors select-none ${
+                  className={`flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition-colors select-none ${
                     checked
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-border hover:bg-accent"
+                      ? "border-primary bg-primary/10 text-primary font-medium"
+                      : "border-border hover:bg-accent text-muted-foreground"
                   }`}
                 >
                   <input
@@ -612,30 +657,31 @@ export function ProfileEditor({
               );
             })}
           </div>
-        </div>
+        </SectionCard>
       )}
 
       {/* Links */}
-      <div>
-        <label className="mb-3 block text-sm font-medium">Links</label>
+      <SectionCard>
+        <SectionHeader icon={Link2} title="Links" />
         {links.length > 0 && (
-          <div className="space-y-2 mb-3">
+          <div className="space-y-2 mb-4">
             {links.map((link, i) => (
-              <div key={i} className="flex items-center justify-between rounded-lg border p-3">
-                <div className="min-w-0">
+              <div key={i} className="flex items-center gap-3 rounded-lg border bg-muted/30 p-3">
+                <LinkTypeIcon type={link.type} />
+                <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium truncate">{link.label || link.url}</p>
                   <p className="text-xs text-muted-foreground capitalize">{link.type}</p>
                 </div>
-                <button type="button" onClick={() => handleRemoveLink(i)} className="text-xs text-destructive hover:underline shrink-0 ml-2">
-                  Remove
+                <button type="button" onClick={() => handleRemoveLink(i)} className="rounded-md p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0">
+                  <Trash2 className="h-3.5 w-3.5" />
                 </button>
               </div>
             ))}
           </div>
         )}
         {showAddLink ? (
-          <div className="space-y-3 rounded-lg border p-4">
-            <select value={linkType} onChange={(e) => setLinkType(e.target.value as ProfileLink["type"])} className="w-full rounded-md border px-3 py-2 text-sm">
+          <div className="space-y-3 rounded-lg border border-dashed p-4">
+            <select value={linkType} onChange={(e) => setLinkType(e.target.value as ProfileLink["type"])} className="w-full rounded-md border bg-background px-3 py-2 text-sm">
               <option value="linkedin">LinkedIn</option>
               <option value="twitter">Twitter / X</option>
               <option value="github">GitHub</option>
@@ -650,42 +696,46 @@ export function ProfileEditor({
             </div>
           </div>
         ) : (
-          <button type="button" onClick={() => setShowAddLink(true)} className="text-sm font-medium text-primary hover:text-primary/80">
-            + Add link
+          <button type="button" onClick={() => setShowAddLink(true)} className="flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 transition-colors">
+            <Plus className="h-3.5 w-3.5" />
+            Add link
           </button>
         )}
-      </div>
+      </SectionCard>
 
       {/* Directory visibility */}
-      <div className="flex items-center justify-between rounded-lg border p-4">
-        <div>
-          <p className="text-sm font-medium">Directory Visibility</p>
-          <p className="text-sm text-muted-foreground">
-            Show my profile in the attendee directory
-          </p>
-        </div>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={isVisible}
-          onClick={() => setIsVisible(!isVisible)}
-          className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
-            isVisible ? "bg-primary" : "bg-muted"
-          }`}
-        >
-          <span
-            className={`pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform ${
-              isVisible ? "translate-x-5" : "translate-x-0"
+      <SectionCard>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-semibold">Directory Visibility</p>
+            <p className="text-xs text-muted-foreground">
+              Show my profile in the attendee directory
+            </p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={isVisible}
+            onClick={() => setIsVisible(!isVisible)}
+            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
+              isVisible ? "bg-primary" : "bg-muted"
             }`}
-          />
-        </button>
-      </div>
+          >
+            <span
+              className={`pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform ${
+                isVisible ? "translate-x-5" : "translate-x-0"
+              }`}
+            />
+          </button>
+        </div>
+      </SectionCard>
 
       {/* Save */}
       <Button
         onClick={handleSave}
         disabled={isPending || uploading || !displayName.trim()}
-        className="w-full sm:w-auto"
+        className="w-full"
+        size="lg"
       >
         {isPending ? (
           <>

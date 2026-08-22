@@ -8,6 +8,7 @@ interface EventData {
   id: string;
   title: string;
   slug: string;
+  description: string | null;
   start_date: string;
   end_date: string;
   venue_name: string | null;

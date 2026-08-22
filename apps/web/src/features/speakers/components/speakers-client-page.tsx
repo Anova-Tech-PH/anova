@@ -156,22 +156,18 @@ export function SpeakersClientPage({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Hero Banner */}
-      <div className="bg-[oklch(0.445_0.107_195)] text-white py-12 px-4">
-        <div className="max-w-6xl mx-auto text-center">
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">
-            Meet Our Speakers
-          </h1>
-          <p className="text-white/80 text-lg">
-            {speakers.length} speaker{speakers.length !== 1 ? "s" : ""} at{" "}
-            {eventTitle}
-          </p>
-        </div>
+    <div className="min-h-screen">
+      {/* Header */}
+      <div className="max-w-6xl mx-auto px-4 pt-6 pb-4">
+        <h1 className="text-2xl font-bold text-gray-900">Speakers</h1>
+        <p className="text-sm text-gray-500 mt-1">
+          {speakers.length} speaker{speakers.length !== 1 ? "s" : ""} at{" "}
+          {eventTitle}
+        </p>
       </div>
 
       {/* Filters Row */}
-      <div className="max-w-6xl mx-auto px-4 py-6">
+      <div className="max-w-6xl mx-auto px-4 pb-6">
         <div className="grid grid-cols-2 gap-3 mb-6 sm:flex sm:flex-wrap sm:items-center">
           {/* Day filter */}
           <select
@@ -237,14 +233,15 @@ export function SpeakersClientPage({
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {filteredSpeakers.map((speaker) => (
               <div
                 key={speaker.id}
-                className="bg-white rounded-lg border shadow-sm overflow-hidden flex flex-col"
+                onClick={() => setSelectedSpeaker(speaker)}
+                className="bg-white rounded-lg border shadow-sm overflow-hidden flex flex-row items-center gap-4 p-4 cursor-pointer hover:bg-gray-50 sm:flex-col sm:items-stretch sm:gap-0 sm:p-0"
               >
-                {/* Square photo area */}
-                <div className="aspect-square bg-gray-100 flex items-center justify-center overflow-hidden">
+                {/* Photo area - circle on mobile, square on sm+ */}
+                <div className="h-16 w-16 shrink-0 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden sm:h-auto sm:w-full sm:rounded-none sm:aspect-[4/3]">
                   {speaker.photo ? (
                     <img
                       src={speaker.photo}
@@ -252,33 +249,35 @@ export function SpeakersClientPage({
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <span className="text-4xl font-bold text-gray-400">
+                    <span className="text-xl font-bold text-gray-400 sm:text-4xl">
                       {getInitials(speaker.name)}
                     </span>
                   )}
                 </div>
 
                 {/* Card body */}
-                <div className="p-4 flex flex-col flex-1">
-                  <h3 className="font-semibold text-gray-900">
+                <div className="flex flex-col flex-1 min-w-0 sm:p-4">
+                  <h3 className="font-semibold text-gray-900 truncate">
                     {speaker.name}
                   </h3>
                   {speaker.title && (
-                    <p className="text-sm text-gray-600 mt-0.5">
+                    <p className="text-sm text-gray-600 mt-0.5 truncate">
                       {speaker.title}
                     </p>
                   )}
-                  <span className="inline-block mt-2 text-xs font-medium bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full w-fit">
+                  {speaker.company && (
+                    <p className="text-xs text-gray-400 mt-0.5 truncate sm:hidden">
+                      {speaker.company}
+                    </p>
+                  )}
+                  <span className="inline-block mt-1.5 text-xs font-medium bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full w-fit sm:mt-2">
                     Speaker
                   </span>
-                  <div className="mt-auto pt-3">
-                    <button
-                      onClick={() => setSelectedSpeaker(speaker)}
-                      className="w-full text-center text-sm font-medium text-blue-600 border border-blue-600 rounded-md py-1.5 hover:bg-blue-50"
-                    >
-                      View Profile
-                    </button>
-                  </div>
+                </div>
+
+                {/* Chevron on mobile */}
+                <div className="text-gray-400 sm:hidden">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
                 </div>
               </div>
             ))}

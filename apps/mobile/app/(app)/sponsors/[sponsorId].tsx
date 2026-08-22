@@ -53,7 +53,7 @@ export default function SponsorDetailScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={shared.centered} edges={["bottom"]}>
+      <SafeAreaView style={shared.centered} edges={["top", "bottom"]}>
         <ActivityIndicator size="large" color={colors.primary} />
       </SafeAreaView>
     );
@@ -61,7 +61,7 @@ export default function SponsorDetailScreen() {
 
   if (!sponsor) {
     return (
-      <SafeAreaView style={shared.centered} edges={["bottom"]}>
+      <SafeAreaView style={shared.centered} edges={["top", "bottom"]}>
         <EmptyState
           icon="ribbon-outline"
           title="Sponsor not found"
@@ -75,7 +75,18 @@ export default function SponsorDetailScreen() {
   const coupons = sponsor.coupons ?? [];
 
   return (
-    <SafeAreaView style={shared.screen} edges={["bottom"]}>
+    <SafeAreaView style={shared.screen} edges={["top", "bottom"]}>
+      {/* Custom Header */}
+      <View style={styles.customHeader}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.backBtn}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle} numberOfLines={1}>{(sponsor as any)?.name ?? "Sponsor"}</Text>
+      </View>
       <ScrollView
         refreshControl={
           <RefreshControl
@@ -191,6 +202,26 @@ export default function SponsorDetailScreen() {
 }
 
 const styles = StyleSheet.create({
+  customHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderLight,
+    backgroundColor: colors.surface,
+  },
+  backBtn: {
+    padding: 4,
+    marginRight: 4,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: colors.textPrimary,
+    flex: 1,
+  },
   header: {
     alignItems: "center",
     padding: spacing.xl,

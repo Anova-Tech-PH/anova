@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import {
   FileText,
   Plus,
@@ -50,6 +50,8 @@ export function ConsentFormsPageClient({
   forms: initialForms,
 }: ConsentFormsPageClientProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const basePath = pathname.slice(0, pathname.indexOf(`/events/${eventId}`) + `/events/${eventId}`.length);
   const [forms, setForms] = useState(initialForms);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -75,7 +77,7 @@ export function ConsentFormsPageClient({
         );
         toast.success("Form created");
         setShowCreateModal(false);
-        router.push(`/events/${eventId}/release-consent-forms/${form.id}`);
+        router.push(`${basePath}/release-consent-forms/${form.id}`);
       } catch (err) {
         toast.error(
           err instanceof Error ? err.message : "Failed to create form"

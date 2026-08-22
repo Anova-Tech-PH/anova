@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { ArrowLeft, Hammer, FileText } from "lucide-react";
 import { Button } from "@attendly/ui/components";
 import { FormSettings } from "./form-settings";
@@ -30,6 +30,8 @@ export function FormDetailClient({
   formUrl,
 }: FormDetailClientProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const basePath = pathname.slice(0, pathname.indexOf(`/events/${eventId}`) + `/events/${eventId}`.length);
   const [currentTab, setCurrentTab] = useState<"builder" | "submissions">(
     "builder"
   );
@@ -41,7 +43,7 @@ export function FormDetailClient({
           variant="ghost"
           size="sm"
           onClick={() =>
-            router.push(`/events/${eventId}/release-consent-forms`)
+            router.push(`${basePath}/release-consent-forms`)
           }
         >
           <ArrowLeft className="h-4 w-4" />

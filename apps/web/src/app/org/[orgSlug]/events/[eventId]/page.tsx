@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@attendly/ui/supabase/server";
 import { BasicsForm } from "./basics-form";
+import { JoinCodeCard } from "./join-code-card";
 
 export default async function EventBasicsPage({
   params,
@@ -18,5 +19,10 @@ export default async function EventBasicsPage({
 
   if (!event) notFound();
 
-  return <BasicsForm event={event} />;
+  return (
+    <div className="space-y-6">
+      {event.join_code && <JoinCodeCard joinCode={event.join_code} />}
+      <BasicsForm event={event} />
+    </div>
+  );
 }

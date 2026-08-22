@@ -54,6 +54,12 @@ export async function GET(request: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
+    const { data: org } = await adminSupabase
+      .from("organizations")
+      .select("slug")
+      .eq("id", organizationId)
+      .single();
+
     const { data: recentEvent } = await adminSupabase
       .from("events")
       .select("id")
@@ -62,9 +68,9 @@ export async function GET(request: NextRequest) {
       .limit(1)
       .single();
 
-    if (recentEvent) {
+    if (recentEvent && org) {
       return NextResponse.redirect(
-        new URL(`/events/${recentEvent.id}/payout`, request.url)
+        new URL(`/org/${org.slug}/events/${recentEvent.id}/payout`, request.url)
       );
     }
 

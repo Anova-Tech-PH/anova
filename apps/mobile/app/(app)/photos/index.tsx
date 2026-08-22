@@ -18,8 +18,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-import { useRouter } from "expo-router";
+import { useRouter, useNavigation } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { DrawerActions } from "@react-navigation/native";
 import { getPhotos, togglePhotoLike, uploadPhoto } from "@attendly/supabase-client";
 import { supabase } from "../../../src/lib/supabase";
 import { useAuth } from "../../../src/lib/auth-context";
@@ -27,11 +28,13 @@ import { useEventContext } from "../../../src/lib/event-context";
 import { EmptyState } from "../../../src/components/empty-state";
 import { colors, typography, spacing, radius, shadows, shared } from "../../../src/theme";
 
-const NUM_COLUMNS = 3;
+const NUM_COLUMNS = 2;
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const GRID_PADDING = spacing.lg;
-const GAP = spacing.xs;
+const GAP = spacing.md;
 const TILE_SIZE = (SCREEN_WIDTH - GRID_PADDING * 2 - GAP * (NUM_COLUMNS - 1)) / NUM_COLUMNS;
+
+type Tab = "all" | "photos" | "videos";
 
 // ── Upload Helper ─────────────────────────────────────────────────
 
@@ -58,7 +61,9 @@ export default function PhotosScreen() {
   const { currentEvent } = useEventContext();
   const queryClient = useQueryClient();
   const router = useRouter();
+  const navigation = useNavigation();
   const [refreshing, setRefreshing] = useState(false);
+  const [activeTab, setActiveTab] = useState<Tab>("all");
   const [uploadModalVisible, setUploadModalVisible] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [caption, setCaption] = useState("");
@@ -127,27 +132,66 @@ export default function PhotosScreen() {
     }
   };
 
+  const header = (
+    <View style={styles.headerSection}>
+      <View style={styles.headerRow}>
+        <View style={{ flex: 1 }}>
+          <TouchableOpacity
+            onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
+            style={styles.menuBtn}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="menu" size={24} color={colors.textPrimary} />
+          </TouchableOpacity>
+        </View>
+      </View>
+      <Text style={styles.pageTitle}>Photos</Text>
+    </View>
+  );
+
   if (!currentEvent) {
     return (
-      <SafeAreaView style={shared.centered} edges={["bottom"]}>
-        <EmptyState
-          icon="calendar-outline"
-          title="Select an event"
-          subtitle="Go to My Events to choose an event"
-        />
+      <SafeAreaView style={shared.screen} edges={["bottom"]}>
+        {header}
+        <View style={shared.centered}>
+          <EmptyState
+            icon="calendar-outline"
+            title="Select an event"
+            subtitle="Go to My Events to choose an event"
+          />
+        </View>
       </SafeAreaView>
     );
   }
 
   if (isLoading) {
     return (
-      <SafeAreaView style={shared.centered} edges={["bottom"]}>
-        <ActivityIndicator size="large" color={colors.primary} />
+      <SafeAreaView style={shared.screen} edges={["bottom"]}>
+        {header}
+        <View style={shared.centered}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
       </SafeAreaView>
     );
   }
 
-  const photos = data?.photos ?? [];
+  const allPhotos = data?.photos ?? [];
+
+  // Filter by tab
+  const photos = activeTab === "all"
+    ? allPhotos
+    : allPhotos.filter((p: any) =>
+        activeTab === "photos" ? p.media_type !== "video" : p.media_type === "video"
+      );
+
+  const photosCount = allPhotos.filter((p: any) => p.media_type !== "video").length;
+  const videosCount = allPhotos.filter((p: any) => p.media_type === "video").length;
+
+  const tabs: { key: Tab; label: string; count: number; icon: string }[] = [
+    { key: "all", label: "All Media", count: allPhotos.length, icon: "camera-outline" },
+    { key: "photos", label: "Photos", count: photosCount, icon: "image-outline" },
+    { key: "videos", label: "Videos", count: videosCount, icon: "film-outline" },
+  ];
 
   const renderPhoto = ({ item, index }: { item: any; index: number }) => {
     const isLiked = item.is_liked;
@@ -157,39 +201,105 @@ export default function PhotosScreen() {
       <TouchableOpacity
         activeOpacity={0.85}
         onPress={() => router.push(`/photos/${item.id}` as any)}
-        style={[styles.tile, !isLastInRow && { marginRight: GAP }]}
+        style={[styles.card, !isLastInRow && { marginRight: GAP }]}
       >
-        <Image
-          source={{ uri: item.image_url }}
-          style={styles.image}
-          contentFit="cover"
-          transition={200}
-        />
-        <View style={styles.overlay}>
-          <TouchableOpacity
-            style={styles.likeButton}
-            onPress={(e) => {
-              e.stopPropagation?.();
-              if (user) likeMutation.mutate({ photoId: item.id });
-            }}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <Ionicons
-              name={isLiked ? "heart" : "heart-outline"}
-              size={18}
-              color={isLiked ? colors.error : colors.white}
-            />
-            {item.likes_count > 0 && (
-              <Text style={styles.likeCount}>{item.likes_count}</Text>
-            )}
-          </TouchableOpacity>
+        <View style={styles.imageContainer}>
+          <Image
+            source={{ uri: item.image_url }}
+            style={styles.image}
+            contentFit="cover"
+            transition={200}
+          />
+          {/* Gradient overlay */}
+          <View style={styles.gradientOverlay}>
+            <View style={styles.overlayContent}>
+              <Text style={styles.authorText} numberOfLines={1}>
+                By {item.author?.display_name ?? "Unknown"}
+              </Text>
+              <TouchableOpacity
+                style={styles.likeButton}
+                onPress={(e) => {
+                  e.stopPropagation?.();
+                  if (user) likeMutation.mutate({ photoId: item.id });
+                }}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Ionicons
+                  name={isLiked ? "heart" : "heart-outline"}
+                  size={16}
+                  color={isLiked ? "#ef4444" : colors.white}
+                />
+                {item.likes_count > 0 && (
+                  <Text style={styles.likeCount}>{item.likes_count}</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
+        {item.caption && (
+          <View style={styles.captionContainer}>
+            <Text style={styles.captionText} numberOfLines={2}>{item.caption}</Text>
+          </View>
+        )}
       </TouchableOpacity>
     );
   };
 
   return (
     <SafeAreaView style={shared.screen} edges={["bottom"]}>
+      {/* Header */}
+      <View style={styles.headerSection}>
+        <View style={styles.headerRow}>
+          <View style={{ flex: 1 }}>
+            <TouchableOpacity
+              onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
+              style={styles.menuBtn}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="menu" size={24} color={colors.textPrimary} />
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity
+            style={styles.shareBtn}
+            onPress={pickImage}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="add" size={18} color={colors.white} />
+            <Text style={styles.shareBtnText}>Share a photo</Text>
+          </TouchableOpacity>
+        </View>
+        <Text style={styles.pageTitle}>Photos</Text>
+        <Text style={styles.pageSubtitle}>
+          {allPhotos.length} {allPhotos.length === 1 ? "photo" : "photos"}
+        </Text>
+      </View>
+
+      {/* Tabs */}
+      <View style={styles.tabBar}>
+        {tabs.map((tab) => {
+          const isActive = activeTab === tab.key;
+          return (
+            <TouchableOpacity
+              key={tab.key}
+              style={[styles.tabBtn, isActive && styles.tabBtnActive]}
+              onPress={() => setActiveTab(tab.key)}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name={tab.icon as any}
+                size={14}
+                color={isActive ? colors.primary : colors.textMuted}
+              />
+              <Text style={[styles.tabText, isActive && styles.tabTextActive]}>
+                {tab.label}
+              </Text>
+              <Text style={styles.tabCount}>({tab.count})</Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      {/* Grid */}
       <FlatList
         data={photos}
         keyExtractor={(item: any) => item.id}
@@ -211,15 +321,6 @@ export default function PhotosScreen() {
           />
         }
       />
-
-      {/* Upload FAB */}
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={pickImage}
-        activeOpacity={0.85}
-      >
-        <Ionicons name="camera" size={26} color={colors.white} />
-      </TouchableOpacity>
 
       {/* Upload Modal */}
       <Modal
@@ -298,54 +399,135 @@ export default function PhotosScreen() {
 }
 
 const styles = StyleSheet.create({
+  headerSection: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.md,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: spacing.sm,
+  },
+  menuBtn: {
+    padding: 4,
+  },
+  shareBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: colors.primary,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: radius.sm,
+  },
+  shareBtnText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.white,
+  },
+  pageTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: colors.textPrimary,
+  },
+  pageSubtitle: {
+    fontSize: 14,
+    color: colors.textMuted,
+    marginTop: 4,
+  },
+  tabBar: {
+    flexDirection: "row",
+    paddingHorizontal: spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderLight,
+    marginBottom: spacing.xs,
+  },
+  tabBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderBottomWidth: 2,
+    borderBottomColor: "transparent",
+    marginBottom: -1,
+  },
+  tabBtnActive: {
+    borderBottomColor: colors.primary,
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: colors.textMuted,
+  },
+  tabTextActive: {
+    color: colors.primary,
+  },
+  tabCount: {
+    fontSize: 12,
+    color: colors.textMuted,
+  },
   grid: {
     padding: GRID_PADDING,
-    paddingBottom: 80,
+    paddingBottom: 40,
   },
-  tile: {
+  card: {
     width: TILE_SIZE,
-    height: TILE_SIZE,
     marginBottom: GAP,
-    borderRadius: radius.sm,
+    borderRadius: radius.md,
     overflow: "hidden",
-    backgroundColor: colors.borderLight,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+  },
+  imageContainer: {
+    width: "100%",
+    aspectRatio: 1,
   },
   image: {
     width: "100%",
     height: "100%",
   },
-  overlay: {
+  gradientOverlay: {
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    paddingHorizontal: spacing.xs,
-    paddingVertical: spacing.xs,
+    paddingHorizontal: 10,
+    paddingBottom: 8,
+    paddingTop: 32,
+    backgroundColor: "rgba(0,0,0,0.35)",
+  },
+  overlayContent: {
     flexDirection: "row",
-    justifyContent: "flex-end",
     alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.25)",
+    justifyContent: "space-between",
+  },
+  authorText: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: colors.white,
+    flex: 1,
+    marginRight: 8,
   },
   likeButton: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 2,
+    gap: 4,
   },
   likeCount: {
-    ...typography.small,
+    fontSize: 12,
     color: colors.white,
   },
-  fab: {
-    position: "absolute",
-    bottom: 24,
-    right: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.primary,
-    justifyContent: "center",
-    alignItems: "center",
-    ...shadows.lg,
+  captionContainer: {
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  captionText: {
+    fontSize: 12,
+    color: colors.textMuted,
   },
 
   // Upload Modal

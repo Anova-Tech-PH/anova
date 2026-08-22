@@ -2,42 +2,51 @@ import React, { useState, useMemo, useCallback } from "react";
 import {
   View,
   Text,
-  FlatList,
+  SectionList,
   StyleSheet,
   ActivityIndicator,
   RefreshControl,
   TouchableOpacity,
+  TextInput,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useRouter, useNavigation } from "expo-router";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { Ionicons } from "@expo/vector-icons";
+import { DrawerActions } from "@react-navigation/native";
 import {
   getEventAttendees,
   getAttendeeBookmarkIds,
   toggleAttendeeBookmark,
+  saveAttendeeNote,
+  createDmConversationMutation,
+  sendMessageMutation,
 } from "@attendly/supabase-client";
 import { supabase } from "../../../src/lib/supabase";
 import { useAuth } from "../../../src/lib/auth-context";
 import { useEventContext } from "../../../src/lib/event-context";
-import { SearchBar } from "../../../src/components/search-bar";
 import { Avatar } from "../../../src/components/avatar";
 import { EmptyState } from "../../../src/components/empty-state";
-import { colors, typography, spacing, radius, shadows, shared } from "../../../src/theme";
+import { colors, spacing, radius, shadows, shared } from "../../../src/theme";
 
 type Tab = "all" | "bookmarked";
-
-const PAGE_SIZE = 30;
 
 export default function AttendeesScreen() {
   const { currentEvent } = useEventContext();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const router = useRouter();
+  const navigation = useNavigation();
   const [search, setSearch] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const [tab, setTab] = useState<Tab>("all");
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+
+  // Per-card toggle state
+  const [messageOpenId, setMessageOpenId] = useState<string | null>(null);
+  const [messageText, setMessageText] = useState("");
+  const [messageSentId, setMessageSentId] = useState<string | null>(null);
+  const [notesOpenId, setNotesOpenId] = useState<string | null>(null);
+  const [noteText, setNoteText] = useState("");
 
   const { data: attendees = [], isLoading } = useQuery({
     queryKey: ["attendees", currentEvent?.id],
@@ -75,8 +84,35 @@ export default function AttendeesScreen() {
     },
   });
 
+  const sendMsgMutation = useMutation({
+    mutationFn: async (targetUserId: string) => {
+      const conv = await createDmConversationMutation(supabase, currentEvent!.id, targetUserId);
+      await sendMessageMutation(supabase, user!.id, {
+        conversation_id: conv.id,
+        content: messageText.trim(),
+      });
+    },
+    onSuccess: (_data, targetUserId) => {
+      setMessageText("");
+      setMessageSentId(targetUserId);
+      setTimeout(() => {
+        setMessageOpenId(null);
+        setMessageSentId(null);
+      }, 2000);
+    },
+  });
+
+  const saveNoteMutation = useMutation({
+    mutationFn: (targetUserId: string) =>
+      saveAttendeeNote(supabase, user!.id, targetUserId, noteText),
+    onSuccess: () => {
+      setNotesOpenId(null);
+      setNoteText("");
+    },
+  });
+
   const filtered = useMemo(() => {
-    let list = attendees.filter((a: any) => a.full_name);
+    let list = (attendees as any[]).filter((a: any) => a.full_name);
 
     if (tab === "bookmarked") {
       list = list.filter((a: any) => bookmarkSet.has(a.id));
@@ -95,10 +131,19 @@ export default function AttendeesScreen() {
     return list;
   }, [attendees, search, tab, bookmarkSet]);
 
-  const paginatedData = useMemo(
-    () => filtered.slice(0, visibleCount),
-    [filtered, visibleCount],
-  );
+  // Group alphabetically
+  const sections = useMemo(() => {
+    const groups: Record<string, any[]> = {};
+    for (const p of filtered) {
+      const letter = (p.full_name?.[0] ?? "#").toUpperCase();
+      const key = /[A-Z]/.test(letter) ? letter : "#";
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(p);
+    }
+    return Object.entries(groups)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([letter, data]) => ({ title: letter, data }));
+  }, [filtered]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -109,124 +154,256 @@ export default function AttendeesScreen() {
     setRefreshing(false);
   };
 
-  const onEndReached = useCallback(() => {
-    if (visibleCount < filtered.length) {
-      setVisibleCount((c) => Math.min(c + PAGE_SIZE, filtered.length));
-    }
-  }, [visibleCount, filtered.length]);
+  const header = (
+    <View style={styles.headerSection}>
+      <View style={styles.headerRow}>
+        <TouchableOpacity
+          onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
+          style={styles.menuBtn}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="menu" size={24} color={colors.textPrimary} />
+        </TouchableOpacity>
+      </View>
+      <Text style={styles.pageTitle}>Attendee Directory</Text>
+    </View>
+  );
 
   if (!currentEvent) {
     return (
-      <SafeAreaView style={shared.centered} edges={["bottom"]}>
-        <EmptyState
-          icon="calendar-outline"
-          title="Select an event"
-          subtitle="Go to My Events to choose an event"
-        />
+      <SafeAreaView style={shared.screen} edges={["bottom"]}>
+        {header}
+        <View style={shared.centered}>
+          <EmptyState icon="calendar-outline" title="Select an event" subtitle="Go to My Events to choose an event" />
+        </View>
       </SafeAreaView>
     );
   }
 
   if (isLoading) {
     return (
-      <SafeAreaView style={shared.centered} edges={["bottom"]}>
-        <ActivityIndicator size="large" color={colors.primary} />
+      <SafeAreaView style={shared.screen} edges={["bottom"]}>
+        {header}
+        <View style={shared.centered}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
       </SafeAreaView>
     );
   }
 
+  const totalCount = (attendees as any[]).filter((a: any) => a.full_name).length;
+
   const renderAttendee = ({ item }: { item: any }) => {
     const isBookmarked = bookmarkSet.has(item.id);
     const isOwnProfile = user?.id === item.id;
+    const subtitle = [item.title, item.company].filter(Boolean).join(" @ ");
+    const isMessageOpen = messageOpenId === item.id;
+    const isNotesOpen = notesOpenId === item.id;
+    const isSent = messageSentId === item.id;
 
     return (
-      <TouchableOpacity
-        style={styles.attendeeCard}
-        onPress={() => router.push(`/(app)/attendees/${item.id}` as any)}
-        activeOpacity={0.7}
-      >
-        <Avatar name={item.full_name} size={48} uri={item.avatar_url} />
-        <View style={styles.attendeeInfo}>
-          <Text style={styles.attendeeName} numberOfLines={1}>
-            {item.full_name}
-          </Text>
-          {item.title && (
-            <Text style={styles.attendeeTitle} numberOfLines={1}>
-              {item.title}
-            </Text>
-          )}
-          {item.company && (
-            <View style={styles.companyRow}>
-              <Ionicons name="business-outline" size={12} color={colors.textMuted} />
-              <Text style={styles.attendeeCompany} numberOfLines={1}>
-                {item.company}
-              </Text>
-            </View>
-          )}
+      <View style={styles.cardOuter}>
+        <View style={styles.cardTop}>
+          <Avatar name={item.full_name} size={48} uri={item.avatar_url} />
+          <View style={styles.cardInfo}>
+            <TouchableOpacity onPress={() => router.push(`/(app)/attendees/${item.id}` as any)}>
+              <Text style={styles.cardName} numberOfLines={1}>{item.full_name}</Text>
+            </TouchableOpacity>
+            {subtitle ? (
+              <Text style={styles.cardSubtitle} numberOfLines={1}>{subtitle}</Text>
+            ) : null}
+          </View>
         </View>
-        {!isOwnProfile && user && (
-          <TouchableOpacity
-            style={styles.bookmarkButton}
-            onPress={(e) => {
-              e.stopPropagation?.();
-              bookmarkMutation.mutate(item.id);
-            }}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          >
-            <Ionicons
-              name={isBookmarked ? "star" : "star-outline"}
-              size={22}
-              color={isBookmarked ? colors.warning : colors.textMuted}
-            />
-          </TouchableOpacity>
+
+        {/* Action buttons */}
+        {user && (
+          <View style={styles.actionRow}>
+            <TouchableOpacity
+              style={styles.actionBtn}
+              onPress={() => {
+                setNotesOpenId(null);
+                setMessageOpenId(isMessageOpen ? null : item.id);
+                setMessageText("");
+                setMessageSentId(null);
+              }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="chatbubble-outline" size={14} color={colors.textPrimary} />
+              <Text style={styles.actionBtnText}>Say Hi!</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.actionBtn}
+              onPress={() => {
+                setMessageOpenId(null);
+                setNotesOpenId(isNotesOpen ? null : item.id);
+                setNoteText("");
+              }}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="pencil-outline" size={14} color={colors.textPrimary} />
+              <Text style={styles.actionBtnText}>Take Notes</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.actionBtn, isBookmarked && styles.actionBtnBookmarked]}
+              onPress={() => bookmarkMutation.mutate(item.id)}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name={isBookmarked ? "star" : "star-outline"}
+                size={14}
+                color={isBookmarked ? "#f59e0b" : colors.textPrimary}
+              />
+              <Text style={styles.actionBtnText}>{isBookmarked ? "Bookmarked" : "Bookmark"}</Text>
+            </TouchableOpacity>
+          </View>
         )}
-      </TouchableOpacity>
+
+        {/* Inline message */}
+        {isMessageOpen && (
+          <View style={styles.inlineSection}>
+            {isSent ? (
+              <View style={styles.sentRow}>
+                <Ionicons name="checkmark-circle" size={16} color={colors.success} />
+                <Text style={styles.sentText}>Message sent!</Text>
+              </View>
+            ) : (
+              <View style={styles.msgRow}>
+                <TextInput
+                  style={styles.msgInput}
+                  value={messageText}
+                  onChangeText={setMessageText}
+                  placeholder="Say something nice..."
+                  placeholderTextColor={colors.textMuted}
+                  onSubmitEditing={() => {
+                    if (messageText.trim()) sendMsgMutation.mutate(item.id);
+                  }}
+                />
+                <TouchableOpacity
+                  style={[styles.sendBtn, (!messageText.trim() || sendMsgMutation.isPending) && styles.sendBtnDisabled]}
+                  onPress={() => sendMsgMutation.mutate(item.id)}
+                  disabled={!messageText.trim() || sendMsgMutation.isPending}
+                >
+                  {sendMsgMutation.isPending ? (
+                    <ActivityIndicator size="small" color={colors.white} />
+                  ) : (
+                    <Ionicons name="send" size={14} color={colors.white} />
+                  )}
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* Inline notes */}
+        {isNotesOpen && (
+          <View style={styles.inlineSection}>
+            <TextInput
+              style={styles.noteInput}
+              value={noteText}
+              onChangeText={setNoteText}
+              placeholder="Write your notes about this attendee..."
+              placeholderTextColor={colors.textMuted}
+              multiline
+              textAlignVertical="top"
+            />
+            <View style={styles.noteActions}>
+              <TouchableOpacity
+                style={styles.noteSaveBtn}
+                onPress={() => saveNoteMutation.mutate(item.id)}
+                disabled={saveNoteMutation.isPending}
+              >
+                <Text style={styles.noteSaveBtnText}>
+                  {saveNoteMutation.isPending ? "Saving..." : "Save"}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.noteCancelBtn}
+                onPress={() => { setNotesOpenId(null); setNoteText(""); }}
+              >
+                <Text style={styles.noteCancelBtnText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+      </View>
     );
   };
 
+  const renderSectionHeader = ({ section }: { section: { title: string } }) => (
+    <View style={styles.sectionHeader}>
+      <View style={styles.letterBadge}>
+        <Text style={styles.letterText}>{section.title}</Text>
+      </View>
+      <View style={styles.sectionDivider} />
+    </View>
+  );
+
   return (
     <SafeAreaView style={shared.screen} edges={["bottom"]}>
-      <SearchBar value={search} onChangeText={setSearch} placeholder="Search attendees..." />
+      {header}
+      <Text style={[styles.pageSubtitle, { paddingHorizontal: spacing.lg, marginBottom: spacing.md }]}>
+        {totalCount.toLocaleString()} attendee{totalCount !== 1 ? "s" : ""} total
+      </Text>
 
-      {/* Tab bar */}
+      {/* Tabs */}
       <View style={styles.tabBar}>
-        {(["all", "bookmarked"] as Tab[]).map((t) => (
-          <TouchableOpacity
-            key={t}
-            style={[styles.tab, tab === t && styles.tabActive]}
-            onPress={() => {
-              setTab(t);
-              setVisibleCount(PAGE_SIZE);
-            }}
-          >
-            {t === "bookmarked" && (
-              <Ionicons
-                name="star"
-                size={14}
-                color={tab === t ? colors.primary : colors.textMuted}
-                style={{ marginRight: 4 }}
-              />
-            )}
-            <Text style={[styles.tabText, tab === t && styles.tabTextActive]}>
-              {t === "all" ? `All (${attendees.filter((a: any) => a.full_name).length})` : `Bookmarked (${bookmarkedIds.length})`}
-            </Text>
-          </TouchableOpacity>
-        ))}
+        {(["all", "bookmarked"] as Tab[]).map((t) => {
+          const isActive = tab === t;
+          return (
+            <TouchableOpacity
+              key={t}
+              style={[styles.tabBtn, isActive && styles.tabBtnActive]}
+              onPress={() => setTab(t)}
+              activeOpacity={0.7}
+            >
+              {t === "bookmarked" && (
+                <Ionicons
+                  name="star"
+                  size={14}
+                  color={isActive ? colors.textPrimary : colors.textMuted}
+                  style={{ marginRight: 4 }}
+                />
+              )}
+              {t === "all" && (
+                <Ionicons
+                  name="people"
+                  size={14}
+                  color={isActive ? colors.textPrimary : colors.textMuted}
+                  style={{ marginRight: 4 }}
+                />
+              )}
+              <Text style={[styles.tabText, isActive && styles.tabTextActive]}>
+                {t === "all" ? "All" : "Bookmarked"}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
-      <FlatList
-        data={paginatedData}
+      {/* Search */}
+      <View style={styles.searchSection}>
+        <View style={styles.searchWrapper}>
+          <Ionicons name="search-outline" size={16} color={colors.textMuted} />
+          <TextInput
+            style={styles.searchInput}
+            value={search}
+            onChangeText={setSearch}
+            placeholder="Search by name, company, title..."
+            placeholderTextColor={colors.textMuted}
+          />
+        </View>
+      </View>
+
+      {/* List */}
+      <SectionList
+        sections={sections}
         keyExtractor={(item: any) => item.id}
         renderItem={renderAttendee}
-        contentContainerStyle={shared.listContent}
-        onEndReached={onEndReached}
-        onEndReachedThreshold={0.3}
+        renderSectionHeader={renderSectionHeader}
+        contentContainerStyle={styles.listContent}
+        stickySectionHeadersEnabled={false}
         refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={colors.primary}
-          />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
         }
         ListEmptyComponent={
           <EmptyState
@@ -235,18 +412,11 @@ export default function AttendeesScreen() {
             subtitle={
               tab === "bookmarked"
                 ? "Tap the star icon on attendee cards to bookmark them"
-                : "Try adjusting your search"
+                : search
+                  ? "Try adjusting your search"
+                  : undefined
             }
           />
-        }
-        ListFooterComponent={
-          visibleCount < filtered.length ? (
-            <ActivityIndicator
-              size="small"
-              color={colors.primary}
-              style={{ paddingVertical: spacing.lg }}
-            />
-          ) : null
         }
       />
     </SafeAreaView>
@@ -254,67 +424,233 @@ export default function AttendeesScreen() {
 }
 
 const styles = StyleSheet.create({
+  headerSection: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.md,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: spacing.sm,
+  },
+  menuBtn: {
+    padding: 4,
+  },
+  pageTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: colors.textPrimary,
+  },
+  pageSubtitle: {
+    fontSize: 14,
+    color: colors.textMuted,
+    marginTop: 4,
+  },
   tabBar: {
     flexDirection: "row",
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.sm,
-    gap: spacing.sm,
+    gap: 4,
+    backgroundColor: colors.surfaceElevated,
+    marginHorizontal: spacing.lg,
+    borderRadius: radius.sm,
+    padding: 4,
   },
-  tab: {
+  tabBtn: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.full,
-    backgroundColor: colors.surfaceElevated,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
   },
-  tabActive: {
-    backgroundColor: colors.primaryLight,
-    borderColor: colors.primary,
+  tabBtnActive: {
+    backgroundColor: colors.surface,
+    ...shadows.sm,
   },
   tabText: {
-    ...typography.caption,
+    fontSize: 14,
+    fontWeight: "500",
     color: colors.textMuted,
   },
   tabTextActive: {
-    color: colors.primary,
-  },
-  attendeeCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
-    gap: spacing.md,
-    ...shadows.sm,
-  },
-  attendeeInfo: {
-    flex: 1,
-    gap: 2,
-  },
-  attendeeName: {
-    ...typography.bodyMedium,
     color: colors.textPrimary,
   },
-  attendeeTitle: {
-    ...typography.caption,
-    color: colors.textSecondary,
+  searchSection: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.sm,
   },
-  companyRow: {
+  searchWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.white,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 14,
+    color: colors.textPrimary,
+    paddingVertical: 10,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: spacing.md,
+    marginTop: spacing.sm,
+  },
+  letterBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 6,
+    backgroundColor: colors.surfaceElevated,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  letterText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: colors.textMuted,
+  },
+  sectionDivider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.borderLight,
+  },
+  listContent: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.xl,
+  },
+  cardOuter: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+    ...shadows.sm,
+  },
+  cardTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+  },
+  cardInfo: {
+    flex: 1,
+    minWidth: 0,
+  },
+  cardName: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.textPrimary,
+  },
+  cardSubtitle: {
+    fontSize: 12,
+    color: colors.textMuted,
+    marginTop: 2,
+  },
+  actionBtnBookmarked: {
+    backgroundColor: "#fefce8",
+    borderColor: "#fde68a",
+  },
+  actionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: spacing.md,
+  },
+  actionBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.white,
+  },
+  actionBtnText: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: colors.textPrimary,
+  },
+  inlineSection: {
+    marginTop: spacing.md,
+  },
+  sentRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
   },
-  attendeeCompany: {
-    ...typography.small,
-    color: colors.textMuted,
+  sentText: {
+    fontSize: 14,
+    color: colors.success,
   },
-  bookmarkButton: {
-    padding: spacing.xs,
+  msgRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  msgInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 14,
+    color: colors.textPrimary,
+  },
+  sendBtn: {
+    backgroundColor: "#2563eb",
+    borderRadius: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sendBtnDisabled: {
+    opacity: 0.5,
+  },
+  noteInput: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 6,
+    padding: 8,
+    fontSize: 14,
+    color: colors.textPrimary,
+    minHeight: 60,
+  },
+  noteActions: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 8,
+  },
+  noteSaveBtn: {
+    backgroundColor: "#2563eb",
+    borderRadius: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  noteSaveBtnText: {
+    fontSize: 14,
+    color: colors.white,
+  },
+  noteCancelBtn: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  noteCancelBtnText: {
+    fontSize: 14,
+    color: colors.textPrimary,
   },
 });

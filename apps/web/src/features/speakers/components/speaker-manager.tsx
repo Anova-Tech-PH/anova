@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useTransition } from "react";
+import { usePathname } from "next/navigation";
 import {
   Plus,
   Upload,
@@ -59,6 +60,7 @@ export function SpeakerManager({
   const [showImport, setShowImport] = useState(false);
   const [editingSpeaker, setEditingSpeaker] = useState<Speaker | null>(null);
   const [isPending, startTransition] = useTransition();
+  const pathname = usePathname();
   const { confirm, dialog: confirmDialog } = useConfirm();
 
   const filtered = useMemo(() => {
@@ -311,7 +313,7 @@ export function SpeakerManager({
           Import CSV
         </Button>
         <Link
-          href={`/events/${eventId}/speakers/settings`}
+          href={`${pathname.replace(/\/speakers$/, "")}/speakers/settings`}
           className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors hover:bg-accent"
         >
           <Settings className="h-3.5 w-3.5" />

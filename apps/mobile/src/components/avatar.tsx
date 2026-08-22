@@ -1,7 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Image } from "expo-image";
-import { LinearGradient } from "expo-linear-gradient";
 import { colors } from "../theme";
 
 interface AvatarProps {
@@ -11,11 +10,28 @@ interface AvatarProps {
   uri?: string | null;
 }
 
+const avatarColors = [
+  { bg: "rgba(139, 61, 255, 0.15)", text: colors.primary },
+  { bg: colors.successSoft, text: colors.success },
+  { bg: "rgba(59, 130, 246, 0.10)", text: "#3b82f6" },
+  { bg: colors.warningSoft, text: colors.warning },
+  { bg: colors.errorSoft, text: colors.error },
+];
+
+function hashName(name: string): number {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = ((hash << 5) - hash + name.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash);
+}
+
 function getInitials(name: string | null) {
   if (!name) return "?";
   return name
     .split(" ")
     .map((w) => w[0])
+    .filter(Boolean)
     .join("")
     .toUpperCase()
     .slice(0, 2);
@@ -35,17 +51,26 @@ export function Avatar({ name, size = 40, photoUrl, uri }: AvatarProps) {
     );
   }
 
+  const colorSet = name
+    ? avatarColors[hashName(name) % avatarColors.length]
+    : avatarColors[0];
+
   return (
-    <LinearGradient
-      colors={[colors.gradientStart, colors.gradientMid, colors.gradientEnd]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={[styles.avatar, { width: size, height: size, borderRadius: size / 2 }]}
+    <View
+      style={[
+        styles.avatar,
+        {
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          backgroundColor: colorSet.bg,
+        },
+      ]}
     >
-      <Text style={[styles.text, { fontSize: size * 0.36 }]}>
+      <Text style={[styles.text, { fontSize: size * 0.36, color: colorSet.text }]}>
         {getInitials(name)}
       </Text>
-    </LinearGradient>
+    </View>
   );
 }
 
@@ -58,7 +83,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.border,
   },
   text: {
-    color: colors.white,
-    fontWeight: "700",
+    fontWeight: "600",
   },
 });

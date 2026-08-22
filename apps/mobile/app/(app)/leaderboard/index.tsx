@@ -12,6 +12,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigation } from "expo-router";
+import { DrawerActions } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import {
@@ -72,6 +74,7 @@ function getActivityIcon(type: string): keyof typeof Ionicons.glyphMap {
 }
 
 export default function LeaderboardScreen() {
+  const navigation = useNavigation();
   const { user } = useAuth();
   const { currentEvent } = useEventContext();
   const queryClient = useQueryClient();
@@ -158,23 +161,44 @@ export default function LeaderboardScreen() {
       ? Math.min(100, Math.round((userSummary.totalPoints / totalMaxPoints) * 100))
       : 0;
 
+  const headerBlock = (
+    <View style={styles.headerSection}>
+      <View style={styles.headerRow}>
+        <TouchableOpacity
+          onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
+          style={styles.menuBtn}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="menu" size={24} color={colors.textPrimary} />
+        </TouchableOpacity>
+      </View>
+      <Text style={styles.pageTitle}>Leaderboard</Text>
+    </View>
+  );
+
   // ── Guards ─────────────────────────────────────────────────────
   if (!currentEvent) {
     return (
-      <SafeAreaView style={shared.centered} edges={["bottom"]}>
-        <EmptyState
-          icon="calendar-outline"
-          title="Select an event"
-          subtitle="Go to My Events to choose an event"
-        />
+      <SafeAreaView style={shared.screen} edges={["bottom"]}>
+        {headerBlock}
+        <View style={shared.centered}>
+          <EmptyState
+            icon="calendar-outline"
+            title="Select an event"
+            subtitle="Go to My Events to choose an event"
+          />
+        </View>
       </SafeAreaView>
     );
   }
 
   if (isLoading) {
     return (
-      <SafeAreaView style={shared.centered} edges={["bottom"]}>
-        <ActivityIndicator size="large" color={colors.primary} />
+      <SafeAreaView style={shared.screen} edges={["bottom"]}>
+        {headerBlock}
+        <View style={shared.centered}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
       </SafeAreaView>
     );
   }
@@ -417,6 +441,7 @@ export default function LeaderboardScreen() {
 
   return (
     <SafeAreaView style={shared.screen} edges={["bottom"]}>
+      {headerBlock}
       <FlatList
         data={leaderboard ?? []}
         keyExtractor={(item: any) => item.user_id}
@@ -444,6 +469,25 @@ export default function LeaderboardScreen() {
 
 // ── Styles ──────────────────────────────────────────────────────
 const styles = StyleSheet.create({
+  headerSection: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.md,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: spacing.sm,
+  },
+  menuBtn: {
+    padding: 4,
+  },
+  pageTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: colors.textPrimary,
+  },
+
   // Prize Banner
   prizeBanner: {
     flexDirection: "row",

@@ -11,7 +11,11 @@ packages/supabase/.temp/
 supabase/.branches/
 supabase/.temp/
 supabase/.temp/start-secrets/
-/screenshots/
+screenshots/
+*.png
+.DS_Store
+.env.production
+.env.production.*
 .vercel
 
 # Generated docs & research

@@ -13,8 +13,10 @@ import {
   Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from "expo-router";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { Ionicons } from "@expo/vector-icons";
+import { DrawerActions } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
 import { getProfile, getAttendeeContactInfo, updateProfileMutation, updateAttendeeContactInfo } from "@attendly/supabase-client";
 import { supabase } from "../../../src/lib/supabase";
@@ -50,12 +52,13 @@ async function uploadAvatar(uri: string): Promise<string> {
 
 // ── Component ─────────────────────────────────────────────────────
 
-const AVATAR_SIZE = 100;
+const AVATAR_SIZE = 88;
 
 export default function ProfileScreen() {
   const { user, signOut } = useAuth();
   const { currentEvent } = useEventContext();
   const queryClient = useQueryClient();
+  const navigation = useNavigation();
   const [refreshing, setRefreshing] = useState(false);
 
   // Form state
@@ -197,11 +200,44 @@ export default function ProfileScreen() {
     }
   };
 
+  const header = (
+    <View style={styles.headerSection}>
+      <View style={styles.headerRow}>
+        <TouchableOpacity
+          onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
+          style={styles.menuBtn}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="menu" size={24} color={colors.textPrimary} />
+        </TouchableOpacity>
+        <View style={{ flex: 1 }} />
+        {dirty && (
+          <TouchableOpacity
+            style={styles.headerSaveBtn}
+            onPress={() => saveMutation.mutate()}
+            disabled={saveMutation.isPending}
+            activeOpacity={0.7}
+          >
+            {saveMutation.isPending ? (
+              <ActivityIndicator size="small" color={colors.white} />
+            ) : (
+              <Text style={styles.headerSaveBtnText}>Save</Text>
+            )}
+          </TouchableOpacity>
+        )}
+      </View>
+      <Text style={styles.pageTitle}>Profile</Text>
+    </View>
+  );
+
   // ── Loading state ───────────────────────────────────────────────
   if (isLoading) {
     return (
-      <SafeAreaView style={shared.centered} edges={["bottom"]}>
-        <ActivityIndicator size="large" color={colors.primary} />
+      <SafeAreaView style={shared.screen} edges={["bottom"]}>
+        {header}
+        <View style={shared.centered}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
       </SafeAreaView>
     );
   }
@@ -209,22 +245,27 @@ export default function ProfileScreen() {
   // ── Empty state (no profile found) ──────────────────────────────
   if (!profile && !isLoading) {
     return (
-      <SafeAreaView style={shared.centered} edges={["bottom"]}>
-        <Ionicons
-          name="person-outline"
-          size={48}
-          color={colors.textMuted}
-        />
-        <Text style={styles.emptyText}>Profile not found</Text>
-        <TouchableOpacity style={styles.signOutBtn} onPress={signOut}>
-          <Text style={styles.signOutBtnText}>Sign Out</Text>
-        </TouchableOpacity>
+      <SafeAreaView style={shared.screen} edges={["bottom"]}>
+        {header}
+        <View style={shared.centered}>
+          <Ionicons
+            name="person-outline"
+            size={48}
+            color={colors.textMuted}
+          />
+          <Text style={styles.emptyText}>Profile not found</Text>
+          <TouchableOpacity style={styles.signOutBtn} onPress={signOut}>
+            <Text style={styles.signOutBtnText}>Sign Out</Text>
+          </TouchableOpacity>
+        </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={["bottom"]}>
+    <SafeAreaView style={shared.screen} edges={["bottom"]}>
+      {header}
+
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -240,8 +281,8 @@ export default function ProfileScreen() {
             />
           }
         >
-          {/* ── Avatar Section ─────────────────────────────────── */}
-          <View style={styles.avatarSection}>
+          {/* ── Profile Card ─────────────────────────────────────── */}
+          <View style={styles.profileCard}>
             <TouchableOpacity
               style={styles.avatarWrapper}
               onPress={pickAvatar}
@@ -260,172 +301,172 @@ export default function ProfileScreen() {
                 />
               )}
               <View style={styles.cameraButton}>
-                <Ionicons name="camera" size={16} color={colors.white} />
+                <Ionicons name="camera" size={14} color={colors.white} />
               </View>
             </TouchableOpacity>
-            <Text style={styles.avatarHint}>Tap to change photo</Text>
-          </View>
-
-          {/* ── Email (read-only) ──────────────────────────────── */}
-          <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>Email</Text>
-            <View style={[styles.input, styles.inputDisabled]}>
-              <Text style={styles.inputDisabledText}>
+            <View style={styles.profileInfo}>
+              <Text style={styles.profileName} numberOfLines={1}>
+                {fullName || "Your Name"}
+              </Text>
+              {(jobTitle || company) ? (
+                <Text style={styles.profileRole} numberOfLines={1}>
+                  {[jobTitle, company].filter(Boolean).join(" at ")}
+                </Text>
+              ) : null}
+              <Text style={styles.profileEmail} numberOfLines={1}>
                 {user?.email ?? ""}
               </Text>
             </View>
           </View>
 
-          {/* ── Display Name ───────────────────────────────────── */}
-          <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>Display Name</Text>
-            <TextInput
-              style={styles.input}
-              value={fullName}
-              onChangeText={(v) => handleFieldChange(setFullName, v)}
-              placeholder="Your name"
-              placeholderTextColor={colors.textMuted}
-              autoCapitalize="words"
-            />
+          {/* ── Basic Info Section ────────────────────────────────── */}
+          <View style={styles.sectionCard}>
+            <View style={styles.sectionHeaderRow}>
+              <Ionicons name="person-outline" size={16} color={colors.primary} />
+              <Text style={styles.sectionTitle}>Basic Information</Text>
+            </View>
+
+            <View style={styles.fieldGroup}>
+              <Text style={styles.fieldLabel}>Display Name</Text>
+              <TextInput
+                style={styles.input}
+                value={fullName}
+                onChangeText={(v) => handleFieldChange(setFullName, v)}
+                placeholder="Your name"
+                placeholderTextColor={colors.textMuted}
+                autoCapitalize="words"
+              />
+            </View>
+
+            <View style={styles.fieldGroup}>
+              <Text style={styles.fieldLabel}>Job Title</Text>
+              <TextInput
+                style={styles.input}
+                value={jobTitle}
+                onChangeText={(v) => handleFieldChange(setJobTitle, v)}
+                placeholder="e.g. Software Engineer"
+                placeholderTextColor={colors.textMuted}
+                autoCapitalize="words"
+              />
+            </View>
+
+            <View style={styles.fieldGroup}>
+              <Text style={styles.fieldLabel}>Company</Text>
+              <TextInput
+                style={styles.input}
+                value={company}
+                onChangeText={(v) => handleFieldChange(setCompany, v)}
+                placeholder="e.g. Acme Inc."
+                placeholderTextColor={colors.textMuted}
+                autoCapitalize="words"
+              />
+            </View>
+
+            <View style={styles.fieldGroupLast}>
+              <Text style={styles.fieldLabel}>Bio</Text>
+              <TextInput
+                style={[styles.input, styles.textArea]}
+                value={bio}
+                onChangeText={(v) => handleFieldChange(setBio, v)}
+                placeholder="Tell others about yourself..."
+                placeholderTextColor={colors.textMuted}
+                multiline
+                numberOfLines={4}
+                textAlignVertical="top"
+              />
+            </View>
           </View>
 
-          {/* ── Job Title ──────────────────────────────────────── */}
-          <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>Job Title</Text>
-            <TextInput
-              style={styles.input}
-              value={jobTitle}
-              onChangeText={(v) => handleFieldChange(setJobTitle, v)}
-              placeholder="e.g. Software Engineer"
-              placeholderTextColor={colors.textMuted}
-              autoCapitalize="words"
-            />
-          </View>
-
-          {/* ── Company ────────────────────────────────────────── */}
-          <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>Company</Text>
-            <TextInput
-              style={styles.input}
-              value={company}
-              onChangeText={(v) => handleFieldChange(setCompany, v)}
-              placeholder="e.g. Acme Inc."
-              placeholderTextColor={colors.textMuted}
-              autoCapitalize="words"
-            />
-          </View>
-
-          {/* ── Bio ────────────────────────────────────────────── */}
-          <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>Bio</Text>
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              value={bio}
-              onChangeText={(v) => handleFieldChange(setBio, v)}
-              placeholder="Tell others about yourself..."
-              placeholderTextColor={colors.textMuted}
-              multiline
-              numberOfLines={4}
-              textAlignVertical="top"
-            />
-          </View>
-
-          {/* ── Contact Information ─────────────────────────────── */}
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Contact Information</Text>
+          {/* ── Contact Information Section ───────────────────────── */}
+          <View style={styles.sectionCard}>
+            <View style={styles.sectionHeaderRow}>
+              <Ionicons name="call-outline" size={16} color={colors.primary} />
+              <Text style={styles.sectionTitle}>Contact Information</Text>
+            </View>
             <Text style={styles.sectionSubtitle}>
               Toggle visibility to control what other attendees can see.
             </Text>
-          </View>
 
-          {/* Phone */}
-          <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>Phone</Text>
-            <View style={styles.contactRow}>
-              <TextInput
-                style={[styles.input, styles.contactInput]}
-                value={phone}
-                onChangeText={(v) => handleFieldChange(setPhone, v)}
-                placeholder="e.g. +1 (555) 123-4567"
-                placeholderTextColor={colors.textMuted}
-                keyboardType="phone-pad"
-              />
-              <TouchableOpacity
-                style={[styles.visibilityBtn, showPhone && styles.visibilityBtnActive]}
-                onPress={() => { setShowPhone(!showPhone); setDirty(true); }}
-                activeOpacity={0.7}
-              >
-                <Ionicons
-                  name={showPhone ? "eye-outline" : "eye-off-outline"}
-                  size={16}
-                  color={showPhone ? colors.primary : colors.textMuted}
+            {/* Phone */}
+            <View style={styles.fieldGroup}>
+              <Text style={styles.fieldLabel}>Phone</Text>
+              <View style={styles.contactRow}>
+                <TextInput
+                  style={[styles.input, styles.contactInput]}
+                  value={phone}
+                  onChangeText={(v) => handleFieldChange(setPhone, v)}
+                  placeholder="e.g. +1 (555) 123-4567"
+                  placeholderTextColor={colors.textMuted}
+                  keyboardType="phone-pad"
                 />
-                <Text style={[styles.visibilityText, showPhone && styles.visibilityTextActive]}>
-                  {showPhone ? "Visible" : "Hidden"}
-                </Text>
-              </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.visibilityBtn, showPhone && styles.visibilityBtnActive]}
+                  onPress={() => { setShowPhone(!showPhone); setDirty(true); }}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons
+                    name={showPhone ? "eye-outline" : "eye-off-outline"}
+                    size={16}
+                    color={showPhone ? colors.primary : colors.textMuted}
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Email */}
+            <View style={styles.fieldGroup}>
+              <Text style={styles.fieldLabel}>Email</Text>
+              <View style={styles.contactRow}>
+                <TextInput
+                  style={[styles.input, styles.contactInput]}
+                  value={contactEmail}
+                  onChangeText={(v) => handleFieldChange(setContactEmail, v)}
+                  placeholder="e.g. you@example.com"
+                  placeholderTextColor={colors.textMuted}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+                <TouchableOpacity
+                  style={[styles.visibilityBtn, showEmail && styles.visibilityBtnActive]}
+                  onPress={() => { setShowEmail(!showEmail); setDirty(true); }}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons
+                    name={showEmail ? "eye-outline" : "eye-off-outline"}
+                    size={16}
+                    color={showEmail ? colors.primary : colors.textMuted}
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Address */}
+            <View style={styles.fieldGroupLast}>
+              <Text style={styles.fieldLabel}>Address</Text>
+              <View style={styles.contactRow}>
+                <TextInput
+                  style={[styles.input, styles.contactInput]}
+                  value={address}
+                  onChangeText={(v) => handleFieldChange(setAddress, v)}
+                  placeholder="e.g. 123 Main St, City, State"
+                  placeholderTextColor={colors.textMuted}
+                />
+                <TouchableOpacity
+                  style={[styles.visibilityBtn, showAddress && styles.visibilityBtnActive]}
+                  onPress={() => { setShowAddress(!showAddress); setDirty(true); }}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons
+                    name={showAddress ? "eye-outline" : "eye-off-outline"}
+                    size={16}
+                    color={showAddress ? colors.primary : colors.textMuted}
+                  />
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
 
-          {/* Email */}
-          <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>Email</Text>
-            <View style={styles.contactRow}>
-              <TextInput
-                style={[styles.input, styles.contactInput]}
-                value={contactEmail}
-                onChangeText={(v) => handleFieldChange(setContactEmail, v)}
-                placeholder="e.g. you@example.com"
-                placeholderTextColor={colors.textMuted}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-              <TouchableOpacity
-                style={[styles.visibilityBtn, showEmail && styles.visibilityBtnActive]}
-                onPress={() => { setShowEmail(!showEmail); setDirty(true); }}
-                activeOpacity={0.7}
-              >
-                <Ionicons
-                  name={showEmail ? "eye-outline" : "eye-off-outline"}
-                  size={16}
-                  color={showEmail ? colors.primary : colors.textMuted}
-                />
-                <Text style={[styles.visibilityText, showEmail && styles.visibilityTextActive]}>
-                  {showEmail ? "Visible" : "Hidden"}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* Address */}
-          <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>Address</Text>
-            <View style={styles.contactRow}>
-              <TextInput
-                style={[styles.input, styles.contactInput]}
-                value={address}
-                onChangeText={(v) => handleFieldChange(setAddress, v)}
-                placeholder="e.g. 123 Main St, City, State"
-                placeholderTextColor={colors.textMuted}
-              />
-              <TouchableOpacity
-                style={[styles.visibilityBtn, showAddress && styles.visibilityBtnActive]}
-                onPress={() => { setShowAddress(!showAddress); setDirty(true); }}
-                activeOpacity={0.7}
-              >
-                <Ionicons
-                  name={showAddress ? "eye-outline" : "eye-off-outline"}
-                  size={16}
-                  color={showAddress ? colors.primary : colors.textMuted}
-                />
-                <Text style={[styles.visibilityText, showAddress && styles.visibilityTextActive]}>
-                  {showAddress ? "Visible" : "Hidden"}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* ── Save Button ────────────────────────────────────── */}
+          {/* ── Save Button ──────────────────────────────────────── */}
           <TouchableOpacity
             style={[
               styles.saveBtn,
@@ -438,11 +479,14 @@ export default function ProfileScreen() {
             {saveMutation.isPending ? (
               <ActivityIndicator size="small" color={colors.white} />
             ) : (
-              <Text style={styles.saveBtnText}>Save Changes</Text>
+              <>
+                <Ionicons name="checkmark-circle-outline" size={18} color={colors.white} style={{ marginRight: spacing.sm }} />
+                <Text style={styles.saveBtnText}>Save Changes</Text>
+              </>
             )}
           </TouchableOpacity>
 
-          {/* ── Sign Out Button ────────────────────────────────── */}
+          {/* ── Sign Out Button ──────────────────────────────────── */}
           <TouchableOpacity
             style={styles.signOutBtn}
             onPress={() =>
@@ -470,20 +514,54 @@ export default function ProfileScreen() {
 // ── Styles ────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
+  // Header
+  headerSection: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.md,
   },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: spacing.sm,
+  },
+  menuBtn: {
+    padding: 4,
+  },
+  pageTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: colors.textPrimary,
+  },
+  headerSaveBtn: {
+    backgroundColor: colors.primary,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+  },
+  headerSaveBtnText: {
+    color: colors.white,
+    fontSize: 14,
+    fontWeight: "600",
+  },
+
   scrollContent: {
-    padding: spacing.lg,
+    paddingHorizontal: spacing.lg,
     paddingBottom: 48,
   },
 
-  // Avatar
-  avatarSection: {
+  // Profile Card
+  profileCard: {
+    flexDirection: "row",
     alignItems: "center",
-    marginBottom: spacing.xxl,
-    marginTop: spacing.md,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    gap: spacing.lg,
+    ...shadows.sm,
   },
   avatarWrapper: {
     position: "relative",
@@ -500,9 +578,9 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 0,
     right: 0,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: colors.primary,
     justifyContent: "center",
     alignItems: "center",
@@ -510,15 +588,59 @@ const styles = StyleSheet.create({
     borderColor: colors.white,
     ...shadows.md,
   },
-  avatarHint: {
+  profileInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  profileName: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: colors.textPrimary,
+  },
+  profileRole: {
+    ...typography.caption,
+    color: colors.textSecondary,
+  },
+  profileEmail: {
+    ...typography.small,
+    color: colors.textMuted,
+    marginTop: 2,
+  },
+
+  // Section Card
+  sectionCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    ...shadows.sm,
+  },
+  sectionHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: colors.textPrimary,
+  },
+  sectionSubtitle: {
     ...typography.caption,
     color: colors.textMuted,
-    marginTop: spacing.sm,
+    marginTop: -spacing.sm,
+    marginBottom: spacing.md,
   },
 
   // Fields
   fieldGroup: {
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
+  },
+  fieldGroupLast: {
+    marginBottom: 0,
   },
   fieldLabel: {
     ...typography.captionBold,
@@ -528,87 +650,56 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   input: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.background,
     borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.border,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: 14,
-    fontSize: 16,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 12,
+    fontSize: 15,
     color: colors.textPrimary,
-  },
-  inputDisabled: {
-    backgroundColor: colors.surfaceElevated,
-    borderColor: colors.borderLight,
-  },
-  inputDisabledText: {
-    fontSize: 16,
-    color: colors.textMuted,
   },
   textArea: {
-    minHeight: 100,
-    paddingTop: 14,
-  },
-
-  // Section headers
-  sectionHeader: {
-    marginBottom: spacing.lg,
-    marginTop: spacing.md,
-  },
-  sectionTitle: {
-    ...typography.h3,
-    color: colors.textPrimary,
-    marginBottom: spacing.xs,
-  },
-  sectionSubtitle: {
-    ...typography.caption,
-    color: colors.textMuted,
+    minHeight: 90,
+    paddingTop: 12,
   },
 
   // Contact row
   contactRow: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing.sm,
   },
   contactInput: {
     flex: 1,
   },
   visibilityBtn: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    gap: 4,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 14,
+    width: 40,
+    height: 40,
     borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.background,
+    justifyContent: "center",
+    alignItems: "center",
   },
   visibilityBtnActive: {
     borderColor: colors.primary + "50",
     backgroundColor: colors.primary + "10",
   },
-  visibilityText: {
-    fontSize: 13,
-    fontWeight: "600" as const,
-    color: colors.textMuted,
-  },
-  visibilityTextActive: {
-    color: colors.primary,
-  },
 
   // Save button
   saveBtn: {
+    flexDirection: "row",
     backgroundColor: colors.primary,
     borderRadius: radius.md,
     paddingVertical: 15,
     alignItems: "center",
-    marginTop: spacing.md,
-    marginBottom: spacing.lg,
+    justifyContent: "center",
+    marginBottom: spacing.md,
   },
   saveBtnDisabled: {
-    opacity: 0.5,
+    opacity: 0.4,
   },
   saveBtnText: {
     color: colors.white,
@@ -620,11 +711,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     borderRadius: radius.md,
-    borderWidth: 1.5,
-    borderColor: colors.error,
+    borderWidth: 1,
+    borderColor: colors.error + "30",
     paddingVertical: 14,
+    marginBottom: spacing.lg,
   },
   signOutBtnText: {
     ...typography.button,

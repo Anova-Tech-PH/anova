@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import {
   Plus,
@@ -33,6 +34,8 @@ export function SocialGroupsPageClient({
   const [editDraft, setEditDraft] = useState<SocialGroup | null>(null);
   const [isPending, startTransition] = useTransition();
   const { confirm, dialog: confirmDialog } = useConfirm();
+  const pathname = usePathname();
+  const basePath = pathname.slice(0, pathname.indexOf(`/events/${eventId}`) + `/events/${eventId}`.length);
 
   function openComposerEmpty() {
     setEditDraft(null);
@@ -148,7 +151,7 @@ export function SocialGroupsPageClient({
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <Link
-                          href={`/events/${eventId}/social-groups/${group.id}`}
+                          href={`${basePath}/social-groups/${group.id}`}
                           aria-label="View"
                           className="inline-flex items-center justify-center rounded-lg text-sm font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground shadow-sm h-8 px-3"
                         >
