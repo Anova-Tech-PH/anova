@@ -85,7 +85,7 @@ export default function AttendeeProfileScreen() {
     navigation.setOptions({
       title: name ?? "Attendee",
       headerLeft: () => (
-        <TouchableOpacity onPress={() => router.back()} style={{ paddingRight: 8 }}>
+        <TouchableOpacity onPress={() => router.replace('/(app)/attendees' as any)} style={{ paddingRight: 8 }}>
           <Ionicons name="arrow-back" size={24} color={colors.white} />
         </TouchableOpacity>
       ),
@@ -185,7 +185,7 @@ export default function AttendeeProfileScreen() {
       {/* Custom Header */}
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={() => router.replace('/(app)/attendees' as any)}
           style={styles.backBtn}
           activeOpacity={0.7}
         >
