@@ -103,6 +103,7 @@ export default async function SessionDetailPage({
     attendingResult,
     profileResult,
     orgMemberResult,
+    userFollowsResult,
   ] = await Promise.all([
     // Bookmark state
     user
@@ -208,6 +209,13 @@ export default async function SessionDetailPage({
           .eq("user_id", user.id)
           .single()
       : Promise.resolve({ data: null }),
+    // User community topic follows
+    user
+      ? supabase
+          .from("community_topic_follows")
+          .select("topic_id")
+          .eq("user_id", user.id)
+      : Promise.resolve({ data: [] as { topic_id: string }[] }),
   ]);
 
   const isBookmarked = !!bookmarkResult.data;
@@ -284,6 +292,9 @@ export default async function SessionDetailPage({
   }
 
   // Process community topics for sidebar preview
+  const followedTopicIds = new Set(
+    ((userFollowsResult.data ?? []) as { topic_id: string }[]).map((f) => f.topic_id)
+  );
   const communityTopics = (communityResult.data ?? []).map((t) => ({
     id: t.id as string,
     title: t.title as string,
@@ -292,6 +303,7 @@ export default async function SessionDetailPage({
     post_count:
       (t.community_posts as unknown as { count: number }[])?.[0]?.count ?? 0,
     pinned: t.pinned as boolean,
+    is_following: followedTopicIds.has(t.id as string),
   }));
   const communityTotalCount = communityCountResult.count ?? 0;
 
@@ -558,6 +570,7 @@ export default async function SessionDetailPage({
                   topics={communityTopics}
                   communityUrl={`${basePath}/community`}
                   totalCount={communityTotalCount}
+                  sessionUrl={`${basePath}/schedule/${sessionId}`}
                 />
               }
               hasPolls={pollsWithResults.length > 0}

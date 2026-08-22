@@ -25,16 +25,19 @@ export interface CommunityTopicPreview {
   description: string | null;
   post_count: number;
   pinned: boolean;
+  is_following?: boolean;
 }
 
 export function SessionCommunityPreview({
   topics,
   communityUrl,
   totalCount,
+  sessionUrl,
 }: {
   topics: CommunityTopicPreview[];
   communityUrl: string;
   totalCount: number;
+  sessionUrl?: string;
 }) {
   if (topics.length === 0) {
     return (
@@ -66,12 +69,12 @@ export function SessionCommunityPreview({
         </Link>
       </div>
 
-      {topics.map((topic) => {
+      {[...topics].sort((a, b) => (b.is_following ? 1 : 0) - (a.is_following ? 1 : 0)).map((topic) => {
         const Icon = typeIcons[topic.type];
         return (
           <Link
             key={topic.id}
-            href={`${communityUrl}/${topic.id}`}
+            href={`${communityUrl}/${topic.id}${sessionUrl ? `?returnTo=${encodeURIComponent(sessionUrl + '?tab=community')}` : ''}`}
             className="flex items-start gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50"
           >
             <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted">
@@ -94,6 +97,12 @@ export function SessionCommunityPreview({
               <span className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground">
                 <MessageCircle className="h-3 w-3" />
                 {topic.post_count}
+                {topic.is_following && (
+                  <>
+                    <span className="mx-0.5">·</span>
+                    <span className="text-primary font-medium">Following</span>
+                  </>
+                )}
               </span>
             </div>
           </Link>

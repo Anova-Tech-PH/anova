@@ -40,6 +40,7 @@ import {
   toggleSessionLike,
   getDefaultFeedbackForm,
   submitSessionFeedback,
+  getTopics,
 } from "@attendly/supabase-client";
 import { supabase } from "../../../src/lib/supabase";
 import { useAuth } from "../../../src/lib/auth-context";
@@ -324,6 +325,13 @@ export default function SessionDetailScreen() {
       return data;
     },
     enabled: !!sessionId && !!user?.id && activeTab === "feedback",
+  });
+
+  // ── Community Topics ──
+  const { data: communityTopics = [] } = useQuery({
+    queryKey: ["community-topics", currentEvent?.id, user?.id],
+    queryFn: () => getTopics(supabase, currentEvent!.id, user!.id),
+    enabled: !!currentEvent?.id && !!user?.id && activeTab === "community",
   });
 
   const isBookmarked = bookmarks.includes(sessionId!);
@@ -914,7 +922,57 @@ export default function SessionDetailScreen() {
           {/* ── Community Tab ── */}
           {activeTab === "community" && (
             <View style={styles.section}>
-              <EmptyState icon="people-outline" title="Community" subtitle="Community discussions will appear here" />
+              {communityTopics.length === 0 ? (
+                <EmptyState icon="people-outline" title="No topics yet" subtitle="Community discussions will appear here" />
+              ) : (
+                <>
+                  <View style={communityStyles.header}>
+                    <Text style={communityStyles.count}>{communityTopics.length} topics</Text>
+                    <TouchableOpacity onPress={() => router.push("/(app)/community" as any)} activeOpacity={0.7}>
+                      <Text style={communityStyles.viewAll}>View all →</Text>
+                    </TouchableOpacity>
+                  </View>
+                  {[...communityTopics].sort((a: any, b: any) => (b.is_following ? 1 : 0) - (a.is_following ? 1 : 0)).slice(0, 5).map((topic: any) => (
+                    <TouchableOpacity
+                      key={topic.id}
+                      style={communityStyles.topicCard}
+                      onPress={() => router.push(`/(app)/community/${topic.id}?returnTo=/schedule/${sessionId}` as any)}
+                      activeOpacity={0.7}
+                    >
+                      <View style={communityStyles.topicIcon}>
+                        <Ionicons
+                          name={
+                            topic.type === "announcement" ? "megaphone-outline" :
+                            topic.type === "meetup" ? "location-outline" :
+                            topic.type === "ask_organizer" ? "help-circle-outline" :
+                            "chatbubble-outline"
+                          }
+                          size={14}
+                          color={colors.textMuted}
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={communityStyles.topicTitle} numberOfLines={1}>{topic.title}</Text>
+                        {topic.description && (
+                          <Text style={communityStyles.topicDesc} numberOfLines={1}>{topic.description}</Text>
+                        )}
+                        <View style={communityStyles.topicMeta}>
+                          <Ionicons name="chatbubble-outline" size={11} color={colors.textMuted} />
+                          <Text style={communityStyles.topicMetaText}>{topic.post_count ?? 0}</Text>
+                          {topic.is_following && (
+                            <>
+                              <Text style={communityStyles.topicMetaSep}>·</Text>
+                              <Ionicons name="checkmark-circle" size={11} color={colors.primary} />
+                              <Text style={[communityStyles.topicMetaText, { color: colors.primary }]}>Following</Text>
+                            </>
+                          )}
+                          {topic.has_unread && <View style={communityStyles.unreadDot} />}
+                        </View>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </>
+              )}
             </View>
           )}
             </View>
@@ -1437,5 +1495,75 @@ const feedbackStyles = StyleSheet.create({
     paddingVertical: spacing.md,
     fontSize: 15,
     color: colors.textPrimary,
+  },
+});
+
+// ── Community Styles ──
+const communityStyles = StyleSheet.create({
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: spacing.md,
+  },
+  count: {
+    ...typography.caption,
+    color: colors.textMuted,
+  },
+  viewAll: {
+    ...typography.caption,
+    color: colors.primary,
+    fontWeight: "600",
+  },
+  topicCard: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+    backgroundColor: colors.surface,
+  },
+  topicIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: radius.sm,
+    backgroundColor: colors.overlay,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 2,
+  },
+  topicTitle: {
+    ...typography.bodyMedium,
+    color: colors.textPrimary,
+  },
+  topicDesc: {
+    ...typography.caption,
+    color: colors.textMuted,
+    marginTop: 2,
+  },
+  topicMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginTop: 6,
+  },
+  topicMetaText: {
+    fontSize: 11,
+    color: colors.textMuted,
+  },
+  topicMetaSep: {
+    fontSize: 11,
+    color: colors.textMuted,
+    marginHorizontal: 2,
+  },
+  unreadDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.primary,
+    marginLeft: 4,
   },
 });

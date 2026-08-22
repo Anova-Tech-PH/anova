@@ -65,6 +65,7 @@ interface TopicDetailProps {
     is_following: boolean;
   };
   backPath: string;
+  backLabel?: string;
 }
 
 function PostReactions({
@@ -130,7 +131,7 @@ function PostReactions({
   );
 }
 
-export function TopicDetail({ topic, backPath }: TopicDetailProps) {
+export function TopicDetail({ topic, backPath, backLabel = "Back to community" }: TopicDetailProps) {
   const [replyContent, setReplyContent] = useState("");
   const [isFollowPending, startFollowTransition] = useTransition();
   const [isPostPending, startPostTransition] = useTransition();
@@ -177,7 +178,7 @@ export function TopicDetail({ topic, backPath }: TopicDetailProps) {
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
       >
         <ArrowLeft className="h-4 w-4" />
-        Back to community
+        {backLabel}
       </Link>
 
       {/* Topic header */}

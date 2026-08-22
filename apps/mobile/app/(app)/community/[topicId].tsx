@@ -74,7 +74,7 @@ function formatMeetupDate(dateStr: string) {
 const REACTION_EMOJIS = ["👍", "❤️", "🤣"] as const;
 
 export default function TopicDetailScreen() {
-  const { topicId } = useLocalSearchParams<{ topicId: string }>();
+  const { topicId, returnTo } = useLocalSearchParams<{ topicId: string; returnTo?: string }>();
   const router = useRouter();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -301,12 +301,18 @@ export default function TopicDetailScreen() {
       {/* Custom header */}
       <View style={styles.navHeader}>
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={() => {
+            if (returnTo) {
+              router.replace(`/(app)${returnTo}` as any);
+            } else {
+              router.back();
+            }
+          }}
           style={styles.backBtn}
           activeOpacity={0.7}
         >
           <Ionicons name="arrow-back" size={20} color={colors.textMuted} />
-          <Text style={styles.backText}>Back to community</Text>
+          <Text style={styles.backText}>{returnTo ? "Back to session" : "Back to community"}</Text>
         </TouchableOpacity>
       </View>
 
