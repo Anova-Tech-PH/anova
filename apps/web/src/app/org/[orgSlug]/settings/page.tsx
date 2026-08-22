@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@attendly/ui/supabase/server";
 import { getOrgBySlug } from "@/features/org/queries";
 import { SignOutButton } from "./sign-out-button";
+import { DeleteOrgSection } from "@/features/org/components/delete-org-section";
 import { Card } from "@attendly/ui/components";
 import { User, Building2, LogOut, Mail, Tag, Users, ChevronRight } from "lucide-react";
 
@@ -21,6 +22,11 @@ export default async function SettingsPage({
 
   const org = await getOrgBySlug(orgSlug, user.id);
   if (!org) redirect("/onboarding");
+
+  const { count: eventCount } = await supabase
+    .from("events")
+    .select("id", { count: "exact", head: true })
+    .eq("organization_id", org.id);
 
   return (
     <div className="space-y-6">
@@ -98,6 +104,14 @@ export default async function SettingsPage({
           </div>
         </Card>
       </Link>
+
+      {org.role === "owner" && (
+        <DeleteOrgSection
+          orgId={org.id}
+          orgName={org.name}
+          eventCount={eventCount ?? 0}
+        />
+      )}
 
       <div className="rounded-xl border-2 border-destructive/40 bg-gradient-to-br from-destructive/5 to-destructive/10 p-6 shadow-sm">
         <div className="mb-2 flex items-center gap-2">
