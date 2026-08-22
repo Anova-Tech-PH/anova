@@ -490,7 +490,7 @@ export default function SessionDetailScreen() {
             renderItem={({ item }: { item: any }) => (
               <ChatBubble message={item} isOwnMessage={item.user_id === user?.id} />
             )}
-            contentContainerStyle={chatStyles.list}
+            contentContainerStyle={[chatStyles.list, chatMessages.length > 0 && { flexGrow: 1, justifyContent: "flex-end" as const }]}
             ListEmptyComponent={
               <EmptyState icon="chatbubbles-outline" title="No messages yet" subtitle="Start the conversation!" />
             }
