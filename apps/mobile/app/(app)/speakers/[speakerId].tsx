@@ -194,7 +194,7 @@ export default function SpeakerDetailScreen() {
       {/* Custom Header */}
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={() => router.replace('/(app)/speakers' as any)}
           style={styles.headerBackBtn}
           activeOpacity={0.7}
         >
