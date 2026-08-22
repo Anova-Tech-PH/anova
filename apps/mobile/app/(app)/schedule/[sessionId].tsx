@@ -8,8 +8,6 @@ import {
   RefreshControl,
   TouchableOpacity,
   TextInput,
-  FlatList,
-  KeyboardAvoidingView,
   Platform,
   Alert,
 } from "react-native";
@@ -197,6 +195,7 @@ export default function SessionDetailScreen() {
   const navigation = useNavigation();
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState("polls");
+  const scrollViewRef = useRef<ScrollView>(null);
 
   // ── Notes state ──
   const [noteText, setNoteText] = useState("");
@@ -204,8 +203,6 @@ export default function SessionDetailScreen() {
 
   // ── Chat state ──
   const [chatInput, setChatInput] = useState("");
-  const chatListRef = useRef<FlatList>(null);
-
   // ── Poll text input state (for word_cloud / short_answer) ──
   const [pollTextInputs, setPollTextInputs] = useState<Record<string, string>>({});
 
@@ -459,76 +456,6 @@ export default function SessionDetailScreen() {
     { key: "community", label: "Community" },
   ];
 
-  // ── Chat tab needs special layout (no ScrollView, uses FlatList + compose bar) ──
-  if (activeTab === "chat") {
-    return (
-      <SafeAreaView style={shared.screen} edges={["bottom"]}>
-        <KeyboardAvoidingView
-          style={{ flex: 1 }}
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
-        >
-          {/* Header */}
-          <ScrollView
-            style={{ flexGrow: 0 }}
-            refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
-            }
-          >
-            <View style={styles.header}>
-              <Text style={styles.title}>{session.title}</Text>
-              {renderActionButtons()}
-            </View>
-            <TabBar tabs={tabs} activeTab={activeTab} onTabPress={setActiveTab} />
-          </ScrollView>
-
-          {/* Chat messages */}
-          <FlatList
-            ref={chatListRef}
-            data={chatMessages}
-            keyExtractor={(item: any) => item.id}
-            renderItem={({ item }: { item: any }) => (
-              <ChatBubble message={item} isOwnMessage={item.user_id === user?.id} />
-            )}
-            contentContainerStyle={[chatStyles.list, chatMessages.length > 0 && { flexGrow: 1, justifyContent: "flex-end" as const }]}
-            ListEmptyComponent={
-              <EmptyState icon="chatbubbles-outline" title="No messages yet" subtitle="Start the conversation!" />
-            }
-            onContentSizeChange={() => chatListRef.current?.scrollToEnd({ animated: false })}
-          />
-
-          {/* Compose bar */}
-          {user && (
-            <View style={chatStyles.composeBar}>
-              <TextInput
-                style={chatStyles.composeInput}
-                placeholder="Type a message..."
-                placeholderTextColor={colors.textMuted}
-                value={chatInput}
-                onChangeText={setChatInput}
-                multiline
-                maxLength={2000}
-              />
-              <TouchableOpacity
-                style={[chatStyles.sendBtn, !chatInput.trim() && { opacity: 0.4 }]}
-                onPress={() => {
-                  if (chatInput.trim()) sendMessageMutation.mutate(chatInput.trim());
-                }}
-                disabled={!chatInput.trim() || sendMessageMutation.isPending}
-              >
-                {sendMessageMutation.isPending ? (
-                  <ActivityIndicator size="small" color={colors.white} />
-                ) : (
-                  <Ionicons name="send" size={18} color={colors.white} />
-                )}
-              </TouchableOpacity>
-            </View>
-          )}
-        </KeyboardAvoidingView>
-      </SafeAreaView>
-    );
-  }
-
   // ── Render action buttons (shared between normal and chat layouts) ──
   function renderActionButtons() {
     if (!user) return null;
@@ -589,6 +516,7 @@ export default function SessionDetailScreen() {
   return (
     <SafeAreaView style={shared.screen} edges={["bottom"]}>
       <ScrollView
+        ref={scrollViewRef}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
         }
@@ -794,7 +722,14 @@ export default function SessionDetailScreen() {
         {/* Bottom Tabs: Polls / Chat / Community */}
         <View style={styles.bottomTabsContainer}>
           <View style={styles.bottomTabsCard}>
-            <TabBar tabs={tabs} activeTab={activeTab} onTabPress={setActiveTab} />
+            <TabBar tabs={tabs} activeTab={activeTab} onTabPress={(tab) => {
+              setActiveTab(tab);
+              if (tab === "chat") {
+                setTimeout(() => {
+                  scrollViewRef.current?.scrollToEnd({ animated: true });
+                }, 100);
+              }
+            }} />
 
             <View style={styles.tabContent}>
 
@@ -915,6 +850,49 @@ export default function SessionDetailScreen() {
                     </View>
                   );
                 })
+              )}
+            </View>
+          )}
+
+          {/* ── Chat Tab ── */}
+          {activeTab === "chat" && (
+            <View style={styles.section}>
+              {chatMessages.length === 0 ? (
+                <EmptyState icon="chatbubbles-outline" title="No messages yet" subtitle="Start the conversation!" />
+              ) : (
+                <View style={chatStyles.messagesList}>
+                  {chatMessages.map((msg: any) => (
+                    <ChatBubble key={msg.id} message={msg} isOwnMessage={msg.user_id === user?.id} />
+                  ))}
+                </View>
+              )}
+
+              {/* Compose bar */}
+              {user && (
+                <View style={chatStyles.composeBar}>
+                  <TextInput
+                    style={chatStyles.composeInput}
+                    placeholder="Type a message..."
+                    placeholderTextColor={colors.textMuted}
+                    value={chatInput}
+                    onChangeText={setChatInput}
+                    multiline
+                    maxLength={2000}
+                  />
+                  <TouchableOpacity
+                    style={[chatStyles.sendBtn, !chatInput.trim() && { opacity: 0.4 }]}
+                    onPress={() => {
+                      if (chatInput.trim()) sendMessageMutation.mutate(chatInput.trim());
+                    }}
+                    disabled={!chatInput.trim() || sendMessageMutation.isPending}
+                  >
+                    {sendMessageMutation.isPending ? (
+                      <ActivityIndicator size="small" color={colors.white} />
+                    ) : (
+                      <Ionicons name="send" size={18} color={colors.white} />
+                    )}
+                  </TouchableOpacity>
+                </View>
               )}
             </View>
           )}
@@ -1400,9 +1378,9 @@ const pollStyles = StyleSheet.create({
 
 // ── Chat Styles ──
 const chatStyles = StyleSheet.create({
-  list: {
-    padding: spacing.lg,
-    paddingBottom: spacing.sm,
+  messagesList: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
   },
   bubbleRow: {
     flexDirection: "row",
