@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@attendly/ui/supabase/server";
 import { stripe } from "@/lib/stripe";
+// Stripe Connect: live mode enabled
 
 /**
  * POST /api/stripe/connect
