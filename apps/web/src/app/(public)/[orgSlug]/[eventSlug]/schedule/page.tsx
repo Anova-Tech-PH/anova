@@ -4,10 +4,10 @@ import { createClient } from "@attendly/ui/supabase/server";
 import { Badge, Avatar } from "@attendly/ui/components";
 import Link from "next/link";
 import { BookmarkButton } from "./bookmark-button";
+import { DaySelector } from "./day-selector";
 import { RsvpButton } from "@/features/rsvp/components/rsvp-button";
 import { SessionFeedbackForm } from "@/features/feedback/components/session-feedback-form";
-import { SessionPollCard } from "@/features/polls/components/session-poll-card";
-import { Pencil } from "lucide-react";
+import { BarChart3, Pencil } from "lucide-react";
 import type { FeedbackQuestion } from "@/features/feedback/queries";
 import type { PollWithResults } from "@/features/polls/queries";
 
@@ -345,30 +345,45 @@ export default async function PublicSchedulePage({
         </div>
       ) : (
         <>
-          {/* Day tabs */}
+          {/* Day tabs: dropdown on mobile, horizontal tabs on desktop */}
           {agendaFilteredGroups.length > 1 && (
-            <div className="mt-6 flex gap-1 overflow-x-auto border-b">
-              {agendaFilteredGroups.map((dayGroup) => (
-                <Link
-                  key={dayGroup.dateKey}
-                  href={`?${new URLSearchParams({
-                    ...(activeTab === "my-agenda" ? { tab: "my-agenda" } : {}),
-                    ...(query.search ? { search: query.search } : {}),
-                    day: dayGroup.dateKey,
-                  }).toString()}`}
-                  className={`whitespace-nowrap px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                    dayGroup.dateKey === activeDay
-                      ? "border-primary text-primary"
-                      : "border-transparent text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {dayGroup.label}
-                  <span className="ml-1.5 text-xs text-muted-foreground">
-                    ({dayGroup.sessions!.length})
-                  </span>
-                </Link>
-              ))}
-            </div>
+            <>
+              {/* Mobile: dropdown selector (client component) */}
+              <DaySelector
+                groups={agendaFilteredGroups.map((g) => ({
+                  dateKey: g.dateKey,
+                  label: g.label,
+                  count: g.sessions!.length,
+                }))}
+                activeDay={activeDay}
+                activeTab={activeTab}
+                search={query.search}
+              />
+
+              {/* Desktop: horizontal tabs */}
+              <div className="mt-6 hidden gap-1 overflow-x-auto border-b sm:flex">
+                {agendaFilteredGroups.map((dayGroup) => (
+                  <Link
+                    key={dayGroup.dateKey}
+                    href={`?${new URLSearchParams({
+                      ...(activeTab === "my-agenda" ? { tab: "my-agenda" } : {}),
+                      ...(query.search ? { search: query.search } : {}),
+                      day: dayGroup.dateKey,
+                    }).toString()}`}
+                    className={`whitespace-nowrap px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                      dayGroup.dateKey === activeDay
+                        ? "border-primary text-primary"
+                        : "border-transparent text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {dayGroup.label}
+                    <span className="ml-1.5 text-xs text-muted-foreground">
+                      ({dayGroup.sessions!.length})
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </>
           )}
 
           {/* Sessions for active day */}
@@ -460,19 +475,6 @@ export default async function PublicSchedulePage({
                       </div>
                     )}
 
-                    {/* Active Polls */}
-                    {sessionPolls.length > 0 && (
-                      <div className="mt-3 space-y-2">
-                        {sessionPolls.map(({ poll, userVote }) => (
-                          <SessionPollCard
-                            key={poll.id}
-                            poll={poll}
-                            userVote={userVote}
-                          />
-                        ))}
-                      </div>
-                    )}
-
                     {/* Feedback Form (only after session ends) */}
                     {sessionFeedback && (
                       <div className="mt-3">
@@ -485,7 +487,7 @@ export default async function PublicSchedulePage({
                       </div>
                     )}
 
-                    {/* Actions: Add to My Agenda + Notes + View Details */}
+                    {/* Actions: Add to My Agenda + Notes + Indicators + View Details */}
                     <div className="mt-3 border-t pt-3 flex items-center gap-2 flex-wrap">
                       {user && (
                         <>
@@ -503,6 +505,16 @@ export default async function PublicSchedulePage({
                             </Link>
                           )}
                         </>
+                      )}
+                      {sessionPolls.length > 0 && (
+                        <Link
+                          href={`${basePath}/schedule/${session.id}?tab=polls`}
+                          className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                          title={`${sessionPolls.length} poll${sessionPolls.length > 1 ? "s" : ""}`}
+                        >
+                          <BarChart3 className="h-3 w-3" />
+                          {sessionPolls.length} {sessionPolls.length === 1 ? "poll" : "polls"}
+                        </Link>
                       )}
                       <Link
                         href={`${basePath}/schedule/${session.id}`}

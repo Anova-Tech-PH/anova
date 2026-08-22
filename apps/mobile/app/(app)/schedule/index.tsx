@@ -3,15 +3,18 @@ import {
   View,
   Text,
   FlatList,
+  ScrollView,
   StyleSheet,
   ActivityIndicator,
   RefreshControl,
   TouchableOpacity,
   Modal,
   Pressable,
+  TextInput,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useRouter, useNavigation } from "expo-router";
+import { DrawerActions } from "@react-navigation/native";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -22,11 +25,11 @@ import {
   rsvpToSession,
   cancelRsvp,
   getMyNotes,
+  getSessionPollCounts,
 } from "@attendly/supabase-client";
 import { supabase } from "../../../src/lib/supabase";
 import { useAuth } from "../../../src/lib/auth-context";
 import { useEventContext } from "../../../src/lib/event-context";
-import { SearchBar } from "../../../src/components/search-bar";
 import { Badge } from "../../../src/components/badge";
 import { EmptyState } from "../../../src/components/empty-state";
 import { Avatar } from "../../../src/components/avatar";
@@ -57,14 +60,19 @@ function formatTime(iso: string) {
   });
 }
 
+function stripHtml(html: string) {
+  return html.replace(/<[^>]*>/g, "").trim();
+}
+
 export default function ScheduleScreen() {
   const { user } = useAuth();
   const { currentEvent } = useEventContext();
   const queryClient = useQueryClient();
   const router = useRouter();
+  const navigation = useNavigation();
   const [search, setSearch] = useState("");
   const [activeDay, setActiveDay] = useState<string | null>(null);
-  const [showMyAgenda, setShowMyAgenda] = useState(false);
+  const [activeTab, setActiveTab] = useState<"full" | "my-agenda">("full");
   const [refreshing, setRefreshing] = useState(false);
   const [dayPickerOpen, setDayPickerOpen] = useState(false);
 
@@ -100,6 +108,13 @@ export default function ScheduleScreen() {
     enabled: !!currentEvent?.id && !!user?.id,
   });
 
+  const sessionIds = useMemo(() => (data?.sessions ?? []).map((s: any) => s.id), [data?.sessions]);
+  const { data: pollCounts = {} } = useQuery({
+    queryKey: ["pollCounts", currentEvent?.id],
+    queryFn: () => getSessionPollCounts(supabase, sessionIds),
+    enabled: sessionIds.length > 0,
+  });
+
   const rsvpMutation = useMutation({
     mutationFn: async ({ sessionId, isRsvpd }: { sessionId: string; isRsvpd: boolean }) => {
       if (isRsvpd) {
@@ -122,7 +137,6 @@ export default function ScheduleScreen() {
     return getDayTabs(data.event.start_date, data.event.end_date);
   }, [data?.event]);
 
-  // Auto-select first day
   const selectedDay = activeDay ?? dayTabs[0]?.key ?? null;
 
   const filteredSessions = useMemo(() => {
@@ -140,17 +154,18 @@ export default function ScheduleScreen() {
       sessions = sessions.filter(
         (s: any) =>
           s.title?.toLowerCase().includes(q) ||
-          s.description?.toLowerCase().includes(q)
+          s.description?.toLowerCase().includes(q) ||
+          s.location?.toLowerCase().includes(q)
       );
     }
 
-    // Filter by bookmarks (My Agenda toggle)
-    if (showMyAgenda) {
+    // Filter by bookmarks (My Agenda tab)
+    if (activeTab === "my-agenda") {
       sessions = sessions.filter((s: any) => bookmarkSet.has(s.id));
     }
 
     return sessions;
-  }, [data?.sessions, selectedDay, search, showMyAgenda, bookmarkSet]);
+  }, [data?.sessions, selectedDay, search, activeTab, bookmarkSet]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -179,117 +194,167 @@ export default function ScheduleScreen() {
     );
   }
 
+  const selectedDayTab = dayTabs.find((d) => d.key === selectedDay);
+  const sessionCount = filteredSessions.filter((s: any) => s.type !== "break").length;
+
   const renderSession = ({ item }: { item: any }) => {
     const tracks = (item.session_tracks ?? []).map((st: any) => st.tracks).filter(Boolean);
     const speakers = (item.session_speakers ?? []).map((ss: any) => ss.speakers).filter(Boolean);
     const isBookmarked = bookmarkSet.has(item.id);
     const isRsvpd = rsvpSet.has(item.id);
     const hasNote = noteSet.has(item.id);
-    const showTypeBadge = item.type && item.type !== "session";
+    const pollCount = pollCounts[item.id] ?? 0;
+    const trackColor = item.track?.color ?? (tracks[0]?.color || null);
 
     return (
       <TouchableOpacity
-        style={styles.sessionCard}
+        style={[
+          styles.sessionCard,
+          item.type === "break" && styles.sessionCardBreak,
+          trackColor && { borderLeftWidth: 3, borderLeftColor: trackColor },
+        ]}
         onPress={() => router.push(`/(app)/schedule/${item.id}` as any)}
         activeOpacity={0.7}
       >
-        <View style={styles.timeCol}>
-          <Text style={styles.timeText}>{formatTime(item.start_time)}</Text>
-          <Text style={styles.endTimeText}>{formatTime(item.end_time)}</Text>
+        {/* Badge row */}
+        <View style={styles.badgeRow}>
+          <Badge label={item.type || "session"} />
+          {(item.track || tracks[0]) && (
+            <Text style={styles.trackName}>{item.track?.name || tracks[0]?.name}</Text>
+          )}
         </View>
-        <View style={styles.sessionContent}>
-          <Text style={styles.sessionTitle} numberOfLines={2}>{item.title}</Text>
 
-          {/* Description preview */}
-          {item.description && (
-            <Text style={styles.sessionDescription} numberOfLines={2}>
-              {item.description}
+        {/* Title */}
+        <Text style={styles.sessionTitle} numberOfLines={2}>{item.title}</Text>
+
+        {/* Description */}
+        {item.description && (
+          <Text style={styles.sessionDesc} numberOfLines={2}>
+            {stripHtml(item.description)}
+          </Text>
+        )}
+
+        {/* Time + Location row */}
+        <View style={styles.metaRow}>
+          <View style={styles.metaItem}>
+            <Ionicons name="time-outline" size={12} color={colors.textMuted} />
+            <Text style={styles.metaText}>
+              {formatTime(item.start_time)} - {formatTime(item.end_time)}
             </Text>
-          )}
-
-          {/* Track & type badges */}
-          {(tracks.length > 0 || showTypeBadge) && (
-            <View style={styles.badgeRow}>
-              {tracks.map((t: any) => (
-                <Badge key={t.id} label={t.name} color={t.color || colors.primary} backgroundColor={`${t.color || colors.primary}20`} />
-              ))}
-              {showTypeBadge && (
-                <Badge label={item.type} />
-              )}
-            </View>
-          )}
-
-          {/* Speakers */}
-          {speakers.length > 0 && (
-            <View style={styles.speakerRow}>
-              {speakers.slice(0, 3).map((sp: any) => (
-                <View key={sp.id} style={styles.speakerChip}>
-                  <Avatar name={sp.name} size={20} />
-                  <Text style={styles.speakerName} numberOfLines={1}>{sp.name}</Text>
-                </View>
-              ))}
-            </View>
-          )}
-
-          {/* Location */}
+          </View>
           {item.location && (
-            <View style={styles.locationRow}>
+            <View style={styles.metaItem}>
               <Ionicons name="location-outline" size={12} color={colors.textMuted} />
-              <Text style={styles.locationText}>{item.location}</Text>
-            </View>
-          )}
-
-          {/* RSVP button */}
-          {user && item.rsvp_enabled && (
-            <View style={styles.rsvpRow}>
+              <Text style={styles.metaText}>{item.location}</Text>
               <TouchableOpacity
-                style={[styles.rsvpBtn, isRsvpd && styles.rsvpBtnActive]}
                 onPress={(e) => {
-                  e.stopPropagation?.();
-                  rsvpMutation.mutate({ sessionId: item.id, isRsvpd });
+                  e.stopPropagation();
+                  router.navigate("/(app)/floormap" as any);
                 }}
                 activeOpacity={0.7}
               >
-                <Ionicons
-                  name={isRsvpd ? "checkmark-circle" : "add-circle-outline"}
-                  size={14}
-                  color={isRsvpd ? colors.white : colors.primary}
-                />
-                <Text style={[styles.rsvpText, isRsvpd && styles.rsvpTextActive]}>
-                  {isRsvpd ? "RSVP'd" : "RSVP"}
-                </Text>
+                <Text style={styles.viewMapLink}>View Map</Text>
               </TouchableOpacity>
-              {item.capacity != null && (
-                <Text style={styles.capacityText}>
-                  {item.capacity - (item.rsvp_count ?? 0)} spots left
-                </Text>
-              )}
             </View>
           )}
         </View>
 
-        {/* Right column: bookmark + notes indicator */}
-        {user && (
-          <View style={styles.rightCol}>
+        {/* Speakers */}
+        {speakers.length > 0 && (
+          <View style={styles.speakerRow}>
+            {speakers.slice(0, 3).map((sp: any) => (
+              <View key={sp.id} style={styles.speakerChip}>
+                <Avatar name={sp.name} size={24} uri={sp.photo} />
+                <View>
+                  <Text style={styles.speakerName}>{sp.name}</Text>
+                  {sp.title && (
+                    <Text style={styles.speakerTitle}> · {sp.title}</Text>
+                  )}
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {/* RSVP button */}
+        {user && item.rsvp_enabled && (
+          <View style={styles.rsvpRow}>
             <TouchableOpacity
-              style={styles.bookmarkBtn}
-              onPress={() => bookmarkMutation.mutate({ sessionId: item.id })}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              style={[styles.rsvpBtn, isRsvpd && styles.rsvpBtnActive]}
+              onPress={(e) => {
+                e.stopPropagation?.();
+                rsvpMutation.mutate({ sessionId: item.id, isRsvpd });
+              }}
+              activeOpacity={0.7}
             >
               <Ionicons
-                name={isBookmarked ? "bookmark" : "bookmark-outline"}
-                size={20}
+                name={isRsvpd ? "checkmark-circle" : "add-circle-outline"}
+                size={14}
+                color={isRsvpd ? colors.white : colors.primary}
+              />
+              <Text style={[styles.rsvpText, isRsvpd && styles.rsvpTextActive]}>
+                {isRsvpd ? "RSVP'd" : "RSVP"}
+              </Text>
+            </TouchableOpacity>
+            {item.capacity != null && (
+              <Text style={styles.capacityText}>
+                {item.capacity - (item.rsvp_count ?? 0)} spots left
+              </Text>
+            )}
+          </View>
+        )}
+
+        {/* Actions row: Add to My Agenda + Add notes + View Details */}
+        {user && (
+          <View style={styles.actionsRow}>
+            <TouchableOpacity
+              style={styles.agendaBtn}
+              onPress={(e) => {
+                e.stopPropagation?.();
+                bookmarkMutation.mutate({ sessionId: item.id });
+              }}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name={isBookmarked ? "calendar" : "calendar-outline"}
+                size={14}
                 color={isBookmarked ? colors.primary : colors.textMuted}
               />
+              <Text style={[styles.agendaBtnText, isBookmarked && styles.agendaBtnTextActive]}>
+                {isBookmarked ? "In My Agenda" : "Add to My Agenda"}
+              </Text>
             </TouchableOpacity>
-            {hasNote && (
-              <Ionicons
-                name="pencil"
-                size={14}
-                color={colors.primary}
-                style={styles.noteIndicator}
-              />
+            {item.type !== "break" && (
+              <TouchableOpacity
+                style={styles.notesBtn}
+                onPress={(e) => {
+                  e.stopPropagation?.();
+                  router.push(`/(app)/schedule/${item.id}` as any);
+                }}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="pencil-outline" size={12} color={colors.textMuted} />
+                <Text style={styles.notesBtnText}>
+                  {hasNote ? "Edit notes" : "Add notes"}
+                </Text>
+              </TouchableOpacity>
             )}
+            {pollCount > 0 && (
+              <TouchableOpacity
+                style={styles.notesBtn}
+                onPress={(e) => {
+                  e.stopPropagation?.();
+                  router.push(`/(app)/schedule/${item.id}` as any);
+                }}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="stats-chart-outline" size={12} color={colors.textMuted} />
+                <Text style={styles.notesBtnText}>
+                  {pollCount} {pollCount === 1 ? "poll" : "polls"}
+                </Text>
+              </TouchableOpacity>
+            )}
+            <Text style={styles.viewDetailsLink}>View Details →</Text>
           </View>
         )}
       </TouchableOpacity>
@@ -298,184 +363,314 @@ export default function ScheduleScreen() {
 
   return (
     <SafeAreaView style={shared.screen} edges={["bottom"]}>
-      <SearchBar value={search} onChangeText={setSearch} placeholder="Search sessions..." />
-
-      {/* Filter row: Day select + Agenda toggle */}
-      <View style={styles.filterRow}>
-        {dayTabs.length > 1 && (
-          <>
-            <TouchableOpacity
-              style={styles.selectBtn}
-              onPress={() => setDayPickerOpen(true)}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="calendar-outline" size={16} color={colors.primary} />
-              <Text style={styles.selectBtnText}>
-                {dayTabs.find((d) => d.key === selectedDay)?.label ?? "Day"}{" "}
-                <Text style={styles.selectBtnDate}>
-                  {dayTabs.find((d) => d.key === selectedDay)?.date ?? ""}
-                </Text>
-              </Text>
-              <Ionicons name="chevron-down" size={16} color={colors.textMuted} />
-            </TouchableOpacity>
-
-            <Modal
-              visible={dayPickerOpen}
-              transparent
-              animationType="fade"
-              onRequestClose={() => setDayPickerOpen(false)}
-            >
-              <Pressable style={styles.modalOverlay} onPress={() => setDayPickerOpen(false)}>
-                <View style={styles.modalContent}>
-                  <Text style={styles.modalTitle}>Select Day</Text>
-                  {dayTabs.map((d) => {
-                    const isSelected = d.key === selectedDay;
-                    return (
-                      <TouchableOpacity
-                        key={d.key}
-                        style={[styles.modalOption, isSelected && styles.modalOptionActive]}
-                        onPress={() => {
-                          setActiveDay(d.key);
-                          setDayPickerOpen(false);
-                        }}
-                        activeOpacity={0.7}
-                      >
-                        <View>
-                          <Text style={[styles.modalOptionLabel, isSelected && styles.modalOptionLabelActive]}>
-                            {d.label}
-                          </Text>
-                          <Text style={[styles.modalOptionDate, isSelected && styles.modalOptionDateActive]}>
-                            {d.date}
-                          </Text>
-                        </View>
-                        {isSelected && (
-                          <Ionicons name="checkmark" size={20} color={colors.primary} />
-                        )}
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              </Pressable>
-            </Modal>
-          </>
-        )}
-
-        {user && (
-          <TouchableOpacity
-            style={[styles.toggleBtn, showMyAgenda && styles.toggleActive]}
-            onPress={() => setShowMyAgenda(!showMyAgenda)}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="bookmark" size={14} color={showMyAgenda ? colors.white : colors.textSecondary} />
-            <Text style={[styles.toggleText, showMyAgenda && styles.toggleTextActive]}>My Agenda</Text>
-          </TouchableOpacity>
-        )}
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
+          style={styles.menuButton}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="menu" size={24} color={colors.textPrimary} />
+        </TouchableOpacity>
       </View>
 
       <FlatList
         data={filteredSessions}
         keyExtractor={(item: any) => item.id}
         renderItem={renderSession}
-        contentContainerStyle={shared.listContent}
+        contentContainerStyle={styles.listContent}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+        }
+        ListHeaderComponent={
+          <View style={styles.listHeader}>
+            {/* Page title */}
+            <Text style={styles.pageTitle}>
+              {currentEvent.title} — Schedule
+            </Text>
+
+            {/* Full Agenda / My Agenda tabs */}
+            {user && (
+              <View style={styles.tabRow}>
+                <TouchableOpacity
+                  style={[styles.tab, activeTab === "full" && styles.tabActive]}
+                  onPress={() => setActiveTab("full")}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.tabText, activeTab === "full" && styles.tabTextActive]}>
+                    Full Agenda
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.tab, activeTab === "my-agenda" && styles.tabActive]}
+                  onPress={() => setActiveTab("my-agenda")}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.tabText, activeTab === "my-agenda" && styles.tabTextActive]}>
+                    My Agenda
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {/* Search bar */}
+            <View style={styles.searchContainer}>
+              <Ionicons name="search-outline" size={16} color={colors.textMuted} />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search by title, location, or description..."
+                placeholderTextColor={colors.textMuted}
+                value={search}
+                onChangeText={setSearch}
+              />
+            </View>
+
+            {/* Day selector dropdown */}
+            {dayTabs.length > 1 && (
+              <TouchableOpacity
+                style={styles.daySelector}
+                onPress={() => setDayPickerOpen(true)}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="calendar-outline" size={16} color={colors.primary} />
+                <Text style={styles.daySelectorText}>
+                  {selectedDayTab?.date ?? "Select day"}
+                  <Text style={styles.daySelectorCount}>
+                    {" "}({sessionCount} sessions)
+                  </Text>
+                </Text>
+                <Ionicons name="chevron-down" size={16} color={colors.textMuted} />
+              </TouchableOpacity>
+            )}
+          </View>
         }
         ListEmptyComponent={
           <EmptyState
             icon="calendar-outline"
-            title={showMyAgenda ? "No bookmarked sessions" : "No sessions found"}
-            subtitle={showMyAgenda ? "Bookmark sessions to add them to your agenda" : "Try adjusting your search or day filter"}
+            title={activeTab === "my-agenda" ? "No sessions in your agenda" : "No sessions found"}
+            subtitle={
+              activeTab === "my-agenda"
+                ? 'Browse the full agenda and tap "Add to My Agenda" on sessions you want to attend.'
+                : "Try adjusting your search or day filter"
+            }
           />
         }
       />
+
+      {/* Day picker modal */}
+      <Modal
+        visible={dayPickerOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setDayPickerOpen(false)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setDayPickerOpen(false)}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Select Day</Text>
+            {dayTabs.map((d) => {
+              const isSelected = d.key === selectedDay;
+              return (
+                <TouchableOpacity
+                  key={d.key}
+                  style={[styles.modalOption, isSelected && styles.modalOptionActive]}
+                  onPress={() => {
+                    setActiveDay(d.key);
+                    setDayPickerOpen(false);
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <View>
+                    <Text style={[styles.modalOptionLabel, isSelected && styles.modalOptionLabelActive]}>
+                      {d.label}
+                    </Text>
+                    <Text style={[styles.modalOptionDate, isSelected && styles.modalOptionDateActive]}>
+                      {d.date}
+                    </Text>
+                  </View>
+                  {isSelected && (
+                    <Ionicons name="checkmark" size={20} color={colors.primary} />
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  sessionCard: {
+  // Header
+  header: {
     flexDirection: "row",
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
-    ...shadows.sm,
+    alignItems: "center",
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
   },
-  timeCol: {
-    width: 60,
-    paddingTop: 2,
+  menuButton: {
+    padding: spacing.xs,
   },
-  timeText: {
-    ...typography.captionBold,
+
+  // List
+  listContent: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: 40,
+  },
+  listHeader: {
+    paddingBottom: spacing.lg,
+  },
+
+  // Page title
+  pageTitle: {
+    fontSize: 24,
+    fontWeight: "600",
+    color: colors.textPrimary,
+    lineHeight: 32,
+  },
+
+  // Tabs
+  tabRow: {
+    flexDirection: "row",
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderLight,
+    marginTop: spacing.lg,
+  },
+  tab: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderBottomWidth: 2,
+    borderBottomColor: "transparent",
+  },
+  tabActive: {
+    borderBottomColor: colors.primary,
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: colors.textMuted,
+  },
+  tabTextActive: {
     color: colors.primary,
   },
-  endTimeText: {
-    ...typography.small,
-    color: colors.textMuted,
-    marginTop: 2,
+
+  // Search
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    marginTop: spacing.lg,
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 10,
   },
-  sessionContent: {
+  searchInput: {
     flex: 1,
-    gap: spacing.xs,
-  },
-  sessionTitle: {
-    ...typography.bodyMedium,
+    fontSize: 14,
     color: colors.textPrimary,
   },
-  sessionDescription: {
-    ...typography.small,
+
+  // Day selector
+  daySelector: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    marginTop: spacing.lg,
+  },
+  daySelectorText: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: colors.textPrimary,
+  },
+  daySelectorCount: {
+    fontWeight: "400",
     color: colors.textMuted,
-    marginTop: 2,
-    fontWeight: "400" as const,
-    lineHeight: 16,
+  },
+
+  // Session card (matches web structure)
+  sessionCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+  },
+  sessionCardBreak: {
+    backgroundColor: colors.surfaceElevated,
   },
   badgeRow: {
     flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  trackName: {
+    fontSize: 10,
+    color: colors.textMuted,
+  },
+  sessionTitle: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: colors.textPrimary,
+    marginTop: 6,
+  },
+  sessionDesc: {
+    fontSize: 14,
+    color: colors.textMuted,
+    marginTop: 4,
+    lineHeight: 20,
+  },
+  metaRow: {
+    flexDirection: "row",
     flexWrap: "wrap",
-    gap: spacing.xs,
+    alignItems: "center",
+    gap: spacing.md,
+    marginTop: spacing.sm,
+  },
+  metaItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  metaText: {
+    fontSize: 12,
+    color: colors.textMuted,
+  },
+  viewMapLink: {
+    fontSize: 12,
+    color: colors.primary,
+    marginLeft: 4,
   },
   speakerRow: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: spacing.sm,
+    marginTop: spacing.md,
   },
   speakerChip: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    gap: spacing.sm,
   },
   speakerName: {
-    ...typography.small,
-    color: colors.textSecondary,
-    maxWidth: 80,
+    fontSize: 12,
+    fontWeight: "500",
+    color: colors.textPrimary,
   },
-  locationRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  locationText: {
-    ...typography.small,
+  speakerTitle: {
+    fontSize: 10,
     color: colors.textMuted,
   },
-  rightCol: {
-    alignItems: "center",
-    paddingLeft: spacing.sm,
-    paddingTop: 2,
-    gap: spacing.xs,
-  },
-  bookmarkBtn: {
-    justifyContent: "flex-start",
-  },
-  noteIndicator: {
-    marginTop: 2,
-  },
+
+  // RSVP
   rsvpRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
+    marginTop: spacing.md,
   },
   rsvpBtn: {
     flexDirection: "row",
@@ -492,45 +687,68 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   rsvpText: {
-    ...typography.small,
+    fontSize: 11,
+    fontWeight: "600",
     color: colors.primary,
   },
   rsvpTextActive: {
     color: colors.white,
   },
   capacityText: {
-    ...typography.small,
+    fontSize: 11,
+    fontWeight: "400",
     color: colors.textMuted,
-    fontWeight: "400" as const,
   },
-  filterRow: {
+
+  // Actions row (matches web: Add to My Agenda + notes + View Details)
+  actionsRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: spacing.lg,
+    flexWrap: "wrap",
     gap: spacing.sm,
-    paddingBottom: spacing.md,
+    marginTop: spacing.md,
+    paddingTop: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.borderLight,
   },
-  selectBtn: {
+  agendaBtn: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.xs,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.md,
-    backgroundColor: colors.surface,
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: colors.border,
-    ...shadows.sm,
+    borderColor: colors.borderLight,
   },
-  selectBtnText: {
-    ...typography.captionBold,
-    color: colors.textPrimary,
-  },
-  selectBtnDate: {
-    ...typography.caption,
+  agendaBtnText: {
+    fontSize: 12,
+    fontWeight: "500",
     color: colors.textMuted,
-    fontWeight: "400" as const,
   },
+  agendaBtnTextActive: {
+    color: colors.primary,
+  },
+  notesBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: radius.sm,
+  },
+  notesBtnText: {
+    fontSize: 12,
+    color: colors.textMuted,
+  },
+  viewDetailsLink: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: colors.primary,
+    marginLeft: "auto",
+  },
+
+  // Day picker modal
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.4)",
@@ -542,7 +760,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
     padding: spacing.lg,
-    width: "100%" as const,
+    width: "100%",
     maxWidth: 320,
     ...shadows.lg,
   },
@@ -576,28 +794,5 @@ const styles = StyleSheet.create({
   },
   modalOptionDateActive: {
     color: colors.primary,
-  },
-  toggleBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.md,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    ...shadows.sm,
-  },
-  toggleActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  toggleText: {
-    ...typography.small,
-    color: colors.textSecondary,
-  },
-  toggleTextActive: {
-    color: colors.white,
   },
 });

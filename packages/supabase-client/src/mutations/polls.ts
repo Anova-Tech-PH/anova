@@ -8,6 +8,8 @@ export async function votePoll(
     userId: string;
   }
 ): Promise<void> {
+  // Delete existing vote then insert (partial unique index doesn't support simple upsert)
+  await client.from("live_poll_votes").delete().eq("poll_id", params.pollId).eq("user_id", params.userId);
   const { error } = await client.from("live_poll_votes").insert({
     poll_id: params.pollId,
     user_id: params.userId,
@@ -24,6 +26,7 @@ export async function submitPollTextResponse(
     responseText: string;
   }
 ): Promise<void> {
+  await client.from("live_poll_votes").delete().eq("poll_id", params.pollId).eq("user_id", params.userId);
   const { error } = await client.from("live_poll_votes").insert({
     poll_id: params.pollId,
     user_id: params.userId,
@@ -40,6 +43,7 @@ export async function submitPollRating(
     ratingValue: number;
   }
 ): Promise<void> {
+  await client.from("live_poll_votes").delete().eq("poll_id", params.pollId).eq("user_id", params.userId);
   const { error } = await client.from("live_poll_votes").insert({
     poll_id: params.pollId,
     user_id: params.userId,

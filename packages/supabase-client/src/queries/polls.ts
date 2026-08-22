@@ -15,6 +15,27 @@ export async function getSessionPolls(
   return data ?? [];
 }
 
+export async function getSessionPollCounts(
+  client: SupabaseClient,
+  sessionIds: string[]
+): Promise<Record<string, number>> {
+  if (sessionIds.length === 0) return {};
+
+  const { data, error } = await client
+    .from("live_polls")
+    .select("session_id")
+    .in("session_id", sessionIds)
+    .in("status", ["open", "closed"]);
+
+  if (error) throw new Error(error.message);
+
+  const counts: Record<string, number> = {};
+  for (const p of data ?? []) {
+    counts[p.session_id] = (counts[p.session_id] ?? 0) + 1;
+  }
+  return counts;
+}
+
 export async function getSessionPollVoteCounts(
   client: SupabaseClient,
   pollIds: string[]

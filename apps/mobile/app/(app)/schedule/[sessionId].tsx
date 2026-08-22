@@ -76,6 +76,7 @@ function PollOptionRow({
   voteCount,
   selected,
   showResults,
+  disabled,
   onPress,
 }: {
   option: { id: string; text: string };
@@ -83,6 +84,7 @@ function PollOptionRow({
   voteCount: number;
   selected: boolean;
   showResults: boolean;
+  disabled?: boolean;
   onPress: () => void;
 }) {
   const pct = totalVotes > 0 ? Math.round((voteCount / totalVotes) * 100) : 0;
@@ -91,7 +93,7 @@ function PollOptionRow({
     <TouchableOpacity
       style={[pollStyles.optionRow, selected && pollStyles.optionSelected]}
       onPress={onPress}
-      disabled={showResults}
+      disabled={disabled}
       activeOpacity={0.7}
     >
       {showResults && (
@@ -193,7 +195,7 @@ export default function SessionDetailScreen() {
   const router = useRouter();
   const navigation = useNavigation();
   const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState("info");
+  const [activeTab, setActiveTab] = useState("polls");
 
   // ── Notes state ──
   const [noteText, setNoteText] = useState("");
@@ -202,6 +204,9 @@ export default function SessionDetailScreen() {
   // ── Chat state ──
   const [chatInput, setChatInput] = useState("");
   const chatListRef = useRef<FlatList>(null);
+
+  // ── Poll text input state (for word_cloud / short_answer) ──
+  const [pollTextInputs, setPollTextInputs] = useState<Record<string, string>>({});
 
   // ── Feedback state ──
   const [feedbackAnswers, setFeedbackAnswers] = useState<Record<string, string | number>>({});
@@ -250,26 +255,17 @@ export default function SessionDetailScreen() {
   });
 
   // ── Notes ──
-  const { data: note } = useQuery({
+  const { data: note, isFetched: noteFetched } = useQuery({
     queryKey: ["session-note", sessionId, user?.id],
     queryFn: () => getSessionNote(supabase, sessionId!, user!.id),
-    enabled: !!sessionId && !!user?.id && activeTab === "notes",
+    enabled: !!sessionId && !!user?.id,
   });
 
   useEffect(() => {
-    if (note && !noteLoaded) {
-      setNoteText(note.content ?? "");
-      setNoteLoaded(true);
-    } else if (!note && activeTab === "notes" && !noteLoaded) {
-      setNoteText("");
-      setNoteLoaded(true);
-    }
-  }, [note, noteLoaded, activeTab]);
-
-  // Reset noteLoaded when switching away from notes
-  useEffect(() => {
-    if (activeTab !== "notes") setNoteLoaded(false);
-  }, [activeTab]);
+    if (!noteFetched || noteLoaded) return;
+    setNoteText(note?.content ?? "");
+    setNoteLoaded(true);
+  }, [note, noteFetched, noteLoaded]);
 
   // ── Polls ──
   const { data: polls = [] } = useQuery({
@@ -378,6 +374,16 @@ export default function SessionDetailScreen() {
     },
   });
 
+  const pollTextMutation = useMutation({
+    mutationFn: (params: { pollId: string; responseText: string }) =>
+      submitPollTextResponse(supabase, { pollId: params.pollId, userId: user!.id, responseText: params.responseText }),
+    onSuccess: (_data, variables) => {
+      setPollTextInputs((prev) => ({ ...prev, [variables.pollId]: "" }));
+      queryClient.invalidateQueries({ queryKey: ["user-poll-votes", sessionId] });
+      queryClient.invalidateQueries({ queryKey: ["poll-vote-counts"] });
+    },
+  });
+
   const sendMessageMutation = useMutation({
     mutationFn: (content: string) =>
       sendChatMessage(supabase, { sessionId: sessionId!, userId: user!.id, content }),
@@ -440,12 +446,9 @@ export default function SessionDetailScreen() {
   const end = formatDateTime(session.end_time);
 
   const tabs = [
-    { key: "info", label: "Info" },
-    { key: "qa", label: `Q&A (${questions.length})` },
-    { key: "notes", label: "Notes" },
     { key: "polls", label: "Polls" },
     { key: "chat", label: "Chat" },
-    ...(sessionEnded ? [{ key: "feedback", label: "Feedback" }] : []),
+    { key: "community", label: "Community" },
   ];
 
   // ── Chat tab needs special layout (no ScrollView, uses FlatList + compose bar) ──
@@ -533,25 +536,11 @@ export default function SessionDetailScreen() {
             color={isBookmarked ? colors.white : colors.primary}
           />
           <Text style={[styles.actionBtnText, isBookmarked && styles.actionBtnTextActive]}>
-            {isBookmarked ? "Saved" : "Save"}
+            {isBookmarked ? "In My Agenda" : "Add to My Agenda"}
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.actionBtn, isLiked && styles.likeActive]}
-          onPress={() => likeMutation.mutate()}
-        >
-          <Ionicons
-            name={isLiked ? "heart" : "heart-outline"}
-            size={16}
-            color={isLiked ? colors.white : colors.error}
-          />
-          <Text style={[styles.actionBtnText, { color: isLiked ? colors.white : colors.error }]}>
-            {likeCount > 0 ? `${likeCount}` : "Like"}
-          </Text>
-        </TouchableOpacity>
-
-        {rsvpData && (
+        {session.rsvp_enabled && rsvpData && (
           <TouchableOpacity
             style={[
               styles.actionBtn,
@@ -596,160 +585,210 @@ export default function SessionDetailScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
         }
       >
+        {/* Back link */}
+        <View style={styles.backRow}>
+          <TouchableOpacity
+            style={styles.backBtn}
+            onPress={() => router.push("/(app)/schedule" as any)}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="arrow-back" size={16} color={colors.textMuted} />
+            <Text style={styles.backText}>Show Agenda</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Header */}
         <View style={styles.header}>
+          {/* Like count top-right */}
+          {user && (
+            <TouchableOpacity
+              style={styles.likeTopRight}
+              onPress={() => likeMutation.mutate()}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name={isLiked ? "heart" : "heart-outline"}
+                size={16}
+                color={isLiked ? colors.error : colors.textMuted}
+              />
+              <Text style={[styles.likeTopText, isLiked && { color: colors.error }]}>
+                {likeCount} Likes
+              </Text>
+            </TouchableOpacity>
+          )}
+
           <Text style={styles.title}>{session.title}</Text>
 
-          {/* Track badges */}
-          {tracks.length > 0 && (
-            <View style={styles.badgeRow}>
-              {tracks.map((t: any) => (
-                <Badge key={t.id} label={t.name} color={t.color || colors.primary} backgroundColor={`${t.color || colors.primary}20`} />
-              ))}
-              {session.type && session.type !== "session" && (
-                <Badge label={session.type} />
-              )}
-            </View>
-          )}
-
-          {/* Date/Time */}
-          <View style={styles.metaRow}>
-            <Ionicons name="calendar-outline" size={16} color={colors.textSecondary} />
-            <Text style={styles.metaText}>{start.date}</Text>
-          </View>
-          <View style={styles.metaRow}>
-            <Ionicons name="time-outline" size={16} color={colors.textSecondary} />
-            <Text style={styles.metaText}>{start.time} - {end.time}</Text>
-          </View>
-          {session.location && (
+          {/* Meta - inline row matching web */}
+          <View style={styles.metaWrap}>
             <View style={styles.metaRow}>
-              <Ionicons name="location-outline" size={16} color={colors.textSecondary} />
-              <Text style={styles.metaText}>{session.location}</Text>
+              <Ionicons name="calendar-outline" size={16} color={colors.textMuted} />
+              <Text style={styles.metaText}>{start.date}</Text>
             </View>
-          )}
+            <View style={styles.metaRow}>
+              <Ionicons name="time-outline" size={16} color={colors.textMuted} />
+              <Text style={styles.metaText}>{start.time} - {end.time}</Text>
+            </View>
+            {session.location && (
+              <View style={styles.metaRow}>
+                <Ionicons name="location-outline" size={16} color={colors.textMuted} />
+                <Text style={styles.metaText}>{session.location}</Text>
+                <TouchableOpacity
+                  onPress={() => router.navigate("/(app)/floormap" as any)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.viewMapLink}>View Map</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+            <View style={styles.metaRow}>
+              <Ionicons name="people-outline" size={16} color={colors.textMuted} />
+              <Text style={styles.metaText}>0 Attending</Text>
+            </View>
+          </View>
+
+          {/* Type & Track badges */}
+          <View style={styles.badgeRow}>
+            {session.type && (
+              <Badge label={session.type} />
+            )}
+            {tracks.map((t: any) => (
+              <Badge key={t.id} label={t.name} color={t.color || colors.primary} backgroundColor={`${t.color || colors.primary}20`} />
+            ))}
+          </View>
 
           {/* Action buttons */}
           {renderActionButtons()}
         </View>
 
-        {/* Tabs */}
-        <TabBar tabs={tabs} activeTab={activeTab} onTabPress={setActiveTab} />
-
-        {/* Tab content */}
-        <View style={styles.tabContent}>
-          {activeTab === "info" && (
-            <>
-              {session.description && (
-                <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>About</Text>
-                  <Text style={styles.description}>{session.description}</Text>
-                </View>
-              )}
-
-              {speakers.length > 0 && (
-                <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Speakers</Text>
-                  {speakers.map((sp: any) => (
-                    <TouchableOpacity
-                      key={sp.id}
-                      style={styles.speakerCard}
-                      onPress={() => router.push(`/(app)/speakers/${sp.id}` as any)}
-                      activeOpacity={0.7}
-                    >
-                      <Avatar name={sp.name} size={48} />
-                      <View style={styles.speakerInfo}>
-                        <Text style={styles.speakerName}>{sp.name}</Text>
-                        {sp.title && <Text style={styles.speakerRole}>{sp.title}</Text>}
-                        {sp.company && <Text style={styles.speakerCompany}>{sp.company}</Text>}
-                      </View>
-                      <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              )}
-            </>
-          )}
-
-          {activeTab === "qa" && (
-            <View style={styles.section}>
-              {questions.length === 0 ? (
-                <EmptyState icon="chatbubble-ellipses-outline" title="No questions yet" subtitle="Be the first to ask!" />
-              ) : (
-                questions.map((q: any) => (
-                  <View key={q.id} style={styles.questionCard}>
-                    <Text style={styles.questionText}>{q.question_text}</Text>
-                    <View style={styles.questionMeta}>
-                      <View style={styles.upvoteRow}>
-                        <Ionicons
-                          name={q.is_upvoted ? "arrow-up-circle" : "arrow-up-circle-outline"}
-                          size={18}
-                          color={q.is_upvoted ? colors.primary : colors.textMuted}
-                        />
-                        <Text style={styles.upvoteCount}>{q.upvote_count}</Text>
-                      </View>
-                      {q.status === "answered" && (
-                        <Badge label="Answered" color={colors.success} backgroundColor={colors.successSoft} />
-                      )}
-                    </View>
-                    {q.answer_text && (
-                      <View style={styles.answerBox}>
-                        <Text style={styles.answerLabel}>Answer</Text>
-                        <Text style={styles.answerText}>{q.answer_text}</Text>
-                      </View>
-                    )}
-                  </View>
-                ))
-              )}
+        {/* Personal Notes (inline, matching web) */}
+        {user && (
+          <View style={styles.notesSection}>
+            <View style={styles.notesCard}>
+              <View style={styles.notesHeader}>
+                <Ionicons name="document-text-outline" size={16} color={colors.textSecondary} />
+                <Text style={styles.notesHeaderText}>Personal notes</Text>
+              </View>
+              <TextInput
+                style={noteStyles.input}
+                placeholder="Take notes on the session, such as key takeaways, insights, memorable quotes, and more"
+                placeholderTextColor={colors.textMuted}
+                value={noteText}
+                onChangeText={setNoteText}
+                multiline
+                textAlignVertical="top"
+              />
+              <View style={noteStyles.actions}>
+                {note && (
+                  <TouchableOpacity style={noteStyles.cancelBtn} onPress={() => setNoteText(note.content ?? "")}>
+                    <Text style={noteStyles.cancelBtnText}>Cancel</Text>
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity
+                  style={[noteStyles.saveBtn, !noteText.trim() && { opacity: 0.4 }]}
+                  onPress={() => noteText.trim() && saveNoteMutation.mutate(noteText.trim())}
+                  disabled={!noteText.trim() || saveNoteMutation.isPending}
+                >
+                  {saveNoteMutation.isPending ? (
+                    <ActivityIndicator size="small" color={colors.white} />
+                  ) : (
+                    <Text style={noteStyles.saveBtnText}>Save</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
             </View>
-          )}
+          </View>
+        )}
 
-          {/* ── Notes Tab (editable) ── */}
-          {activeTab === "notes" && (
-            <View style={styles.section}>
-              {!user ? (
-                <EmptyState icon="lock-closed-outline" title="Sign in to take notes" />
-              ) : (
-                <>
-                  <TextInput
-                    style={noteStyles.input}
-                    placeholder="Write your notes here..."
-                    placeholderTextColor={colors.textMuted}
-                    value={noteText}
-                    onChangeText={setNoteText}
-                    multiline
-                    textAlignVertical="top"
-                  />
-                  <View style={noteStyles.actions}>
-                    <TouchableOpacity
-                      style={[noteStyles.saveBtn, !noteText.trim() && { opacity: 0.4 }]}
-                      onPress={() => noteText.trim() && saveNoteMutation.mutate(noteText.trim())}
-                      disabled={!noteText.trim() || saveNoteMutation.isPending}
-                    >
-                      {saveNoteMutation.isPending ? (
-                        <ActivityIndicator size="small" color={colors.white} />
-                      ) : (
-                        <>
-                          <Ionicons name="save-outline" size={16} color={colors.white} />
-                          <Text style={noteStyles.saveBtnText}>Save</Text>
-                        </>
-                      )}
-                    </TouchableOpacity>
-                    {note && (
-                      <TouchableOpacity style={noteStyles.deleteBtn} onPress={handleDeleteNote}>
-                        <Ionicons name="trash-outline" size={16} color={colors.error} />
-                        <Text style={noteStyles.deleteBtnText}>Delete</Text>
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                  {note && (
-                    <Text style={noteStyles.lastSaved}>
-                      Last saved {new Date(note.updated_at).toLocaleDateString()}
+        {/* Description (inline, matching web) */}
+        {session.description && (
+          <View style={styles.descriptionSection}>
+            <Text style={styles.sectionTitle}>Description</Text>
+            <Text style={styles.description}>{session.description}</Text>
+          </View>
+        )}
+
+        {/* Speakers (inline, matching web) */}
+        {speakers.length > 0 && (
+          <View style={styles.speakersSection}>
+            <Text style={styles.sectionTitle}>
+              {speakers.length === 1 ? "Speaker" : "Speakers"}
+            </Text>
+            {speakers.map((sp: any) => (
+              <TouchableOpacity
+                key={sp.id}
+                style={styles.speakerCard}
+                onPress={() => router.push(`/(app)/speakers/${sp.id}` as any)}
+                activeOpacity={0.7}
+              >
+                <Avatar name={sp.name} size={48} uri={sp.photo} />
+                <View style={styles.speakerInfo}>
+                  <Text style={styles.speakerName}>{sp.name}</Text>
+                  {(sp.title || sp.company) && (
+                    <Text style={styles.speakerRole}>
+                      {[sp.title, sp.company].filter(Boolean).join(" at ")}
                     </Text>
                   )}
-                </>
-              )}
-            </View>
-          )}
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+
+        {/* Session Feedback (after session ends) */}
+        {sessionEnded && user && (
+          <View style={styles.feedbackSection}>
+            {existingFeedback || feedbackSubmitted ? (
+              <EmptyState icon="checkmark-circle-outline" title="Feedback submitted" subtitle="Thank you for your feedback!" />
+            ) : !feedbackForm ? null : (
+              <>
+                <Text style={styles.sectionTitle}>Session Feedback</Text>
+                {(feedbackForm.questions as any[]).map((q: any, idx: number) => (
+                  <View key={idx} style={feedbackStyles.questionRow}>
+                    <Text style={feedbackStyles.questionLabel}>{q.label || q.question}</Text>
+                    {q.type === "rating" || q.type === "star_rating" ? (
+                      <StarRating
+                        value={(feedbackAnswers[q.id ?? idx] as number) ?? 0}
+                        onChange={(v) =>
+                          setFeedbackAnswers((prev) => ({ ...prev, [q.id ?? idx]: v }))
+                        }
+                      />
+                    ) : (
+                      <TextInput
+                        style={feedbackStyles.textInput}
+                        placeholder="Your answer..."
+                        placeholderTextColor={colors.textMuted}
+                        value={(feedbackAnswers[q.id ?? idx] as string) ?? ""}
+                        onChangeText={(v) =>
+                          setFeedbackAnswers((prev) => ({ ...prev, [q.id ?? idx]: v }))
+                        }
+                        multiline={q.type === "textarea"}
+                      />
+                    )}
+                  </View>
+                ))}
+                <TouchableOpacity
+                  style={[shared.buttonPrimary, { marginTop: spacing.lg }]}
+                  onPress={() => feedbackMutation.mutate()}
+                  disabled={feedbackMutation.isPending}
+                >
+                  {feedbackMutation.isPending ? (
+                    <ActivityIndicator color={colors.white} />
+                  ) : (
+                    <Text style={shared.buttonPrimaryText}>Submit Feedback</Text>
+                  )}
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        )}
+
+        {/* Bottom Tabs: Polls / Chat / Community */}
+        <View style={styles.bottomTabsContainer}>
+          <View style={styles.bottomTabsCard}>
+            <TabBar tabs={tabs} activeTab={activeTab} onTabPress={setActiveTab} />
+
+            <View style={styles.tabContent}>
 
           {/* ── Polls Tab ── */}
           {activeTab === "polls" && (
@@ -763,7 +802,7 @@ export default function SessionDetailScreen() {
                     : [];
                   const voteCounts = pollVoteCounts[poll.id] ?? {};
                   const userVote = userPollVotes[poll.id];
-                  const hasVoted = !!userVote && userVote.optionIds.length > 0;
+                  const hasVoted = !!userVote && (userVote.optionIds.length > 0 || !!userVote.responseText || !!userVote.ratingValue);
                   const showResults = hasVoted || poll.status === "closed" || poll.show_results;
                   const totalVotes = Object.values(voteCounts).reduce(
                     (sum: number, c: any) => sum + (c as number),
@@ -787,8 +826,9 @@ export default function SessionDetailScreen() {
                               voteCount={voteCounts[opt.id] ?? 0}
                               selected={userVote?.optionIds?.includes(opt.id) ?? false}
                               showResults={showResults}
+                              disabled={poll.status === "closed"}
                               onPress={() => {
-                                if (!hasVoted && poll.status === "open") {
+                                if (poll.status === "open") {
                                   pollVoteMutation.mutate({ pollId: poll.id, optionId: opt.id });
                                 }
                               }}
@@ -802,18 +842,62 @@ export default function SessionDetailScreen() {
                           <StarRating
                             value={userVote?.ratingValue ?? 0}
                             onChange={(v) => {
-                              if (!hasVoted && poll.status === "open") {
+                              if (poll.status === "open") {
                                 submitPollRating(supabase, {
                                   pollId: poll.id,
                                   userId: user!.id,
                                   ratingValue: v,
                                 }).then(() => {
                                   queryClient.invalidateQueries({ queryKey: ["user-poll-votes", sessionId] });
+                                  queryClient.invalidateQueries({ queryKey: ["poll-vote-counts"] });
                                 });
                               }
                             }}
-                            disabled={hasVoted || poll.status === "closed"}
+                            disabled={poll.status === "closed"}
                           />
+                        </View>
+                      )}
+
+                      {(poll.answer_type === "word_cloud" || poll.answer_type === "short_answer") && (
+                        <View style={{ marginTop: spacing.md }}>
+                          {userVote?.responseText ? (
+                            <View style={pollStyles.submittedResponse}>
+                              <Text style={pollStyles.submittedLabel}>Your response:</Text>
+                              <Text style={pollStyles.submittedText}>{userVote.responseText}</Text>
+                            </View>
+                          ) : null}
+                          {poll.status === "open" && (
+                            <View style={{ gap: spacing.sm }}>
+                              <TextInput
+                                style={pollStyles.textInput}
+                                placeholder={poll.answer_type === "word_cloud" ? "Enter a word or short phrase..." : "Type your answer..."}
+                                placeholderTextColor={colors.textMuted}
+                                value={pollTextInputs[poll.id] ?? ""}
+                                onChangeText={(v) => setPollTextInputs((prev) => ({ ...prev, [poll.id]: v }))}
+                                maxLength={poll.answer_type === "word_cloud" ? 50 : 500}
+                                multiline={poll.answer_type === "short_answer"}
+                              />
+                              <TouchableOpacity
+                                style={[pollStyles.submitBtn, !(pollTextInputs[poll.id]?.trim()) && { opacity: 0.4 }]}
+                                onPress={() => {
+                                  const text = pollTextInputs[poll.id]?.trim();
+                                  if (text) {
+                                    pollTextMutation.mutate({ pollId: poll.id, responseText: text });
+                                  }
+                                }}
+                                disabled={!(pollTextInputs[poll.id]?.trim()) || pollTextMutation.isPending}
+                                activeOpacity={0.7}
+                              >
+                                {pollTextMutation.isPending ? (
+                                  <ActivityIndicator size="small" color={colors.white} />
+                                ) : (
+                                  <Text style={pollStyles.submitBtnText}>
+                                    {userVote?.responseText ? "Update" : "Submit"}
+                                  </Text>
+                                )}
+                              </TouchableOpacity>
+                            </View>
+                          )}
                         </View>
                       )}
 
@@ -827,59 +911,14 @@ export default function SessionDetailScreen() {
             </View>
           )}
 
-          {/* ── Feedback Tab ── */}
-          {activeTab === "feedback" && (
+          {/* ── Community Tab ── */}
+          {activeTab === "community" && (
             <View style={styles.section}>
-              {!user ? (
-                <EmptyState icon="lock-closed-outline" title="Sign in to leave feedback" />
-              ) : !sessionEnded ? (
-                <EmptyState icon="time-outline" title="Feedback available after session ends" />
-              ) : existingFeedback || feedbackSubmitted ? (
-                <EmptyState icon="checkmark-circle-outline" title="Feedback submitted" subtitle="Thank you for your feedback!" />
-              ) : !feedbackForm ? (
-                <EmptyState icon="document-text-outline" title="No feedback form" subtitle="No feedback form is configured for this event" />
-              ) : (
-                <>
-                  <Text style={styles.sectionTitle}>Session Feedback</Text>
-                  {(feedbackForm.questions as any[]).map((q: any, idx: number) => (
-                    <View key={idx} style={feedbackStyles.questionRow}>
-                      <Text style={feedbackStyles.questionLabel}>{q.label || q.question}</Text>
-                      {q.type === "rating" || q.type === "star_rating" ? (
-                        <StarRating
-                          value={(feedbackAnswers[q.id ?? idx] as number) ?? 0}
-                          onChange={(v) =>
-                            setFeedbackAnswers((prev) => ({ ...prev, [q.id ?? idx]: v }))
-                          }
-                        />
-                      ) : (
-                        <TextInput
-                          style={feedbackStyles.textInput}
-                          placeholder="Your answer..."
-                          placeholderTextColor={colors.textMuted}
-                          value={(feedbackAnswers[q.id ?? idx] as string) ?? ""}
-                          onChangeText={(v) =>
-                            setFeedbackAnswers((prev) => ({ ...prev, [q.id ?? idx]: v }))
-                          }
-                          multiline={q.type === "textarea"}
-                        />
-                      )}
-                    </View>
-                  ))}
-                  <TouchableOpacity
-                    style={[shared.buttonPrimary, { marginTop: spacing.lg }]}
-                    onPress={() => feedbackMutation.mutate()}
-                    disabled={feedbackMutation.isPending}
-                  >
-                    {feedbackMutation.isPending ? (
-                      <ActivityIndicator color={colors.white} />
-                    ) : (
-                      <Text style={shared.buttonPrimaryText}>Submit Feedback</Text>
-                    )}
-                  </TouchableOpacity>
-                </>
-              )}
+              <EmptyState icon="people-outline" title="Community" subtitle="Community discussions will appear here" />
             </View>
           )}
+            </View>
+          </View>
         </View>
 
         <View style={{ height: 40 }} />
@@ -893,27 +932,66 @@ export default function SessionDetailScreen() {
 // ═══════════════════════════════════════════════════════════════
 
 const styles = StyleSheet.create({
+  backRow: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.sm,
+  },
+  backBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  backText: {
+    fontSize: 14,
+    color: colors.textMuted,
+  },
+  likeTopRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    alignSelf: "flex-end",
+    marginBottom: spacing.sm,
+  },
+  likeTopText: {
+    fontSize: 12,
+    color: colors.textMuted,
+  },
   header: {
     padding: spacing.lg,
+    paddingTop: 0,
     gap: spacing.sm,
   },
   title: {
-    ...typography.h1,
+    fontSize: 24,
+    fontWeight: "700",
     color: colors.textPrimary,
   },
   badgeRow: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: spacing.xs,
+    marginTop: spacing.xs,
+  },
+  metaWrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.md,
+    marginTop: spacing.md,
   },
   metaRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.sm,
+    gap: 6,
   },
   metaText: {
-    ...typography.body,
-    color: colors.textSecondary,
+    fontSize: 14,
+    color: colors.textMuted,
+  },
+  viewMapLink: {
+    fontSize: 12,
+    color: colors.primary,
+    marginLeft: 4,
   },
   actionRow: {
     flexDirection: "row",
@@ -925,18 +1003,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.full,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: colors.primary,
+    borderColor: colors.borderLight,
   },
   actionBtnActive: {
     backgroundColor: colors.primary,
-  },
-  likeActive: {
-    backgroundColor: colors.error,
-    borderColor: colors.error,
   },
   actionBtnText: {
     ...typography.buttonSmall,
@@ -950,14 +1024,60 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     marginLeft: 2,
   },
-  tabContent: {
+  notesSection: {
     paddingHorizontal: spacing.lg,
-  },
-  section: {
     marginTop: spacing.lg,
   },
+  notesCard: {
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    backgroundColor: colors.surface,
+  },
+  notesHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: spacing.md,
+  },
+  notesHeaderText: {
+    ...typography.bodyMedium,
+    color: colors.textSecondary,
+  },
+  descriptionSection: {
+    paddingHorizontal: spacing.lg,
+    marginTop: spacing.xl,
+  },
+  speakersSection: {
+    paddingHorizontal: spacing.lg,
+    marginTop: spacing.xl,
+  },
+  feedbackSection: {
+    paddingHorizontal: spacing.lg,
+    marginTop: spacing.xl,
+  },
+  bottomTabsContainer: {
+    marginTop: spacing.xl,
+  },
+  bottomTabsCard: {
+    borderTopWidth: 1,
+    borderTopColor: colors.borderLight,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    marginHorizontal: spacing.lg,
+    overflow: "hidden",
+  },
+  tabContent: {
+    paddingHorizontal: spacing.md,
+  },
+  section: {
+    marginTop: spacing.md,
+    marginBottom: spacing.md,
+  },
   sectionTitle: {
-    ...typography.h3,
+    fontSize: 16,
+    fontWeight: "600",
     color: colors.textPrimary,
     marginBottom: spacing.md,
   },
@@ -1052,21 +1172,28 @@ const noteStyles = StyleSheet.create({
   },
   actions: {
     flexDirection: "row",
+    justifyContent: "flex-end",
+    alignItems: "center",
     gap: spacing.sm,
     marginTop: spacing.md,
   },
   saveBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
     backgroundColor: colors.primary,
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.full,
+    paddingVertical: 6,
+    borderRadius: radius.sm,
   },
   saveBtnText: {
     ...typography.buttonSmall,
     color: colors.white,
+  },
+  cancelBtn: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: 6,
+  },
+  cancelBtnText: {
+    ...typography.buttonSmall,
+    color: colors.textMuted,
   },
   deleteBtn: {
     flexDirection: "row",
@@ -1172,6 +1299,44 @@ const pollStyles = StyleSheet.create({
     color: colors.success,
     marginTop: spacing.sm,
     textAlign: "center",
+  },
+  textInput: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    fontSize: 15,
+    color: colors.textPrimary,
+    minHeight: 40,
+  },
+  submitBtn: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: 8,
+    borderRadius: radius.sm,
+    alignItems: "center",
+    alignSelf: "flex-end",
+  },
+  submitBtnText: {
+    ...typography.buttonSmall,
+    color: colors.white,
+  },
+  submittedResponse: {
+    backgroundColor: colors.primaryMuted,
+    borderRadius: radius.sm,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  submittedLabel: {
+    ...typography.captionBold,
+    color: colors.primary,
+    marginBottom: 4,
+  },
+  submittedText: {
+    ...typography.body,
+    color: colors.textPrimary,
   },
 });
 

@@ -125,13 +125,11 @@ export async function votePoll(pollId: string, optionId: string) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Authentication required");
 
-  // Try upsert (insert or update)
-  const { error } = await supabase
-    .from("live_poll_votes")
-    .upsert(
-      { poll_id: pollId, user_id: user.id, option_id: optionId },
-      { onConflict: "poll_id,user_id" }
-    );
+  // Delete existing vote then insert new one (partial unique index doesn't support simple upsert)
+  await supabase.from("live_poll_votes").delete().eq("poll_id", pollId).eq("user_id", user.id);
+  const { error } = await supabase.from("live_poll_votes").insert({
+    poll_id: pollId, user_id: user.id, option_id: optionId,
+  });
 
   if (error) throw new Error(error.message);
 

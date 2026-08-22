@@ -7,14 +7,13 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   ActivityIndicator,
   ScrollView,
 } from "react-native";
 import { Link } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import { useAuth, isAppleDevice } from "../../src/lib/auth-context";
+import { useAuth } from "../../src/lib/auth-context";
 import {
   colors,
   typography,
@@ -22,24 +21,26 @@ import {
 } from "../../src/theme";
 
 export default function SignInScreen() {
-  const { signIn, signInWithGoogle, signInWithApple } = useAuth();
+  const { signIn } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSignIn = async () => {
+    setError(null);
     if (!email || !password) {
-      Alert.alert("Error", "Please fill in all fields.");
+      setError("Please fill in all fields.");
       return;
     }
 
     setLoading(true);
     try {
       await signIn(email.trim(), password);
-    } catch (error: any) {
-      Alert.alert("Sign In Failed", error.message ?? "An error occurred.");
+    } catch (err: any) {
+      setError(err.message ?? "An error occurred. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -108,7 +109,7 @@ export default function SignInScreen() {
                 placeholder="you@example.com"
                 placeholderTextColor={colors.textMuted}
                 value={email}
-                onChangeText={setEmail}
+                onChangeText={(t) => { setEmail(t); setError(null); }}
                 autoCapitalize="none"
                 keyboardType="email-address"
                 textContentType="emailAddress"
@@ -147,7 +148,7 @@ export default function SignInScreen() {
                 placeholder="Enter your password"
                 placeholderTextColor={colors.textMuted}
                 value={password}
-                onChangeText={setPassword}
+                onChangeText={(t) => { setPassword(t); setError(null); }}
                 secureTextEntry={!showPassword}
                 textContentType="password"
                 onFocus={() => setFocusedField("password")}
@@ -165,6 +166,14 @@ export default function SignInScreen() {
               </TouchableOpacity>
             </View>
           </View>
+
+          {/* Error Message */}
+          {error && (
+            <View style={styles.errorBanner}>
+              <Ionicons name="alert-circle" size={16} color="#dc2626" />
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
+          )}
 
           {/* Sign In Button */}
           <TouchableOpacity
@@ -194,39 +203,6 @@ export default function SignInScreen() {
               )}
             </LinearGradient>
           </TouchableOpacity>
-
-          {/* Divider */}
-          <View style={styles.dividerRow}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>or continue with</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          {/* Social Login Buttons */}
-          <View style={styles.socialRow}>
-            <TouchableOpacity
-              style={[styles.socialButton, !isAppleDevice && { flex: 1 }]}
-              activeOpacity={0.7}
-              onPress={() => signInWithGoogle().catch((e: any) =>
-                Alert.alert("Google Sign In Failed", e.message)
-              )}
-            >
-              <Ionicons name="logo-google" size={20} color="#DB4437" />
-              <Text style={styles.socialButtonText}>Google</Text>
-            </TouchableOpacity>
-            {isAppleDevice && (
-              <TouchableOpacity
-                style={styles.socialButton}
-                activeOpacity={0.7}
-                onPress={() => signInWithApple().catch((e: any) =>
-                  Alert.alert("Apple Sign In Failed", e.message)
-                )}
-              >
-                <Ionicons name="logo-apple" size={20} color={colors.black} />
-                <Text style={styles.socialButtonText}>Apple</Text>
-              </TouchableOpacity>
-            )}
-          </View>
 
           {/* Footer */}
           <View style={styles.footer}>
@@ -363,6 +339,25 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.textPrimary,
   },
+  // -- Error Banner ---------------------------------------------
+  errorBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fef2f2",
+    borderWidth: 1,
+    borderColor: "#fecaca",
+    borderRadius: 12,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 12,
+    gap: 8,
+    marginTop: spacing.sm,
+  },
+  errorText: {
+    flex: 1,
+    fontSize: 13,
+    color: "#dc2626",
+    fontWeight: "500",
+  },
   // -- Button --------------------------------------------------
   button: {
     borderRadius: 14,
@@ -390,46 +385,6 @@ const styles = StyleSheet.create({
     ...typography.button,
     color: colors.white,
     fontSize: 17,
-  },
-  // -- Divider -------------------------------------------------
-  dividerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: spacing.xxl + 4,
-    marginBottom: spacing.xl,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: colors.borderLight,
-  },
-  dividerText: {
-    ...typography.caption,
-    color: colors.textMuted,
-    marginHorizontal: spacing.lg,
-    fontSize: 12,
-  },
-  // -- Social --------------------------------------------------
-  socialRow: {
-    flexDirection: "row",
-    gap: spacing.md,
-  },
-  socialButton: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.sm,
-    paddingVertical: 14,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: colors.borderLight,
-    backgroundColor: colors.surface,
-  },
-  socialButtonText: {
-    ...typography.bodyMedium,
-    color: colors.textPrimary,
-    fontSize: 14,
   },
   // -- Footer --------------------------------------------------
   footer: {

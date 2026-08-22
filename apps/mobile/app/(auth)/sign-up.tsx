@@ -7,14 +7,13 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   ActivityIndicator,
   ScrollView,
 } from "react-native";
 import { Link } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import { useAuth, isAppleDevice } from "../../src/lib/auth-context";
+import { useAuth } from "../../src/lib/auth-context";
 import {
   colors,
   typography,
@@ -22,26 +21,30 @@ import {
 } from "../../src/theme";
 
 export default function SignUpScreen() {
-  const { signUp, signInWithGoogle, signInWithApple } = useAuth();
+  const { signUp } = useAuth();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   const handleSignUp = async () => {
+    setError(null);
+    setSuccess(null);
     if (!fullName || !email || !password) {
-      Alert.alert("Error", "Please fill in all fields.");
+      setError("Please fill in all fields.");
       return;
     }
 
     setLoading(true);
     try {
       await signUp(email.trim(), password, fullName.trim());
-      Alert.alert("Success", "Account created! You can now sign in.");
-    } catch (error: any) {
-      Alert.alert("Sign Up Failed", error.message ?? "An error occurred.");
+      setSuccess("Account created! You can now sign in.");
+    } catch (err: any) {
+      setError(err.message ?? "An error occurred. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -110,7 +113,7 @@ export default function SignUpScreen() {
                 placeholder="John Doe"
                 placeholderTextColor={colors.textMuted}
                 value={fullName}
-                onChangeText={setFullName}
+                onChangeText={(t) => { setFullName(t); setError(null); }}
                 autoCapitalize="words"
                 textContentType="name"
                 onFocus={() => setFocusedField("name")}
@@ -143,7 +146,7 @@ export default function SignUpScreen() {
                 placeholder="you@example.com"
                 placeholderTextColor={colors.textMuted}
                 value={email}
-                onChangeText={setEmail}
+                onChangeText={(t) => { setEmail(t); setError(null); }}
                 autoCapitalize="none"
                 keyboardType="email-address"
                 textContentType="emailAddress"
@@ -177,7 +180,7 @@ export default function SignUpScreen() {
                 placeholder="Min. 6 characters"
                 placeholderTextColor={colors.textMuted}
                 value={password}
-                onChangeText={setPassword}
+                onChangeText={(t) => { setPassword(t); setError(null); }}
                 secureTextEntry={!showPassword}
                 textContentType="newPassword"
                 onFocus={() => setFocusedField("password")}
@@ -195,6 +198,20 @@ export default function SignUpScreen() {
               </TouchableOpacity>
             </View>
           </View>
+
+          {/* Error / Success Message */}
+          {error && (
+            <View style={styles.errorBanner}>
+              <Ionicons name="alert-circle" size={16} color="#dc2626" />
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
+          )}
+          {success && (
+            <View style={styles.successBanner}>
+              <Ionicons name="checkmark-circle" size={16} color="#16a34a" />
+              <Text style={styles.successText}>{success}</Text>
+            </View>
+          )}
 
           {/* Sign Up Button */}
           <TouchableOpacity
@@ -224,39 +241,6 @@ export default function SignUpScreen() {
               )}
             </LinearGradient>
           </TouchableOpacity>
-
-          {/* Divider */}
-          <View style={styles.dividerRow}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>or continue with</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          {/* Social Login Buttons */}
-          <View style={styles.socialRow}>
-            <TouchableOpacity
-              style={[styles.socialButton, !isAppleDevice && { flex: 1 }]}
-              activeOpacity={0.7}
-              onPress={() => signInWithGoogle().catch((e: any) =>
-                Alert.alert("Google Sign In Failed", e.message)
-              )}
-            >
-              <Ionicons name="logo-google" size={20} color="#DB4437" />
-              <Text style={styles.socialButtonText}>Google</Text>
-            </TouchableOpacity>
-            {isAppleDevice && (
-              <TouchableOpacity
-                style={styles.socialButton}
-                activeOpacity={0.7}
-                onPress={() => signInWithApple().catch((e: any) =>
-                  Alert.alert("Apple Sign In Failed", e.message)
-                )}
-              >
-                <Ionicons name="logo-apple" size={20} color={colors.black} />
-                <Text style={styles.socialButtonText}>Apple</Text>
-              </TouchableOpacity>
-            )}
-          </View>
 
           {/* Terms */}
           <Text style={styles.termsText}>
@@ -390,6 +374,43 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.textPrimary,
   },
+  // -- Error / Success Banners ----------------------------------
+  errorBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fef2f2",
+    borderWidth: 1,
+    borderColor: "#fecaca",
+    borderRadius: 12,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 12,
+    gap: 8,
+    marginTop: spacing.sm,
+  },
+  errorText: {
+    flex: 1,
+    fontSize: 13,
+    color: "#dc2626",
+    fontWeight: "500",
+  },
+  successBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f0fdf4",
+    borderWidth: 1,
+    borderColor: "#bbf7d0",
+    borderRadius: 12,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 12,
+    gap: 8,
+    marginTop: spacing.sm,
+  },
+  successText: {
+    flex: 1,
+    fontSize: 13,
+    color: "#16a34a",
+    fontWeight: "500",
+  },
   // -- Button --------------------------------------------------
   button: {
     borderRadius: 14,
@@ -417,46 +438,6 @@ const styles = StyleSheet.create({
     ...typography.button,
     color: colors.white,
     fontSize: 17,
-  },
-  // -- Divider -------------------------------------------------
-  dividerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: spacing.xxl,
-    marginBottom: spacing.xl,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: colors.borderLight,
-  },
-  dividerText: {
-    ...typography.caption,
-    color: colors.textMuted,
-    marginHorizontal: spacing.lg,
-    fontSize: 12,
-  },
-  // -- Social --------------------------------------------------
-  socialRow: {
-    flexDirection: "row",
-    gap: spacing.md,
-  },
-  socialButton: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.sm,
-    paddingVertical: 14,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: colors.borderLight,
-    backgroundColor: colors.surface,
-  },
-  socialButtonText: {
-    ...typography.bodyMedium,
-    color: colors.textPrimary,
-    fontSize: 14,
   },
   // -- Terms ---------------------------------------------------
   termsText: {
